@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/* Force Tailwind CSS v4 to use class-based dark mode selector (.dark on html/body) instead of system media queries */
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-slate-955: #080b11;
+  --color-slate-855: #111827;
+  --color-slate-850: #1e293b;
+  --color-slate-750: #334155;
+  --color-slate-770: #334155;
+  --color-slate-705: #374151;
+  --color-slate-805: #1e293b;
+  --color-slate-555: #64748b;
+  --color-slate-550: #64748b;
+  --color-slate-505: #64748b;
+  --color-slate-455: #94a3b8;
+  --color-slate-450: #94a3b8;
+  --color-slate-655: #475569;
+  --color-slate-650: #475569;
+  --color-slate-355: #cbd5e1;
+  --color-slate-350: #cbd5e1;
+  --color-slate-255: #e2e8f0;
+  --color-slate-250: #e2e8f0;
+  --color-slate-150: #f1f5f9;
+  
+  --color-indigo-955: #111329;
+  --color-indigo-755: #4338ca;
+  --color-indigo-150: #c7d2fe;
+
+  /* Additional dark mode badge backgrounds */
+  --color-rose-955: #2d1414;
+  --color-orange-955: #351c0b;
+  --color-amber-955: #302008;
+  --color-emerald-955: #062817;
+  --color-purple-955: #24143c;
+  --color-blue-955: #172554;
+
+  /* Additional custom text colors */
+  --color-emerald-655: #059669;
+  --color-rose-450: #f43f5e;
+  --color-rose-455: #f43f5e;
+  --color-emerald-450: #10b981;
+  --color-amber-450: #f59e0b;
+  --color-blue-450: #3b82f6;
+  --color-purple-450: #8b5cf6;
+}
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+.dark {
+  --background: #080b11; /* Matching our slate-955 theme background */
+  --foreground: #f8fafc;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Force select option colors in dark mode to prevent white-on-white text bugs in Chrome/Windows */
+.dark select option {
+  background-color: #1e293b !important; /* Tailwind slate-800 */
+  color: #f8fafc !important; /* slate-100 */
+}
+
+select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}

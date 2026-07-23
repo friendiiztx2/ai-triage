@@ -1,0 +1,330 @@
+[
+  {
+    "id": "mock-log-1",
+    "admin_name": "aor",
+    "admin_email": "aor",
+    "action": "DELETE",
+    "details": "ลบหมวดหมู่: ปัญหาเว็บโหลดช้า",
+    "created_at": "2026-07-16T11:20:00.000Z"
+  },
+  {
+    "id": "mock-log-2",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "CREATE",
+    "details": "เพิ่มผู้ใช้งานใหม่: test2 (บทบาท: agent)",
+    "created_at": "2026-07-15T09:44:00.000Z"
+  },
+  {
+    "id": "mock-log-3",
+    "admin_name": "aor",
+    "admin_email": "aor",
+    "action": "UPDATE",
+    "details": "แก้ไขหมวดหมู่: การเข้าสู่ระบบ (ID: login_issue)",
+    "created_at": "2026-07-15T08:05:00.000Z"
+  },
+  {
+    "id": "mock-log-4",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-15T03:56:00.000Z"
+  },
+  {
+    "id": "eorv3cqnb",
+    "admin_name": "aor (Super Admin ของ Alpha Support)",
+    "admin_email": "aor",
+    "action": "CREATE",
+    "details": "สร้างหมวดหมู่ใหม่: สิทธิประโยชน์ระดับ VIP (ID: vip_privilege)",
+    "created_at": "2026-07-16T08:34:21.173Z"
+  },
+  {
+    "id": "g0hlefp43",
+    "admin_name": "aor (Super Admin ของ Alpha Support)",
+    "admin_email": "aor",
+    "action": "UPDATE",
+    "details": "อัปเดตข้อมูลผู้ใช้: test2 (ID: 044468bb-d278-47b7-ae1f-005a9f99cdda)",
+    "created_at": "2026-07-16T10:54:07.538Z"
+  },
+  {
+    "id": "6z8mrtjt8",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T07:41:11.494Z"
+  },
+  {
+    "id": "rj2c16r8o",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T07:41:45.425Z"
+  },
+  {
+    "id": "22znpezen",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T07:42:33.057Z"
+  },
+  {
+    "id": "ozcmibann",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T07:59:23.633Z"
+  },
+  {
+    "id": "w0wt7kd7g",
+    "admin_name": "aor (Super Admin ของ Alpha Support)",
+    "admin_email": "aor",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: super_admin)",
+    "created_at": "2026-07-20T07:59:29.352Z"
+  },
+  {
+    "id": "5p9ippc16",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:29:56.711Z"
+  },
+  {
+    "id": "re624exe2",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:30:49.119Z"
+  },
+  {
+    "id": "2qpcst0im",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:31:22.680Z"
+  },
+  {
+    "id": "c68fonxmt",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:31:34.517Z"
+  },
+  {
+    "id": "ykd7xl49q",
+    "admin_name": "aor (Super Admin ของ Alpha Support)",
+    "admin_email": "aor",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: super_admin)",
+    "created_at": "2026-07-20T08:33:13.802Z"
+  },
+  {
+    "id": "2zbuzbj8f",
+    "admin_name": "aor (Super Admin ของ Alpha Support)",
+    "admin_email": "aor",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: super_admin)",
+    "created_at": "2026-07-20T08:33:19.840Z"
+  },
+  {
+    "id": "whscpug46",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:33:29.264Z"
+  },
+  {
+    "id": "8urlb5que",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:34:08.589Z"
+  },
+  {
+    "id": "rufkpj3fp",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:34:16.435Z"
+  },
+  {
+    "id": "i8w63eqmw",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:34:23.994Z"
+  },
+  {
+    "id": "rzdv0vhva",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:34:36.824Z"
+  },
+  {
+    "id": "qexcn8zlk",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:34:50.732Z"
+  },
+  {
+    "id": "kgg7qxdvp",
+    "admin_name": "aor (Super Admin ของ Alpha Support)",
+    "admin_email": "aor",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: super_admin)",
+    "created_at": "2026-07-20T08:34:54.990Z"
+  },
+  {
+    "id": "krz01yldy",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:35:11.927Z"
+  },
+  {
+    "id": "g8rxcz896",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:39:29.321Z"
+  },
+  {
+    "id": "g83yins97",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:39:49.385Z"
+  },
+  {
+    "id": "0xbzzz2yu",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:40:19.856Z"
+  },
+  {
+    "id": "hx34wyljw",
+    "admin_name": "aor (Super Admin ของ Alpha Support)",
+    "admin_email": "aor",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: super_admin)",
+    "created_at": "2026-07-20T08:40:23.569Z"
+  },
+  {
+    "id": "fav2880xn",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:40:29.008Z"
+  },
+  {
+    "id": "4zh8n4hwn",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "CREATE",
+    "details": "เพิ่มผู้ใช้งานใหม่: zoon (บทบาท: system_admin)",
+    "created_at": "2026-07-20T08:42:01.259Z"
+  },
+  {
+    "id": "r5uvudrn9",
+    "admin_name": "zoon",
+    "admin_email": "zoon",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:42:15.785Z"
+  },
+  {
+    "id": "y3kckv5uu",
+    "admin_name": "zoon",
+    "admin_email": "zoon",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:42:32.826Z"
+  },
+  {
+    "id": "6ji02oyq5",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:43:10.542Z"
+  },
+  {
+    "id": "zrybcm93u",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:43:16.579Z"
+  },
+  {
+    "id": "th61qnqi0",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "UPDATE",
+    "details": "อัปเดตข้อมูลผู้ใช้: zoon (ID: 10bd2a6d-6f7b-48ba-bca4-a101a869d224)",
+    "created_at": "2026-07-20T08:43:49.556Z"
+  },
+  {
+    "id": "s68zjdw7v",
+    "admin_name": "zoon",
+    "admin_email": "zoon",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T08:44:09.612Z"
+  },
+  {
+    "id": "yuyfyu745",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T10:24:40.920Z"
+  },
+  {
+    "id": "4fn1b4str",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T10:24:42.781Z"
+  },
+  {
+    "id": "vjs7evrur",
+    "admin_name": "aor (Super Admin ของ Alpha Support)",
+    "admin_email": "aor",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: super_admin)",
+    "created_at": "2026-07-20T10:24:51.886Z"
+  },
+  {
+    "id": "fazib2705",
+    "admin_name": "System Admin (แอดมินกลางดูแลทุกบริษัท)",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-20T10:24:53.221Z"
+  }
+]
