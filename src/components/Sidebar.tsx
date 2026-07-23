@@ -12,6 +12,7 @@ import {
   Database,
   ShieldCheck,
   BrainCircuit,
+  Sparkles,
   Sun,
   Moon,
   LogOut,
@@ -195,15 +196,33 @@ export default function Sidebar() {
       </button>
 
       <div className={isCollapsed ? 'p-3' : 'p-6'}>
-        {/* Logo */}
-        <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center gap-0' : 'gap-3'}`}>
-          <div className="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-100 dark:shadow-none shrink-0">
-            <BrainCircuit size={20} />
+        {/* Logo Badge */}
+        <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center gap-0' : 'gap-3.5'}`}>
+          <div className="relative group cursor-pointer">
+            <div className="bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30 ring-4 ring-indigo-500/10 transition-all duration-300 group-hover:scale-105 group-hover:shadow-indigo-500/50 shrink-0 flex items-center justify-center">
+              <BrainCircuit size={22} className="animate-pulse" />
+            </div>
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
+            </span>
           </div>
+
           {!isCollapsed && (
             <div>
-              <h1 className="font-extrabold text-slate-800 dark:text-slate-100 text-base leading-none">AI Triage</h1>
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold tracking-wider uppercase">Back Office</span>
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-black text-slate-800 dark:text-slate-100 text-base leading-none tracking-tight font-display">
+                  AI Triage
+                </h1>
+                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-xs uppercase tracking-wider">
+                  PRO
+                </span>
+              </div>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold tracking-widest uppercase">
+                  Back Office
+                </span>
+              </div>
             </div>
           )}
         </div>
