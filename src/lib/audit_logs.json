@@ -326,5 +326,21 @@
     "action": "LOGIN",
     "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
     "created_at": "2026-07-20T10:24:53.221Z"
+  },
+  {
+    "id": "qmk01dpkg",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-23T09:01:52.383Z"
+  },
+  {
+    "id": "1isoqkiu2",
+    "admin_name": "System Admin",
+    "admin_email": "friendiiztx2@gmail.com",
+    "action": "LOGIN",
+    "details": "เข้าสู่ระบบสำเร็จ (สิทธิ์: system_admin)",
+    "created_at": "2026-07-23T09:02:22.475Z"
   }
 ]

@@ -199,11 +199,11 @@ export default function Sidebar() {
         {/* Luxury Logo Badge */}
         <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center gap-0' : 'gap-3.5'}`}>
           <div className="relative group cursor-pointer">
-            <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-3 rounded-2xl shadow-xl shadow-indigo-500/30 ring-4 ring-indigo-500/15 border border-white/20 transition-all duration-300 group-hover:scale-105 group-hover:shadow-indigo-500/50 shrink-0 flex items-center justify-center">
+            <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white p-3 rounded-2xl shadow-xl shadow-blue-500/30 ring-4 ring-blue-500/20 border border-white/20 transition-all duration-300 group-hover:scale-105 group-hover:shadow-blue-500/50 shrink-0 flex items-center justify-center">
               {/* Subtle glass shimmer layer */}
               <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
               <BrainCircuit size={24} className="text-white drop-shadow-md relative z-10" />
-              <Sparkles size={12} className="text-amber-300 absolute top-1 right-1 animate-pulse z-10" />
+              <Sparkles size={12} className="text-sky-200 absolute top-1 right-1 animate-pulse z-10" />
             </div>
             <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 z-20">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
