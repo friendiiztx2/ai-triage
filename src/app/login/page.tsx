@@ -153,7 +153,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl p-8 relative z-10">
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
-          <div className="bg-gradient-to-br from-sky-500 to-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-500/25 dark:shadow-none mb-3">
+          <div className="bg-gradient-to-br from-red-500 to-rose-600 text-white p-3 rounded-2xl shadow-lg shadow-rose-500/25 dark:shadow-none mb-3">
             <BrainCircuit size={28} />
           </div>
           <h1 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl leading-none">AI Triage</h1>
