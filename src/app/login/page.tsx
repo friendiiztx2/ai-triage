@@ -36,12 +36,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Clear any old sessions on login page load
+  // Check if session already exists, redirect to home page
   useEffect(() => {
-    document.cookie = 'user_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    document.cookie = 'company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    localStorage.removeItem('user_session');
-    localStorage.removeItem('company_id');
+    const match = document.cookie.match(/(?:^|; )user_session=([^;]*)/);
+    const savedSession = match ? decodeURIComponent(match[1]) : localStorage.getItem('user_session');
+    if (savedSession) {
+      window.location.href = '/';
+    }
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -138,10 +139,8 @@ export default function LoginPage() {
     // Save audit log asynchronously
     saveAuditLog('LOGIN', `เข้าสู่ระบบสำเร็จ (สิทธิ์: ${account.role || 'unknown'})`);
 
-    router.push('/');
-    setTimeout(() => {
-      window.location.reload();
-    }, 150);
+    // Immediate hard redirect to main page to prevent router delay & reload race conditions
+    window.location.href = '/';
   };
 
   return (
