@@ -342,8 +342,8 @@ function FloatingChatWindow({
       const dx = moveEvent.clientX - startX;
       const dy = moveEvent.clientY - startY;
       
-      const newWidth = Math.max(360, Math.min(850, startWidth + dx));
-      const newHeight = Math.max(250, Math.min(750, startHeight + dy));
+      const newWidth = Math.max(320, startWidth + dx);
+      const newHeight = Math.max(200, startHeight + dy);
       
       setWidth(newWidth);
       setHeight(newHeight);
