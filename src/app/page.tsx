@@ -1043,11 +1043,12 @@ export default function OverviewPage() {
             * สถิติคำนวณจากการเปรียบเทียบประวัติการแก้ไขแมนนวลจริงในระบบ
           </div>
         </div>
+      </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
         {/* Line Chart (Multi-line comparison over time) */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-250">
+        <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-250 min-h-[400px]">
           <div>
             <h2 className="font-bold text-slate-800 dark:text-slate-100 text-lg flex items-center gap-2">
               <TrendingUp size={18} className="text-indigo-600 dark:text-indigo-400" />
@@ -1055,9 +1056,9 @@ export default function OverviewPage() {
             </h2>
             <p className="text-slate-450 dark:text-slate-500 text-xs mt-1">{t('categoryTrendsSub')}</p>
           </div>
-          <div className="h-[300px] mt-6">
+          <div className="h-[300px] mt-6 w-full flex items-center justify-center">
             {timeSeriesData.length === 0 ? (
-              <div className="h-full flex justify-center items-center text-slate-400 dark:text-slate-500 text-sm">ไม่มีข้อมูลแนวโน้มประเภทปัญหาในช่วงเวลานี้</div>
+              <div className="h-full w-full flex justify-center items-center text-slate-400 dark:text-slate-500 text-sm">ไม่มีข้อมูลแนวโน้มประเภทปัญหาในช่วงเวลานี้</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={timeSeriesData} margin={{ top: 10, right: 15, left: -10, bottom: 5 }}>
@@ -1096,7 +1097,7 @@ export default function OverviewPage() {
         </div>
 
         {/* Bar Chart (Priority Statistics with Soothing Pastel Colors) */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-250">
+        <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-250 min-h-[400px]">
           <div>
             <h2 className="font-bold text-slate-800 dark:text-slate-100 text-lg flex items-center gap-2">
               <AlertTriangle size={18} className="text-rose-455" />
@@ -1104,9 +1105,9 @@ export default function OverviewPage() {
             </h2>
             <p className="text-slate-455 dark:text-slate-500 text-xs mt-1">จำนวนปัญหาแยกตามระดับความฉุกเฉินของการช่วยเหลือ (โทนสีพาสเทลสบายตา)</p>
           </div>
-          <div className="h-[300px] mt-6">
+          <div className="h-[300px] mt-6 w-full flex items-center justify-center">
             {stats.totalChats === 0 ? (
-              <div className="h-full flex justify-center items-center text-slate-400 dark:text-slate-500 text-sm">
+              <div className="h-full w-full flex justify-center items-center text-slate-400 dark:text-slate-500 text-sm">
                 {t('noData')}
               </div>
             ) : (
@@ -1142,6 +1143,5 @@ export default function OverviewPage() {
         </div>
       </div>
     </div>
-  </div>
   );
 }
