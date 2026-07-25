@@ -790,20 +790,6 @@ export default function OverviewPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-            <Link
-              href="/chats?priority=urgent"
-              className="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-            >
-              <AlertTriangle size={14} /> ดูเคสด่วน ({stats.highPriority})
-            </Link>
-            <Link
-              href="/chats?status=pending"
-              className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-            >
-              <Clock size={14} /> เคสรอดำเนินการ ({stats.pendingTriage})
-            </Link>
-          </div>
         </div>
       </div>
 
