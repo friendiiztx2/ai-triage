@@ -12,15 +12,19 @@ envFile.split('\n').forEach(line => {
 });
 
 const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function checkChats() {
-  const { data, error, count } = await supabase.from('chats').select('id, customer_id, status, created_at, customers(name)', { count: 'exact' });
+async function testCompanyQuery() {
+  const companyId = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+  const { data, error, count } = await supabase
+    .from('chats')
+    .select('id, status, priority, category_id', { count: 'exact' })
+    .eq('company_id', companyId);
+
   console.log('Error:', error);
-  console.log('Total Count in DB:', count);
-  console.log('Sample Chats:', data ? data.slice(0, 3) : []);
+  console.log('Count for company_id 2c3f46cc-fae8-4ef8-99e1-874dec8b2af2:', count);
 }
 
-checkChats();
+testCompanyQuery();

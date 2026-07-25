@@ -12,6 +12,7 @@ import {
   Database,
   ShieldCheck,
   BrainCircuit,
+  Sparkles,
   Sun,
   Moon,
   LogOut,
@@ -195,15 +196,36 @@ export default function Sidebar() {
       </button>
 
       <div className={isCollapsed ? 'p-3' : 'p-6'}>
-        {/* Logo */}
-        <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center gap-0' : 'gap-3'}`}>
-          <div className="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-100 dark:shadow-none shrink-0">
-            <BrainCircuit size={20} />
+        {/* Luxury Logo Badge */}
+        <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center gap-0' : 'gap-3.5'}`}>
+          <div className="relative group cursor-pointer">
+            <div className="relative overflow-hidden bg-gradient-to-br from-red-500 via-rose-600 to-rose-700 text-white p-3 rounded-2xl shadow-xl shadow-rose-500/30 ring-4 ring-rose-500/20 border border-white/20 transition-all duration-300 group-hover:scale-105 group-hover:shadow-rose-500/50 shrink-0 flex items-center justify-center">
+              {/* Subtle glass shimmer layer */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              <BrainCircuit size={24} className="text-white drop-shadow-md relative z-10" />
+              <Sparkles size={12} className="text-amber-300 absolute top-1 right-1 animate-pulse z-10" />
+            </div>
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 z-20">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></span>
+            </span>
           </div>
+
           {!isCollapsed && (
             <div>
-              <h1 className="font-extrabold text-slate-800 dark:text-slate-100 text-base leading-none">AI Triage</h1>
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold tracking-wider uppercase">Back Office</span>
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-white dark:via-indigo-100 dark:to-slate-200 text-lg leading-none tracking-tight font-display">
+                  AI Triage
+                </h1>
+                <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/20 uppercase tracking-widest border border-amber-300/40">
+                  ENTERPRISE
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-[9.5px] font-extrabold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase flex items-center gap-1">
+                  COMMAND CENTER
+                </span>
+              </div>
             </div>
           )}
         </div>

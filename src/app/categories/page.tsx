@@ -256,6 +256,48 @@ export default function CategoriesPage() {
             </div>
           </div>
 
+          {/* Feature #4: Category Usage Overview Stat Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center gap-4">
+              <div className="bg-indigo-50 dark:bg-indigo-955/40 text-indigo-600 dark:text-indigo-400 p-3 rounded-xl">
+                <Database size={20} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">หมวดหมู่หลักทั้งหมด</span>
+                <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-0.5 block">{categories.length} หมวดหมู่</span>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center gap-4">
+              <div className="bg-emerald-50 dark:bg-emerald-955/40 text-emerald-600 dark:text-emerald-400 p-3 rounded-xl">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">เคสรวมทุกหมวดหมู่</span>
+                <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-0.5 block">
+                  {Object.values(categoryStats).reduce((a, b) => a + b, 0)} เคส
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center gap-4">
+              <div className="bg-amber-50 dark:bg-amber-955/40 text-amber-600 dark:text-amber-400 p-3 rounded-xl">
+                <MessageSquare size={20} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">หมวดหมู่ที่พบบ่อยที่สุด</span>
+                <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5 block truncate max-w-[180px]">
+                  {(() => {
+                    const sorted = Object.entries(categoryStats).sort((a, b) => b[1] - a[1]);
+                    if (sorted.length === 0) return 'ไม่มีข้อมูล';
+                    const topCat = categories.find(c => c.id === sorted[0][0]);
+                    return topCat ? `${topCat.name} (${sorted[0][1]} เคส)` : `${sorted[0][0]} (${sorted[0][1]} เคส)`;
+                  })()}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((cat) => {
