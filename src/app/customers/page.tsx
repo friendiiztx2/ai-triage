@@ -164,11 +164,18 @@ export default function CustomersPage() {
                         }`}
                       >
                         <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-extrabold text-white text-xs shadow-sm">
                             {cust.name?.charAt(0) || 'C'}
                           </div>
                           <div>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 block">{cust.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-800 dark:text-slate-200 block">{cust.name}</span>
+                              {cust.email?.includes('gmail') || cust.phone ? (
+                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40">
+                                  ⭐ VERIFIED
+                                </span>
+                              ) : null}
+                            </div>
                             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">ID: {cust.id?.substring(0, 8)}...</span>
                           </div>
                         </td>

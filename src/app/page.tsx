@@ -733,14 +733,11 @@ export default function OverviewPage() {
                 />
               </div>
             )}
-          </div>
-          
 
-
-          <button 
-            type="button"
-            onClick={() => loadDashboardData()}
-            disabled={loading}
+            <button
+              type="button"
+              onClick={() => loadDashboardData()}
+              disabled={loading}
             className={`flex items-center gap-1.5 border px-3 py-2 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-60 ${
               isReloadedSuccess
                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-955/30 dark:border-emerald-800'
@@ -757,6 +754,55 @@ export default function OverviewPage() {
                   : (language === 'th' ? 'รีเฟรช' : 'Refresh')}
             </span>
           </button>
+        </div>
+      </div>
+    </div>
+
+      {/* Feature #2: AI Smart Daily Insight & Trend Recommendation Banner */}
+      <div className="bg-gradient-to-r from-indigo-900 via-indigo-850 to-slate-900 text-white p-5 rounded-2xl shadow-xl border border-indigo-500/30 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-start gap-3.5">
+            <div className="bg-gradient-to-tr from-amber-400 via-amber-500 to-yellow-500 text-slate-950 p-3 rounded-2xl shadow-lg shadow-amber-500/20 shrink-0 mt-0.5">
+              <Sparkles size={20} className="animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  AI DAILY INSIGHT & RECOMMENDATION
+                </span>
+                <span className="text-xs text-indigo-300 font-semibold">• วิเคราะห์สดประจำวัน</span>
+              </div>
+              <h3 className="font-extrabold text-white text-base mt-1 leading-snug">
+                {stats.highPriority > 0
+                  ? `พบเคสด่วนที่สุด ${stats.highPriority} เคสที่ต้องการการดูแลทันที! หมวดหมู่ยอดฮิตวันนี้คือ "${sortedChartData[0]?.name || 'ทั่วไป'}" (${sortedChartData[0]?.value || 0} เคส)`
+                  : stats.totalChats > 0 && sortedChartData[0]?.value > 0
+                    ? `ภาพรวมระบบเรียบร้อยดี! มีเคสเข้ามาทั้งหมด ${stats.totalChats} เคส หมวดหมู่หลักวันนี้คือ "${sortedChartData[0]?.name}" (${sortedChartData[0]?.value} เคส)`
+                    : `ภาพรวมระบบเรียบร้อยดี! วันนี้ยังไม่มีเคสใหม่ทักเข้ามาในระบบ (0 เคส)`
+                }
+              </h3>
+              <p className="text-xs text-indigo-200/80 mt-1 font-medium">
+                {stats.totalChats > 0 && sortedChartData[0]?.value > 0
+                  ? `💡 คำแนะนำปฏิบัติงาน: ควรเตรียมข้อมูลเรื่อง ${sortedChartData[0]?.name} และเข้าตรวจสอบเคสในสถานะรอดำเนินการ (${stats.pendingTriage} เคส) เพื่อรักษารอบระยะเวลาตอบกลับให้ต่ำกว่า 5 นาที`
+                  : `💡 คำแนะนำปฏิบัติงาน: ระบบพร้อมรับเรื่องและเตรียมพร้อมสำหรับการคัดกรองเคสให้อัตโนมัติ 24 ชั่วโมง`
+                }
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+            <Link
+              href="/chats?priority=urgent"
+              className="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            >
+              <AlertTriangle size={14} /> ดูเคสด่วน ({stats.highPriority})
+            </Link>
+            <Link
+              href="/chats?status=pending"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            >
+              <Clock size={14} /> เคสรอดำเนินการ ({stats.pendingTriage})
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -997,7 +1043,6 @@ export default function OverviewPage() {
             * สถิติคำนวณจากการเปรียบเทียบประวัติการแก้ไขแมนนวลจริงในระบบ
           </div>
         </div>
-      </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1097,5 +1142,6 @@ export default function OverviewPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

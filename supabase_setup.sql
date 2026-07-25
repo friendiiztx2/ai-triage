@@ -5,13 +5,10 @@
 -- SECTION 1: ตารางบริษัท (COMPANIES TABLE)
 -- -------------------------------------------------------------
 
--- 1. ยกเลิกระบบความปลอดภัยระดับแถว (RLS) บนตาราง companies
-ALTER TABLE public.companies DISABLE ROW LEVEL SECURITY;
-
--- 2. เคลียร์ข้อมูลบริษัทเดิมเพื่อรีเซ็ต
+-- 1. เคลียร์ข้อมูลบริษัทเดิมเพื่อรีเซ็ต
 TRUNCATE public.companies CASCADE;
 
--- 3. บันทึกข้อมูลบริษัทตั้งต้น 2 บริษัทเข้าไปในระบบ
+-- 2. บันทึกข้อมูลบริษัทตั้งต้น 2 บริษัทเข้าไปในระบบ
 INSERT INTO public.companies (id, name, domain, client_id, client_secret, created_at) VALUES
 ('2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', 'Mika Co.', 'mika.com', 'client_mika', 'secret_mika', NOW()),
 ('2e65829a-6a60-4022-8289-0fe64ec98fae', 'Alpha Support Co., Ltd.', 'alphasupport.com', 'client_alpha', 'secret_alpha', NOW());
@@ -33,13 +30,10 @@ ALTER TABLE public.users ALTER COLUMN company_id TYPE text USING company_id::tex
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS is_2fa_enabled boolean DEFAULT false;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS two_factor_secret text;
 
--- 2. ยกเลิกระบบความปลอดภัย RLS บนตาราง users
-ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
-
--- 3. ล้างข้อมูลผู้ใช้เก่า
+-- 2. ล้างข้อมูลผู้ใช้เก่า
 TRUNCATE public.users;
 
--- 4. บันทึกบัญชีผู้ใช้งานตั้งต้น 2 บัญชีหลักตามระเบียบใหม่
+-- 3. บันทึกบัญชีผู้ใช้งานตั้งต้น 2 บัญชีหลักตามระเบียบใหม่
 -- บัญชีที่ 1: System Admin (แอดมินกลางดูแลทุกบริษัท)
 -- บัญชีที่ 2: aor (Super Admin ของ Alpha Support Co., Ltd.)
 INSERT INTO public.users (id, email, name, role, company_id, password, permissions, is_2fa_enabled, created_at) VALUES
@@ -68,5 +62,29 @@ INSERT INTO public.users (id, email, name, role, company_id, password, permissio
   false, 
   NOW()
 );
+
+
+-- -------------------------------------------------------------
+-- SECTION 3: Performance Indexes (ดรรชนีเร่งความเร็วในการคีย์ข้อมูล)
+-- -------------------------------------------------------------
+
+CREATE INDEX IF NOT EXISTS idx_chats_company_id ON public.chats (company_id);
+CREATE INDEX IF NOT EXISTS idx_chats_status ON public.chats (status);
+CREATE INDEX IF NOT EXISTS idx_chats_priority ON public.chats (priority);
+CREATE INDEX IF NOT EXISTS idx_users_company_id ON public.users (company_id);
+
+
+-- -------------------------------------------------------------
+-- SECTION 4: Production Security Guidance & RLS Template
+-- -------------------------------------------------------------
+-- ข้อเสนอแนะความปลอดภัยสำหรับ Production:
+-- 1. หากต้องการเปิดใช้งาน RLS ให้ใช้คำสั่ง:
+--    ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY;
+--    ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;
+--    ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+-- 2. ตัวอย่างนโยบาย RLS แบบจำกัดองค์กร (Multi-tenant Policy Example):
+--    CREATE POLICY tenant_isolation_chats ON public.chats
+--      FOR ALL USING (company_id = auth.jwt() ->> 'company_id' OR auth.jwt() ->> 'role' = 'system_admin');
+-- 3. สำหรับการเก็บ Password แนะนำให้แฮชด้วย Supabase Auth / bcrypt ในระบบ Production จริง
 
 -- การตั้งค่าความสมบูรณ์เสร็จเรียบร้อย! ฐานข้อมูลทั้งหมดซิงก์กัน 100% แล้วครับ

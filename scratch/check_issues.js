@@ -16,11 +16,10 @@ const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_AN
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function checkChats() {
-  const { data, error, count } = await supabase.from('chats').select('id, customer_id, status, created_at, customers(name)', { count: 'exact' });
+async function inspectIssues() {
+  const { data, error } = await supabase.from('chat_issues').select('*').limit(10);
   console.log('Error:', error);
-  console.log('Total Count in DB:', count);
-  console.log('Sample Chats:', data ? data.slice(0, 3) : []);
+  console.log('Sample chat_issues:', data);
 }
 
-checkChats();
+inspectIssues();
