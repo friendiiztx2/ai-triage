@@ -359,35 +359,58 @@ function FloatingChatWindow({
   };
 
   const renderConversation = () => {
+    // Map strictly from main column: chats.conversation
     let rawConv = chat.conversation;
+    
+    if (!rawConv) {
+      return (
+        <div className="text-slate-400 dark:text-slate-500 italic text-xs p-4 text-center">
+          ไม่มีประวัติบทสนทนาในคอลัมน์ chats.conversation
+        </div>
+      );
+    }
+
     if (typeof rawConv === 'string') {
       try {
         rawConv = JSON.parse(rawConv);
-      } catch (e) {}
+      } catch (e) {
+        // Plain text string
+      }
     }
 
     if (Array.isArray(rawConv)) {
       return (
         <div className="space-y-4">
-          {rawConv.map((msg, index) => {
-            const isCustomer = msg.sender?.toLowerCase() === 'customer' || msg.sender?.toLowerCase() === 'user';
+          {rawConv.map((msg: any, index: number) => {
+            const isCustomer = msg.sender?.toLowerCase() === 'customer' || 
+                               msg.sender?.toLowerCase() === 'user' || 
+                               msg.role?.toLowerCase() === 'user' ||
+                               msg.role?.toLowerCase() === 'customer' ||
+                               (!msg.sender && index % 2 === 0);
+            
+            const senderName = isCustomer 
+              ? (chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id))
+              : 'แอดมิน / AI';
+
+            const messageText = msg.message || msg.text || msg.content || (typeof msg === 'string' ? msg : JSON.stringify(msg));
+
             return (
               <div 
                 key={index} 
                 className={'flex flex-col ' + (isCustomer ? 'items-start' : 'items-end')}
               >
-                <span className="text-[10px] text-slate-400 dark:text-slate-550 font-bold mb-1 uppercase tracking-wider">
-                  {isCustomer ? (chat.customer_name || 'ลูกค้า') : 'แอดมิน / AI'}
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
+                  {senderName}
                 </span>
                 <div 
-                  className={'p-3.5 rounded-2xl max-w-[85%] text-xs font-medium leading-relaxed ' + 
+                  className={'p-3.5 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed ' + 
                     (isCustomer 
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none' 
                       : 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
                     )
                   }
                 >
-                  {msg.message || msg.text}
+                  {messageText}
                 </div>
                 {msg.time && (
                   <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 select-none font-medium">
@@ -401,9 +424,40 @@ function FloatingChatWindow({
       );
     }
 
+    // Handle plain text / multi-line string in chats.conversation
+    if (typeof rawConv === 'string') {
+      const lines = rawConv.split('\n').filter((l: string) => l.trim() !== '');
+      return (
+        <div className="space-y-3">
+          {lines.map((line: string, index: number) => {
+            const isCustomer = line.startsWith('ลูกค้า:') || line.toLowerCase().includes('customer:') || index % 2 === 0;
+            const cleanLine = line.replace(/^(ลูกค้า|แอดมิน|AI|Customer|Agent):\s*/i, '');
+
+            return (
+              <div key={index} className={'flex flex-col ' + (isCustomer ? 'items-start' : 'items-end')}>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
+                  {isCustomer ? (chat.customer_name || 'ลูกค้า') : 'แอดมิน / AI'}
+                </span>
+                <div 
+                  className={'p-3.5 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed ' + 
+                    (isCustomer 
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none' 
+                      : 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
+                    )
+                  }
+                >
+                  {cleanLine}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
     return (
-      <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 p-4 rounded-xl font-mono text-xs text-slate-700 dark:text-slate-355 whitespace-pre-wrap">
-        {typeof rawConv === 'string' ? rawConv : JSON.stringify(rawConv, null, 2)}
+      <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 p-4 rounded-xl font-mono text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+        {JSON.stringify(rawConv, null, 2)}
       </div>
     );
   };
