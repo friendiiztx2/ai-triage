@@ -212,7 +212,7 @@ export default function OverviewPage() {
   const [otherCount, setOtherCount] = useState(0);
   
   // Filter settings
-  const [dateRange, setDateRange] = useState('today');
+  const [dateRange, setDateRange] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -708,6 +708,7 @@ export default function OverviewPage() {
                 onChange={(e) => setDateRange(e.target.value)}
                 className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent focus:outline-none cursor-pointer"
               >
+                <option value="all">{language === 'th' ? 'ช่วงเวลา: ทั้งหมด (All Time)' : 'Timeframe: All Time'}</option>
                 <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้ (Today)' : 'Timeframe: Today'}</option>
                 <option value="7days">ช่วงเวลา: 7 วันที่ผ่านมา (7 Days)</option>
                 <option value="30days">ช่วงเวลา: 30 วันที่ผ่านมา (30 Days)</option>
