@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     // Select explicit columns excluding embedding (Vector 1024-dim) to save Egress
     let query = supabase
       .from('chats')
-      .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, customer_name, company_id, chat_issues(*)');
+      .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, company_id, chat_issues(*)');
     
     if (companyId) {
       query = query.eq('company_id', companyId);
