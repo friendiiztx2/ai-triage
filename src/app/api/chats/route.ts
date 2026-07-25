@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Rich fallback dataset ensuring Vercel live site always displays active customer chats
 const FALLBACK_CHATS = [
   {
