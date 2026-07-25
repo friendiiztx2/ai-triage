@@ -148,11 +148,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(data);
     }
 
-    // Smart Fallback: If chats table is empty (e.g. after DB migration reset), fetch from chat_issues (677 items)
+    // Smart Fallback: If chats table is empty (e.g. after DB migration reset), fetch from chat_issues (all 677 items)
     const { data: issues } = await supabase
       .from('chat_issues')
       .select('*')
-      .limit(60);
+      .order('created_at', { ascending: false });
 
     if (issues && issues.length > 0) {
       const chatMap = new Map();
