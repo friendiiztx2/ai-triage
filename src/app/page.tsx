@@ -668,21 +668,31 @@ export default function OverviewPage() {
                   playAlertTone(undefined, undefined, true);
                 }
               }}
-              className={`flex items-center gap-2 border px-3.5 py-2.5 rounded-l-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
+              className={`flex items-center gap-2 border px-3.5 py-2.5 rounded-l-xl text-xs font-extrabold transition-all cursor-pointer shadow-sm ${
                 soundEnabled
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-650 dark:bg-indigo-955/20 dark:border-indigo-900/50 dark:text-indigo-400'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-855'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-emerald-600/20 dark:bg-emerald-600 dark:border-emerald-500'
+                  : 'bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-250 dark:border-slate-750'
               }`}
               title={soundEnabled ? 'ปิดเสียงแจ้งเตือนเคสด่วนที่สุด' : 'เปิดเสียงแจ้งเตือนเคสด่วนที่สุด'}
             >
-              {soundEnabled ? '🔔 เสียงเคสด่วน: เปิด' : '🔕 เสียงเคสด่วน: ปิด'}
+              {soundEnabled ? (
+                <>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                  <span>🔔 เสียงเคสด่วน: เปิด</span>
+                </>
+              ) : (
+                <span>🔕 เสียงเคสด่วน: ปิด</span>
+              )}
             </button>
             <button
               onClick={() => setShowSoundModal(true)}
               className={`border-y border-r px-2.5 py-2.5 rounded-r-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
                 soundEnabled
-                  ? 'bg-indigo-100/70 border-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:border-indigo-900/50 dark:text-indigo-300'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50'
+                  ? 'bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-600 dark:bg-emerald-700 dark:border-emerald-600'
+                  : 'bg-slate-150 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 dark:text-slate-400 border-slate-250 dark:border-slate-750'
               }`}
               title="ตั้งค่ารูปแบบเสียงแจ้งเตือน ความดัง และทดสอบเปิดเสียง"
             >
