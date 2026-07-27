@@ -155,29 +155,6 @@ export default function Sidebar() {
     return null;
   }
 
-  // Prevent layout collapse/flicker during initial client mount
-  if (!mounted) {
-    return (
-      <aside className="bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-screen w-64 flex flex-col justify-between shadow-sm shrink-0 transition-all duration-250 relative">
-        <div className="p-6 space-y-6">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
-            <div className="space-y-1.5 flex-1">
-              <div className="w-24 h-4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
-              <div className="w-16 h-3 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
-            </div>
-          </div>
-          <div className="space-y-2 pt-4">
-            <div className="w-full h-9 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />
-            <div className="w-full h-9 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />
-            <div className="w-full h-9 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />
-            <div className="w-full h-9 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />
-          </div>
-        </div>
-      </aside>
-    );
-  }
-
   // Dynamically build menu items based on user profile permissions
   const allowedPermissions = userProfile?.permissions || (
     userProfile?.role === 'system_admin'
