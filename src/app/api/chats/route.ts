@@ -174,6 +174,15 @@ export async function GET(request: NextRequest) {
               { sender: 'agent', message: issue.recommended_reply || 'สวัสดีค่ะ ทีมงานกำลังดำเนินการตรวจสอบให้โดยด่วนค่ะ', time: new Date(issue.created_at || Date.now()).toLocaleTimeString('th-TH') }
             ]),
             chat_issues: [issue],
+            tags: issue.priority === 'urgent' 
+              ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
+              : issue.category_id === 'deposit_withdrawal'
+              ? ['#รอสลิป']
+              : issue.category_id === 'promo_bonus'
+              ? ['#ติดตามผล']
+              : issue.priority === 'high'
+              ? ['#เคสพิเศษ']
+              : [],
             created_at: issue.created_at || new Date().toISOString()
           });
         } else {
