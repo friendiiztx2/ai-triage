@@ -775,68 +775,22 @@ function FloatingChatWindow({
                         {/* Current Active Tags */}
                         <div className="flex flex-wrap items-center gap-1.5 min-h-[28px]">
                           {(tags || []).length > 0 ? (
-                            tags.map((t: string, idx: number) => {
-                              const isEditingThis = editingTagIndex === idx;
-                              if (isEditingThis) {
-                                return (
-                                  <div key={idx} className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-indigo-500 rounded-lg p-1 shadow-sm">
-                                    <input
-                                      type="text"
-                                      value={editingTagValue}
-                                      onChange={(e) => setEditingTagValue(e.target.value)}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          e.preventDefault();
-                                          handleSaveEditTag(idx);
-                                        }
-                                        if (e.key === 'Escape') setEditingTagIndex(null);
-                                      }}
-                                      className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none w-[120px]"
-                                      autoFocus
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSaveEditTag(idx)}
-                                      className="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-0.5 rounded-md transition cursor-pointer"
-                                    >
-                                      บันทึก
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setEditingTagIndex(null)}
-                                      className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                                    >
-                                      ยกเลิก
-                                    </button>
-                                  </div>
-                                );
-                              }
-
-                              return (
-                                <span 
-                                  key={idx} 
-                                  className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 shadow-sm group"
+                            tags.map((t: string, idx: number) => (
+                              <span 
+                                key={idx} 
+                                className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 shadow-sm"
+                              >
+                                <span>{t}</span>
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleRemoveTag(t)} 
+                                  className="hover:text-rose-600 text-slate-400 transition cursor-pointer font-extrabold text-[11px] ml-0.5"
+                                  title="ถอดแท็กนี้ออกจากแชตนี้"
                                 >
-                                  <span>{t}</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStartEditTag(idx, t)}
-                                    className="hover:text-indigo-600 text-indigo-400 dark:text-indigo-400 transition cursor-pointer text-[10px]"
-                                    title="แก้ไขชื่อแท็กนี้"
-                                  >
-                                    ✏️
-                                  </button>
-                                  <button 
-                                    type="button" 
-                                    onClick={() => handleRemoveTag(t)} 
-                                    className="hover:text-rose-600 text-slate-400 transition cursor-pointer font-extrabold text-[11px] ml-0.5"
-                                    title="ถอดแท็กนี้ออกจากแชตนี้"
-                                  >
-                                    ×
-                                  </button>
-                                </span>
-                              );
-                            })
+                                  ×
+                                </button>
+                              </span>
+                            ))
                           ) : (
                             <span className="text-slate-400 dark:text-slate-500 italic text-xs">ยังไม่ได้ติดแท็ก (คลิกป้ายสำเร็จรูปด้านล่างเพื่อติดแท็ก)</span>
                           )}
@@ -1074,6 +1028,44 @@ export default function ChatsPage() {
   const [auditFilter, setAuditFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // Global Tag Rename State
+  const [showTagRenameModal, setShowTagRenameModal] = useState(false);
+  const [tagToRename, setTagToRename] = useState('');
+  const [newGlobalTagName, setNewGlobalTagName] = useState('');
+
+  const handleOpenGlobalRenameModal = (targetTag: string) => {
+    setTagToRename(targetTag);
+    setNewGlobalTagName(targetTag);
+    setShowTagRenameModal(true);
+  };
+
+  const handleExecuteGlobalTagRename = () => {
+    if (!newGlobalTagName.trim() || !tagToRename) return;
+    let formattedNew = newGlobalTagName.trim();
+    if (!formattedNew.startsWith('#')) formattedNew = '#' + formattedNew;
+
+    // Update ALL customer chats in the system carrying this tag
+    setChats(prev => prev.map(chat => {
+      if (!chat.tags || !chat.tags.includes(tagToRename)) return chat;
+      const updated = chat.tags.map((t: string) => t === tagToRename ? formattedNew : t);
+      return { ...chat, tags: updated };
+    }));
+
+    // If active windows have this tag, update active windows as well!
+    setActiveWindows(prev => prev.map(win => {
+      if (!win.chat?.tags || !win.chat.tags.includes(tagToRename)) return win;
+      const updated = win.chat.tags.map((t: string) => t === tagToRename ? formattedNew : t);
+      return { ...win, chat: { ...win.chat, tags: updated } };
+    }));
+
+    // Update current active filter if filtering by old tag
+    if (tagFilter === tagToRename) {
+      setTagFilter(formattedNew);
+    }
+
+    setShowTagRenameModal(false);
+  };
 
   const handleUpdateTags = (chatId: string, newTags: string[]) => {
     setChats(prev => prev.map(c => c.id === chatId ? { ...c, tags: newTags } : c));
@@ -1530,7 +1522,7 @@ export default function ChatsPage() {
           </div>
 
           {/* Tag Filter */}
-          <div className="w-full">
+          <div className="w-full flex flex-col gap-1.5">
             <select
               value={tagFilter}
               onChange={(e) => setTagFilter(e.target.value)}
@@ -1544,6 +1536,15 @@ export default function ChatsPage() {
               <option value="#รอธนาคารแก้ไข">#รอธนาคารแก้ไข (ป้ายสีเขียว)</option>
               <option value="#เคสพิเศษ">#เคสพิเศษ (ป้ายสีอินดิโก้)</option>
             </select>
+            {tagFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => handleOpenGlobalRenameModal(tagFilter)}
+                className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer self-start"
+              >
+                ✏️ แก้ไขชื่อแท็ก "{tagFilter}" ทุกเคส
+              </button>
+            )}
           </div>
 
           {/* Audit Filter */}
@@ -1863,6 +1864,60 @@ export default function ChatsPage() {
           onUpdateTags={handleUpdateTags}
         />
       ))}
+
+      {/* Global Tag Rename Modal */}
+      {showTagRenameModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+                ✏️ แก้ไขชื่อแท็กกลางทั่วทั้งระบบ
+              </h3>
+              <button
+                onClick={() => setShowTagRenameModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-semibold">
+                ระบบจะทำการเปลี่ยนชื่อแท็ก <span className="font-bold text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">{tagToRename}</span> สำหรับ <span className="font-bold text-rose-600">ทุกเคสลูกค้า</span> ที่ติดแท็กนี้อยู่ ให้เปลี่ยนเป็นชื่อใหม่พร้อมกันทันที:
+              </p>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+                  ชื่อแท็กใหม่
+                </label>
+                <input
+                  type="text"
+                  value={newGlobalTagName}
+                  onChange={(e) => setNewGlobalTagName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-600 focus:outline-none text-slate-800 dark:text-slate-100"
+                  placeholder="เช่น #รอสลิปโอนเงิน..."
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setShowTagRenameModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleExecuteGlobalTagRename}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition cursor-pointer"
+              >
+                ✓ ยืนยันเปลี่ยนชื่อทุกเคส
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
