@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
             summary: issue.summary,
             category_id: issue.category_id || 'other',
             priority: issue.priority || 'medium',
-            status: 'pending',
+            status: issue.status || 'completed',
             confidence: 95,
             company_id: companyId || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
             conversation: JSON.stringify([

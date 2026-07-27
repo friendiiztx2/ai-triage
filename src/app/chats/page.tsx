@@ -1295,7 +1295,11 @@ export default function ChatsPage() {
       const chatsData = await chatsRes.json();
       
       if (chatsData) {
-        const sorted = [...chatsData].sort((a, b) => 
+        const processed = chatsData.map((c: any) => ({
+          ...c,
+          status: c.status || (c.category_id || c.summary || (c.chat_issues && c.chat_issues.length > 0) ? 'completed' : 'pending')
+        }));
+        const sorted = [...processed].sort((a, b) => 
           new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
         );
         setChats(sorted);
