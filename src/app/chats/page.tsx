@@ -1029,6 +1029,60 @@ export default function ChatsPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  // System Tags & Tag Manager State
+  const [allAvailableTags, setAllAvailableTags] = useState([
+    { name: '#VIP', desc: 'ป้ายสีม่วง', style: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50' },
+    { name: '#ติดตามผล', desc: 'ป้ายสีส้ม', style: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50' },
+    { name: '#รอสลิป', desc: 'ป้ายสีฟ้า', style: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50' },
+    { name: '#ส่งเรื่องทีมเทคนิค', desc: 'ป้ายสีแดง', style: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50' },
+    { name: '#รอธนาคารแก้ไข', desc: 'ป้ายสีเขียว', style: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50' },
+    { name: '#เคสพิเศษ', desc: 'ป้ายสีอินดิโก้', style: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-955/30 dark:text-indigo-300 dark:border-indigo-900/50' }
+  ]);
+
+  const [showTagManagerModal, setShowTagManagerModal] = useState(false);
+  const [editingSystemTagIndex, setEditingSystemTagIndex] = useState<number | null>(null);
+  const [editingSystemTagValue, setEditingSystemTagValue] = useState('');
+
+  const handleOpenTagManagerModal = () => {
+    setShowTagManagerModal(true);
+    setEditingSystemTagIndex(null);
+  };
+
+  const handleSaveRenameSystemTag = (index: number) => {
+    if (!editingSystemTagValue.trim()) return;
+    let formattedNew = editingSystemTagValue.trim();
+    if (!formattedNew.startsWith('#')) formattedNew = '#' + formattedNew;
+
+    const oldTagObj = allAvailableTags[index];
+    const oldTagName = oldTagObj.name;
+
+    // 1. Update available tags array
+    const updatedAvailable = [...allAvailableTags];
+    updatedAvailable[index] = { ...oldTagObj, name: formattedNew };
+    setAllAvailableTags(updatedAvailable);
+
+    // 2. Update ALL customer chats carrying oldTagName
+    setChats(prev => prev.map(chat => {
+      if (!chat.tags || !chat.tags.includes(oldTagName)) return chat;
+      const updated = chat.tags.map((t: string) => t === oldTagName ? formattedNew : t);
+      return { ...chat, tags: updated };
+    }));
+
+    // 3. Update active windows
+    setActiveWindows(prev => prev.map(win => {
+      if (!win.chat?.tags || !win.chat.tags.includes(oldTagName)) return win;
+      const updated = win.chat.tags.map((t: string) => t === oldTagName ? formattedNew : t);
+      return { ...win, chat: { ...win.chat, tags: updated } };
+    }));
+
+    // 4. Update current filter if filtering by old tag
+    if (tagFilter === oldTagName) {
+      setTagFilter(formattedNew);
+    }
+
+    setEditingSystemTagIndex(null);
+  };
+
   // Global Tag Rename State
   const [showTagRenameModal, setShowTagRenameModal] = useState(false);
   const [tagToRename, setTagToRename] = useState('');
@@ -1523,19 +1577,36 @@ export default function ChatsPage() {
 
           {/* Tag Filter */}
           <div className="w-full flex flex-col gap-1.5">
-            <select
-              value={tagFilter}
-              onChange={(e) => setTagFilter(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-            >
-              <option value="all">🏷️ แท็ก: ทั้งหมด</option>
-              <option value="#VIP">#VIP (ป้ายสีม่วง)</option>
-              <option value="#ติดตามผล">#ติดตามผล (ป้ายสีส้ม)</option>
-              <option value="#รอสลิป">#รอสลิป (ป้ายสีฟ้า)</option>
-              <option value="#ส่งเรื่องทีมเทคนิค">#ส่งเรื่องทีมเทคนิค (ป้ายสีแดง)</option>
-              <option value="#รอธนาคารแก้ไข">#รอธนาคารแก้ไข (ป้ายสีเขียว)</option>
-              <option value="#เคสพิเศษ">#เคสพิเศษ (ป้ายสีอินดิโก้)</option>
-            </select>
+            <div className="flex items-center gap-1 w-full">
+              <select
+                value={tagFilter}
+                onChange={(e) => {
+                  if (e.target.value === 'manage_tags') {
+                    handleOpenTagManagerModal();
+                  } else {
+                    setTagFilter(e.target.value);
+                  }
+                }}
+                className="flex-1 min-w-0 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-l-xl px-3 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
+              >
+                <option value="all">🏷️ แท็ก: ทั้งหมด</option>
+                {allAvailableTags.map((tagObj) => (
+                  <option key={tagObj.name} value={tagObj.name}>
+                    {tagObj.name} ({tagObj.desc})
+                  </option>
+                ))}
+                <option value="manage_tags">⚙️ จัดการ/แก้ไขชื่อแท็กระบบ...</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={handleOpenTagManagerModal}
+                className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-955/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-extrabold border border-indigo-200 dark:border-indigo-800 px-3 py-2.5 rounded-r-xl text-xs transition cursor-pointer shrink-0 shadow-sm flex items-center gap-1"
+                title="เปิดหน้าต่างจัดการและแก้ไขชื่อแท็กทั้งหมดในระบบ"
+              >
+                ✏️ แก้ไขแท็ก
+              </button>
+            </div>
             {tagFilter !== 'all' && (
               <button
                 type="button"
@@ -1913,6 +1984,93 @@ export default function ChatsPage() {
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition cursor-pointer"
               >
                 ✓ ยืนยันเปลี่ยนชื่อทุกเคส
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tag Manager Modal (Full system tags management) */}
+      {showTagManagerModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+                ⚙️ จัดการและแก้ไขชื่อแท็กทั้งหมดในระบบ (Tag Manager)
+              </h3>
+              <button
+                onClick={() => setShowTagManagerModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              คลิกปุ่ม <span className="font-bold text-indigo-600 dark:text-indigo-400">✏️ แก้ไขชื่อ</span> ด้านหลังแท็กที่ต้องการเปลี่ยน การเปลี่ยนชื่อแท็กตรงนี้จะทำการอัปเดตชื่อใหม่ให้ทุกเคสในระบบทันที:
+            </p>
+
+            <div className="space-y-2 max-h-[350px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+              {allAvailableTags.map((tagObj, idx) => {
+                const isEditing = editingSystemTagIndex === idx;
+                return (
+                  <div key={idx} className="flex items-center justify-between py-2.5 gap-3">
+                    {isEditing ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="text"
+                          value={editingSystemTagValue}
+                          onChange={(e) => setEditingSystemTagValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveRenameSystemTag(idx);
+                            if (e.key === 'Escape') setEditingSystemTagIndex(null);
+                          }}
+                          className="flex-1 bg-slate-50 dark:bg-slate-850 border border-indigo-500 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSaveRenameSystemTag(idx)}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition cursor-pointer"
+                        >
+                          บันทึก
+                        </button>
+                        <button
+                          onClick={() => setEditingSystemTagIndex(null)}
+                          className="text-xs font-bold text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                        >
+                          ยกเลิก
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-bold px-3 py-1 rounded-lg border ${tagObj.style}`}>
+                            {tagObj.name}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-medium">({tagObj.desc})</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setEditingSystemTagIndex(idx);
+                            setEditingSystemTagValue(tagObj.name);
+                          }}
+                          className="flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 transition cursor-pointer shadow-sm"
+                        >
+                          ✏️ แก้ไขชื่อ
+                        </button>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setShowTagManagerModal(false)}
+                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer"
+              >
+                ปิดหน้าต่าง
               </button>
             </div>
           </div>
