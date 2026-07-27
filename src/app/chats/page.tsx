@@ -145,7 +145,8 @@ function FloatingChatWindow({
   onClose, 
   onFocus, 
   onSaved,
-  onPositionChange 
+  onPositionChange,
+  onUpdateTags 
 }: any) {
   const [x, setX] = useState(initialX);
   const [y, setY] = useState(initialY);
@@ -161,9 +162,42 @@ function FloatingChatWindow({
   const [editCategory, setEditCategory] = useState(chat.category_id || '');
   const [editPriority, setEditPriority] = useState(chat.priority || 'low');
   
+  // Custom Tags State
+  const [tags, setTags] = useState<string[]>(chat.tags || []);
+  const [customTagInput, setCustomTagInput] = useState('');
+  
   const [updating, setUpdating] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const handleTogglePresetTag = (tagName: string) => {
+    let nextTags: string[];
+    if (tags.includes(tagName)) {
+      nextTags = tags.filter(t => t !== tagName);
+    } else {
+      nextTags = [...tags, tagName];
+    }
+    setTags(nextTags);
+    if (onUpdateTags) onUpdateTags(chat.id, nextTags);
+  };
+
+  const handleRemoveTag = (tagName: string) => {
+    const nextTags = tags.filter(t => t !== tagName);
+    setTags(nextTags);
+    if (onUpdateTags) onUpdateTags(chat.id, nextTags);
+  };
+
+  const handleAddCustomTag = () => {
+    if (!customTagInput.trim()) return;
+    let formatted = customTagInput.trim();
+    if (!formatted.startsWith('#')) formatted = '#' + formatted;
+    if (!tags.includes(formatted)) {
+      const nextTags = [...tags, formatted];
+      setTags(nextTags);
+      if (onUpdateTags) onUpdateTags(chat.id, nextTags);
+    }
+    setCustomTagInput('');
+  };
 
   // Fetch issues & customer info
   useEffect(() => {
@@ -708,6 +742,93 @@ function FloatingChatWindow({
                         )}
                       </div>
 
+                      {/* SECTION: Custom Tags Management */}
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <h5 className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                            🏷️ แท็กป้ายกำกับเคส (Custom Tags)
+                          </h5>
+                          <span className="text-[10px] text-slate-400 font-bold">{(tags || []).length} แท็ก</span>
+                        </div>
+
+                        {/* Current Active Tags */}
+                        <div className="flex flex-wrap items-center gap-1.5 min-h-[28px]">
+                          {(tags || []).length > 0 ? (
+                            tags.map((t: string, idx: number) => (
+                              <span 
+                                key={idx} 
+                                className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 shadow-sm"
+                              >
+                                {t}
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleRemoveTag(t)} 
+                                  className="hover:text-rose-600 transition cursor-pointer font-extrabold text-[11px] ml-0.5"
+                                  title="ลบแท็กนี้"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-slate-400 dark:text-slate-500 italic text-xs">ยังไม่ได้ติดแท็ก (คลิกป้ายสำเร็จรูปด้านล่างเพื่อติดแท็ก)</span>
+                          )}
+                        </div>
+
+                        {/* Preset Quick Tags */}
+                        <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ป้ายแท็กสำเร็จรูป:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              { name: '#VIP', style: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50' },
+                              { name: '#ติดตามผล', style: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50' },
+                              { name: '#รอสลิป', style: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50' },
+                              { name: '#ส่งเรื่องทีมเทคนิค', style: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50' },
+                              { name: '#รอธนาคารแก้ไข', style: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50' },
+                              { name: '#เคสพิเศษ', style: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-955/30 dark:text-indigo-300 dark:border-indigo-900/50' }
+                            ].map((ptag) => {
+                              const isSelected = (tags || []).includes(ptag.name);
+                              return (
+                                <button
+                                  key={ptag.name}
+                                  type="button"
+                                  onClick={() => handleTogglePresetTag(ptag.name)}
+                                  className={`text-[11px] font-bold px-2 py-0.5 rounded-md border transition cursor-pointer flex items-center gap-1 ${
+                                    isSelected ? 'ring-2 ring-indigo-500 shadow-sm opacity-100 font-extrabold' : 'opacity-60 hover:opacity-100'
+                                  } ${ptag.style}`}
+                                >
+                                  {isSelected ? '✓ ' : '+ '}{ptag.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Custom Tag Input */}
+                        <div className="flex items-center gap-2 pt-2">
+                          <input
+                            type="text"
+                            placeholder="พิมพ์ชื่อแท็กใหม่ (เช่น #คืนยอดเสีย)..."
+                            value={customTagInput}
+                            onChange={(e) => setCustomTagInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddCustomTag();
+                              }
+                            }}
+                            className="flex-1 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-1.5 text-xs font-semibold focus:border-indigo-600 focus:outline-none text-slate-800 dark:text-slate-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddCustomTag}
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer"
+                          >
+                            + เพิ่ม
+                          </button>
+                        </div>
+                      </div>
+
                       {/* General recommendations */}
                       {recData && recData.generalRecommendation && (
                         <div className="space-y-1.5">
@@ -881,10 +1002,15 @@ export default function ChatsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [tagFilter, setTagFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [auditFilter, setAuditFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  const handleUpdateTags = (chatId: string, newTags: string[]) => {
+    setChats(prev => prev.map(c => c.id === chatId ? { ...c, tags: newTags } : c));
+  };
 
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -901,13 +1027,14 @@ export default function ChatsPage() {
   const mediumCount = chats.filter(c => (c.priority || '').toLowerCase() === 'medium').length;
   const lowCount = chats.filter(c => (c.priority || '').toLowerCase() === 'low').length;
 
-  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all' || dateFilter !== 'all' || auditFilter !== 'all';
+  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all' || tagFilter !== 'all' || dateFilter !== 'all' || auditFilter !== 'all';
 
   const handleClearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
     setPriorityFilter('all');
     setCategoryFilter('all');
+    setTagFilter('all');
     setDateFilter('all');
     setAuditFilter('all');
     setStartDate('');
@@ -1122,6 +1249,13 @@ export default function ChatsPage() {
       });
     }
 
+    if (tagFilter !== 'all') {
+      result = result.filter(c => {
+        const tags = c.tags || [];
+        return tags.includes(tagFilter);
+      });
+    }
+
     if (dateFilter !== 'all') {
       const now = new Date();
       const cutoff = new Date();
@@ -1328,6 +1462,23 @@ export default function ChatsPage() {
             </select>
           </div>
 
+          {/* Tag Filter */}
+          <div className="w-full">
+            <select
+              value={tagFilter}
+              onChange={(e) => setTagFilter(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
+            >
+              <option value="all">🏷️ แท็ก: ทั้งหมด</option>
+              <option value="#VIP">#VIP (ป้ายสีม่วง)</option>
+              <option value="#ติดตามผล">#ติดตามผล (ป้ายสีส้ม)</option>
+              <option value="#รอสลิป">#รอสลิป (ป้ายสีฟ้า)</option>
+              <option value="#ส่งเรื่องทีมเทคนิค">#ส่งเรื่องทีมเทคนิค (ป้ายสีแดง)</option>
+              <option value="#รอธนาคารแก้ไข">#รอธนาคารแก้ไข (ป้ายสีเขียว)</option>
+              <option value="#เคสพิเศษ">#เคสพิเศษ (ป้ายสีอินดิโก้)</option>
+            </select>
+          </div>
+
           {/* Audit Filter */}
           <div className="w-full">
             <select
@@ -1505,7 +1656,27 @@ export default function ChatsPage() {
 
                         {/* Customer */}
                         <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
-                          {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
+                          <div>
+                            {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
+                          </div>
+                          {chat.tags && chat.tags.length > 0 && (
+                            <div className="flex items-center gap-1 flex-wrap mt-1 select-none">
+                              {chat.tags.map((tag: string, tidx: number) => {
+                                let badgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800';
+                                if (tag === '#VIP') badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50';
+                                else if (tag === '#ติดตามผล') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50';
+                                else if (tag === '#รอสลิป') badgeColor = 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50';
+                                else if (tag === '#ส่งเรื่องทีมเทคนิค') badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50';
+                                else if (tag === '#รอธนาคารแก้ไข') badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50';
+                                
+                                return (
+                                  <span key={tidx} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${badgeColor}`}>
+                                    {tag}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </td>
                         
                         {/* Summary with AI Confidence Badge */}
@@ -1622,6 +1793,7 @@ export default function ChatsPage() {
           onPositionChange={(newX: number, newY: number) => {
             setActiveWindows(prev => prev.map(w => w.id === win.id ? { ...w, x: newX, y: newY } : w));
           }}
+          onUpdateTags={handleUpdateTags}
         />
       ))}
     </div>
