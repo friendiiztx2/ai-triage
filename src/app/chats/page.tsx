@@ -1961,6 +1961,7 @@ export default function ChatsPage() {
                     <th className="px-6 py-4">{t('colChatId')}</th>
                     <th className="px-6 py-4">{t('colCustomer')}</th>
                     <th className="px-6 py-4">{t('colAiSummary')}</th>
+                    <th className="px-6 py-4">{language === 'th' ? 'ประวัติทัก (Customer 360)' : 'Contact 360'}</th>
                     <th className="px-6 py-4">{t('colCategory')}</th>
                     <th className="px-6 py-4">{t('colPriority')}</th>
                     <th className="px-6 py-4">{t('colStatus')}</th>
@@ -2034,6 +2035,37 @@ export default function ChatsPage() {
                               </span>
                             )}
                           </div>
+                        </td>
+
+                        {/* Customer 360 Contact History */}
+                        <td className="px-6 py-4">
+                          {(() => {
+                            const count = chats.filter(c => 
+                              (chat.customer_id && c.customer_id === chat.customer_id) ||
+                              (chat.customer_name && c.customer_name === chat.customer_name) ||
+                              c.id === chat.id
+                            ).length;
+
+                            if (count > 1) {
+                              return (
+                                <span 
+                                  className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50 shadow-sm whitespace-nowrap"
+                                  title={`ลูกค้ารายนี้มีประวัติทักเข้ามาในระบบรวม ${count} เคส`}
+                                >
+                                  <span>🔁 ทักซ้ำ {count} เคส</span>
+                                </span>
+                              );
+                            }
+
+                            return (
+                              <span 
+                                className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50 shadow-sm whitespace-nowrap"
+                                title="ลูกค้ารายนี้ทักเข้ามาเป็นครั้งแรก"
+                              >
+                                <span>✨ ทักครั้งแรก</span>
+                              </span>
+                            );
+                          })()}
                         </td>
                         {/* Category */}
                         <td className="px-6 py-4">
