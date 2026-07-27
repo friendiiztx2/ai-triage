@@ -170,6 +170,27 @@ function FloatingChatWindow({
   const [copiedId, setCopiedId] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Inline tag editing state
+  const [editingTagIndex, setEditingTagIndex] = useState<number | null>(null);
+  const [editingTagValue, setEditingTagValue] = useState('');
+
+  const handleStartEditTag = (index: number, currentVal: string) => {
+    setEditingTagIndex(index);
+    setEditingTagValue(currentVal);
+  };
+
+  const handleSaveEditTag = (index: number) => {
+    if (!editingTagValue.trim()) return;
+    let formatted = editingTagValue.trim();
+    if (!formatted.startsWith('#')) formatted = '#' + formatted;
+    
+    const nextTags = [...tags];
+    nextTags[index] = formatted;
+    setTags(nextTags);
+    if (onUpdateTags) onUpdateTags(chat.id, nextTags);
+    setEditingTagIndex(null);
+  };
+
   const handleTogglePresetTag = (tagName: string) => {
     let nextTags: string[];
     if (tags.includes(tagName)) {
@@ -754,22 +775,68 @@ function FloatingChatWindow({
                         {/* Current Active Tags */}
                         <div className="flex flex-wrap items-center gap-1.5 min-h-[28px]">
                           {(tags || []).length > 0 ? (
-                            tags.map((t: string, idx: number) => (
-                              <span 
-                                key={idx} 
-                                className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 shadow-sm"
-                              >
-                                {t}
-                                <button 
-                                  type="button" 
-                                  onClick={() => handleRemoveTag(t)} 
-                                  className="hover:text-rose-600 transition cursor-pointer font-extrabold text-[11px] ml-0.5"
-                                  title="ลบแท็กนี้"
+                            tags.map((t: string, idx: number) => {
+                              const isEditingThis = editingTagIndex === idx;
+                              if (isEditingThis) {
+                                return (
+                                  <div key={idx} className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-indigo-500 rounded-lg p-1 shadow-sm">
+                                    <input
+                                      type="text"
+                                      value={editingTagValue}
+                                      onChange={(e) => setEditingTagValue(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          handleSaveEditTag(idx);
+                                        }
+                                        if (e.key === 'Escape') setEditingTagIndex(null);
+                                      }}
+                                      className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none w-[120px]"
+                                      autoFocus
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSaveEditTag(idx)}
+                                      className="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-0.5 rounded-md transition cursor-pointer"
+                                    >
+                                      บันทึก
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingTagIndex(null)}
+                                      className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                                    >
+                                      ยกเลิก
+                                    </button>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <span 
+                                  key={idx} 
+                                  className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 shadow-sm group"
                                 >
-                                  ×
-                                </button>
-                              </span>
-                            ))
+                                  <span>{t}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditTag(idx, t)}
+                                    className="hover:text-indigo-600 text-indigo-400 dark:text-indigo-400 transition cursor-pointer text-[10px]"
+                                    title="แก้ไขชื่อแท็กนี้"
+                                  >
+                                    ✏️
+                                  </button>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => handleRemoveTag(t)} 
+                                    className="hover:text-rose-600 text-slate-400 transition cursor-pointer font-extrabold text-[11px] ml-0.5"
+                                    title="ถอดแท็กนี้ออกจากแชตนี้"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              );
+                            })
                           ) : (
                             <span className="text-slate-400 dark:text-slate-500 italic text-xs">ยังไม่ได้ติดแท็ก (คลิกป้ายสำเร็จรูปด้านล่างเพื่อติดแท็ก)</span>
                           )}
