@@ -1576,46 +1576,26 @@ export default function ChatsPage() {
           </div>
 
           {/* Tag Filter */}
-          <div className="w-full flex flex-col gap-1.5">
-            <div className="flex items-center gap-1 w-full">
-              <select
-                value={tagFilter}
-                onChange={(e) => {
-                  if (e.target.value === 'manage_tags') {
-                    handleOpenTagManagerModal();
-                  } else {
-                    setTagFilter(e.target.value);
-                  }
-                }}
-                className="flex-1 min-w-0 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-l-xl px-3 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-              >
-                <option value="all">🏷️ แท็ก: ทั้งหมด</option>
-                {allAvailableTags.map((tagObj) => (
-                  <option key={tagObj.name} value={tagObj.name}>
-                    {tagObj.name} ({tagObj.desc})
-                  </option>
-                ))}
-                <option value="manage_tags">⚙️ จัดการ/แก้ไขชื่อแท็กระบบ...</option>
-              </select>
-
-              <button
-                type="button"
-                onClick={handleOpenTagManagerModal}
-                className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-955/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-extrabold border border-indigo-200 dark:border-indigo-800 px-3 py-2.5 rounded-r-xl text-xs transition cursor-pointer shrink-0 shadow-sm flex items-center gap-1"
-                title="เปิดหน้าต่างจัดการและแก้ไขชื่อแท็กทั้งหมดในระบบ"
-              >
-                ✏️ แก้ไขแท็ก
-              </button>
-            </div>
-            {tagFilter !== 'all' && (
-              <button
-                type="button"
-                onClick={() => handleOpenGlobalRenameModal(tagFilter)}
-                className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer self-start"
-              >
-                ✏️ แก้ไขชื่อแท็ก "{tagFilter}" ทุกเคส
-              </button>
-            )}
+          <div className="w-full">
+            <select
+              value={tagFilter}
+              onChange={(e) => {
+                if (e.target.value === 'manage_tags') {
+                  handleOpenTagManagerModal();
+                } else {
+                  setTagFilter(e.target.value);
+                }
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
+            >
+              <option value="all">🏷️ แท็ก: ทั้งหมด</option>
+              {allAvailableTags.map((tagObj) => (
+                <option key={tagObj.name} value={tagObj.name}>
+                  {tagObj.name} ({tagObj.desc})
+                </option>
+              ))}
+              <option value="manage_tags">⚙️ จัดการ/แก้ไขชื่อแท็กระบบ...</option>
+            </select>
           </div>
 
           {/* Audit Filter */}
@@ -1630,24 +1610,29 @@ export default function ChatsPage() {
               <option value="corrected">{t('filterCorrected')}</option>
             </select>
           </div>
+        </div>
 
-          {/* Date Filter Column */}
-          <div className="w-full flex flex-col gap-2">
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-            >
-              <option value="all">{t('filterTimeframe')}</option>
-              <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้' : 'Timeframe: Today'}</option>
-              <option value="7days">{language === 'th' ? 'ช่วงเวลา: 7 วันล่าสุด' : 'Timeframe: Last 7 Days'}</option>
-              <option value="30days">{language === 'th' ? 'ช่วงเวลา: 30 วันล่าสุด' : 'Timeframe: Last 30 Days'}</option>
-              <option value="custom">{language === 'th' ? 'ระบุช่วงวันที่เอง...' : 'Custom Range...'}</option>
-            </select>
-            
+        {/* Row 2: Date Filter & Tag Manager Action Button */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Timeframe Filter Dropdown */}
+            <div className="w-[200px]">
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
+              >
+                <option value="all">{t('filterTimeframe')}</option>
+                <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้' : 'Timeframe: Today'}</option>
+                <option value="7days">{language === 'th' ? 'ช่วงเวลา: 7 วันล่าสุด' : 'Timeframe: Last 7 Days'}</option>
+                <option value="30days">{language === 'th' ? 'ช่วงเวลา: 30 วันล่าสุด' : 'Timeframe: Last 30 Days'}</option>
+                <option value="custom">{language === 'th' ? 'ระบุช่วงวันที่เอง...' : 'Custom Range...'}</option>
+              </select>
+            </div>
+
             {dateFilter === 'custom' && (
-              <div className="flex flex-col gap-1.5 text-xs text-slate-400 dark:text-slate-555 bg-slate-50 dark:bg-slate-855/50 p-2.5 rounded-xl border border-slate-150 dark:border-slate-800">
-                <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-555 bg-slate-50 dark:bg-slate-855/50 p-2 rounded-xl border border-slate-150 dark:border-slate-800">
+                <div className="flex items-center gap-1">
                   <span className="font-bold">{language === 'th' ? 'จาก:' : 'From:'}</span>
                   <input
                     type="date"
@@ -1656,7 +1641,7 @@ export default function ChatsPage() {
                     className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-800 dark:text-slate-100 w-[130px]"
                   />
                 </div>
-                <div className="flex items-center justify-between gap-1">
+                <div className="flex items-center gap-1">
                   <span className="font-bold">{language === 'th' ? 'ถึง:' : 'To:'}</span>
                   <input
                     type="date"
@@ -1666,6 +1651,26 @@ export default function ChatsPage() {
                   />
                 </div>
               </div>
+            )}
+
+            {/* Dedicated Tag Manager Action Button */}
+            <button
+              type="button"
+              onClick={handleOpenTagManagerModal}
+              className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-955/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-extrabold border border-indigo-200/80 dark:border-indigo-800 px-4 py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm hover:shadow"
+              title="เปิดหน้าต่างจัดการและแก้ไขชื่อแท็กทั้งหมดในระบบ"
+            >
+              <span>⚙️ จัดการ & แก้ไขชื่อแท็กระบบ</span>
+            </button>
+
+            {tagFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => handleOpenGlobalRenameModal(tagFilter)}
+                className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer bg-indigo-50/50 dark:bg-indigo-955/20 px-3 py-2 rounded-xl border border-indigo-100 dark:border-indigo-900/40"
+              >
+                ✏️ แก้ไขชื่อแท็ก "{tagFilter}" ทุกเคส
+              </button>
             )}
           </div>
         </div>
