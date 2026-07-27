@@ -1179,24 +1179,93 @@ export default function ChatsPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeWindows]);
 
-  // Export CSV Handler
+  // Desktop Notification State
+  const [desktopNotifyEnabled, setDesktopNotifyEnabled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setDesktopNotifyEnabled(Notification.permission === 'granted');
+    }
+  }, []);
+
+  const handleToggleDesktopNotification = async () => {
+    if (!('Notification' in window)) {
+      alert(language === 'th' ? 'เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนเดสก์ท็อป' : 'Desktop notification is not supported');
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      new Notification('🔔 AI Triage Manager', {
+        body: 'การแจ้งเตือนป๊อปอัพหน้าจอเปิดใช้งานเรียบร้อยแล้ว!',
+        icon: '/favicon.ico'
+      });
+      setDesktopNotifyEnabled(true);
+    } else if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        new Notification('🔔 AI Triage Manager', {
+          body: 'การแจ้งเตือนป๊อปอัพหน้าจอเปิดใช้งานเรียบร้อยแล้ว!',
+          icon: '/favicon.ico'
+        });
+        setDesktopNotifyEnabled(true);
+      }
+    } else {
+      alert(language === 'th' ? 'กรุณาอนุญาตการแจ้งเตือน (Notifications) ในการตั้งค่าเบราว์เซอร์ของคุณ' : 'Please allow notifications in browser settings');
+    }
+  };
+
+  // 1-Click Single Status Toggle Handler
+  const handleToggleSingleStatus = async (chat: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newStatus = chat.status === 'completed' ? 'pending' : 'completed';
+
+    // Optimistic UI update
+    setChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: newStatus } : c));
+    setFilteredChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: newStatus } : c));
+
+    // Persist to backend API
+    try {
+      await fetch('/api/chats', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ids: [chat.id],
+          status: newStatus
+        })
+      });
+    } catch (err) {
+      console.error('Failed to toggle status:', err);
+    }
+  };
+
+  // Export CSV Handler with complete fields and UTF-8 BOM
   const handleExportCSV = () => {
     if (filteredChats.length === 0) return;
-    const headers = ['Chat ID', 'Customer Name', 'Priority', 'Status', 'Summary', 'Created At'];
-    const rows = filteredChats.map(c => [
-      `"${c.id || ''}"`,
-      `"${c.customer_name || ''}"`,
-      `"${c.priority || ''}"`,
-      `"${c.status || 'pending'}"`,
-      `"${(c.summary || '').replace(/"/g, '""')}"`,
-      `"${c.created_at || ''}"`
-    ]);
+    const headers = ['Chat ID', 'Customer Name', 'Category', 'Priority', 'Status', 'AI Summary', 'Tags', 'Created At'];
+    const rows = filteredChats.map(c => {
+      const catObj = categories.find((cat: any) => cat.id === c.category_id);
+      const catName = catObj ? catObj.name : (c.category_id || '-');
+      const tagsStr = (c.tags || []).join(' ');
+      const summaryText = c.summary || c.problem_summary || '';
+
+      return [
+        `"${c.id || ''}"`,
+        `"${(c.customer_name || '').replace(/"/g, '""')}"`,
+        `"${(catName).replace(/"/g, '""')}"`,
+        `"${c.priority || ''}"`,
+        `"${c.status || 'pending'}"`,
+        `"${summaryText.replace(/"/g, '""')}"`,
+        `"${tagsStr.replace(/"/g, '""')}"`,
+        `"${c.created_at || ''}"`
+      ];
+    });
+
     const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `chats-export-${new Date().toISOString().substring(0, 10)}.csv`;
+    a.download = `ai-triage-cases-${new Date().toISOString().substring(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1331,12 +1400,18 @@ export default function ChatsPage() {
     let result = chats;
 
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(c => 
-        c.customer_name?.toLowerCase().includes(q) || 
-        c.summary?.toLowerCase().includes(q) ||
-        c.id?.toLowerCase().includes(q)
-      );
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(c => {
+        const nameMatch = c.customer_name?.toLowerCase().includes(q);
+        const idMatch = c.id?.toLowerCase().includes(q) || c.customer_id?.toLowerCase().includes(q);
+        const summaryMatch = (c.summary || c.problem_summary)?.toLowerCase().includes(q);
+        const conversationMatch = typeof c.conversation === 'string' 
+          ? c.conversation.toLowerCase().includes(q) 
+          : JSON.stringify(c.conversation || '').toLowerCase().includes(q);
+        const tagsMatch = c.tags?.some((t: string) => t.toLowerCase().includes(q));
+
+        return nameMatch || idMatch || summaryMatch || conversationMatch || tagsMatch;
+      });
     }
 
     if (statusFilter !== 'all') {
@@ -1466,6 +1541,19 @@ export default function ChatsPage() {
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('chatsSub')}</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Desktop Web Notification Control */}
+          <button
+            onClick={handleToggleDesktopNotification}
+            className={`flex items-center gap-2 border px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
+              desktopNotifyEnabled
+                ? 'bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-955/20 dark:border-sky-900/50 dark:text-sky-400'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-855'
+            }`}
+            title="เปิด/ปิดการแจ้งเตือนป๊อปอัพหน้าจอคอมพิวเตอร์"
+          >
+            {desktopNotifyEnabled ? '💻 ป๊อปอัพหน้าจอ: เปิด' : '💻 ป๊อปอัพหน้าจอ: ปิด'}
+          </button>
+
           {/* Sound Alert Control Group */}
           <div className="flex items-center gap-1">
             <button
@@ -1672,6 +1760,20 @@ export default function ChatsPage() {
                 ✏️ แก้ไขชื่อแท็ก "{tagFilter}" ทุกเคส
               </button>
             )}
+          </div>
+
+          {/* Right side of Row 2: Export CSV/Excel Button */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              disabled={filteredChats.length === 0}
+              className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-955/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-extrabold border border-emerald-200/80 dark:border-emerald-800 px-4 py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="ดาวน์โหลดรายการเคสที่คัดกรองอยู่เป็นไฟล์ Excel / CSV"
+            >
+              <Download size={14} />
+              <span>📥 ส่งออก Excel/CSV ({filteredChats.length})</span>
+            </button>
           </div>
         </div>
 
@@ -1882,16 +1984,21 @@ export default function ChatsPage() {
                           })()}
                         </td>
 
-                        {/* Status */}
-                        <td className="px-6 py-4">
-                          <span className={'text-xs font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap ' + 
-                            (chat.status === 'completed' 
-                              ? 'bg-emerald-50 dark:bg-emerald-955/30 text-emerald-600 dark:text-emerald-400' 
-                              : 'bg-amber-50 dark:bg-amber-955/30 text-amber-600 dark:text-amber-400'
-                            )
-                          }>
-                            {chat.status === 'completed' ? (language === 'th' ? 'แยกแยะแล้ว' : 'Completed') : (language === 'th' ? 'รอดำเนินการ' : 'Pending')}
-                          </span>
+                        {/* Status with 1-Click Quick Toggle */}
+                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={(e) => handleToggleSingleStatus(chat, e)}
+                            className={'text-xs font-bold px-2.5 py-1 rounded-lg whitespace-nowrap border transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 flex items-center gap-1 ' + 
+                              (chat.status === 'completed' 
+                                ? 'bg-emerald-50 dark:bg-emerald-955/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' 
+                                : 'bg-amber-50 dark:bg-amber-955/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                              )
+                            }
+                            title="คลิกเพื่อสลับสถานะ (รอดำเนินการ ↔ แยกแยะแล้ว)"
+                          >
+                            {chat.status === 'completed' ? (language === 'th' ? '✅ แยกแยะแล้ว' : '✅ Completed') : (language === 'th' ? '⏳ รอดำเนินการ' : '⏳ Pending')}
+                          </button>
                         </td>
 
                         {/* Time */}
