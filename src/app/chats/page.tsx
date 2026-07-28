@@ -447,7 +447,7 @@ function FloatingChatWindow({
       // 1B. If it's a JSON array of message objects
       if (Array.isArray(rawConv) && rawConv.length > 0) {
         return (
-          <div className="space-y-4">
+          <div className="space-y-1.5">
             {rawConv.map((msg: any, index: number) => {
               const isCustomer = msg.sender?.toLowerCase() === 'customer' || 
                                  msg.sender?.toLowerCase() === 'user' || 
@@ -455,6 +455,17 @@ function FloatingChatWindow({
                                  msg.role?.toLowerCase() === 'customer' ||
                                  (!msg.sender && index % 2 === 0);
               
+              const prevMsg = index > 0 ? rawConv[index - 1] : null;
+              const prevIsCustomer = prevMsg ? (
+                prevMsg.sender?.toLowerCase() === 'customer' || 
+                prevMsg.sender?.toLowerCase() === 'user' || 
+                prevMsg.role?.toLowerCase() === 'user' ||
+                prevMsg.role?.toLowerCase() === 'customer' ||
+                (!prevMsg.sender && (index - 1) % 2 === 0)
+              ) : null;
+
+              const showHeader = index === 0 || prevIsCustomer !== isCustomer;
+
               const senderName = isCustomer 
                 ? (chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id))
                 : 'แอดมิน / AI';
@@ -464,13 +475,15 @@ function FloatingChatWindow({
               return (
                 <div 
                   key={index} 
-                  className={'flex flex-col ' + (isCustomer ? 'items-start' : 'items-end')}
+                  className={'flex flex-col ' + (isCustomer ? 'items-start' : 'items-end') + (showHeader && index > 0 ? ' pt-2' : '')}
                 >
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
-                    {senderName}
-                  </span>
+                  {showHeader && (
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
+                      {senderName}
+                    </span>
+                  )}
                   <div 
-                    className={'p-3.5 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed ' + 
+                    className={'p-3 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed ' + 
                       (isCustomer 
                         ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-750' 
                         : 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
@@ -480,7 +493,7 @@ function FloatingChatWindow({
                     {messageText}
                   </div>
                   {msg.time && (
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 select-none font-medium">
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 select-none font-medium">
                       {msg.time}
                     </span>
                   )}
@@ -519,24 +532,31 @@ function FloatingChatWindow({
 
         if (parsedList.length > 0) {
           return (
-            <div className="space-y-3">
-              {parsedList.map((item: any, index: number) => (
-                <div key={index} className={'flex flex-col ' + (item.isCustomer ? 'items-start' : 'items-end')}>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
-                    {item.isCustomer ? (chat.customer_name || 'ลูกค้า') : 'แอดมิน / AI'}
-                  </span>
-                  <div 
-                    className={'p-3.5 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed ' + 
-                      (item.isCustomer 
-                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-750' 
-                        : 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
-                      )
-                    }
-                  >
-                    {item.message}
+            <div className="space-y-1.5">
+              {parsedList.map((item: any, index: number) => {
+                const prevItem = index > 0 ? parsedList[index - 1] : null;
+                const showHeader = index === 0 || prevItem.isCustomer !== item.isCustomer;
+
+                return (
+                  <div key={index} className={'flex flex-col ' + (item.isCustomer ? 'items-start' : 'items-end') + (showHeader && index > 0 ? ' pt-2' : '')}>
+                    {showHeader && (
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
+                        {item.isCustomer ? (chat.customer_name || 'ลูกค้า') : 'แอดมิน / AI'}
+                      </span>
+                    )}
+                    <div 
+                      className={'p-3 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed ' + 
+                        (item.isCustomer 
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-750' 
+                          : 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
+                        )
+                      }
+                    >
+                      {item.message}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         }
@@ -562,53 +582,22 @@ function FloatingChatWindow({
 
     if (issuesToRender.length > 0) {
       return (
-        <div className="space-y-4">
-          {issuesToRender.map((issueItem: any, idx: number) => {
-            const custMsg = issueItem.title || issueItem.summary || issueItem.message || 'เรื่องที่ ' + (idx + 1);
-            const aiMsg = issueItem.reply || issueItem.recommended_reply || 'สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหานี้นะคะ';
-            const msgTime = issueItem.time || (chat.created_at ? new Date(chat.created_at).toLocaleTimeString('th-TH') : undefined);
-
-            return (
-              <div key={idx} className="space-y-3">
-                {/* Customer Bubble */}
-                <div className="flex flex-col items-start">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-                      {chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id)}
-                    </span>
-                    <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-955/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                      เรื่องที่ {idx + 1}
-                    </span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-750">
+        <div className="space-y-2">
+          <div className="flex flex-col items-start">
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
+              {chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id)}
+            </span>
+            <div className="space-y-1.5 w-full">
+              {issuesToRender.map((issueItem: any, idx: number) => {
+                const custMsg = issueItem.title || issueItem.summary || issueItem.message || 'เรื่องที่ ' + (idx + 1);
+                return (
+                  <div key={idx} className="p-3 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-750">
                     {custMsg}
                   </div>
-                  {msgTime && (
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 select-none font-medium">
-                      {msgTime}
-                    </span>
-                  )}
-                </div>
-
-                {/* AI Response Bubble */}
-                {aiMsg && (
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
-                      แอดมิน / AI
-                    </span>
-                    <div className="p-3.5 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed bg-indigo-600 text-white rounded-tr-none shadow-sm">
-                      {aiMsg}
-                    </div>
-                    {msgTime && (
-                      <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 select-none font-medium">
-                        {msgTime}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          </div>
         </div>
       );
     }
