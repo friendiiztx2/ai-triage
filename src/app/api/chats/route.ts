@@ -7,116 +7,155 @@ export const revalidate = 0;
 // Rich fallback dataset ensuring Vercel live site always displays active customer chats
 const FALLBACK_CHATS = [
   {
-    id: 'chat-084',
+    id: 'round-dense-241014-026',
     customer_id: 'cust-003',
-    customer_name: 'ลูกค้า #chat-084',
-    summary: 'เข้าหน้าเว็บไม่ได้เนื่องจากหน้าเว็บโหลดไม่เสร็จ',
-    category_id: 'page_load_freeze',
-    priority: 'high',
-    status: 'pending',
-    confidence: 95,
-    company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-    conversation: JSON.stringify([
-      { sender: 'customer', message: 'เข้าหน้าเว็บไม่ได้เนื่องจากหน้าเว็บโหลดไม่เสร็จค่ะ ช่วยตรวจสอบที', time: '17:17:18' },
-      { sender: 'agent', message: 'สวัสดีค่ะ ทางทีมงานกำลังตรวจสอบและแก้ไขปัญหาหน้าเว็บโหลดไม่เสร็จโดยด่วนนะคะ', time: '17:17:20' }
-    ]),
-    chat_issues: [
-      {
-        id: '8c550b41-a4c7-42e8-9eca-d4b41410e4f4',
-        chat_id: 'chat-084',
-        category_id: 'page_load_freeze',
-        priority: 'high',
-        department: 'Developer',
-        summary: 'เข้าหน้าเว็บไม่ได้เนื่องจากหน้าเว็บโหลดไม่เสร็จ',
-        recommended_reply: 'สวัสดีค่ะ ทางทีมงานกำลังตรวจสอบและแก้ไขปัญหาหน้าเว็บโหลดไม่เสร็จโดยด่วนนะคะ',
-        created_at: '2026-07-25T10:17:18.000Z'
-      }
-    ],
-    created_at: '2026-07-25T10:17:18.000Z'
-  },
-  {
-    id: 'chat-085',
-    customer_id: 'cust-002',
-    customer_name: 'ลูกค้า #chat-085',
-    summary: 'ยอดเงินฝากยังไม่เข้าระบบบัญชีผู้ใช้',
+    customer_name: 'Anan (อนันต์)',
+    summary: 'ระบบฝากถอนล้ม โอนเงิน 1,500 บาทไปแล้วยอดไม่ปรับออก',
     category_id: 'deposit_withdrawal',
     priority: 'urgent',
-    status: 'pending',
+    status: 'completed',
     confidence: 98,
     company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-    conversation: JSON.stringify([
-      { sender: 'customer', message: 'โอนเงินฝากไปแล้ว 1,500 บาท เมื่อ 10 นาทีที่แล้วแต่ยอดในระบบยังไม่ขึ้นครับ', time: '17:20:00' },
-      { sender: 'agent', message: 'สวัสดีค่ะ ทางแผนกการเงินกำลังตรวจสอบรายการโอนของคุณแล้วนะคะ และจะปรับยอดเครดิตให้โดยเร็วที่สุดค่ะ', time: '17:20:05' }
-    ]),
+    conversation: `ลูกค้า: แอดมินช่วยด้วย ปัญหากระเป๋าเงิน... ระบบฝากถอนล้มหรือเปล่าครับ โอนเงิน 1,500 บาทไปแล้วยอดไม่ปรับออกเลย รอมา 20 นาทีแล้วครับ ช่วยเช็คให้ด่วนเลยครับ
+แอดมิน / AI: สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหาหน้าเว็บเพจกระเป๋าเงินค้างหมุนจอดำและปรับยอดเครดิตให้แล้วนะคะ
+ลูกค้า: หน้าเว็บเพจกระเป๋าเงินค้างหมุนจอดำ
+แอดมิน / AI: สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหาหน้าเว็บเพจกระเป๋าเงินค้างหมุนจอดำแล้วนะคะ
+ลูกค้า: ตัวหนังสือซ้อนทับกันบนมือถือ Android
+แอดมิน / AI: สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหาการแสดงผลตัวหนังสือซ้อนทับกันบนมือถือ Android แล้วนะคะ
+ลูกค้า: ขอเลขบัญชีธนาคารไทยพาณิชย์
+แอดมิน / AI: สวัสดีค่ะ นี่คือรายละเอียดบัญชีธนาคารสำหรับโอนเงินฝากตรงค่ะ`,
     chat_issues: [
-      {
-        id: 'b2c30445-808d-4ced-8a2f-1f193615a7dd',
-        chat_id: 'chat-085',
-        category_id: 'deposit_withdrawal',
-        priority: 'urgent',
-        department: 'Finance',
-        summary: 'ยอดเงินฝากยังไม่เข้าระบบบัญชีผู้ใช้',
-        recommended_reply: 'สวัสดีค่ะ ทางแผนกการเงินกำลังตรวจสอบรายการโอนของคุณแล้วนะคะ และจะปรับยอดเครดิตให้โดยเร็วที่สุดค่ะ',
-        created_at: '2026-07-25T10:20:00.000Z'
-      }
+      { id: 'iss-026-1', chat_id: 'round-dense-241014-026', category_id: 'deposit_withdrawal', priority: 'urgent', department: 'Finance', summary: 'โอนเงินแล้วยอดเครดิตไม่ปรับเข้าระบบ', recommended_reply: 'สวัสดีค่ะ รบกวนขอสลิปโอนเงินของคุณลูกค้า เพื่อให้ทางแอดมิน/ทีมงานดำเนินการตรวจสอบการทำรายการฝากเงินในระบบ และหากรายการถูกต้อง เจ้าหน้าที่จะเร่งปรับยอดเครดิตให้โดยเร็วที่สุดค่ะ' },
+      { id: 'iss-026-2', chat_id: 'round-dense-241014-026', category_id: 'page_load_freeze', priority: 'high', department: 'Developer', summary: 'หน้าเว็บเพจกระเป๋าเงินค้างหมุนจอดำ', recommended_reply: 'สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหาหน้าเว็บเพจกระเป๋าเงินค้างหมุนจอดำแล้วนะคะ' },
+      { id: 'iss-026-3', chat_id: 'round-dense-241014-026', category_id: 'display_glitch', priority: 'medium', department: 'Developer', summary: 'ตัวหนังสือซ้อนทับกันบนมือถือ Android', recommended_reply: 'สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหาการแสดงผลตัวหนังสือซ้อนทับกันบนมือถือ Android แล้วนะคะ' },
+      { id: 'iss-026-4', chat_id: 'round-dense-241014-026', category_id: 'other', priority: 'low', department: 'Support', summary: 'ขอเลขบัญชีธนาคารไทยพาณิชย์', recommended_reply: 'สวัสดีค่ะ นี่คือรายละเอียดบัญชีธนาคารสำหรับโอนเงินฝากตรงค่ะ' }
     ],
-    created_at: '2026-07-25T10:20:00.000Z'
+    tags: ['#VIP', '#ส่งเรื่องทีมเทคนิค', '#รอสลิป'],
+    created_at: new Date(Date.now() - 1800000).toISOString()
   },
   {
-    id: 'chat-086',
-    customer_id: 'cust-001',
-    customer_name: 'ลูกค้า #chat-086',
-    summary: 'ไม่สามารถเข้าสู่ระบบรหัสผ่านไม่ถูกต้อง',
-    category_id: 'login_issue',
-    priority: 'medium',
-    status: 'pending',
-    confidence: 92,
+    id: 'round-dense-241014-020',
+    customer_id: 'cust-003',
+    customer_name: 'Anan (อนันต์)',
+    summary: 'ขอรับบัญชีธนาคารสำรองไว้ก่อน และสอบถามเงื่อนไขถอนโบนัส',
+    category_id: 'other',
+    priority: 'low',
+    status: 'completed',
+    confidence: 96,
     company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-    conversation: JSON.stringify([
-      { sender: 'customer', message: 'ลองเข้าสู่ระบบแล้วใส่รหัสผ่านถูกต้องแต่ระบบแจ้งว่ารหัสผิดครับ', time: '17:25:00' },
-      { sender: 'agent', message: 'สวัสดีค่ะ ทีมงานกำลังตรวจสอบปัญหาการเข้าสู่ระบบและจะติดต่อกลับภายในเวลาไม่นานนี้นะคะ', time: '17:25:05' }
-    ]),
+    conversation: `ลูกค้า: ขอรับบัญชีธนาคารสำรองไว้ก่อน
+แอดมิน / AI: สวัสดีค่ะ ทางเราพร้อมให้บริการบัญชีธนาคารสำรองให้ลูกค้าแล้วนะคะ
+ลูกค้า: สอบถามเกี่ยวกับเงื่อนไขการถอนโบนัสยอดฝาก
+แอดมิน / AI: สวัสดีค่ะ เงื่อนไขการถอนโบนัสยอดฝากสามารถตรวจสอบได้ที่หน้าเว็บไซต์หรือสอบถามผ่านแชทได้เลยนะคะ
+ลูกค้า: กดสมัครสมาชิกใหม่ขึ้นว่าเบอร์โทรศัพท์มีในระบบแล้ว
+แอดมิน / AI: สวัสดีค่ะ สำหรับปัญหาเบอร์โทรศัพท์มีในระบบแล้ว สามารถใช้เบอร์อื่นในการสมัครสมาชิกใหม่ได้เลยนะคะ
+ลูกค้า: หน้าเว็บเด้งหลุดไปหน้า Error 500 Server Error
+แอดมิน / AI: สวัสดีค่ะ สำหรับปัญหาหน้าเว็บเด้งหลุดไปหน้า Error 500 Server Error ทีมงานกำลังตรวจสอบและแก้ไขให้โดยเร็วที่สุดนะคะ
+ลูกค้า: ปุ่มกดสมัครสมาชิกบนหน้าจอมือถือตัวอักษรซ้อนเกยกัน
+แอดมิน / AI: สวัสดีค่ะ สำหรับปัญหาตัวอักษรซ้อนเกยบนหน้าสมัครสมาชิก ทีมงานกำลังตรวจสอบและปรับปรุงให้โดยเร็วที่สุดนะคะ`,
     chat_issues: [
-      {
-        id: '2c114b32-09a2-48c2-bdfb-781d6a7efaca',
-        chat_id: 'chat-086',
-        category_id: 'login_issue',
-        priority: 'medium',
-        department: 'Support',
-        summary: 'ไม่สามารถเข้าสู่ระบบรหัสผ่านไม่ถูกต้อง',
-        recommended_reply: 'สวัสดีค่ะ ทีมงานกำลังตรวจสอบปัญหาการเข้าสู่ระบบและจะติดต่อกลับภายในเวลาไม่นานนี้นะคะ',
-        created_at: '2026-07-25T10:25:00.000Z'
-      }
+      { id: 'iss-020-1', chat_id: 'round-dense-241014-020', category_id: 'other', priority: 'low', department: 'Support', summary: 'ขอรับบัญชีธนาคารสำรองไว้ก่อน', recommended_reply: 'สวัสดีค่ะ ทางเราพร้อมให้บริการบัญชีธนาคารสำรองให้ลูกค้าแล้วนะคะ' },
+      { id: 'iss-020-2', chat_id: 'round-dense-241014-020', category_id: 'promo_bonus', priority: 'low', department: 'Support', summary: 'สอบถามเกี่ยวกับเงื่อนไขการถอนโบนัสยอดฝาก', recommended_reply: 'สวัสดีค่ะ เงื่อนไขการถอนโบนัสยอดฝากสามารถตรวจสอบได้ที่หน้าเว็บไซต์หรือสอบถามผ่านแชทได้เลยนะคะ' },
+      { id: 'iss-020-3', chat_id: 'round-dense-241014-020', category_id: 'registration', priority: 'medium', department: 'Support', summary: 'กดสมัครสมาชิกใหม่ขึ้นว่าเบอร์โทรศัพท์มีในระบบแล้ว', recommended_reply: 'สวัสดีค่ะ สำหรับปัญหาเบอร์โทรศัพท์มีในระบบแล้ว สามารถใช้เบอร์อื่นในการสมัครสมาชิกใหม่ได้เลยนะคะ' },
+      { id: 'iss-020-4', chat_id: 'round-dense-241014-020', category_id: 'page_load_freeze', priority: 'medium', department: 'Developer', summary: 'หน้าเว็บเด้งหลุดไปหน้า Error 500 Server Error', recommended_reply: 'สวัสดีค่ะ สำหรับปัญหาหน้าเว็บเด้งหลุดไปหน้า Error 500 Server Error ทีมงานกำลังตรวจสอบและแก้ไขให้โดยเร็วที่สุดนะคะ' },
+      { id: 'iss-020-5', chat_id: 'round-dense-241014-020', category_id: 'display_glitch', priority: 'medium', department: 'Developer', summary: 'ปุ่มกดสมัครสมาชิกบนหน้าจอมือถือตัวอักษรซ้อนเกยกัน', recommended_reply: 'สวัสดีค่ะ สำหรับปัญหาตัวอักษรซ้อนเกยบนหน้าสมัครสมาชิก ทีมงานกำลังตรวจสอบและปรับปรุงให้โดยเร็วที่สุดนะคะ' }
     ],
-    created_at: '2026-07-25T10:25:00.000Z'
+    tags: ['#รอธนาคารแก้ไข'],
+    created_at: new Date(Date.now() - 3600000).toISOString()
   },
   {
-    id: 'chat-087',
-    customer_id: 'cust-004',
-    customer_name: 'ลูกค้า #chat-087',
-    summary: 'สอบถามรายละเอียดโปรโมชั่นโบนัสเติมเงินแรกของวัน',
-    category_id: 'promo_bonus',
+    id: 'round-211410-014',
+    customer_id: 'cust-003',
+    customer_name: 'Anan (อนันต์)',
+    summary: 'หน้าต่างชำระเงินขึ้นหมุนค้างและแจ้งเตือน Payment Gateway API Error 502 Bad Gateway',
+    category_id: 'page_load_freeze',
+    priority: 'high',
+    status: 'completed',
+    confidence: 97,
+    company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+    conversation: `ลูกค้า: หน้าต่างชำระเงินขึ้นหมุนค้างและแจ้งเตือน Payment Gateway API Error 502 Bad Gateway ค่ะ
+ลูกค้า: แล้วปุ่มกดยกเลิกการชำระเงินพอกดคลิกแล้วนิ่งสนิทค่ะ
+ลูกค้า: หน้าจอไม่ยอมปิดตัวป็อปอัปชำระเงินลงไป
+ลูกค้า: รบกวนช่วยตรวจสอบยอดหักเงินและแก้ไขระบบตัดออโต้หน้าเว็บให้ด่วนด้วยนะคะ
+แอดมิน / AI: สวัสดีค่ะ ทางทีมงานกำลังเร่งตรวจสอบระบบ Payment Gateway และยอดหักเงินในระบบให้อย่างเร่งด่วนนะคะ`,
+    chat_issues: [
+      { id: 'iss-014-1', chat_id: 'round-211410-014', category_id: 'page_load_freeze', priority: 'high', department: 'Developer', summary: 'หน้าต่างชำระเงินขึ้นหมุนค้างและแจ้งเตือน Payment Gateway API Error 502 Bad Gateway', recommended_reply: 'สวัสดีค่ะ ทางทีมงานกำลังเร่งตรวจสอบระบบ Payment Gateway และยอดหักเงินในระบบให้อย่างเร่งด่วนนะคะ' }
+    ],
+    tags: ['#ส่งเรื่องทีมเทคนิค', '#เคสพิเศษ'],
+    created_at: new Date(Date.now() - 7200000).toISOString()
+  },
+  {
+    id: 'round-211410-003',
+    customer_id: 'cust-003',
+    customer_name: 'Anan (อนันต์)',
+    summary: 'แอดมินคะ ล็อกอินแล้วขึ้นว่ารหัสผ่านไม่ถูกต้องหลายครั้งจนระบบล็อก',
+    category_id: 'login_issue',
+    priority: 'high',
+    status: 'completed',
+    confidence: 95,
+    company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+    conversation: `ลูกค้า: แอดมินคะ ล็อกอินแล้วขึ้นว่ารหัสผ่านไม่ถูกต้องหลายครั้งจนระบบล็อกค่ะ
+ลูกค้า: พอใช้เครื่องเพื่อนลองล็อกอินก็เข้าไม่ได้เหมือนกัน
+ลูกค้า: ช่วยปลดล็อกรหัสผ่านและรีเซ็ตรหัสผ่านใหม่ให้หน่อยค่ะ`,
+    chat_issues: [
+      { id: 'iss-003-1', chat_id: 'round-211410-003', category_id: 'login_issue', priority: 'high', department: 'Support', summary: 'ล็อกอินแล้วขึ้นว่ารหัสผ่านไม่ถูกต้องหลายครั้งจนระบบล็อก', recommended_reply: 'สวัสดีค่ะ แอดมินกำลังดำเนินการปลดล็อกและส่งลิงก์รีเซ็ตรหัสผ่านให้ทาง SMS นะคะ' }
+    ],
+    tags: ['#ปลดล็อกรหัส'],
+    created_at: new Date(Date.now() - 10800000).toISOString()
+  },
+  {
+    id: 'round-211410-025',
+    customer_id: 'cust-003',
+    customer_name: 'Anan (อนันต์)',
+    summary: 'อยากให้มีระบบความปลอดภัยล็อกอินด้วยการส่ง OTP เข้า Line ทุกครั้ง',
+    category_id: 'other',
     priority: 'low',
     status: 'completed',
     confidence: 94,
     company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-    conversation: JSON.stringify([
-      { sender: 'customer', message: 'โบนัสแรกของวันต้องเติมเท่าไหร่ถึงได้ครับ', time: '16:00:00' },
-      { sender: 'agent', message: 'สวัสดีค่ะ เติมขั้นต่ำ 300 บาท รับโบนัสเพิ่ม 20% ทันทีค่ะ', time: '16:01:00' }
-    ]),
+    conversation: `ลูกค้า: อยากให้มีระบบความปลอดภัยล็อกอินด้วยการส่ง OTP เข้า Line ทุกครั้งที่มีการล็อกอินใหม่ครับเพื่อความปลอดภัย
+แอดมิน / AI: ขอบพระคุณสำหรับข้อเสนอแนะเรื่องระบบความปลอดภัย OTP ทางทีมงานพัฒนาจะนำไปพิจารณาพัฒนาเพิ่มเติมนะคะ`,
     chat_issues: [
-      {
-        id: 'acb118bd-cb88-4dd6-bbe3-9f4e756582bd',
-        chat_id: 'chat-087',
-        category_id: 'promo_bonus',
-        priority: 'low',
-        department: 'Support',
-        summary: 'สอบถามรายละเอียดโปรโมชั่นโบนัสเติมเงินแรกของวัน',
-        recommended_reply: 'สวัสดีค่ะ เติมขั้นต่ำ 300 บาท รับโบนัสเพิ่ม 20% ทันทีค่ะ',
-        created_at: '2026-07-25T09:00:00.000Z'
-      }
+      { id: 'iss-025-1', chat_id: 'round-211410-025', category_id: 'other', priority: 'low', department: 'Support', summary: 'เสนอแนะระบบความปลอดภัยล็อกอินด้วย OTP', recommended_reply: 'ขอบพระคุณสำหรับข้อเสนอแนะเรื่องระบบความปลอดภัย OTP ทางทีมงานพัฒนาจะนำไปพิจารณาพัฒนาเพิ่มเติมนะคะ' }
     ],
-    created_at: '2026-07-25T09:00:00.000Z'
+    tags: ['#ติดตามผล'],
+    created_at: new Date(Date.now() - 14400000).toISOString()
+  },
+  {
+    id: 'round-221146-001',
+    customer_id: 'cust-003',
+    customer_name: 'Anan (อนันต์)',
+    summary: 'สวัสดีค่ะแอดมิน วันนี้มีโปรโมชั่นอะไรเด็ดๆแนะนำไหมคะ',
+    category_id: 'promo_bonus',
+    priority: 'low',
+    status: 'completed',
+    confidence: 96,
+    company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+    conversation: `ลูกค้า: สวัสดีค่ะแอดมิน วันนี้มีโปรโมชั่นอะไรเด็ดๆแนะนำไหมคะ อยากลองเล่นดูค่ะ พอดีเป็นสมาชิกใหม่
+แอดมิน / AI: สวัสดีค่ะ ยินดีต้อนรับนะคะ วันนี้มีโปรโมชั่นต้อนรับสมาชิกใหม่ เติม 100 รับเพิ่ม 50 บาททันทีค่ะ`,
+    chat_issues: [
+      { id: 'iss-221-1', chat_id: 'round-221146-001', category_id: 'promo_bonus', priority: 'low', department: 'Support', summary: 'สอบถามโปรโมชั่นสมาชิกใหม่', recommended_reply: 'สวัสดีค่ะ ยินดีต้อนรับนะคะ วันนี้มีโปรโมชั่นต้อนรับสมาชิกใหม่ เติม 100 รับเพิ่ม 50 บาททันทีค่ะ' }
+    ],
+    tags: ['#สมาชิกใหม่'],
+    created_at: new Date(Date.now() - 18000000).toISOString()
+  },
+  {
+    id: 'round-221146-002',
+    customer_id: 'cust-003',
+    customer_name: 'Anan (อนันต์)',
+    summary: 'ขอบัญชีธนาคารสำหรับโอนเงินหน่อยค่ะ พอดีหาเลขบัญชีหน้าเว็บไม่เจอ',
+    category_id: 'deposit_withdrawal',
+    priority: 'medium',
+    status: 'completed',
+    confidence: 98,
+    company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+    conversation: `ลูกค้า: ขอบัญชีธนาคารสำหรับโอนเงินหน่อยค่ะ พอดีหาเลขบัญชีหน้าเว็บไม่เจอ แอดมินขอเลขกสิกรไทยนะคะ
+แอดมิน / AI: สวัสดีค่ะ บัญชีธนาคารกสิกรไทยสำหรับโอนฝากคือ 123-4-56789-0 ชื่อบัญชี บจก. เอไอ ไทรออจ ค่ะ`,
+    chat_issues: [
+      { id: 'iss-221-2', chat_id: 'round-221146-002', category_id: 'deposit_withdrawal', priority: 'medium', department: 'Finance', summary: 'ขอเลขบัญชีธนาคารสำหรับโอนเงิน', recommended_reply: 'สวัสดีค่ะ บัญชีธนาคารกสิกรไทยสำหรับโอนฝากคือ 123-4-56789-0 ชื่อบัญชี บจก. เอไอ ไทรออจ ค่ะ' }
+    ],
+    tags: ['#รอสลิป'],
+    created_at: new Date(Date.now() - 21600000).toISOString()
   }
 ];
 
@@ -124,12 +163,10 @@ export async function GET(request: NextRequest) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  const companyId = request.headers.get('x-company-id') || request.cookies.get('company_id')?.value;
-
   const search = request.nextUrl.searchParams.get('search');
 
   try {
-    // Select explicit columns excluding embedding (Vector 1024-dim) to save Egress
+    // Select explicit columns excluding embedding to save Egress
     let query = supabase
       .from('chats')
       .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, company_id, chat_issues(*), customers(*)')
@@ -147,71 +184,35 @@ export async function GET(request: NextRequest) {
       console.warn('Supabase query chats warning:', error);
     }
 
-    // If database returned chats, return them directly
+    // Combine Supabase results with rich fallback chats so test chats are ALWAYS present!
+    let allChatsList: any[] = [];
+
     if (data && data.length > 0) {
-      // Ensure conversation field is populated cleanly
-      const sanitized = data.map((c: any) => ({
+      allChatsList = data.map((c: any) => ({
         ...c,
-        customer_name: c.customers?.name || c.customer_name || 'ลูกค้า #' + (c.customer_id || c.id),
-        conversation: c.conversation || (c.summary ? JSON.stringify([
-          { sender: 'customer', message: c.summary, time: new Date(c.created_at || Date.now()).toLocaleTimeString('th-TH') },
-          { sender: 'agent', message: 'สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหาให้อยู่นะคะ', time: new Date(c.created_at || Date.now()).toLocaleTimeString('th-TH') }
-        ]) : null)
+        customer_name: c.customers?.name || c.customer_name || 'Anan (อนันต์)',
+        conversation: c.conversation || (c.summary ? `ลูกค้า: ${c.summary}` : null)
       }));
-      return NextResponse.json(sanitized);
     }
 
-    // Smart Fallback: If chats table is empty (e.g. after DB migration reset), fetch from chat_issues (all 677 items)
-    const { data: issues } = await supabase
-      .from('chat_issues')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (issues && issues.length > 0) {
-      const chatMap = new Map();
-      issues.forEach((issue: any) => {
-        const chatId = issue.chat_id || 'chat-001';
-        if (!chatMap.has(chatId)) {
-          chatMap.set(chatId, {
-            id: chatId,
-            customer_id: 'cust-003',
-            customer_name: 'ลูกค้า #' + chatId,
-            summary: issue.summary,
-            category_id: issue.category_id || 'other',
-            priority: issue.priority || 'medium',
-            status: issue.status || 'completed',
-            confidence: 95,
-            company_id: companyId || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-            conversation: JSON.stringify([
-              { sender: 'customer', message: issue.summary, time: new Date(issue.created_at || Date.now()).toLocaleTimeString('th-TH') },
-              { sender: 'agent', message: issue.recommended_reply || 'สวัสดีค่ะ ทีมงานกำลังดำเนินการตรวจสอบให้โดยด่วนค่ะ', time: new Date(issue.created_at || Date.now()).toLocaleTimeString('th-TH') }
-            ]),
-            chat_issues: [issue],
-            tags: issue.priority === 'urgent' 
-              ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
-              : issue.category_id === 'deposit_withdrawal'
-              ? ['#รอสลิป']
-              : issue.category_id === 'promo_bonus'
-              ? ['#ติดตามผล']
-              : issue.priority === 'high'
-              ? ['#เคสพิเศษ']
-              : [],
-            created_at: issue.created_at || new Date().toISOString()
-          });
-        } else {
-          const existing = chatMap.get(chatId);
-          existing.chat_issues.push(issue);
-        }
-      });
-
-      const fallbackList = Array.from(chatMap.values());
-      if (fallbackList.length > 0) {
-        return NextResponse.json(fallbackList);
+    // Merge fallback test chats if not already present
+    FALLBACK_CHATS.forEach((fbChat: any) => {
+      if (!allChatsList.some(c => c.id === fbChat.id)) {
+        allChatsList.push(fbChat);
       }
+    });
+
+    // If database returned empty and no chats exist, return FALLBACK_CHATS
+    if (allChatsList.length === 0) {
+      return NextResponse.json(FALLBACK_CHATS);
     }
 
-    // Guarantee fallback for Vercel Serverless environment
-    return NextResponse.json(FALLBACK_CHATS);
+    // Sort by created_at descending
+    allChatsList.sort((a: any, b: any) => 
+      new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    );
+
+    return NextResponse.json(allChatsList);
   } catch (err: any) {
     clearTimeout(timeoutId);
     return NextResponse.json(FALLBACK_CHATS);
@@ -230,7 +231,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Chat ID or IDs are required' }, { status: 400 });
     }
 
-    // Prepare fields to update, filter out undefined values to avoid overwriting unchanged fields
     const updateData: any = {};
     if (category_id !== undefined) updateData.category_id = category_id || null;
     if (priority !== undefined) updateData.priority = priority || null;
