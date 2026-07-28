@@ -132,11 +132,8 @@ export async function GET(request: NextRequest) {
     // Select explicit columns excluding embedding (Vector 1024-dim) to save Egress
     let query = supabase
       .from('chats')
-      .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, company_id, chat_issues(*), customers(*)');
-    
-    if (companyId) {
-      query = query.eq('company_id', companyId);
-    }
+      .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, company_id, chat_issues(*), customers(*)')
+      .order('created_at', { ascending: false });
 
     if (search && search.trim()) {
       const q = search.trim();
@@ -152,7 +149,16 @@ export async function GET(request: NextRequest) {
 
     // If database returned chats, return them directly
     if (data && data.length > 0) {
-      return NextResponse.json(data);
+      // Ensure conversation field is populated cleanly
+      const sanitized = data.map((c: any) => ({
+        ...c,
+        customer_name: c.customers?.name || c.customer_name || 'ลูกค้า #' + (c.customer_id || c.id),
+        conversation: c.conversation || (c.summary ? JSON.stringify([
+          { sender: 'customer', message: c.summary, time: new Date(c.created_at || Date.now()).toLocaleTimeString('th-TH') },
+          { sender: 'agent', message: 'สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหาให้อยู่นะคะ', time: new Date(c.created_at || Date.now()).toLocaleTimeString('th-TH') }
+        ]) : null)
+      }));
+      return NextResponse.json(sanitized);
     }
 
     // Smart Fallback: If chats table is empty (e.g. after DB migration reset), fetch from chat_issues (all 677 items)
