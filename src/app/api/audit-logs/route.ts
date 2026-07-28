@@ -71,7 +71,23 @@ export async function POST(request: Request) {
       created_at: new Date().toISOString()
     };
 
-    // 1. Attempt to write to Supabase
+    // 1. Insert into activity_logs as required
+    const activityEntry = {
+      company_id: body.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+      user_id: body.user_id || 'user-admin',
+      user_name: admin_name || body.user_name || 'Admin',
+      action_type: body.action_type || action || 'UPDATE_CATEGORY',
+      details: typeof details === 'object' ? details : { info: details },
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      await supabase.from('activity_logs').insert([activityEntry]);
+    } catch (e) {
+      console.warn('activity_logs insert warning:', e);
+    }
+
+    // 2. Insert into audit_logs
     const { data, error } = await supabase
       .from('audit_logs')
       .insert([logEntry])

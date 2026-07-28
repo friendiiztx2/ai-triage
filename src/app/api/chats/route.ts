@@ -126,14 +126,21 @@ export async function GET(request: NextRequest) {
 
   const companyId = request.headers.get('x-company-id') || request.cookies.get('company_id')?.value;
 
+  const search = request.nextUrl.searchParams.get('search');
+
   try {
     // Select explicit columns excluding embedding (Vector 1024-dim) to save Egress
     let query = supabase
       .from('chats')
-      .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, company_id, chat_issues(*)');
+      .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, company_id, chat_issues(*), customers(*)');
     
     if (companyId) {
       query = query.eq('company_id', companyId);
+    }
+
+    if (search && search.trim()) {
+      const q = search.trim();
+      query = query.or(`summary.ilike.%${q}%,customers.name.ilike.%${q}%,customer_id.ilike.%${q}%`);
     }
 
     const { data, error } = await query.abortSignal(controller.signal);

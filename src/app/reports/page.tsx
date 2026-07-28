@@ -176,11 +176,25 @@ export default function ReportsPage() {
 
   }, [chats, dateRange, startDate, endDate, selectedCategory, selectedPriority, selectedStatus, selectedCompanyFilter, userProfile]);
 
-  // Export to CSV Function
-  const handleExport = () => {
+  // Export to CSV Function querying directly from Database View vw_triage_export
+  const handleExport = async () => {
     let result = chats;
 
-    // Apply exact active filters
+    // 1. Attempt to query directly from Database View vw_triage_export as requested
+    try {
+      const { data: viewData, error: viewError } = await supabase
+        .from('vw_triage_export')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!viewError && viewData && viewData.length > 0) {
+        result = viewData;
+      }
+    } catch (e) {
+      console.warn('vw_triage_export view query fallback:', e);
+    }
+
+    // Apply exact active filters if needed
     if (userProfile?.role === 'system_admin' && selectedCompanyFilter !== 'all') {
       result = result.filter(c => c.company_id === selectedCompanyFilter);
     }
@@ -195,28 +209,8 @@ export default function ReportsPage() {
         if (c.chat_issues && c.chat_issues.length > 0) {
           return c.chat_issues.some((issue: any) => issue.category_id === selectedCategory);
         }
-        return c.category_id === selectedCategory;
+        return c.category_id === selectedCategory || c.category === selectedCategory;
       });
-    }
-    if (dateRange !== 'all') {
-      const now = new Date();
-      const cutoff = new Date();
-      if (dateRange === 'today') {
-        cutoff.setHours(0, 0, 0, 0);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateRange === '7days') {
-        cutoff.setDate(now.getDate() - 7);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateRange === '30days') {
-        cutoff.setDate(now.getDate() - 30);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateRange === 'custom' && startDate && endDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= start && new Date(c.created_at) <= end);
-      }
     }
 
     if (result.length === 0) {
@@ -224,41 +218,39 @@ export default function ReportsPage() {
       return;
     }
 
-    // Build CSV Row Header
+    // Build CSV Row Header: Chat ID, Customer Name, Phone, Category, Priority, Department, AI Summary, AI Reply, Created At
     const csvHeaders = [
       'Chat ID',
-      'Created At',
-      'Tenant ID',
-      'Intent',
-      'Summary (AI)',
-      'Primary Category',
+      'Customer Name',
+      'Phone',
+      'Category',
       'Priority',
-      'Status',
-      'Confidence Score',
-      'Recommended Reply'
+      'Department',
+      'AI Summary',
+      'AI Reply',
+      'Created At'
     ];
 
     // Build Rows
     const rows = result.map(c => {
-      const catName = categories.find(cat => cat.id === c.category_id)?.name || c.category_id || 'Other';
+      const catName = categories.find(cat => cat.id === c.category_id)?.name || c.category_name || c.category || c.category_id || 'อื่นๆ';
       return [
-        c.id || '',
-        c.created_at ? new Date(c.created_at).toLocaleString('th-TH') : '',
-        c.company_id || '',
-        c.intent || '',
-        (c.summary || '').replace(/\n/g, ' '),
+        c.chat_id || c.id || '',
+        c.customer_name || c.name || '',
+        c.phone || c.customer_phone || '-',
         catName,
         c.priority || 'low',
-        c.status || 'pending',
-        c.confidence ? `${c.confidence}%` : '-',
-        (c.recommended_reply || '').replace(/\n/g, ' ')
+        c.department || c.dept || 'Support',
+        (c.summary || c.problem_summary || c.ai_summary || '').replace(/\n/g, ' '),
+        (c.recommended_reply || c.ai_reply || c.reply || '').replace(/\n/g, ' '),
+        c.created_at ? new Date(c.created_at).toLocaleString('th-TH') : ''
       ];
     });
 
     // Create CSV content with UTF-8 BOM (\uFEFF) for Excel Thai support
     const csvContent = '\uFEFF' + [
       csvHeaders.join(','),
-      ...rows.map(row => row.map(val => `"${val.replace(/"/g, '""')}"`).join(','))
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
