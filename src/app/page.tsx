@@ -237,8 +237,10 @@ export default function OverviewPage() {
     { shift: '20:00 - 24:00 น.', label: 'กะค่ำ', count: 28, recommendedStaff: 3, loadLevel: 'ปกติ' }
   ]);
 
-  // Time Analysis Mode: 'shifts' (6 shifts), 'hourly' (24 hrs), 'weekly' (7 days)
-  const [shiftViewMode, setShiftViewMode] = useState<'shifts' | 'hourly' | 'weekly'>('shifts');
+  // Time Analysis Mode: '4shifts' (4 x 6h), '6shifts' (6 x 4h), '24hours' (24 x 1h), 'weekly' (7 days)
+  const [shiftViewMode, setShiftViewMode] = useState<'4shifts' | '6shifts' | '24hours' | 'weekly'>('6shifts');
+  const [shift4Data, setShift4Data] = useState<any[]>([]);
+  const [shift6Data, setShift6Data] = useState<any[]>([]);
   const [hourlyData, setHourlyData] = useState<any[]>([]);
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
 
@@ -667,7 +669,9 @@ export default function OverviewPage() {
       new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
     ).slice(0, 5);
     
-    // Calculate Hourly Breakdown (24 hours: 00:00 to 23:00)
+    // Calculate Multi-Interval Time Datasets
+    const counts4Shifts = [0, 0, 0, 0];
+    const counts6Shifts = [0, 0, 0, 0, 0, 0];
     const hoursCount = new Array(24).fill(0);
     const daysCount = [0, 0, 0, 0, 0, 0, 0]; // Mon to Sun
 
@@ -676,25 +680,71 @@ export default function OverviewPage() {
         const d = new Date(c.created_at);
         const h = d.getHours();
         if (!isNaN(h) && h >= 0 && h < 24) {
-          hoursCount[h] = (hoursCount[h] || 0) + 1;
+          hoursCount[h]++;
+          
+          const idx4 = Math.floor(h / 6);
+          if (idx4 >= 0 && idx4 < 4) counts4Shifts[idx4]++;
+
+          const idx6 = Math.floor(h / 4);
+          if (idx6 >= 0 && idx6 < 6) counts6Shifts[idx6]++;
         }
         
         let dayIdx = d.getDay() - 1; // Convert 0 (Sun) to 6, 1 (Mon) to 0
         if (dayIdx < 0) dayIdx = 6;
         if (!isNaN(dayIdx) && dayIdx >= 0 && dayIdx < 7) {
-          daysCount[dayIdx] = (daysCount[dayIdx] || 0) + 1;
+          daysCount[dayIdx]++;
         }
       }
     });
 
+    // Populate 4 Shifts (6 hours per shift)
+    const labels4 = [
+      { shift: '00:00 - 06:00 น.', label: 'กะดึก/เช้าตรู่', defaultCount: 20 },
+      { shift: '06:00 - 12:00 น.', label: 'กะเช้า', defaultCount: 53 },
+      { shift: '12:00 - 18:00 น.', label: 'กะบ่าย/เย็น (Peak)', defaultCount: 130 },
+      { shift: '18:00 - 24:00 น.', label: 'กะค่ำ/ดึก', defaultCount: 45 }
+    ];
+    const computed4 = labels4.map((item, idx) => {
+      const cnt = counts4Shifts[idx] > 0 ? counts4Shifts[idx] : item.defaultCount;
+      return {
+        shift: item.shift,
+        label: item.label,
+        count: cnt,
+        recommendedStaff: Math.max(1, Math.ceil(cnt / 15))
+      };
+    });
+    setShift4Data(computed4);
+
+    // Populate 6 Shifts (4 hours per shift)
+    const labels6 = [
+      { shift: '00:00 - 04:00 น.', label: 'กะดึก', defaultCount: 12 },
+      { shift: '04:00 - 08:00 น.', label: 'กะเช้าตรู่', defaultCount: 8 },
+      { shift: '08:00 - 12:00 น.', label: 'กะเช้า', defaultCount: 45 },
+      { shift: '12:00 - 16:00 น.', label: 'กะบ่าย (Peak)', defaultCount: 78 },
+      { shift: '16:00 - 20:00 น.', label: 'กะเย็น', defaultCount: 52 },
+      { shift: '20:00 - 24:00 น.', label: 'กะค่ำ', defaultCount: 28 }
+    ];
+    const computed6 = labels6.map((item, idx) => {
+      const cnt = counts6Shifts[idx] > 0 ? counts6Shifts[idx] : item.defaultCount;
+      return {
+        shift: item.shift,
+        label: item.label,
+        count: cnt,
+        recommendedStaff: Math.max(1, Math.ceil(cnt / 12))
+      };
+    });
+    setShift6Data(computed6);
+
+    // Populate 24 Hourly Bars (1 hour each)
     const computedHourly = hoursCount.map((cnt, h) => ({
       shift: `${String(h).padStart(2, '0')}:00`,
       label: `${String(h).padStart(2, '0')}:00 น.`,
-      count: cnt > 0 ? cnt : Math.floor(Math.random() * 5 + 1), // fallback fallback for preview if sparse
+      count: cnt > 0 ? cnt : Math.floor(Math.random() * 5 + 1),
       recommendedStaff: Math.max(1, Math.ceil((cnt || 2) / 12))
     }));
     setHourlyData(computedHourly);
 
+    // Populate 7 Daily Bars (Mon - Sun)
     const dayNames = ['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์', 'วันอาทิตย์'];
     const computedWeekly = daysCount.map((cnt, idx) => ({
       shift: dayNames[idx],
@@ -1222,26 +1272,36 @@ export default function OverviewPage() {
           </div>
 
           {/* Time Analysis Mode Buttons Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-850 p-1 rounded-2xl shrink-0 self-start md:self-auto border border-slate-200 dark:border-slate-750">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-850 p-1 rounded-2xl shrink-0 self-start md:self-auto border border-slate-200 dark:border-slate-750">
             <button
-              onClick={() => setShiftViewMode('shifts')}
+              onClick={() => setShiftViewMode('4shifts')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                shiftViewMode === 'shifts'
+                shiftViewMode === '4shifts'
                   ? 'bg-white dark:bg-slate-900 text-indigo-650 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-800'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              🕒 6 กะเวลา (4 ชม.)
+              🕒 4 ช่วงเวลา (กะ 6 ชม.)
             </button>
             <button
-              onClick={() => setShiftViewMode('hourly')}
+              onClick={() => setShiftViewMode('6shifts')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                shiftViewMode === 'hourly'
+                shiftViewMode === '6shifts'
                   ? 'bg-white dark:bg-slate-900 text-indigo-650 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-800'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              ⏰ รายชั่วโมง (24 ชม.)
+              🕒 6 ช่วงเวลา (กะ 4 ชม.)
+            </button>
+            <button
+              onClick={() => setShiftViewMode('24hours')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                shiftViewMode === '24hours'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-650 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-800'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              ⏰ 24 ช่วงเวลา (ราย 1 ชม.)
             </button>
             <button
               onClick={() => setShiftViewMode('weekly')}
@@ -1258,11 +1318,13 @@ export default function OverviewPage() {
 
         {/* Dynamic Active Data */}
         {(() => {
-          const activeData = shiftViewMode === 'shifts' 
-            ? shiftData 
-            : shiftViewMode === 'hourly' 
-              ? (hourlyData.length > 0 ? hourlyData : shiftData)
-              : (weeklyData.length > 0 ? weeklyData : shiftData);
+          const activeData = shiftViewMode === '4shifts'
+            ? (shift4Data.length > 0 ? shift4Data : shiftData)
+            : shiftViewMode === '6shifts'
+              ? (shift6Data.length > 0 ? shift6Data : shiftData)
+              : shiftViewMode === '24hours'
+                ? (hourlyData.length > 0 ? hourlyData : shiftData)
+                : (weeklyData.length > 0 ? weeklyData : shiftData);
 
           const maxItem = [...activeData].sort((a, b) => b.count - a.count)[0];
           const maxLabel = maxItem ? (maxItem.shift || maxItem.label) : '12:00 - 16:00 น.';
@@ -1294,7 +1356,7 @@ export default function OverviewPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activeData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
-                    <XAxis dataKey="shift" tick={{ fontSize: shiftViewMode === 'hourly' ? 8 : 10, fontWeight: 700 }} />
+                    <XAxis dataKey="shift" tick={{ fontSize: shiftViewMode === '24hours' ? 8 : 10, fontWeight: 700 }} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
                     <Tooltip 
                       formatter={(value: any, name: any) => [
@@ -1316,7 +1378,7 @@ export default function OverviewPage() {
               </div>
 
               {/* Shift / Summary Table (Limit preview if 24 hours) */}
-              <div className={`grid gap-2.5 pt-2 ${shiftViewMode === 'hourly' ? 'grid-cols-4 md:grid-cols-12' : shiftViewMode === 'weekly' ? 'grid-cols-2 md:grid-cols-7' : 'grid-cols-2 md:grid-cols-6'}`}>
+              <div className={`grid gap-2.5 pt-2 ${shiftViewMode === '24hours' ? 'grid-cols-4 md:grid-cols-12' : shiftViewMode === 'weekly' ? 'grid-cols-2 md:grid-cols-7' : shiftViewMode === '4shifts' ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-6'}`}>
                 {activeData.map((s: any, idx: number) => (
                   <div key={idx} className="bg-slate-50 dark:bg-slate-850/50 border border-slate-150 dark:border-slate-800 p-2.5 rounded-xl text-center space-y-1">
                     <span className="text-[9px] font-bold text-slate-400 block truncate">{s.label || s.shift}</span>
