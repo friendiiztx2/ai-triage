@@ -1334,20 +1334,20 @@ export default function OverviewPage() {
           return (
             <>
               {/* Peak-Hour Insights Banner */}
-              <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 border border-amber-200/80 dark:border-amber-900/40 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+              <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-emerald-500/10 border border-indigo-200/80 dark:border-indigo-900/40 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-lg">🔥</span>
+                  <span className="text-lg">🤖</span>
                   <div>
-                    <span className="font-extrabold text-amber-800 dark:text-amber-300 block">
-                      {shiftViewMode === 'weekly' ? 'วันที่มีแชตเข้าสูงสุด (Peak Day Insight):' : 'ช่วงเวลาที่มีปริมาณแชตทะลักสูงสุด (Peak Hour Insight):'}
+                    <span className="font-extrabold text-indigo-900 dark:text-indigo-300 block">
+                      {shiftViewMode === 'weekly' ? 'วันที่มีปริมาณแชตที่ AI ช่วยวิเคราะห์สูงสุด:' : 'ช่วงเวลาที่ AI ช่วยคัดแยกและวิเคราะห์แชตสูงสุด (Peak Volume):'}
                     </span>
                     <span className="text-slate-600 dark:text-slate-300 font-medium">
-                      ช่วงเวลา **{maxLabel}** มีปริมาณแชตสูงถึง **{maxCount} เคส**
+                      ช่วงเวลา **{maxLabel}** AI ประมวลผลสำเร็จ **{maxCount} เคส**
                     </span>
                   </div>
                 </div>
-                <span className="bg-amber-500 text-white font-extrabold px-3 py-1.5 rounded-xl text-[11px] shadow-sm self-start md:self-auto shrink-0">
-                  💡 แนะนำจัดแอดมินอยู่อย่างน้อย {recStaff} คน
+                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold px-3 py-1.5 rounded-xl text-[11px] shadow-sm self-start md:self-auto shrink-0 flex items-center gap-1.5">
+                  ⚡ AI วิเคราะห์และจัดการให้อัตโนมัติ 100%
                 </span>
               </div>
 
@@ -1361,7 +1361,7 @@ export default function OverviewPage() {
                     <Tooltip 
                       formatter={(value: any, name: any) => [
                         `${value} เคส`, 
-                        name === 'count' ? 'ปริมาณแชตสะสม' : 'จำนวนแอดมินแนะนำ'
+                        name === 'count' ? 'ปริมาณแชตสะสม' : 'สถานะการทำงาน'
                       ]} 
                     />
                     <Bar dataKey="count" radius={[6, 6, 0, 0]}>
@@ -1377,13 +1377,13 @@ export default function OverviewPage() {
                 </ResponsiveContainer>
               </div>
 
-              {/* Shift / Summary Table (Limit preview if 24 hours) */}
+              {/* Shift / Summary Table (Fully Autonomous AI Status) */}
               <div className={`grid gap-2.5 pt-2 ${shiftViewMode === '24hours' ? 'grid-cols-4 md:grid-cols-12' : shiftViewMode === 'weekly' ? 'grid-cols-2 md:grid-cols-7' : shiftViewMode === '4shifts' ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-6'}`}>
                 {activeData.map((s: any, idx: number) => (
                   <div key={idx} className="bg-slate-50 dark:bg-slate-850/50 border border-slate-150 dark:border-slate-800 p-2.5 rounded-xl text-center space-y-1">
                     <span className="text-[9px] font-bold text-slate-400 block truncate">{s.label || s.shift}</span>
                     <span className="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">{s.count} <span className="text-[8px] font-normal text-slate-400">เคส</span></span>
-                    <span className="text-[8px] font-bold text-indigo-600 dark:text-indigo-400 block truncate">👤 {s.recommendedStaff} คน</span>
+                    <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 block truncate">⚡ AI อัตโนมัติ</span>
                   </div>
                 ))}
               </div>
