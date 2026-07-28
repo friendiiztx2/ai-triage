@@ -12,6 +12,7 @@ import {
 import LanguageToggle from '@/components/LanguageToggle';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
 import { playAlertTone, isSoundEnabled } from '@/lib/audio';
+import { supabase } from '@/lib/supabase';
 
 // Custom regex-based parser for AI Recommendation Markdown structure (Multi-Issue Breakdown)
 function parseAIRecommendation(markdown: string) {
@@ -377,6 +378,19 @@ function FloatingChatWindow({
       });
 
       if (res.ok) {
+        // Log to activity_logs table
+        try {
+          await supabase.from('activity_logs').insert([{
+            company_id: userProfile?.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+            user_id: userProfile?.id || 'admin-01',
+            user_name: userProfile?.name || 'Admin',
+            action_type: 'UPDATE_CATEGORY',
+            details: { chat_id: chat.id, old_category: chat.category_id, new_category: finalCategoryId, old_priority: chat.priority, new_priority: finalPriority }
+          }]);
+        } catch (e) {
+          console.warn('activity_logs insert:', e);
+        }
+
         onSaved();
       }
     } catch (err) {
@@ -1350,6 +1364,67 @@ export default function ChatsPage() {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
+
+  // 🔔 Task 1: Supabase Realtime Listener (Live Chat Updates)
+  useEffect(() => {
+    const channel = supabase
+      .channel('realtime-chats-chats-page')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
+        fetchInitialData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_issues' }, () => {
+        fetchInitialData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // 📜 Task 4: Activity Log Trail helper for activity_logs table
+  const logActivityTrail = async (actionType: string, selectedChatId: string, oldValue: any, newValue: any) => {
+    try {
+      const user = userProfile || {
+        id: 'admin-01',
+        name: 'Admin',
+        company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2'
+      };
+
+      const logPayload = {
+        company_id: user.company_id || user.companyId || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+        user_id: user.id || 'admin-01',
+        user_name: user.name || 'Admin',
+        action_type: actionType,
+        details: { chat_id: selectedChatId, old_value: oldValue, new_value: newValue }
+      };
+
+      // 1. Direct Supabase insert to activity_logs
+      try {
+        await supabase.from('activity_logs').insert([logPayload]);
+      } catch (err) {
+        console.warn('activity_logs insert warning:', err);
+      }
+
+      // 2. API proxy insert
+      try {
+        await fetch('/api/audit-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            admin_name: user.name || 'Admin',
+            admin_email: user.email || 'admin@aitriage.com',
+            action: actionType,
+            ...logPayload
+          })
+        });
+      } catch (err) {
+        console.error('Audit log API error:', err);
+      }
+    } catch (e) {
+      console.error('Error logging activity trail:', e);
+    }
+  };
 
   useEffect(() => {
     fetchInitialData();
