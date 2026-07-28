@@ -430,74 +430,66 @@ function FloatingChatWindow({
   };
 
   const renderConversation = () => {
-    // Map strictly from main column: chats.conversation
-    let rawConv = chat.conversation;
-    
-    if (!rawConv) {
-      return (
-        <div className="text-slate-400 dark:text-slate-500 italic text-xs p-4 text-center">
-          ไม่มีประวัติบทสนทนาในคอลัมน์ chats.conversation
-        </div>
-      );
-    }
+    let conversationList: any[] = [];
 
-    if (typeof rawConv === 'string') {
-      try {
-        rawConv = JSON.parse(rawConv);
-      } catch (e) {
-        // Plain text string
+    // 1. Parse raw chat.conversation if present
+    if (chat.conversation) {
+      let rawConv = chat.conversation;
+      if (typeof rawConv === 'string') {
+        try {
+          rawConv = JSON.parse(rawConv);
+        } catch (e) {}
+      }
+      if (Array.isArray(rawConv) && rawConv.length > 0) {
+        conversationList = rawConv;
       }
     }
 
-    if (Array.isArray(rawConv)) {
-      return (
-        <div className="space-y-4">
-          {rawConv.map((msg: any, index: number) => {
-            const isCustomer = msg.sender?.toLowerCase() === 'customer' || 
-                               msg.sender?.toLowerCase() === 'user' || 
-                               msg.role?.toLowerCase() === 'user' ||
-                               msg.role?.toLowerCase() === 'customer' ||
-                               (!msg.sender && index % 2 === 0);
-            
-            const senderName = isCustomer 
-              ? (chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id))
-              : 'แอดมิน / AI';
+    // 2. Get all sub-issues analyzed by AI for this chat
+    const hasDbIssues = selectedChatIssues && selectedChatIssues.length > 0;
+    const recData = parseAIRecommendation(chat.ai_recommendation);
+    const hasParsedIssues = recData && recData.issues && recData.issues.length > 0;
 
-            const messageText = msg.message || msg.text || msg.content || (typeof msg === 'string' ? msg : JSON.stringify(msg));
+    const issuesToRender = hasDbIssues
+      ? selectedChatIssues.map((issue: any) => ({
+          title: issue.summary,
+          reply: issue.recommended_reply,
+          time: issue.created_at ? new Date(issue.created_at).toLocaleTimeString('th-TH') : undefined
+        }))
+      : hasParsedIssues
+        ? recData.issues
+        : (chat.chat_issues && chat.chat_issues.length > 0)
+          ? chat.chat_issues.map((i: any) => ({ title: i.summary, reply: i.recommended_reply }))
+          : [];
 
-            return (
-              <div 
-                key={index} 
-                className={'flex flex-col ' + (isCustomer ? 'items-start' : 'items-end')}
-              >
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
-                  {senderName}
-                </span>
-                <div 
-                  className={'p-3.5 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed ' + 
-                    (isCustomer 
-                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none' 
-                      : 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
-                    )
-                  }
-                >
-                  {messageText}
-                </div>
-                {msg.time && (
-                  <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 select-none font-medium">
-                    {msg.time}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      );
+    // If conversationList is empty OR has fewer customer messages than issuesToRender,
+    // build/merge full multi-issue conversation list!
+    if (issuesToRender.length > 0 && conversationList.length < issuesToRender.length * 2) {
+      conversationList = [];
+      issuesToRender.forEach((issueItem: any, idx: number) => {
+        const custMsg = issueItem.title || issueItem.summary || issueItem.message || 'เรื่องที่ ' + (idx + 1);
+        const aiMsg = issueItem.reply || issueItem.recommended_reply || 'สวัสดีค่ะ ทางทีมงานกำลังดำเนินการตรวจสอบและแก้ไขปัญหานี้นะคะ';
+        const msgTime = issueItem.time || (chat.created_at ? new Date(chat.created_at).toLocaleTimeString('th-TH') : undefined);
+
+        conversationList.push({
+          sender: 'customer',
+          message: custMsg,
+          issueNumber: idx + 1,
+          time: msgTime
+        });
+
+        if (aiMsg) {
+          conversationList.push({
+            sender: 'agent',
+            message: aiMsg,
+            time: msgTime
+          });
+        }
+      });
     }
 
-    // Handle plain text / multi-line string in chats.conversation
-    if (typeof rawConv === 'string') {
-      const lines = rawConv.split('\n').filter((l: string) => l.trim() !== '');
+    if (conversationList.length === 0 && typeof chat.conversation === 'string') {
+      const lines = chat.conversation.split('\n').filter((l: string) => l.trim() !== '');
       return (
         <div className="space-y-3">
           {lines.map((line: string, index: number) => {
@@ -526,9 +518,62 @@ function FloatingChatWindow({
       );
     }
 
+    if (conversationList.length === 0) {
+      return (
+        <div className="text-slate-400 dark:text-slate-500 italic text-xs p-4 text-center">
+          ไม่มีประวัติบทสนทนาในคอลัมน์ chats.conversation
+        </div>
+      );
+    }
+
     return (
-      <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 p-4 rounded-xl font-mono text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-        {JSON.stringify(rawConv, null, 2)}
+      <div className="space-y-4">
+        {conversationList.map((msg: any, index: number) => {
+          const isCustomer = msg.sender?.toLowerCase() === 'customer' || 
+                             msg.sender?.toLowerCase() === 'user' || 
+                             msg.role?.toLowerCase() === 'user' ||
+                             msg.role?.toLowerCase() === 'customer' ||
+                             (!msg.sender && index % 2 === 0);
+          
+          const senderName = isCustomer 
+            ? (chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id))
+            : 'แอดมิน / AI';
+
+          const messageText = msg.message || msg.text || msg.content || (typeof msg === 'string' ? msg : JSON.stringify(msg));
+
+          return (
+            <div 
+              key={index} 
+              className={'flex flex-col ' + (isCustomer ? 'items-start' : 'items-end')}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                  {senderName}
+                </span>
+                {msg.issueNumber && isCustomer && (
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-955/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                    เรื่องที่ {msg.issueNumber}
+                  </span>
+                )}
+              </div>
+              <div 
+                className={'p-3.5 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed ' + 
+                  (isCustomer 
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-750' 
+                    : 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
+                  )
+                }
+              >
+                {messageText}
+              </div>
+              {msg.time && (
+                <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 select-none font-medium">
+                  {msg.time}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
