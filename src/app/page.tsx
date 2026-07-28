@@ -218,6 +218,32 @@ export default function OverviewPage() {
 
 
 
+  // Feature 1: Agent Workload & Capacity Center State
+  const [teamMembers, setTeamMembers] = useState<any[]>([
+    { id: 'usr-01', name: 'แอดมินอ้อ (Aor)', role: 'Support Lead', status: 'online', activeCases: 3, maxCapacity: 8, urgentCount: 1, highCount: 1, mediumCount: 1 },
+    { id: 'usr-02', name: 'แอดมินสมชาย (Somchai)', role: 'Senior Support', status: 'online', activeCases: 6, maxCapacity: 8, urgentCount: 2, highCount: 3, mediumCount: 1 },
+    { id: 'usr-03', name: 'แอดมินนภา (Napha)', role: 'Technical Support', status: 'busy', activeCases: 7, maxCapacity: 8, urgentCount: 3, highCount: 2, mediumCount: 2 },
+    { id: 'usr-04', name: 'แอดมินกิตติ (Kitti)', role: 'VIP Support', status: 'online', activeCases: 2, maxCapacity: 10, urgentCount: 0, highCount: 1, mediumCount: 1 },
+    { id: 'usr-05', name: 'แอดมินเมย์ (May)', role: 'Junior Support', status: 'online', activeCases: 4, maxCapacity: 6, urgentCount: 1, highCount: 2, mediumCount: 1 }
+  ]);
+
+  // Feature 4: Shift Workload Heatmap & Peak-Hour Distribution State
+  const [shiftData, setShiftData] = useState<any[]>([
+    { shift: '00:00 - 04:00 น.', label: 'กะดึก', count: 12, recommendedStaff: 2, loadLevel: 'ปกติ' },
+    { shift: '04:00 - 08:00 น.', label: 'กะเช้าตรู่', count: 8, recommendedStaff: 1, loadLevel: 'เบาบาง' },
+    { shift: '08:00 - 12:00 น.', label: 'กะเช้า', count: 45, recommendedStaff: 4, loadLevel: 'คึกคัก' },
+    { shift: '12:00 - 16:00 น.', label: 'กะบ่าย (Peak)', count: 78, recommendedStaff: 6, loadLevel: 'เคสหนาแน่น 🚨' },
+    { shift: '16:00 - 20:00 น.', label: 'กะเย็น', count: 52, recommendedStaff: 5, loadLevel: 'คึกคัก' },
+    { shift: '20:00 - 24:00 น.', label: 'กะค่ำ', count: 28, recommendedStaff: 3, loadLevel: 'ปกติ' }
+  ]);
+
+  // Transfer Workload Modal State
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferSourceAgent, setTransferSourceAgent] = useState<any>(null);
+  const [transferTargetAgentId, setTransferTargetAgentId] = useState('');
+  const [transferCount, setTransferCount] = useState(1);
+  const [transferSuccessMsg, setTransferSuccessMsg] = useState('');
+
   // Category Show/Hide Toggle
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [isReloadedSuccess, setIsReloadedSuccess] = useState(false);
@@ -1139,6 +1165,286 @@ export default function OverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* 📊 FEATURE 1: การ์ดภาระงานรายบุคคลและการบริหารทีม (Team Workload & Capacity Center) */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <h2 className="font-extrabold text-slate-850 dark:text-slate-100 text-lg flex items-center gap-2 font-display">
+              <Users size={20} className="text-indigo-600 dark:text-indigo-400" />
+              {language === 'th' ? 'ศูนย์บริหารจัดการภาระงานเจ้าหน้าที่ (Agent Workload & Capacity Center)' : 'Agent Workload & Capacity Center'}
+            </h2>
+            <p className="text-slate-455 dark:text-slate-400 text-xs mt-1">
+              {language === 'th' ? 'ติดตามดูภาระงาน (Active Cases) ของเจ้าหน้าที่แต่ละคน ป้องกันเคสคั่งค้างและโอนย้ายกระจายงานอย่างสมดุล' : 'Monitor active handled cases per agent, prevent case backlog, and balance workload.'}
+            </p>
+          </div>
+
+          {/* Quick Action: Re-balance Workload */}
+          <button
+            onClick={() => {
+              // Smart Auto Balance Team Workload
+              const totalActive = teamMembers.reduce((acc, member) => acc + member.activeCases, 0);
+              const avg = Math.ceil(totalActive / teamMembers.length);
+              setTeamMembers(prev => prev.map(m => ({ ...m, activeCases: avg })));
+              setTransferSuccessMsg(language === 'th' ? 'กระจายภาระงานทีมให้เท่ากันสมดุลเรียบร้อยแล้ว!' : 'Team workload re-balanced successfully!');
+              setTimeout(() => setTransferSuccessMsg(''), 3000);
+            }}
+            className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-955/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none self-start md:self-auto shrink-0 shadow-sm"
+          >
+            <RefreshCw size={14} />
+            {language === 'th' ? '⚖️ จัดสมดุลภาระงานทีมอัตโนมัติ' : 'Auto Balance Workload'}
+          </button>
+        </div>
+
+        {transferSuccessMsg && (
+          <div className="bg-emerald-50 dark:bg-emerald-955/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 p-3 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in">
+            <span>✨ {transferSuccessMsg}</span>
+            <button onClick={() => setTransferSuccessMsg('')} className="text-xs font-extrabold hover:underline">ปิด</button>
+          </div>
+        )}
+
+        {/* Agent Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {teamMembers.map((agent) => {
+            const capacityPercent = Math.min(100, Math.round((agent.activeCases / agent.maxCapacity) * 100));
+            
+            let statusBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50';
+            let statusText = '🟢 พร้อมรับแชต';
+            let barColorClass = 'bg-emerald-500';
+
+            if (capacityPercent >= 80) {
+              statusBadgeClass = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50 animate-pulse';
+              statusText = '🔴 งานล้นมือ 🚨';
+              barColorClass = 'bg-rose-500';
+            } else if (capacityPercent >= 50) {
+              statusBadgeClass = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50';
+              statusText = '🟡 งานแน่น';
+              barColorClass = 'bg-amber-500';
+            }
+
+            return (
+              <div 
+                key={agent.id}
+                className="bg-slate-50/70 dark:bg-slate-855/40 border border-slate-200 dark:border-slate-800 p-4.5 rounded-2xl space-y-3.5 hover:shadow-md transition"
+              >
+                {/* Agent Header Info */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-extrabold flex items-center justify-center text-xs shadow-sm">
+                      {agent.name.substring(6, 8) || 'AD'}
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-slate-850 dark:text-slate-100 text-xs">{agent.name}</h4>
+                      <span className="text-[10px] text-slate-400 font-semibold">{agent.role}</span>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border shadow-sm ${statusBadgeClass}`}>
+                    {statusText}
+                  </span>
+                </div>
+
+                {/* Capacity Meter Bar */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">เคสในมือ (Capacity):</span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200">
+                      {agent.activeCases} / {agent.maxCapacity} เคส <span className="text-slate-400 font-normal">({capacityPercent}%)</span>
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-200 dark:bg-slate-750 h-2 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${barColorClass}`}
+                      style={{ width: `${capacityPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Case Priority Breakdown Pills */}
+                <div className="flex items-center justify-between text-[10px] font-bold pt-1 border-t border-slate-200/60 dark:border-slate-800">
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-955/40 dark:text-rose-300">
+                      🚨 เคสด่วน: {agent.urgentCount}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-700 dark:bg-orange-955/40 dark:text-orange-300">
+                      High: {agent.highCount}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setTransferSourceAgent(agent);
+                      setShowTransferModal(true);
+                    }}
+                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-extrabold hover:underline cursor-pointer"
+                  >
+                    โอนย้ายเคส ➔
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 📈 FEATURE 4: กราฟช่วงเวลาภาระงานสะสม (Shift Workload Heatmap / Peak-Hour Distribution) */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-6">
+        <div>
+          <h2 className="font-extrabold text-slate-850 dark:text-slate-100 text-lg flex items-center gap-2 font-display">
+            <Clock size={20} className="text-amber-500" />
+            {language === 'th' ? 'กราฟวิเคราะห์ภาระงานรายช่วงเวลา (Shift Workload & Peak-Hour Distribution)' : 'Shift Workload & Peak-Hour Distribution'}
+          </h2>
+          <p className="text-slate-455 dark:text-slate-400 text-xs mt-1">
+            {language === 'th' ? 'วิเคราะห์ปริมาณแชตสะสมในแต่ละกะเวลา 24 ชม. เพื่อวางแผนจัดเจ้าหน้าที่เข้าเวรได้อย่างเหมาะสม' : 'Analyze hourly chat volume distribution to optimize team shift planning.'}
+          </p>
+        </div>
+
+        {/* Peak-Hour Insights Banner */}
+        <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 border border-amber-200/80 dark:border-amber-900/40 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="text-lg">🔥</span>
+            <div>
+              <span className="font-extrabold text-amber-800 dark:text-amber-300 block">
+                ช่วงเวลาที่มีปริมาณแชตทะลักสูงสุด (Peak Hour Insight):
+              </span>
+              <span className="text-slate-600 dark:text-slate-300 font-medium">
+                ช่วงเวลา **12:00 - 16:00 น. (กะบ่าย)** มีปริมาณแชตสูงถึง **78 เคส**
+              </span>
+            </div>
+          </div>
+          <span className="bg-amber-500 text-white font-extrabold px-3 py-1.5 rounded-xl text-[11px] shadow-sm self-start md:self-auto shrink-0">
+            💡 แนะนำจัดแอดมินอยู่อย่างน้อย 6 คน
+          </span>
+        </div>
+
+        {/* Heatmap Bar Chart */}
+        <div className="h-[280px] w-full pt-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={shiftData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
+              <XAxis dataKey="shift" tick={{ fontSize: 10, fontWeight: 700 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
+              <Tooltip 
+                formatter={(value: any, name: any) => [
+                  `${value} เคส`, 
+                  name === 'count' ? 'ปริมาณแชตสะสม' : 'จำนวนแอดมินแนะนำ'
+                ]} 
+              />
+              <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                {shiftData.map((entry, index) => {
+                  let barColor = '#c084fc'; // Normal shift (Purple)
+                  if (entry.count >= 70) barColor = '#f43f5e'; // Peak shift (Rose)
+                  else if (entry.count >= 40) barColor = '#f59e0b'; // Busy shift (Amber)
+                  else if (entry.count <= 10) barColor = '#93c5fd'; // Light shift (Blue)
+                  return <Cell key={`cell-shift-${index}`} fill={barColor} />;
+                })}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Shift Summary Table */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 pt-2">
+          {shiftData.map((s, idx) => (
+            <div key={idx} className="bg-slate-50 dark:bg-slate-850/50 border border-slate-150 dark:border-slate-800 p-3 rounded-xl text-center space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 block truncate">{s.label}</span>
+              <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100 block">{s.count} <span className="text-[9px] font-normal text-slate-400">เคส</span></span>
+              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 block">👤 แอดมิน: {s.recommendedStaff} คน</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Transfer Workload Interactive Modal */}
+      {showTransferModal && transferSourceAgent && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-sm flex items-center gap-2">
+                🔄 โอนย้ายกระจายภาระงาน (Transfer Workload)
+              </h3>
+              <button 
+                onClick={() => setShowTransferModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-extrabold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="bg-amber-50 dark:bg-amber-955/30 border border-amber-200 dark:border-amber-900/50 p-3 rounded-2xl text-amber-800 dark:text-amber-300 font-bold">
+                👤 ผู้ส่งเคส: <span className="text-slate-900 dark:text-slate-100 font-extrabold">{transferSourceAgent.name}</span> (ปัจจุบันดูแลอยู่ {transferSourceAgent.activeCases} เคส)
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  เลือกเจ้าหน้าที่รับโอนเคสปลายทาง:
+                </label>
+                <select
+                  value={transferTargetAgentId}
+                  onChange={(e) => setTransferTargetAgentId(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:border-indigo-600"
+                >
+                  <option value="">-- เลือกเจ้าหน้าที่ที่มี Capacity ว่าง --</option>
+                  {teamMembers.filter(m => m.id !== transferSourceAgent.id).map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.activeCases}/{m.maxCapacity} เคส) - {m.status === 'online' ? '🟢 พร้อมรับแชต' : '🟡 งานแน่น'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  จำนวนเคสที่ต้องการโอนย้าย:
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={transferSourceAgent.activeCases}
+                  value={transferCount}
+                  onChange={(e) => setTransferCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowTransferModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={() => {
+                  if (!transferTargetAgentId) {
+                    alert('กรุณาเลือกเจ้าหน้าที่รับโอนปลายทาง');
+                    return;
+                  }
+                  
+                  // Update team members workload
+                  setTeamMembers(prev => prev.map(m => {
+                    if (m.id === transferSourceAgent.id) {
+                      return { ...m, activeCases: Math.max(0, m.activeCases - transferCount) };
+                    }
+                    if (m.id === transferTargetAgentId) {
+                      return { ...m, activeCases: m.activeCases + transferCount };
+                    }
+                    return m;
+                  }));
+
+                  setShowTransferModal(false);
+                  setTransferSuccessMsg(`โอนย้ายจำนวน ${transferCount} เคสเรียบร้อยแล้ว!`);
+                  setTimeout(() => setTransferSuccessMsg(''), 3000);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-750 text-white shadow-md transition cursor-pointer"
+              >
+                ยืนยันการโอนย้ายเคส
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
