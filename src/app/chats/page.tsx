@@ -1916,8 +1916,8 @@ export default function ChatsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-855/50 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold">
-                    <th className="px-2 py-3 w-8 text-center select-none">
+                  <tr className="bg-slate-50 dark:bg-slate-855/50 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold select-none">
+                    <th className="px-2 py-2.5 w-8 text-center select-none">
                       <input 
                         type="checkbox" 
                         checked={isAllSelected}
@@ -1928,15 +1928,55 @@ export default function ChatsPage() {
                         className="w-3.5 h-3.5 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-1.5 py-3 max-w-[85px] whitespace-nowrap">{t('colChatId')}</th>
-                    <th className="px-2 py-3 whitespace-nowrap">{t('colCustomer')}</th>
-                    <th className="px-2.5 py-3 max-w-[210px]">{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</th>
-                    <th className="px-1.5 py-3 whitespace-nowrap">{language === 'th' ? 'ประวัติ (360)' : 'Contact 360'}</th>
-                    <th className="px-1.5 py-3 whitespace-nowrap">{t('colCategory')}</th>
-                    <th className="px-1.5 py-3 whitespace-nowrap text-center">{t('colPriority')}</th>
-                    <th className="px-1.5 py-3 whitespace-nowrap text-center">{t('colStatus')}</th>
-                    <th className="px-3 py-3 w-[110px] min-w-[110px] whitespace-nowrap text-right">{t('colTime')}</th>
-                    <th className="px-1.5 py-3 w-5"></th>
+                    <th className="px-2 py-2.5 whitespace-nowrap">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'แชทไอดี' : 'Chat ID'}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Chat ID)</span>
+                      </div>
+                    </th>
+                    <th className="px-2 py-2.5 whitespace-nowrap">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'ลูกค้า' : 'Customer'}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Customer)</span>
+                      </div>
+                    </th>
+                    <th className="px-2.5 py-2.5 max-w-[210px]">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(AI Summary)</span>
+                      </div>
+                    </th>
+                    <th className="px-2 py-2.5 whitespace-nowrap">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'ประวัติ 360' : '360 History'}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Customer 360)</span>
+                      </div>
+                    </th>
+                    <th className="px-2 py-2.5 whitespace-nowrap">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'หมวดหมู่' : 'Category'}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Category)</span>
+                      </div>
+                    </th>
+                    <th className="px-2 py-2.5 whitespace-nowrap text-center">
+                      <div className="flex flex-col leading-tight items-center">
+                        <span>{language === 'th' ? 'ความด่วน' : 'Priority'}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Priority)</span>
+                      </div>
+                    </th>
+                    <th className="px-2 py-2.5 whitespace-nowrap text-center">
+                      <div className="flex flex-col leading-tight items-center">
+                        <span>{language === 'th' ? 'สถานะ' : 'Status'}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Status)</span>
+                      </div>
+                    </th>
+                    <th className="px-3 py-2.5 w-[110px] min-w-[110px] whitespace-nowrap text-right">
+                      <div className="flex flex-col leading-tight items-end">
+                        <span>{language === 'th' ? 'เวลา' : 'Time'}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Time)</span>
+                      </div>
+                    </th>
+                    <th className="px-1.5 py-2.5 w-5"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
