@@ -1928,9 +1928,9 @@ export default function ChatsPage() {
                         className="w-3.5 h-3.5 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-2 py-3 whitespace-nowrap">{t('colChatId')}</th>
+                    <th className="px-2 py-3 max-w-[100px] whitespace-nowrap">{t('colChatId')}</th>
                     <th className="px-2.5 py-3 whitespace-nowrap">{t('colCustomer')}</th>
-                    <th className="px-3 py-3 max-w-[160px]">{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</th>
+                    <th className="px-3 py-3 min-w-[240px] max-w-[400px]">{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</th>
                     <th className="px-2 py-3 whitespace-nowrap">{language === 'th' ? 'ประวัติ (360)' : 'Contact 360'}</th>
                     <th className="px-2 py-3 whitespace-nowrap">{t('colCategory')}</th>
                     <th className="px-2 py-3 whitespace-nowrap text-center">{t('colPriority')}</th>
@@ -1959,8 +1959,8 @@ export default function ChatsPage() {
                           />
                         </td>
 
-                        {/* Chat ID */}
-                        <td className="px-2 py-3 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        {/* Chat ID (Compact & Truncated) */}
+                        <td className="px-2 py-3 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 max-w-[95px] truncate" title={chat.id}>
                           {chat.id}
                         </td>
 
@@ -1989,10 +1989,10 @@ export default function ChatsPage() {
                           )}
                         </td>
                         
-                        {/* Summary with AI Confidence Badge */}
-                        <td className="px-3 py-3 max-w-[160px] text-slate-600 dark:text-slate-300 font-medium">
+                        {/* Summary with AI Confidence Badge (Expanded Width) */}
+                        <td className="px-3 py-3 min-w-[240px] max-w-[400px] text-slate-700 dark:text-slate-200 font-medium">
                           <div className="flex flex-col gap-1">
-                            <span className="truncate block leading-snug">{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
+                            <span className="truncate block leading-snug font-semibold" title={chat.summary}>{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
                             {chat.confidence !== undefined && chat.confidence !== null && (
                               <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold w-max px-1.5 py-0.2 rounded-full border leading-none select-none ${
                                 chat.confidence >= 85 
