@@ -529,17 +529,31 @@ export default function OverviewPage() {
     setChartData(parsedData);
 
     // Group chats by date or hourly intervals for multi-line trend comparison
+    let sortedDateKeys: string[] = [];
     const dateMap = new Map<string, Date>();
-    filtered.forEach((c: any) => {
-      if (c.created_at) {
-        const d = new Date(c.created_at);
-        const key = d.toISOString().substring(0, 10); // YYYY-MM-DD for sorting
+
+    if (dateRange === '7days' || dateRange === '30days') {
+      const numDays = dateRange === '7days' ? 7 : 30;
+      const today = new Date();
+      for (let i = numDays - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const key = d.toISOString().substring(0, 10);
+        sortedDateKeys.push(key);
         dateMap.set(key, d);
       }
-    });
+    } else {
+      filtered.forEach((c: any) => {
+        if (c.created_at) {
+          const d = new Date(c.created_at);
+          const key = d.toISOString().substring(0, 10);
+          dateMap.set(key, d);
+        }
+      });
+      sortedDateKeys = Array.from(dateMap.keys()).sort();
+    }
 
-    const sortedDateKeys = Array.from(dateMap.keys()).sort();
-    const isSingleDay = dateRange === 'today' || (dateRange === 'custom' && startDate === endDate) || (dateRange === 'all' && sortedDateKeys.length <= 1);
+    const isSingleDay = dateRange === 'today' || (dateRange === 'custom' && startDate === endDate);
 
     let timeSeries: any[] = [];
 
@@ -595,7 +609,7 @@ export default function OverviewPage() {
       });
     } else {
       timeSeries = sortedDateKeys.map(key => {
-        const d = dateMap.get(key)!;
+        const d = dateMap.get(key) || new Date(key);
         const dateLabel = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
         
         const item: Record<string, any> = { name: dateLabel };
@@ -607,7 +621,7 @@ export default function OverviewPage() {
         item['อื่นๆ'] = 0;
 
         // Filter chats for this date
-        const dayChats = filtered.filter((c: any) => c.created_at && c.created_at.startsWith(key));
+        const dayChats = filtered.filter((c: any) => c.created_at && c.created_at.substring(0, 10) === key);
         dayChats.forEach((c: any) => {
           if (c.chat_issues && c.chat_issues.length > 0) {
             c.chat_issues.forEach((issue: any) => {
