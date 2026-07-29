@@ -1142,7 +1142,7 @@ export default function ChatsPage() {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('today');
   const [auditFilter, setAuditFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -1258,7 +1258,7 @@ export default function ChatsPage() {
   const mediumCount = chats.filter(c => (c.priority || '').toLowerCase() === 'medium').length;
   const lowCount = chats.filter(c => (c.priority || '').toLowerCase() === 'low').length;
 
-  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all' || tagFilter !== 'all' || dateFilter !== 'all' || auditFilter !== 'all';
+  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all' || tagFilter !== 'all' || dateFilter !== 'today' || auditFilter !== 'all';
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -1266,7 +1266,7 @@ export default function ChatsPage() {
     setPriorityFilter('all');
     setCategoryFilter('all');
     setTagFilter('all');
-    setDateFilter('all');
+    setDateFilter('today');
     setAuditFilter('all');
     setStartDate('');
     setEndDate('');
@@ -1808,7 +1808,6 @@ export default function ChatsPage() {
                 onChange={(e) => setDateFilter(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
               >
-                <option value="all">{t('filterTimeframe')}</option>
                 <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้' : 'Timeframe: Today'}</option>
                 <option value="7days">{language === 'th' ? 'ช่วงเวลา: 7 วันล่าสุด' : 'Timeframe: Last 7 Days'}</option>
                 <option value="30days">{language === 'th' ? 'ช่วงเวลา: 30 วันล่าสุด' : 'Timeframe: Last 30 Days'}</option>
