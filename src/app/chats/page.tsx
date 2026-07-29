@@ -1014,13 +1014,14 @@ function FloatingChatWindow({
                           <h4 className="font-extrabold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
                             👤 ข้อมูลโปรไฟล์และประวัติสะสม (Customer 360)
                           </h4>
-                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border shadow-sm ${
-                            isReturning 
-                              ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50' 
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50'
-                          }`}>
-                            {isReturning ? `🔁 ทักซ้ำ ${customerChats.length} เคสในระบบ` : '✨ ลูกค้าใหม่ (ทักครั้งแรก)'}
-                          </span>
+                          <Link 
+                            href={`/customers?search=${encodeURIComponent(chat.customer_name || chat.customer_id || '')}`}
+                            target="_blank"
+                            className="text-[10px] font-extrabold px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-955/40 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 transition cursor-pointer shadow-sm flex items-center gap-1"
+                          >
+                            <span>🔍 ดูใน Customer 360</span>
+                            <span>➔</span>
+                          </Link>
                         </div>
 
                         {customerInfo ? (
