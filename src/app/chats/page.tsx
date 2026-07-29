@@ -1820,8 +1820,24 @@ export default function ChatsPage() {
             </select>
           </div>
 
+          {/* Tag Filter Dropdown */}
+          <div className="w-full">
+            <select
+              value={tagFilter}
+              onChange={(e) => setTagFilter(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
+            >
+              <option value="all">🏷️ แท็ก: ทั้งหมด</option>
+              {allAvailableTags.map((tagObj) => (
+                <option key={tagObj.name} value={tagObj.name}>
+                  {tagObj.name} ({tagObj.desc})
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Audit Filter */}
-          <div className="w-full md:col-span-2">
+          <div className="w-full">
             <select
               value={auditFilter}
               onChange={(e) => setAuditFilter(e.target.value)}
@@ -2006,6 +2022,24 @@ export default function ChatsPage() {
                           <div>
                             {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
                           </div>
+                          {chat.tags && chat.tags.length > 0 && (
+                            <div className="flex items-center gap-1 flex-wrap mt-1 select-none">
+                              {chat.tags.map((tag: string, tidx: number) => {
+                                let badgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800';
+                                if (tag === '#VIP') badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50';
+                                else if (tag === '#ติดตามผล') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50';
+                                else if (tag === '#รอสลิป') badgeColor = 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50';
+                                else if (tag === '#ส่งเรื่องทีมเทคนิค') badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50';
+                                else if (tag === '#รอธนาคารแก้ไข') badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50';
+                                
+                                return (
+                                  <span key={tidx} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${badgeColor}`}>
+                                    {tag}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </td>
                         
                         {/* Summary with AI Confidence Badge */}

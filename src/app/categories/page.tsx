@@ -204,20 +204,60 @@ export default function CategoriesPage() {
     }
   };
 
+  const [activeTab, setActiveTab] = useState<'categories' | 'tags'>('categories');
+  const [systemTags, setSystemTags] = useState<string[]>([
+    '#VIP', '#ส่งเรื่องทีมเทคนิค', '#รอสลิป', '#ติดตามผล', '#รอธนาคารแก้ไข', '#เคสพิเศษ'
+  ]);
+  const [editingTag, setEditingTag] = useState<{ oldName: string; newName: string } | null>(null);
+  const [newTagInput, setNewTagInput] = useState('');
+
+  const handleAddSystemTag = () => {
+    if (!newTagInput.trim()) return;
+    let tagName = newTagInput.trim();
+    if (!tagName.startsWith('#')) tagName = '#' + tagName;
+    if (systemTags.includes(tagName)) {
+      alert('มีแท็กชื่อนี้ในระบบแล้ว');
+      return;
+    }
+    setSystemTags(prev => [...prev, tagName]);
+    setNewTagInput('');
+    saveAuditLog('CREATE', `เพิ่มแท็กระบบใหม่: ${tagName}`);
+    alert(`เพิ่มแท็ก "${tagName}" เข้าสู่ระบบสำเร็จ!`);
+  };
+
+  const handleRenameSystemTag = (oldName: string) => {
+    if (!editingTag || !editingTag.newName.trim()) return;
+    let updatedName = editingTag.newName.trim();
+    if (!updatedName.startsWith('#')) updatedName = '#' + updatedName;
+
+    setSystemTags(prev => prev.map(t => t === oldName ? updatedName : t));
+    saveAuditLog('UPDATE', `แก้ไขชื่อแท็กระบบจาก ${oldName} เป็น ${updatedName}`);
+    setEditingTag(null);
+    alert(`แก้ไขชื่อแท็กจาก "${oldName}" เป็น "${updatedName}" สำเร็จ!`);
+  };
+
+  const handleDeleteSystemTag = (tagName: string) => {
+    const isConfirmed = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบแท็ก "${tagName}" ออกจากระบบ?`);
+    if (!isConfirmed) return;
+    setSystemTags(prev => prev.filter(t => t !== tagName));
+    saveAuditLog('DELETE', `ลบแท็กระบบ: ${tagName}`);
+    alert(`ลบแท็ก "${tagName}" สำเร็จ!`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Title & Action Buttons */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display">
-            {language === 'th' ? 'จัดการหมวดหมู่ปัญหา (Category Manager)' : 'Manage Categories'}
+            {language === 'th' ? 'ศูนย์จัดการหมวดหมู่และแท็กระบบ (Category & Tag Manager)' : 'Category & Tag Manager'}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            {language === 'th' ? 'ตั้งค่าและดูรายการหมวดหมู่ปัญหาหลักที่ใช้ประเมินผลด้วย AI' : 'Configure main category mappings evaluated by AI'}
+            {language === 'th' ? 'จัดการเพิ่ม/แก้ไข/ลบหมวดหมู่หลัก และแท็กติดเคสระบบสำหรับใช้งานทั่วทั้งแอปพลิเคชัน' : 'Manage main categories and system tag labels across the application'}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {(userProfile?.role === 'super_admin' || userProfile?.role === 'system_admin') && (
+          {activeTab === 'categories' && (userProfile?.role === 'super_admin' || userProfile?.role === 'system_admin') && (
             <button 
               onClick={() => setShowModal(true)}
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-100 dark:shadow-none transition-all cursor-pointer"
@@ -230,12 +270,164 @@ export default function CategoriesPage() {
             onClick={fetchCategories}
             className="flex items-center gap-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-855 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all cursor-pointer"
           >
-            <RefreshCw size={14} /> {language === 'th' ? 'อัปเดตข้อมูลหมวดหมู่' : 'Reload Categories'}
+            <RefreshCw size={14} /> {language === 'th' ? 'อัปเดตข้อมูล' : 'Reload Data'}
           </button>
         </div>
       </div>
 
-      {loading ? (
+      {/* Sub-Tab Navigation Bar */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-1">
+        <button
+          onClick={() => setActiveTab('categories')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+            activeTab === 'categories'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+          }`}
+        >
+          <Database size={14} />
+          <span>📂 หมวดหมู่หลัก (Main Categories)</span>
+          <span className="ml-1 bg-white/20 px-2 py-0.5 rounded-full text-[10px]">{categories.length}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('tags')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+            activeTab === 'tags'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+          }`}
+        >
+          <Settings size={14} />
+          <span>🏷️ จัดการแท็กระบบ (System Tags Manager)</span>
+          <span className="ml-1 bg-white/20 px-2 py-0.5 rounded-full text-[10px]">{systemTags.length}</span>
+        </button>
+      </div>
+
+      {activeTab === 'tags' ? (
+        <div className="space-y-6">
+          {/* Info Banner */}
+          <div className="bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 p-4 rounded-2xl flex items-start gap-3">
+            <BadgeInfo size={20} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-indigo-900 dark:text-indigo-300 leading-relaxed font-semibold">
+              การจัดการแท็กระบบในหน้านี้ ช่วยให้แอดมินหรือระบบ AI สามารถสร้าง เพิ่ม แก้ไขชื่อ หรือลบแท็กกลางเพื่อนำไปใช้กรองและจัดหมวดเคสในหน้ารายการแชตได้สะดวก 100%
+            </div>
+          </div>
+
+          {/* Add New Tag Card */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-3">
+            <h3 className="font-extrabold text-xs text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+              ➕ เพิ่มแท็กระบบใหม่
+            </h3>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                placeholder="พิมพ์ชื่อแท็กใหม่ (เช่น #คืนยอดเสีย, #เคสด่วนพิเศษ)..."
+                value={newTagInput}
+                onChange={(e) => setNewTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddSystemTag();
+                  }
+                }}
+                className="flex-1 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddSystemTag}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition cursor-pointer shrink-0 flex items-center gap-1.5"
+              >
+                <Plus size={14} />
+                <span>เพิ่มแท็กระบบ</span>
+              </button>
+            </div>
+          </div>
+
+          {/* System Tags Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {systemTags.map((tagName) => {
+              const isEditingThis = editingTag?.oldName === tagName;
+
+              return (
+                <div key={tagName} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-3 flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        System Label
+                      </span>
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-955/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                        พร้อมใช้งานในหน้ารายการแชต
+                      </span>
+                    </div>
+
+                    {isEditingThis ? (
+                      <div className="space-y-2 pt-1">
+                        <input
+                          type="text"
+                          value={editingTag.newName}
+                          onChange={(e) => setEditingTag({ ...editingTag, newName: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-850 border border-indigo-500 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setEditingTag(null)}
+                            className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          >
+                            ยกเลิก
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRenameSystemTag(tagName)}
+                            className="text-[10px] font-bold px-3 py-1 rounded-lg bg-indigo-600 text-white"
+                          >
+                            บันทึก
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-base font-extrabold text-indigo-600 dark:text-indigo-400">
+                          {tagName}
+                        </span>
+                        {(userProfile?.role === 'super_admin' || userProfile?.role === 'system_admin') && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setEditingTag({ oldName: tagName, newName: tagName })}
+                              className="text-xs font-bold text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+                              title="แก้ไขชื่อแท็กทั้งระบบ"
+                            >
+                              ✏️ แก้ไข
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSystemTag(tagName)}
+                              className="text-xs font-bold text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition cursor-pointer p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-955/30"
+                              title="ลบแท็กระบบ"
+                            >
+                              🗑️ ลบ
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <Link
+                    href={`/chats?search=${encodeURIComponent(tagName)}`}
+                    className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-500 hover:text-indigo-600 flex items-center justify-between group transition cursor-pointer"
+                  >
+                    <span>ค้นหาเคสติดแท็กนี้ในหน้ารายการแชต</span>
+                    <span className="group-hover:translate-x-1 transition-transform">➡️</span>
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : loading ? (
         <div className="flex flex-col items-center justify-center py-32 gap-3 text-slate-400 dark:text-slate-500">
           <RefreshCw size={32} className="animate-spin text-indigo-600 dark:text-indigo-400" />
           <span className="text-sm font-semibold">{language === 'th' ? 'กำลังตรวจสอบรายการหมวดหมู่...' : 'Checking categories list...'}</span>
