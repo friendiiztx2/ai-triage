@@ -214,47 +214,47 @@ export default function CustomersPage() {
           </div>
         </div>
         {/* Right: Selected Customer Triage History */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-250">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850/50">
+        <div className="space-y-6 lg:sticky lg:top-6 lg:h-[calc(100vh-130px)] flex flex-col">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-250 flex flex-col h-full">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850/50 shrink-0">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">{language === 'th' ? 'ประวัติการเปิดตั๋ว / แจ้งเคส' : 'Ticket & Case History'}</h3>
               <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">{language === 'th' ? 'เลือกชื่อลูกค้าเพื่อประเมินประวัติแชต' : 'Select a customer to view history'}</p>
             </div>
 
-            <div className="p-6">
+            <div className="p-5 flex-1 flex flex-col min-h-0 overflow-hidden">
               {selectedCust ? (
-                <div className="space-y-6">
+                <div className="space-y-4 flex flex-col h-full min-h-0">
                   {/* Selected Customer mini profile */}
-                  <div className="bg-indigo-50/20 dark:bg-indigo-950/10 border border-indigo-50 dark:border-indigo-950/20 p-4 rounded-xl space-y-3">
+                  <div className="bg-indigo-50/20 dark:bg-indigo-950/10 border border-indigo-50 dark:border-indigo-950/20 p-3.5 rounded-xl space-y-2 shrink-0">
                     <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <User size={14} className="text-indigo-600 dark:text-indigo-400" /> {selectedCust.name}
                     </h4>
-                    <div className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 font-medium">
                       {selectedCust.email && <div className="flex items-center gap-1.5"><Mail size={12} /> {selectedCust.email}</div>}
                       {selectedCust.phone && <div className="flex items-center gap-1.5"><Phone size={12} /> {selectedCust.phone}</div>}
                     </div>
                   </div>
 
                   {/* Chats list of customer */}
-                  <div>
-                    <h5 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-3">{language === 'th' ? 'เคสทั้งหมด' : 'Total Cases'} ({custChats.length})</h5>
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <h5 className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-2.5 shrink-0">{language === 'th' ? 'เคสทั้งหมด' : 'Total Cases'} ({custChats.length})</h5>
                     
                     {loadingChats ? (
-                      <div className="flex justify-center py-10">
+                      <div className="flex justify-center items-center py-20 flex-1">
                         <RefreshCw size={24} className="animate-spin text-indigo-600 dark:text-indigo-400" />
                       </div>
                     ) : custChats.length === 0 ? (
-                      <div className="text-slate-400 dark:text-slate-500 italic text-xs text-center py-10 flex flex-col items-center justify-center gap-2">
+                      <div className="text-slate-400 dark:text-slate-500 italic text-xs text-center py-10 flex flex-col items-center justify-center gap-2 flex-1">
                         <Inbox size={24} className="text-slate-300 dark:text-slate-700" />
                         <span>{language === 'th' ? 'ไม่พบประวัติการเปิดแชตแจ้งเรื่อง' : 'No chat history found'}</span>
                       </div>
                     ) : (
-                      <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+                      <div className="space-y-3 flex-1 overflow-y-auto pr-1">
                         {custChats.map((chat) => (
                           <Link 
                             key={chat.id} 
                             href={`/chats?chat_id=${chat.id}`}
-                            className="block border border-slate-100 dark:border-slate-800 rounded-xl p-4 hover:border-indigo-150 dark:hover:border-indigo-900 transition-all bg-slate-50/50 dark:bg-slate-850/40 space-y-3 cursor-pointer group hover:shadow-sm"
+                            className="block border border-slate-100 dark:border-slate-800 rounded-xl p-3.5 hover:border-indigo-150 dark:hover:border-indigo-900 transition-all bg-slate-50/50 dark:bg-slate-850/40 space-y-2.5 cursor-pointer group hover:shadow-sm"
                           >
                             <div className="flex justify-between items-start gap-2">
                               {/* Category */}
@@ -293,7 +293,7 @@ export default function CustomersPage() {
                   </div>
                 </div>
               ) : (
-                <div className="text-slate-400 dark:text-slate-500 italic text-xs text-center py-20 flex flex-col items-center justify-center gap-2">
+                <div className="text-slate-400 dark:text-slate-500 italic text-xs text-center py-20 flex flex-col items-center justify-center gap-2 flex-1">
                   <User size={32} className="text-slate-200 dark:text-slate-800" />
                   <span>{language === 'th' ? 'ยังไม่มีการเลือกชื่อลูกค้าเพื่อประเมินประวัติ' : 'No customer selected. Please select a customer.'}</span>
                 </div>
