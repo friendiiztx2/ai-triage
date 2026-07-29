@@ -1928,15 +1928,15 @@ export default function ChatsPage() {
                         className="w-3.5 h-3.5 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-2 py-3 max-w-[100px] whitespace-nowrap">{t('colChatId')}</th>
-                    <th className="px-2.5 py-3 whitespace-nowrap">{t('colCustomer')}</th>
-                    <th className="px-3 py-3 min-w-[240px] max-w-[400px]">{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</th>
-                    <th className="px-2 py-3 whitespace-nowrap">{language === 'th' ? 'ประวัติ (360)' : 'Contact 360'}</th>
-                    <th className="px-2 py-3 whitespace-nowrap">{t('colCategory')}</th>
-                    <th className="px-2 py-3 whitespace-nowrap text-center">{t('colPriority')}</th>
-                    <th className="px-2 py-3 whitespace-nowrap text-center">{t('colStatus')}</th>
-                    <th className="px-2.5 py-3 whitespace-nowrap">{t('colTime')}</th>
-                    <th className="px-2 py-3 w-6"></th>
+                    <th className="px-1.5 py-3 max-w-[85px] whitespace-nowrap">{t('colChatId')}</th>
+                    <th className="px-2 py-3 whitespace-nowrap">{t('colCustomer')}</th>
+                    <th className="px-2.5 py-3 max-w-[210px]">{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</th>
+                    <th className="px-1.5 py-3 whitespace-nowrap">{language === 'th' ? 'ประวัติ (360)' : 'Contact 360'}</th>
+                    <th className="px-1.5 py-3 whitespace-nowrap">{t('colCategory')}</th>
+                    <th className="px-1.5 py-3 whitespace-nowrap text-center">{t('colPriority')}</th>
+                    <th className="px-1.5 py-3 whitespace-nowrap text-center">{t('colStatus')}</th>
+                    <th className="px-3 py-3 w-[110px] min-w-[110px] whitespace-nowrap text-right">{t('colTime')}</th>
+                    <th className="px-1.5 py-3 w-5"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1960,12 +1960,12 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Chat ID (Compact & Truncated) */}
-                        <td className="px-2 py-3 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 max-w-[95px] truncate" title={chat.id}>
+                        <td className="px-1.5 py-3 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 max-w-[80px] truncate" title={chat.id}>
                           {chat.id}
                         </td>
 
                         {/* Customer */}
-                        <td className="px-2.5 py-3 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        <td className="px-2 py-3 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                           <div>
                             {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
                           </div>
@@ -1989,8 +1989,8 @@ export default function ChatsPage() {
                           )}
                         </td>
                         
-                        {/* Summary with AI Confidence Badge (Expanded Width) */}
-                        <td className="px-3 py-3 min-w-[240px] max-w-[400px] text-slate-700 dark:text-slate-200 font-medium">
+                        {/* Summary with AI Confidence Badge */}
+                        <td className="px-2.5 py-3 max-w-[210px] text-slate-700 dark:text-slate-200 font-medium">
                           <div className="flex flex-col gap-1">
                             <span className="truncate block leading-snug font-semibold" title={chat.summary}>{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
                             {chat.confidence !== undefined && chat.confidence !== null && (
@@ -2008,7 +2008,7 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Customer 360 Contact History */}
-                        <td className="px-2 py-3 whitespace-nowrap">
+                        <td className="px-1.5 py-3 whitespace-nowrap">
                           {(() => {
                             const count = chats.filter(c => 
                               (chat.customer_id && c.customer_id === chat.customer_id) ||
@@ -2039,7 +2039,7 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Category */}
-                        <td className="px-2 py-3 whitespace-nowrap">
+                        <td className="px-1.5 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-1 flex-wrap">
                             <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-semibold px-2 py-0.5 rounded-lg">
                               {categories.find(c => c.id === chat.category_id)?.name || chat.category_id || 'อื่นๆ'}
@@ -2053,7 +2053,7 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Priority */}
-                        <td className="px-2 py-3 text-center whitespace-nowrap">
+                        <td className="px-1.5 py-3 text-center whitespace-nowrap">
                           {(() => {
                             const pri = chat.priority?.toLowerCase() || 'low';
                             if (pri === 'urgent') {
@@ -2081,7 +2081,7 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Status */}
-                        <td className="px-2 py-3 text-center whitespace-nowrap">
+                        <td className="px-1.5 py-3 text-center whitespace-nowrap">
                           <span className={'text-[10px] font-semibold px-1.5 py-0.5 rounded-lg whitespace-nowrap ' + 
                             (chat.status === 'completed' 
                               ? 'bg-emerald-50 dark:bg-emerald-955/30 text-emerald-600 dark:text-emerald-400' 
@@ -2092,10 +2092,10 @@ export default function ChatsPage() {
                           </span>
                         </td>
 
-                        {/* Time (Compact 2-line layout) */}
-                        <td className="px-2.5 py-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                          <div className="flex flex-col leading-tight">
-                            <span>{chat.created_at ? new Date(chat.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-'}</span>
+                        {/* Time (Compact 2-line layout guaranteed right-aligned) */}
+                        <td className="px-3 py-3 w-[110px] min-w-[110px] text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap text-right">
+                          <div className="flex flex-col leading-tight items-end">
+                            <span className="font-bold text-slate-700 dark:text-slate-200">{chat.created_at ? new Date(chat.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-'}</span>
                             <span className="text-[10px] text-slate-400 font-mono">{chat.created_at ? new Date(chat.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : ''}</span>
                           </div>
                         </td>
