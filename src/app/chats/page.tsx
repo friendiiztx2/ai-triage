@@ -1916,8 +1916,8 @@ export default function ChatsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-855/50 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold select-none">
-                    <th className="px-2 py-2.5 w-8 text-center select-none">
+                  <tr className="bg-slate-50 dark:bg-slate-855/50 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold select-none text-[13px]">
+                    <th className="px-1.5 py-2.5 w-7 text-center select-none">
                       <input 
                         type="checkbox" 
                         checked={isAllSelected}
@@ -1928,55 +1928,55 @@ export default function ChatsPage() {
                         className="w-3.5 h-3.5 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-2 py-2.5 whitespace-nowrap">
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">
                       <div className="flex flex-col leading-tight">
                         <span>{language === 'th' ? 'แชทไอดี' : 'Chat ID'}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Chat ID)</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Chat ID)</span>
                       </div>
                     </th>
-                    <th className="px-2 py-2.5 whitespace-nowrap">
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">
                       <div className="flex flex-col leading-tight">
                         <span>{language === 'th' ? 'ลูกค้า' : 'Customer'}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Customer)</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Customer)</span>
                       </div>
                     </th>
-                    <th className="px-2.5 py-2.5 max-w-[210px]">
+                    <th className="px-2 py-2.5 max-w-[200px]">
                       <div className="flex flex-col leading-tight">
                         <span>{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(AI Summary)</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(AI Summary)</span>
                       </div>
                     </th>
-                    <th className="px-2 py-2.5 whitespace-nowrap">
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">
                       <div className="flex flex-col leading-tight">
                         <span>{language === 'th' ? 'ประวัติ 360' : '360 History'}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Customer 360)</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Customer 360)</span>
                       </div>
                     </th>
-                    <th className="px-2 py-2.5 whitespace-nowrap">
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">
                       <div className="flex flex-col leading-tight">
                         <span>{language === 'th' ? 'หมวดหมู่' : 'Category'}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Category)</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Category)</span>
                       </div>
                     </th>
-                    <th className="px-2 py-2.5 whitespace-nowrap text-center">
+                    <th className="px-1.5 py-2.5 whitespace-nowrap text-center">
                       <div className="flex flex-col leading-tight items-center">
                         <span>{language === 'th' ? 'ความด่วน' : 'Priority'}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Priority)</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Priority)</span>
                       </div>
                     </th>
-                    <th className="px-2 py-2.5 whitespace-nowrap text-center">
+                    <th className="px-1.5 py-2.5 whitespace-nowrap text-center">
                       <div className="flex flex-col leading-tight items-center">
                         <span>{language === 'th' ? 'สถานะ' : 'Status'}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Status)</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Status)</span>
                       </div>
                     </th>
-                    <th className="px-3 py-2.5 w-[110px] min-w-[110px] whitespace-nowrap text-right">
+                    <th className="px-2.5 py-2.5 w-[105px] min-w-[105px] whitespace-nowrap text-right">
                       <div className="flex flex-col leading-tight items-end">
                         <span>{language === 'th' ? 'เวลา' : 'Time'}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">(Time)</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Time)</span>
                       </div>
                     </th>
-                    <th className="px-1.5 py-2.5 w-5"></th>
+                    <th className="px-1 py-2.5 w-5"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1990,7 +1990,7 @@ export default function ChatsPage() {
                         className={'hover:bg-slate-50 dark:hover:bg-slate-855/50 transition-colors cursor-pointer group ' + (isSelected ? 'bg-indigo-50/20 dark:bg-indigo-955/10 font-bold' : '') + (isChecked ? ' bg-indigo-50/10 dark:bg-indigo-955/5' : '')}
                       >
                         {/* Checkbox */}
-                        <td className="px-2 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-1.5 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
                           <input 
                             type="checkbox" 
                             checked={isChecked}
@@ -2000,12 +2000,12 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Chat ID (Compact & Truncated) */}
-                        <td className="px-1.5 py-3 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 max-w-[80px] truncate" title={chat.id}>
+                        <td className="px-1.5 py-2.5 font-mono text-xs font-bold text-slate-600 dark:text-slate-300 max-w-[80px] truncate" title={chat.id}>
                           {chat.id}
                         </td>
 
                         {/* Customer */}
-                        <td className="px-2 py-3 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 font-bold text-slate-850 dark:text-slate-100 text-xs whitespace-nowrap">
                           <div>
                             {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
                           </div>
@@ -2020,7 +2020,7 @@ export default function ChatsPage() {
                                 else if (tag === '#รอธนาคารแก้ไข') badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50';
                                 
                                 return (
-                                  <span key={tidx} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${badgeColor}`}>
+                                  <span key={tidx} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${badgeColor}`}>
                                     {tag}
                                   </span>
                                 );
@@ -2030,25 +2030,25 @@ export default function ChatsPage() {
                         </td>
                         
                         {/* Summary with AI Confidence Badge */}
-                        <td className="px-2.5 py-3 max-w-[210px] text-slate-700 dark:text-slate-200 font-medium">
+                        <td className="px-2 py-2.5 max-w-[200px] text-slate-800 dark:text-slate-100 font-semibold text-[13px]">
                           <div className="flex flex-col gap-1">
-                            <span className="truncate block leading-snug font-semibold" title={chat.summary}>{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
+                            <span className="truncate block leading-snug font-semibold" title={chat.summary}>{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic font-normal">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
                             {chat.confidence !== undefined && chat.confidence !== null && (
-                              <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold w-max px-1.5 py-0.2 rounded-full border leading-none select-none ${
+                              <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold w-max px-2 py-0.5 rounded-full border leading-none select-none ${
                                 chat.confidence >= 85 
                                   ? 'bg-emerald-50 text-emerald-600 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30' 
                                   : chat.confidence >= 70 
                                     ? 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-955/20 dark:text-amber-400 dark:border-amber-900/30' 
                                     : 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-955/20 dark:text-rose-455 dark:border-rose-900/30'
                               }`}>
-                                <Sparkles size={8} className="shrink-0" /> AI มั่นใจ {chat.confidence}%
+                                <Sparkles size={9} className="shrink-0" /> AI มั่นใจ {chat.confidence}%
                               </span>
                             )}
                           </div>
                         </td>
 
                         {/* Customer 360 Contact History */}
-                        <td className="px-1.5 py-3 whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 whitespace-nowrap">
                           {(() => {
                             const count = chats.filter(c => 
                               (chat.customer_id && c.customer_id === chat.customer_id) ||
@@ -2059,7 +2059,7 @@ export default function ChatsPage() {
                             if (count > 1) {
                               return (
                                 <span 
-                                  className="inline-flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50 shadow-sm whitespace-nowrap"
+                                  className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50 shadow-sm whitespace-nowrap"
                                   title={`ลูกค้ารายนี้มีประวัติทักเข้ามาในระบบรวม ${count} เคส`}
                                 >
                                   <span>🔁 ทักซ้ำ {count} เคส</span>
@@ -2069,7 +2069,7 @@ export default function ChatsPage() {
 
                             return (
                               <span 
-                                className="inline-flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50 shadow-sm whitespace-nowrap"
+                                className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50 shadow-sm whitespace-nowrap"
                                 title="ลูกค้ารายนี้ทักเข้ามาเป็นครั้งแรก"
                               >
                                 <span>✨ ทักครั้งแรก</span>
@@ -2079,13 +2079,13 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Category */}
-                        <td className="px-1.5 py-3 whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 whitespace-nowrap">
                           <div className="flex items-center gap-1 flex-wrap">
-                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-semibold px-2 py-0.5 rounded-lg">
+                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-2 py-0.5 rounded-lg">
                               {categories.find(c => c.id === chat.category_id)?.name || chat.category_id || 'อื่นๆ'}
                             </span>
                             {chat.chat_issues && chat.chat_issues.length > 1 && (
-                              <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full border border-indigo-100/60 dark:border-indigo-900/40 shrink-0">
+                              <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full border border-indigo-100/60 dark:border-indigo-900/40 shrink-0">
                                 +{chat.chat_issues.length - 1} เรื่อง
                               </span>
                             )}
@@ -2093,12 +2093,12 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Priority */}
-                        <td className="px-1.5 py-3 text-center whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 text-center whitespace-nowrap">
                           {(() => {
                             const pri = chat.priority?.toLowerCase() || 'low';
                             if (pri === 'urgent') {
                               return (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-lg uppercase tracking-wide bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-955/30 dark:text-rose-400 dark:border-rose-900/50 shadow-sm">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded-lg uppercase tracking-wide bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-955/30 dark:text-rose-400 dark:border-rose-900/50 shadow-sm">
                                   <span className="relative flex h-1.5 w-1.5">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
@@ -2113,7 +2113,7 @@ export default function ChatsPage() {
                             else if (pri === 'medium') styles = 'bg-amber-50 text-amber-655 border-amber-200 dark:bg-amber-955/40 dark:text-amber-400';
                             else if (pri === 'low') styles = 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-955/30 dark:text-blue-455';
                             return (
-                              <span className={'text-[10px] font-bold px-1.5 py-0.5 rounded-lg uppercase tracking-wide ' + styles}>
+                              <span className={'text-[11px] font-extrabold px-2 py-0.5 rounded-lg uppercase tracking-wide ' + styles}>
                                 {pri}
                               </span>
                             );
@@ -2121,8 +2121,8 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Status */}
-                        <td className="px-1.5 py-3 text-center whitespace-nowrap">
-                          <span className={'text-[10px] font-semibold px-1.5 py-0.5 rounded-lg whitespace-nowrap ' + 
+                        <td className="px-1.5 py-2.5 text-center whitespace-nowrap">
+                          <span className={'text-[11px] font-bold px-2 py-0.5 rounded-lg whitespace-nowrap ' + 
                             (chat.status === 'completed' 
                               ? 'bg-emerald-50 dark:bg-emerald-955/30 text-emerald-600 dark:text-emerald-400' 
                               : 'bg-amber-50 dark:bg-amber-955/30 text-amber-600 dark:text-amber-400'
@@ -2133,10 +2133,10 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Time (Compact 2-line layout guaranteed right-aligned) */}
-                        <td className="px-3 py-3 w-[110px] min-w-[110px] text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap text-right">
+                        <td className="px-2.5 py-2.5 w-[105px] min-w-[105px] text-xs font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap text-right">
                           <div className="flex flex-col leading-tight items-end">
-                            <span className="font-bold text-slate-700 dark:text-slate-200">{chat.created_at ? new Date(chat.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-'}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">{chat.created_at ? new Date(chat.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : ''}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-100 text-xs">{chat.created_at ? new Date(chat.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-'}</span>
+                            <span className="text-[11px] text-slate-400 font-mono font-medium">{chat.created_at ? new Date(chat.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.' : ''}</span>
                           </div>
                         </td>
 
