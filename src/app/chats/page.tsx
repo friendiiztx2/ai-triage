@@ -1820,31 +1820,8 @@ export default function ChatsPage() {
             </select>
           </div>
 
-          {/* Tag Filter */}
-          <div className="w-full">
-            <select
-              value={tagFilter}
-              onChange={(e) => {
-                if (e.target.value === 'manage_tags') {
-                  handleOpenTagManagerModal();
-                } else {
-                  setTagFilter(e.target.value);
-                }
-              }}
-              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-            >
-              <option value="all">🏷️ แท็ก: ทั้งหมด</option>
-              {allAvailableTags.map((tagObj) => (
-                <option key={tagObj.name} value={tagObj.name}>
-                  {tagObj.name} ({tagObj.desc})
-                </option>
-              ))}
-              <option value="manage_tags">⚙️ จัดการ/แก้ไขชื่อแท็กระบบ...</option>
-            </select>
-          </div>
-
           {/* Audit Filter */}
-          <div className="w-full">
+          <div className="w-full md:col-span-2">
             <select
               value={auditFilter}
               onChange={(e) => setAuditFilter(e.target.value)}
@@ -1857,7 +1834,7 @@ export default function ChatsPage() {
           </div>
         </div>
 
-        {/* Row 2: Date Filter & Tag Manager Action Button */}
+        {/* Row 2: Date Filter */}
         <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
           <div className="flex flex-wrap items-center gap-3">
             {/* Timeframe Filter Dropdown */}
@@ -1896,26 +1873,6 @@ export default function ChatsPage() {
                   />
                 </div>
               </div>
-            )}
-
-            {/* Dedicated Tag Manager Action Button */}
-            <button
-              type="button"
-              onClick={handleOpenTagManagerModal}
-              className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-955/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-extrabold border border-indigo-200/80 dark:border-indigo-800 px-4 py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm hover:shadow"
-              title="เปิดหน้าต่างจัดการและแก้ไขชื่อแท็กทั้งหมดในระบบ"
-            >
-              <span>⚙️ จัดการ & แก้ไขชื่อแท็กระบบ</span>
-            </button>
-
-            {tagFilter !== 'all' && (
-              <button
-                type="button"
-                onClick={() => handleOpenGlobalRenameModal(tagFilter)}
-                className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer bg-indigo-50/50 dark:bg-indigo-955/20 px-3 py-2 rounded-xl border border-indigo-100 dark:border-indigo-900/40"
-              >
-                ✏️ แก้ไขชื่อแท็ก "{tagFilter}" ทุกเคส
-              </button>
             )}
           </div>
         </div>
@@ -2049,24 +2006,6 @@ export default function ChatsPage() {
                           <div>
                             {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
                           </div>
-                          {chat.tags && chat.tags.length > 0 && (
-                            <div className="flex items-center gap-1 flex-wrap mt-1 select-none">
-                              {chat.tags.map((tag: string, tidx: number) => {
-                                let badgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800';
-                                if (tag === '#VIP') badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50';
-                                else if (tag === '#ติดตามผล') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50';
-                                else if (tag === '#รอสลิป') badgeColor = 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50';
-                                else if (tag === '#ส่งเรื่องทีมเทคนิค') badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50';
-                                else if (tag === '#รอธนาคารแก้ไข') badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50';
-                                
-                                return (
-                                  <span key={tidx} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${badgeColor}`}>
-                                    {tag}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
                         </td>
                         
                         {/* Summary with AI Confidence Badge */}
