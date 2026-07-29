@@ -44,9 +44,27 @@ export default function CustomersPage() {
       if (!custRes.ok) throw new Error('Failed to load customers');
       const custData = await custRes.json();
       
-      if (custData) {
+      if (custData && custData.length > 0) {
         setCustomers(custData);
         setFilteredCustomers(custData);
+        
+        // Auto select matched customer or first customer
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          const qParam = params.get('search') || params.get('customer_id') || params.get('customer_name');
+          if (qParam) {
+            setSearchQuery(qParam);
+            const matched = custData.find((c: any) => 
+              c.name.toLowerCase().includes(qParam.toLowerCase()) || 
+              c.id.toLowerCase().includes(qParam.toLowerCase())
+            );
+            handleSelectCustomer(matched || custData[0]);
+          } else {
+            handleSelectCustomer(custData[0]);
+          }
+        } else {
+          handleSelectCustomer(custData[0]);
+        }
       }
     } catch (err) {
       console.error('Error fetching customers:', err);
