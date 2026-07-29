@@ -1917,7 +1917,7 @@ export default function ChatsPage() {
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-855/50 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold">
-                    <th className="px-6 py-4 w-12 text-center select-none">
+                    <th className="px-3 py-3.5 w-10 text-center select-none">
                       <input 
                         type="checkbox" 
                         checked={isAllSelected}
@@ -1928,15 +1928,15 @@ export default function ChatsPage() {
                         className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-6 py-4">{t('colChatId')}</th>
-                    <th className="px-6 py-4">{t('colCustomer')}</th>
-                    <th className="px-6 py-4">{t('colAiSummary')}</th>
-                    <th className="px-6 py-4">{language === 'th' ? 'ประวัติทัก (Customer 360)' : 'Contact 360'}</th>
-                    <th className="px-6 py-4">{t('colCategory')}</th>
-                    <th className="px-6 py-4">{t('colPriority')}</th>
-                    <th className="px-6 py-4">{t('colStatus')}</th>
-                    <th className="px-6 py-4">{t('colTime')}</th>
-                    <th className="px-6 py-4"></th>
+                    <th className="px-3 py-3.5">{t('colChatId')}</th>
+                    <th className="px-4 py-3.5">{t('colCustomer')}</th>
+                    <th className="px-4 py-3.5">{t('colAiSummary')}</th>
+                    <th className="px-3 py-3.5 whitespace-nowrap">{language === 'th' ? 'ประวัติทัก (Customer 360)' : 'Contact 360'}</th>
+                    <th className="px-3 py-3.5 whitespace-nowrap">{t('colCategory')}</th>
+                    <th className="px-3 py-3.5 whitespace-nowrap">{t('colPriority')}</th>
+                    <th className="px-3 py-3.5 whitespace-nowrap">{t('colStatus')}</th>
+                    <th className="px-4 py-3.5 whitespace-nowrap min-w-[130px]">{t('colTime')}</th>
+                    <th className="px-3 py-3.5 w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -2092,12 +2092,12 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Time */}
-                        <td className="px-6 py-4 text-xs text-slate-400 dark:text-slate-555 font-medium">
+                        <td className="px-4 py-4 text-xs text-slate-400 dark:text-slate-555 font-semibold whitespace-nowrap">
                           {chat.created_at ? new Date(chat.created_at).toLocaleString('th-TH') : '-'}
                         </td>
 
                         {/* Action */}
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-3 py-4 text-right">
                           <ChevronRight size={18} className="text-slate-300 dark:text-slate-650 group-hover:text-indigo-650 group-hover:translate-x-1 transition-all" />
                         </td>
                       </tr>
