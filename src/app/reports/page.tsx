@@ -20,7 +20,7 @@ export default function ReportsPage() {
   const [activeCompanyId, setActiveCompanyId] = useState('');
 
   // Filter States
-  const [dateRange, setDateRange] = useState('7days');
+  const [dateRange, setDateRange] = useState('today');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -329,7 +329,6 @@ export default function ReportsPage() {
                 onChange={(e) => setDateRange(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:border-indigo-650 focus:outline-none"
               >
-                <option value="all">{language === 'th' ? 'แสดงข้อมูลทั้งหมด' : 'All time datasets'}</option>
                 <option value="today">{language === 'th' ? 'เฉพาะวันนี้ (Today)' : 'Today'}</option>
                 <option value="7days">{language === 'th' ? '7 วันล่าสุด (7 Days)' : 'Last 7 Days'}</option>
                 <option value="30days">{language === 'th' ? '30 วันล่าสุด (30 Days)' : 'Last 30 Days'}</option>
