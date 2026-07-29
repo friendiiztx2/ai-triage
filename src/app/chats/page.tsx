@@ -1048,58 +1048,6 @@ function FloatingChatWindow({
                             <span className="font-bold text-slate-700 dark:text-slate-200">{chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id))}</span>
                           </div>
                         )}
-
-                        {/* Customer All Contact History List */}
-                        <div className="pt-2 space-y-2 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                            📜 ประวัติการทักแชตของลูกค้ารายนี้ทั้งหมด ({customerChats.length} เคส):
-                          </span>
-                          <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
-                            {customerChats.map((c: any) => {
-                              const isCurrent = c.id === chat.id;
-                              const catObj = categories.find((cat: any) => cat.id === c.category_id);
-                              const catName = catObj ? catObj.name : (c.category_id || 'อื่นๆ');
-
-                              return (
-                                <div 
-                                  key={c.id}
-                                  onClick={() => {
-                                    if (!isCurrent && onOpenChat) onOpenChat(c);
-                                  }}
-                                  className={`p-2.5 rounded-xl border transition text-xs flex flex-col gap-1 ${
-                                    isCurrent 
-                                      ? 'bg-indigo-50/70 border-indigo-200 dark:bg-indigo-955/30 dark:border-indigo-900/50' 
-                                      : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-855/40 dark:hover:bg-slate-800 border-slate-150 dark:border-slate-800 cursor-pointer'
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-mono text-[10px] font-extrabold text-slate-600 dark:text-slate-300">
-                                      #{c.id} {isCurrent && <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">(เคสปัจจุบัน)</span>}
-                                    </span>
-                                    <span className="text-[9px] text-slate-400 font-bold">
-                                      {c.created_at ? new Date(c.created_at).toLocaleString('th-TH') : '-'}
-                                    </span>
-                                  </div>
-                                  <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 line-clamp-1">
-                                    {c.summary || c.problem_summary || 'ไม่มีบทสรุป'}
-                                  </p>
-                                  <div className="flex items-center justify-between pt-0.5">
-                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-750 text-slate-700 dark:text-slate-300">
-                                      {catName}
-                                    </span>
-                                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${
-                                      c.status === 'completed' 
-                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-955/40 dark:text-emerald-300' 
-                                        : 'bg-amber-100 text-amber-700 dark:bg-amber-955/40 dark:text-amber-300'
-                                    }`}>
-                                      {c.status === 'completed' ? '✅ แยกแยะแล้ว' : '⏳ รอดำเนินการ'}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
                       </>
                     );
                   })()}
