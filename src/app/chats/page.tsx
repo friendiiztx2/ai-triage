@@ -1537,11 +1537,13 @@ export default function ChatsPage() {
         const priorityParam = params.get('priority');
         const categoryParam = params.get('category');
         const auditParam = params.get('audit');
+        const dateParam = params.get('dateRange') || params.get('timeframe') || params.get('dateFilter');
 
         if (statusParam) setStatusFilter(statusParam);
         if (priorityParam) setPriorityFilter(priorityParam);
         if (categoryParam) setCategoryFilter(categoryParam);
         if (auditParam) setAuditFilter(auditParam);
+        if (dateParam) setDateFilter(dateParam);
       }
     }
   }, [chats]);
@@ -1575,7 +1577,19 @@ export default function ChatsPage() {
     if (priorityFilter !== 'all') {
       result = result.filter(c => {
         const pri = c.priority?.toLowerCase() || 'low';
-        return pri === priorityFilter;
+        let issueMatch = false;
+        if (c.chat_issues && c.chat_issues.length > 0) {
+          issueMatch = c.chat_issues.some((issue: any) => {
+            const ipri = issue.priority?.toLowerCase();
+            if (priorityFilter === 'urgent') return ipri === 'urgent' || ipri === 'high';
+            return ipri === priorityFilter;
+          });
+        }
+
+        if (priorityFilter === 'urgent') {
+          return pri === 'urgent' || pri === 'high' || issueMatch;
+        }
+        return pri === priorityFilter || issueMatch;
       });
     }
 
