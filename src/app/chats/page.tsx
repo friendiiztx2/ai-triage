@@ -941,55 +941,6 @@ function FloatingChatWindow({
                           </button>
                         </div>
                       </div>
-
-                      {/* General recommendations */}
-                      {recData && recData.generalRecommendation && (
-                        <div className="space-y-1.5">
-                          <span className="font-bold text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1"><BookOpen size={11} /> คำแนะนำทั่วไปจาก AI</span>
-                          <div className="bg-slate-50 dark:bg-slate-850/50 border border-slate-150 p-3.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
-                            {recData.generalRecommendation}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Issues breakdown list with copy text */}
-                      {issuesToRender.length > 0 && (
-                        <div className="space-y-3">
-                          {issuesToRender.map((issue, idx) => {
-                            const issueId = 'db-issue-win-' + (issue.id || idx);
-                            return (
-                              <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-sm">
-                                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-2">
-                                  <span className="font-bold text-slate-750 dark:text-slate-200 text-xs truncate">เรื่องที่ {idx + 1}: {issue.title}</span>
-                                  <span className="px-2 py-0.5 rounded text-[8px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 font-bold">{issue.category}</span>
-                                </div>
-                                
-                                {issue.reply && (
-                                  <div className="space-y-2 flex flex-col">
-                                    <div className="bg-slate-50 dark:bg-slate-855/40 rounded-xl p-3 text-xs text-slate-755 dark:text-slate-300 leading-relaxed font-semibold">
-                                      {issue.reply}
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleCopyText(issue.reply, issueId)}
-                                      className="flex items-center gap-1 bg-sky-50 hover:bg-sky-100 dark:bg-sky-955/40 text-sky-700 dark:text-sky-400 px-3 py-1.5 rounded-lg border border-sky-100 text-[10px] font-bold shadow-sm transition active:scale-95 cursor-pointer self-end"
-                                    >
-                                      {copiedId === issueId ? (
-                                        <span className="text-emerald-600 font-extrabold">คัดลอกแล้ว!</span>
-                                      ) : (
-                                        <>
-                                          <Copy size={11} />
-                                          <span>คัดลอกร่างคำตอบ</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
                     </div>
                   );
                 })()}
