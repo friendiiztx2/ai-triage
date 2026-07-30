@@ -36,13 +36,11 @@ export async function GET(request: NextRequest) {
 
     const chatMap = new Map();
 
-    // Map all issues into full multi-line conversations with Customer & Support Agent dialogue
+    // Map all issues into full multi-line conversations starting with "ลูกค้า: ..."
     if (issuesData && issuesData.length > 0) {
       issuesData.forEach((issue: any) => {
         const chatId = issue.chat_id || 'chat-001';
-        const msgText = issue.recommended_reply 
-          ? `ลูกค้า: ${issue.summary}\nพนักงาน: ${issue.recommended_reply}`
-          : `ลูกค้า: ${issue.summary}`;
+        const msgText = `ลูกค้า: ${issue.summary}`;
         
         if (!chatMap.has(chatId)) {
           chatMap.set(chatId, {
