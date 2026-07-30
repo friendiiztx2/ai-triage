@@ -2048,12 +2048,12 @@ export default function ChatsPage() {
 
                         {/* Category */}
                         <td className="px-1.5 py-2.5 whitespace-nowrap">
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-2 py-0.5 rounded-lg">
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-2 py-0.5 rounded-lg truncate max-w-[150px]">
                               {categories.find(c => c.id === chat.category_id)?.name || chat.category_id || 'อื่นๆ'}
                             </span>
                             {chat.chat_issues && chat.chat_issues.length > 1 && (
-                              <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full border border-indigo-100/60 dark:border-indigo-900/40 shrink-0">
+                              <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md border border-indigo-100/60 dark:border-indigo-900/40 shrink-0 leading-none">
                                 +{chat.chat_issues.length - 1} เรื่อง
                               </span>
                             )}
