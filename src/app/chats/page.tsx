@@ -153,8 +153,8 @@ function FloatingChatWindow({
 }: any) {
   const [x, setX] = useState(initialX);
   const [y, setY] = useState(initialY);
-  const [width, setWidth] = useState(450);
-  const [height, setHeight] = useState(580);
+  const [width, setWidth] = useState(760);
+  const [height, setHeight] = useState(620);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   
@@ -413,8 +413,8 @@ function FloatingChatWindow({
       const dx = moveEvent.clientX - startX;
       const dy = moveEvent.clientY - startY;
       
-      const newWidth = Math.max(320, startWidth + dx);
-      const newHeight = Math.max(200, startHeight + dy);
+      const newWidth = Math.max(680, startWidth + dx);
+      const newHeight = Math.max(350, startHeight + dy);
       
       setWidth(newWidth);
       setHeight(newHeight);
@@ -1587,10 +1587,10 @@ export default function ChatsPage() {
       return;
     }
 
-    // Stagger initial window position
-    const offset = (activeWindows.length % 6) * 35;
-    const initialX = 180 + offset;
-    const initialY = 120 + offset;
+    // Stagger initial window position cleanly
+    const offset = (activeWindows.length % 5) * 25;
+    const initialX = typeof window !== 'undefined' ? Math.max(20, Math.min(window.innerWidth - 780, 120 + offset)) : 120;
+    const initialY = 90 + offset;
 
     const newWin = {
       id: chat.id,
