@@ -999,6 +999,50 @@ function FloatingChatWindow({
                           </div>
                         </div>
                       </div>
+
+                      {/* SECTION 3: Triage History Timeline */}
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+                        <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                          📜 ประวัติการแก้ไข (Triage History Timeline)
+                        </h4>
+                        {(() => {
+                          let history: any[] = [];
+                          try {
+                            if (chat.resolution && chat.resolution !== 'Pending' && chat.resolution !== 'Solved') {
+                              const parsed = JSON.parse(chat.resolution);
+                              if (Array.isArray(parsed)) {
+                                history = parsed;
+                              }
+                            }
+                          } catch (e) {}
+
+                          return (
+                            <div className="relative border-l border-slate-200 dark:border-slate-800 pl-4 ml-1.5 space-y-4">
+                              {history.map((log: any, idx: number) => {
+                                const oldCatName = categories.find((c: any) => c.id === log.old_category)?.name || log.old_category || 'อื่นๆ';
+                                const newCatName = categories.find((c: any) => c.id === log.new_category)?.name || log.new_category || 'อื่นๆ';
+                                return (
+                                  <div key={idx} className="relative text-xs">
+                                    <div className="absolute -left-[20.5px] top-1 w-1.5 h-1.5 rounded-full bg-indigo-600 ring-2 ring-indigo-50 dark:ring-indigo-955" />
+                                    <div className="text-[9px] text-slate-400 font-bold">{new Date(log.timestamp).toLocaleString('th-TH')}</div>
+                                    <div className="text-slate-700 dark:text-slate-355 font-bold mt-0.5">โดย: {log.actor}</div>
+                                    <div className="text-[10px] text-slate-550 dark:text-slate-405 mt-0.5 leading-relaxed">
+                                      หมวดหมู่: <span className="line-through">{oldCatName}</span> ➔ <span className="font-bold text-indigo-600">{newCatName}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              
+                              <div className="relative text-xs">
+                                <div className="absolute -left-[20.5px] top-1 w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 ring-2 ring-slate-100" />
+                                <div className="text-[9px] text-slate-400 font-bold">{chat.created_at ? new Date(chat.created_at).toLocaleString('th-TH') : '-'}</div>
+                                <div className="text-slate-500 font-bold mt-0.5">โดย: ระบบ AI (Gemini Triage)</div>
+                                <div className="text-[10px] text-slate-550 mt-0.5">หมวดหมู่เริ่มต้น: {categories.find((c: any) => c.id === chat.category_id)?.name || 'อื่นๆ'}</div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
               </div>
           )}
         </div>
