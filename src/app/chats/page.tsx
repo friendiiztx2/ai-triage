@@ -1023,49 +1023,6 @@ function FloatingChatWindow({
                           </button>
                       </div>
                     </div>
-              {/* SECTION 3: Triage History Timeline */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-                <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  📜 ประวัติการแก้ไข (Triage History Timeline)
-                </h4>
-                  {(() => {
-                    let history: any[] = [];
-                    try {
-                      if (chat.resolution && chat.resolution !== 'Pending' && chat.resolution !== 'Solved') {
-                        const parsed = JSON.parse(chat.resolution);
-                        if (Array.isArray(parsed)) {
-                          history = parsed;
-                        }
-                      }
-                    } catch (e) {}
-
-                    return (
-                      <div className="relative border-l border-slate-200 dark:border-slate-800 pl-4 ml-1.5 space-y-4">
-                        {history.map((log: any, idx: number) => {
-                          const oldCatName = categories.find((c: any) => c.id === log.old_category)?.name || log.old_category || 'อื่นๆ';
-                          const newCatName = categories.find((c: any) => c.id === log.new_category)?.name || log.new_category || 'อื่นๆ';
-                          return (
-                            <div key={idx} className="relative text-xs">
-                              <div className="absolute -left-[20.5px] top-1 w-1.5 h-1.5 rounded-full bg-indigo-600 ring-2 ring-indigo-50 dark:ring-indigo-955" />
-                              <div className="text-[9px] text-slate-400 font-bold">{new Date(log.timestamp).toLocaleString('th-TH')}</div>
-                              <div className="text-slate-700 dark:text-slate-355 font-bold mt-0.5">โดย: {log.actor}</div>
-                              <div className="text-[10px] text-slate-550 dark:text-slate-405 mt-0.5 leading-relaxed">
-                                หมวดหมู่: <span className="line-through">{oldCatName}</span> ➔ <span className="font-bold text-indigo-600">{newCatName}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        
-                        <div className="relative text-xs">
-                          <div className="absolute -left-[20.5px] top-1 w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 ring-2 ring-slate-100" />
-                          <div className="text-[9px] text-slate-400 font-bold">{chat.created_at ? new Date(chat.created_at).toLocaleString('th-TH') : '-'}</div>
-                          <div className="text-slate-500 font-bold mt-0.5">โดย: ระบบ AI (Gemini Triage)</div>
-                          <div className="text-[10px] text-slate-550 mt-0.5">หมวดหมู่เริ่มต้น: {categories.find((c: any) => c.id === chat.category_id)?.name || 'อื่นๆ'}</div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
               </div>
           )}
         </div>
@@ -2012,15 +1969,49 @@ export default function ChatsPage() {
                         className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-3 py-3.5">{t('colChatId')}</th>
-                    <th className="px-4 py-3.5">{t('colCustomer')}</th>
-                    <th className="px-4 py-3.5">{t('colAiSummary')}</th>
-                    <th className="px-3 py-3.5 whitespace-nowrap">{language === 'th' ? 'ประวัติทัก (Customer 360)' : 'Contact 360'}</th>
-                    <th className="px-3 py-3.5 whitespace-nowrap">{t('colCategory')}</th>
-                    <th className="px-3 py-3.5 whitespace-nowrap">{t('colPriority')}</th>
-                    <th className="px-3 py-3.5 whitespace-nowrap">{t('colStatus')}</th>
-                    <th className="px-4 py-3.5 whitespace-nowrap min-w-[130px]">{t('colTime')}</th>
-                    <th className="px-3 py-3.5 w-10"></th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'แชทไอดี' : 'Chat ID'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Chat ID)</span>
+                      </div>
+                    </th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'ลูกค้า' : 'Customer'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Customer)</span>
+                      </div>
+                    </th>
+                    <th className="px-2 py-2.5 max-w-[200px]">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(AI Summary)</span>
+                      </div>
+                    </th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">
+                      <div className="flex flex-col leading-tight">
+                        <span>{language === 'th' ? 'หมวดหมู่' : 'Category'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Category)</span>
+                      </div>
+                    </th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap text-center">
+                      <div className="flex flex-col leading-tight items-center">
+                        <span>{language === 'th' ? 'ความด่วน' : 'Priority'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Priority)</span>
+                      </div>
+                    </th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap text-center">
+                      <div className="flex flex-col leading-tight items-center">
+                        <span>{language === 'th' ? 'สถานะ' : 'Status'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Status)</span>
+                      </div>
+                    </th>
+                    <th className="px-2.5 py-2.5 w-[105px] min-w-[105px] whitespace-nowrap text-right">
+                      <div className="flex flex-col leading-tight items-end">
+                        <span>{language === 'th' ? 'เวลา' : 'Time'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Time)</span>
+                      </div>
+                    </th>
+                    <th className="px-1 py-2.5 w-5"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -2091,6 +2082,7 @@ export default function ChatsPage() {
                           </div>
                         </td>
 
+<<<<<<< HEAD
                         {/* Customer 360 Contact History */}
                         <td className="px-6 py-4">
                           {(() => {
@@ -2121,6 +2113,8 @@ export default function ChatsPage() {
                             );
                           })()}
                         </td>
+=======
+>>>>>>> main
                         {/* Category */}
                         <td className="px-1.5 py-2.5 whitespace-nowrap">
                           <div className="flex flex-col items-start gap-1">
