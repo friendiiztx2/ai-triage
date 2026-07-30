@@ -998,31 +998,7 @@ function FloatingChatWindow({
                             })}
                           </div>
                         </div>
-
-                        {/* Custom Tag Input */}
-                        <div className="flex items-center gap-2 pt-2">
-                          <input
-                            type="text"
-                            placeholder="พิมพ์ชื่อแท็กใหม่ (เช่น #คืนยอดเสีย)..."
-                            value={customTagInput}
-                            onChange={(e) => setCustomTagInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleAddCustomTag();
-                              }
-                            }}
-                            className="flex-1 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-1.5 text-xs font-semibold focus:border-indigo-600 focus:outline-none text-slate-800 dark:text-slate-200"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleAddCustomTag}
-                            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer"
-                          >
-                            + เพิ่ม
-                          </button>
                       </div>
-                    </div>
               </div>
           )}
         </div>
