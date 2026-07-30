@@ -583,9 +583,9 @@ function FloatingChatWindow({
         );
       }
 
-      // 1C. If it's a raw string from Supabase chats.conversation (e.g. multi-line text with "ลูกค้า:" / "แอดมิน:")
+      // 1C. If it's a raw string from Supabase chats.conversation (e.g. multi-line text with "ลูกค้า:" / "พนักงาน:" / "แอดมิน:")
       if (typeof rawConv === 'string' && rawConv.trim()) {
-        const blocks = rawConv.split(/(?=(?:ลูกค้า|แอดมิน|AI|Customer|Agent):\s*)/i);
+        const blocks = rawConv.split(/(?=(?:ลูกค้า|พนักงาน|แอดมิน|AI|Customer|Agent|Support):\s*)/i);
         const parsedList: any[] = [];
 
         blocks.forEach((blk: string) => {
@@ -595,9 +595,9 @@ function FloatingChatWindow({
             if (!trimmedLine) return;
 
             const isCust = /^ลูกค้า\s*:/i.test(trimmedLine) || /^Customer\s*:/i.test(trimmedLine) || /^user\s*:/i.test(trimmedLine);
-            const isAg = /^แอดมิน\s*:/i.test(trimmedLine) || /^AI\s*:/i.test(trimmedLine) || /^Agent\s*:/i.test(trimmedLine);
+            const isAg = /^พนักงาน\s*:/i.test(trimmedLine) || /^แอดมิน\s*:/i.test(trimmedLine) || /^AI\s*:/i.test(trimmedLine) || /^Agent\s*:/i.test(trimmedLine) || /^Support\s*:/i.test(trimmedLine);
 
-            const cleanContent = trimmedLine.replace(/^(ลูกค้า|แอดมิน|AI|Customer|Agent):\s*/i, '').trim();
+            const cleanContent = trimmedLine.replace(/^(ลูกค้า|พนักงาน|แอดมิน|AI|Customer|Agent|Support):\s*/i, '').trim();
 
             if (cleanContent) {
               parsedList.push({
@@ -620,7 +620,7 @@ function FloatingChatWindow({
                     <div className={'flex flex-col flex-1 min-w-0 ' + (item.isCustomer ? 'items-start' : 'items-end')}>
                       {showHeader && (
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
-                          {item.isCustomer ? (chat.customer_name || 'ลูกค้า') : 'แอดมิน / AI'}
+                          {item.isCustomer ? (chat.customer_name || 'ลูกค้า') : 'พนักงาน / AI'}
                         </span>
                       )}
                       <div 
@@ -755,68 +755,88 @@ function FloatingChatWindow({
                 };
 
                 return (
-                  <div key={idx} className="flex items-start justify-between gap-2.5 w-full">
-                    <div className="p-3 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-750 flex-1">
-                      {custMsg}
-                    </div>
+                  <div key={idx} className="space-y-1.5 w-full">
+                    {/* Customer Message Row with Triage Controls */}
+                    <div className="flex items-start justify-between gap-2.5 w-full">
+                      <div className="flex flex-col flex-1 min-w-0 items-start">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
+                          {chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id)}
+                        </span>
+                        <div className="p-3 rounded-2xl max-w-[90%] text-xs font-semibold leading-relaxed bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-750">
+                          {custMsg}
+                        </div>
+                      </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0 select-none pt-1">
-                      {/* Category Selector */}
-                      <select
-                        value={currentVal.category_id}
-                        onChange={(e) => {
-                          const newCat = e.target.value;
-                          if (issueItem.id) {
-                            setEditIssues(prev => ({
-                              ...prev,
-                              [issueItem.id]: { ...currentVal, category_id: newCat }
-                            }));
-                          }
-                          setEditCategory(newCat);
-                        }}
-                        disabled={userProfile?.role === 'agent'}
-                        className="bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold px-2 py-1 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-sm"
-                      >
-                        <option value="">-- หมวดหมู่ --</option>
-                        {categories.map((cat: any) => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                      </select>
+                      <div className="flex items-center gap-1.5 shrink-0 select-none pt-4">
+                        {/* Category Selector */}
+                        <select
+                          value={currentVal.category_id}
+                          onChange={(e) => {
+                            const newCat = e.target.value;
+                            if (issueItem.id) {
+                              setEditIssues(prev => ({
+                                ...prev,
+                                [issueItem.id]: { ...currentVal, category_id: newCat }
+                              }));
+                            }
+                            setEditCategory(newCat);
+                          }}
+                          disabled={userProfile?.role === 'agent'}
+                          className="bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold px-2 py-1 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-sm"
+                        >
+                          <option value="">-- หมวดหมู่ --</option>
+                          {categories.map((cat: any) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          ))}
+                        </select>
 
-                      {/* Priority Buttons */}
-                      <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-250 dark:border-slate-700 shadow-sm">
-                        {['low', 'medium', 'high', 'urgent'].map(p => {
-                          const isActive = currentVal.priority.toLowerCase() === p;
-                          let activeStyle = '';
-                          if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-sm';
-                          else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-sm';
-                          else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-sm';
-                          else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-sm';
+                        {/* Priority Buttons */}
+                        <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-250 dark:border-slate-700 shadow-sm">
+                          {['low', 'medium', 'high', 'urgent'].map(p => {
+                            const isActive = currentVal.priority.toLowerCase() === p;
+                            let activeStyle = '';
+                            if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-sm';
+                            else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-sm';
+                            else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-sm';
+                            else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-sm';
 
-                          return (
-                            <button
-                              key={p}
-                              type="button"
-                              onClick={() => {
-                                if (issueItem.id) {
-                                  setEditIssues(prev => ({
-                                    ...prev,
-                                    [issueItem.id]: { ...currentVal, priority: p }
-                                  }));
+                            return (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => {
+                                  if (issueItem.id) {
+                                    setEditIssues(prev => ({
+                                      ...prev,
+                                      [issueItem.id]: { ...currentVal, priority: p }
+                                    }));
+                                  }
+                                  setEditPriority(p);
+                                }}
+                                disabled={userProfile?.role === 'agent'}
+                                className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
+                                  (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
                                 }
-                                setEditPriority(p);
-                              }}
-                              disabled={userProfile?.role === 'agent'}
-                              className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
-                                (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
-                              }
-                            >
-                              {p}
-                            </button>
-                          );
-                        })}
+                              >
+                                {p}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Support Agent / AI Reply Bubble */}
+                    {issueItem.reply && (
+                      <div className="flex flex-col items-end w-full pt-1">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">
+                          พนักงาน / AI
+                        </span>
+                        <div className="p-3 rounded-2xl max-w-[85%] text-xs font-semibold leading-relaxed bg-indigo-600 text-white rounded-tr-none shadow-sm">
+                          {issueItem.reply}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
