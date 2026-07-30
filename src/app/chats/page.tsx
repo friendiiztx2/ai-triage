@@ -944,71 +944,11 @@ function FloatingChatWindow({
                     </div>
                   );
                 })()}
-              </div>
-
-              {/* SECTION 3: Profile & Customer 360 Contact History */}
-              <div className="grid grid-cols-1 gap-4">
-                {/* Profile Metadata & Customer 360 Badge */}
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-                  {(() => {
-                    const customerChats = (allChats || []).filter((c: any) => 
-                      (chat.customer_id && c.customer_id === chat.customer_id) ||
-                      (chat.customer_name && c.customer_name === chat.customer_name) ||
-                      c.id === chat.id
-                    );
-
-                    const isReturning = customerChats.length > 1;
-
-                    return (
-                      <>
-                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                          <h4 className="font-extrabold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                            👤 ข้อมูลโปรไฟล์และประวัติสะสม (Customer 360)
-                          </h4>
-                          <Link 
-                            href={`/customers?search=${encodeURIComponent(chat.customer_name || chat.customer_id || '')}`}
-                            target="_blank"
-                            className="text-[10px] font-extrabold px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-955/40 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 transition cursor-pointer shadow-sm flex items-center gap-1"
-                          >
-                            <span>🔍 ดูใน Customer 360</span>
-                            <span>➔</span>
-                          </Link>
-                        </div>
-
-                        {customerInfo ? (
-                          <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                            <div className="flex items-center justify-between py-2">
-                              <span className="text-slate-400 font-bold">ชื่อลูกค้า</span>
-                              <span className="text-slate-800 dark:text-slate-200 font-medium">{customerInfo.name}</span>
-                            </div>
-                            {customerInfo.email && (
-                              <div className="flex items-center justify-between py-2">
-                                <span className="text-slate-400 font-bold">อีเมล</span>
-                                <span className="text-slate-800 dark:text-slate-200 font-medium">{customerInfo.email}</span>
-                              </div>
-                            )}
-                            {customerInfo.phone && (
-                              <div className="flex items-center justify-between py-2">
-                                <span className="text-slate-400 font-bold">เบอร์โทร</span>
-                                <span className="text-slate-800 dark:text-slate-200 font-medium">{customerInfo.phone}</span>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-slate-400 text-xs py-1">
-                            <span className="font-bold text-slate-700 dark:text-slate-200">{chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id))}</span>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-
-                {/* Audit Logs history */}
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-                  <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    📜 ประวัติการแก้ไข (Triage History Timeline)
-                  </h4>
+              {/* SECTION 3: Triage History Timeline */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+                <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  📜 ประวัติการแก้ไข (Triage History Timeline)
+                </h4>
                   {(() => {
                     let history: any[] = [];
                     try {
