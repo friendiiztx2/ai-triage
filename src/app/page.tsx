@@ -938,7 +938,7 @@ export default function OverviewPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: Total Chats */}
         <Link 
-          href="/chats"
+          href={`/chats?dateRange=${dateRange}`}
           className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-indigo-150 dark:hover:border-indigo-900 transition-all duration-250 cursor-pointer group"
         >
           <div className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 p-3.5 rounded-2xl group-hover:scale-105 transition-transform">
@@ -952,7 +952,7 @@ export default function OverviewPage() {
 
         {/* Card 2: Pending Triage */}
         <Link 
-          href="/chats?status=pending"
+          href={`/chats?status=pending&dateRange=${dateRange}`}
           className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-amber-200 dark:hover:border-amber-900 transition-all duration-250 cursor-pointer group"
         >
           <div className="bg-amber-50 dark:bg-amber-955/40 text-amber-600 dark:text-amber-400 p-3.5 rounded-2xl group-hover:scale-105 transition-transform">
@@ -966,7 +966,7 @@ export default function OverviewPage() {
 
         {/* Card 3: Urgent / High priority */}
         <Link 
-          href="/chats?priority=urgent"
+          href={`/chats?priority=urgent&dateRange=${dateRange}`}
           className={`bg-white dark:bg-slate-900 border p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-rose-200 dark:hover:border-rose-900 transition-all duration-250 cursor-pointer group ${
             stats.highPriority > 0
               ? 'border-rose-300 dark:border-rose-800/80 shadow-rose-100/60 dark:shadow-rose-955/20 shadow-md'
@@ -1045,7 +1045,7 @@ export default function OverviewPage() {
                     return (
                       <Link 
                         key={item.name} 
-                        href={`/chats?category=${item.id}`}
+                        href={`/chats?category=${item.id}&dateRange=${dateRange}`}
                         className={`bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800/75 border-l-4 ${borderStyle} p-4 rounded-xl flex flex-col justify-between hover:bg-slate-100/50 dark:hover:bg-slate-800/80 hover:border-indigo-150 dark:hover:border-indigo-900 transition-all duration-250 cursor-pointer group`}
                       >
                         <span className="text-slate-700 dark:text-slate-300 text-xs font-bold block truncate mb-2">{item.name}</span>
@@ -1056,7 +1056,7 @@ export default function OverviewPage() {
                   
                   {/* Fallback Unclassified check in listing */}
                   <Link 
-                    href="/chats?category=other"
+                    href={`/chats?category=other&dateRange=${dateRange}`}
                     className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800/75 border-l-4 border-l-slate-400 dark:border-l-slate-650 p-4 rounded-xl flex flex-col justify-between hover:bg-slate-100/50 dark:hover:bg-slate-800/80 hover:border-indigo-150 dark:hover:border-indigo-900 transition-all duration-250 cursor-pointer group"
                   >
                     <span className="text-slate-700 dark:text-slate-300 text-xs font-bold block truncate mb-2">อื่นๆ (Other)</span>
