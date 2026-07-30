@@ -698,7 +698,7 @@ function FloatingChatWindow({
           ) : (
             <div className="space-y-6">
               
-              {/* SECTION 1: Conversation History */}
+              {/* SECTION 1: Conversation History & Compact Triage Bar */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
@@ -710,150 +710,132 @@ function FloatingChatWindow({
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm max-h-[300px] overflow-y-auto">
                   {renderConversation()}
                 </div>
-              </div>
 
-              {/* SECTION 2: AI Recommendations & Edit Form */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  ✨ บทวิเคราะห์และคำแนะนำ AI
-                </h4>
+                {/* Compact Inline Category & Priority Manager (Next to chat issues) */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <h5 className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] uppercase tracking-wider flex items-center gap-1">
+                      <span>🏷️ จัดการหมวดหมู่และความด่วนประจำเคส</span>
+                    </h5>
+                    {userProfile?.role !== 'agent' && (
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={handleSaveChanges}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-indigo-300 px-3 py-1 rounded-lg text-[10px] font-bold shadow-sm transition cursor-pointer"
+                      >
+                        {updating ? 'กำลังบันทึก...' : '💾 บันทึกการแก้ไข'}
+                      </button>
+                    )}
+                  </div>
 
-                {(() => {
-                  const hasDbIssues = selectedChatIssues && selectedChatIssues.length > 0;
-                  const recData = parseAIRecommendation(chat.ai_recommendation);
-                  const hasParsedIssues = recData && recData.issues && recData.issues.length > 0;
+                  {selectedChatIssues && selectedChatIssues.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedChatIssues.map((issue, idx) => {
+                        const currentVal = editIssues[issue.id] || { category_id: issue.category_id || '', priority: issue.priority || 'low' };
+                        return (
+                          <div key={issue.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-150 dark:border-slate-800 text-xs">
+                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                              <span className="font-bold text-slate-800 dark:text-slate-200 truncate" title={issue.summary}>
+                                เรื่องที่ {idx + 1}: {issue.summary}
+                              </span>
+                            </div>
 
-                  const issuesToRender = hasDbIssues
-                    ? selectedChatIssues.map((issue) => ({
-                        title: issue.summary,
-                        category: issue.categories?.name || issue.category_id || 'อื่นๆ',
-                        department: issue.department,
-                        priority: issue.priority,
-                        reply: issue.recommended_reply,
-                        id: issue.id
-                      }))
-                    : (hasParsedIssues ? recData.issues : []);
-
-                  return (
-                    <div className="space-y-4">
-                      {/* Custom Form editable block */}
-                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4 shadow-sm">
-                        <h5 className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] uppercase tracking-wider">จัดการหมวดหมู่และความเร่งด่วน</h5>
-                        
-                        {selectedChatIssues && selectedChatIssues.length > 0 ? (
-                          <div className="space-y-4 divide-y divide-slate-105 dark:divide-slate-800">
-                            {selectedChatIssues.map((issue, idx) => {
-                              const currentVal = editIssues[issue.id] || { category_id: issue.category_id || '', priority: issue.priority || 'low' };
-                              return (
-                                <div key={issue.id} className={'space-y-3 ' + (idx > 0 ? 'pt-4' : '')}>
-                                  <h6 className="font-bold text-xs text-indigo-650 dark:text-indigo-400">เรื่องที่ {idx + 1}: {issue.summary}</h6>
-                                  
-                                  <div>
-                                    <select
-                                      value={currentVal.category_id}
-                                      onChange={(e) => setEditIssues(prev => ({
-                                        ...prev,
-                                        [issue.id]: { ...currentVal, category_id: e.target.value }
-                                      }))}
-                                      disabled={userProfile?.role === 'agent'}
-                                      className="w-full border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-semibold focus:border-indigo-600 focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 disabled:opacity-60"
-                                    >
-                                      <option value="">-- ไม่ระบุ (อื่นๆ) --</option>
-                                      {categories.map((cat: any) => (
-                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-
-                                  <div className="grid grid-cols-4 gap-1">
-                                    {['low', 'medium', 'high', 'urgent'].map(p => {
-                                      const isActive = currentVal.priority.toLowerCase() === p;
-                                      let activeStyle = '';
-                                      if (p === 'urgent') activeStyle = 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-955/35 dark:text-rose-455';
-                                      else if (p === 'high') activeStyle = 'bg-orange-50 text-orange-655 border-orange-200 dark:bg-orange-955/35 dark:text-orange-400';
-                                      else if (p === 'medium') activeStyle = 'bg-amber-50 text-amber-655 border-amber-200 dark:bg-amber-955/35 dark:text-amber-400';
-                                      else if (p === 'low') activeStyle = 'bg-blue-50 text-blue-650 border-blue-200 dark:bg-blue-955/35 dark:text-blue-400';
-
-                                      return (
-                                        <button
-                                          key={p}
-                                          type="button"
-                                          onClick={() => setEditIssues(prev => ({
-                                            ...prev,
-                                            [issue.id]: { ...currentVal, priority: p }
-                                          }))}
-                                          disabled={userProfile?.role === 'agent'}
-                                          className={'py-1 rounded-md text-[9px] font-bold uppercase border text-center transition cursor-pointer ' + 
-                                            (isActive ? activeStyle : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-555 border-slate-200 dark:border-slate-800 hover:bg-slate-50')
-                                          }
-                                        >
-                                          {p}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <div>
-                              <select 
-                                value={editCategory}
-                                onChange={(e) => setEditCategory(e.target.value)}
+                            <div className="flex items-center gap-1.5 shrink-0 select-none">
+                              {/* Category select dropdown */}
+                              <select
+                                value={currentVal.category_id}
+                                onChange={(e) => setEditIssues(prev => ({
+                                  ...prev,
+                                  [issue.id]: { ...currentVal, category_id: e.target.value }
+                                }))}
                                 disabled={userProfile?.role === 'agent'}
-                                className="w-full border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-semibold focus:border-indigo-600 focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 disabled:opacity-60"
+                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold px-2 py-1 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer"
                               >
-                                <option value="">-- ไม่ระบุ (อื่นๆ) --</option>
+                                <option value="">-- หมวดหมู่ --</option>
                                 {categories.map((cat: any) => (
                                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                                 ))}
                               </select>
-                            </div>
 
-                            <div className="grid grid-cols-4 gap-1">
-                              {['low', 'medium', 'high', 'urgent'].map(p => {
-                                const isActive = editPriority.toLowerCase() === p;
-                                let activeStyle = '';
-                                if (p === 'urgent') activeStyle = 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-955/35 dark:text-rose-455';
-                                else if (p === 'high') activeStyle = 'bg-orange-50 text-orange-655 border-orange-200 dark:bg-orange-955/35 dark:text-orange-400';
-                                else if (p === 'medium') activeStyle = 'bg-amber-50 text-amber-655 border-amber-200 dark:bg-amber-955/35 dark:text-amber-400';
-                                else if (p === 'low') activeStyle = 'bg-blue-50 text-blue-605 border-blue-200 dark:bg-blue-955/35 dark:text-blue-400';
+                              {/* Priority Buttons */}
+                              <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                {['low', 'medium', 'high', 'urgent'].map(p => {
+                                  const isActive = currentVal.priority.toLowerCase() === p;
+                                  let activeStyle = '';
+                                  if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-sm';
+                                  else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-sm';
+                                  else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-sm';
+                                  else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-sm';
 
-                                return (
-                                  <button
-                                    key={p}
-                                    type="button"
-                                    onClick={() => setEditPriority(p)}
-                                    disabled={userProfile?.role === 'agent'}
-                                    className={'py-1 rounded-md text-[9px] font-bold uppercase border text-center transition cursor-pointer ' + 
-                                      (isActive ? activeStyle : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-555 border-slate-200 dark:border-slate-800 hover:bg-slate-50')
-                                    }
-                                  >
-                                    {p}
-                                  </button>
-                                );
-                              })}
+                                  return (
+                                    <button
+                                      key={p}
+                                      type="button"
+                                      onClick={() => setEditIssues(prev => ({
+                                        ...prev,
+                                        [issue.id]: { ...currentVal, priority: p }
+                                      }))}
+                                      disabled={userProfile?.role === 'agent'}
+                                      className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
+                                        (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
+                                      }
+                                    >
+                                      {p}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
-                        )}
-
-                        {userProfile?.role === 'agent' ? (
-                          <div className="bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-400 text-[10px] p-2.5 rounded-xl border border-amber-200/50 dark:border-amber-900/30 text-center leading-normal">
-                            🔒 สิทธิ์พนักงาน ไม่สามารถแก้ไขผลได้
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={updating}
-                            onClick={handleSaveChanges}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-indigo-300 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-100 dark:shadow-none transition cursor-pointer"
-                          >
-                            {updating ? 'กำลังบันทึก...' : 'บันทึกการแก้ไขข้อมูล'}
-                          </button>
-                        )}
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-150 dark:border-slate-800 text-xs">
+                      <div className="flex-1">
+                        <select 
+                          value={editCategory}
+                          onChange={(e) => setEditCategory(e.target.value)}
+                          disabled={userProfile?.role === 'agent'}
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-semibold focus:border-indigo-600 focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+                        >
+                          <option value="">-- ไม่ระบุ (อื่นๆ) --</option>
+                          {categories.map((cat: any) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          ))}
+                        </select>
                       </div>
+
+                      <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
+                        {['low', 'medium', 'high', 'urgent'].map(p => {
+                          const isActive = editPriority.toLowerCase() === p;
+                          let activeStyle = '';
+                          if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-sm';
+                          else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-sm';
+                          else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-sm';
+                          else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-sm';
+
+                          return (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => setEditPriority(p)}
+                              disabled={userProfile?.role === 'agent'}
+                              className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
+                                (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
+                              }
+                            >
+                              {p}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
                       {/* SECTION: Custom Tags Management */}
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-sm">
@@ -939,11 +921,8 @@ function FloatingChatWindow({
                           >
                             + เพิ่ม
                           </button>
-                        </div>
                       </div>
                     </div>
-                  );
-                })()}
               {/* SECTION 3: Triage History Timeline */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
                 <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
@@ -988,8 +967,6 @@ function FloatingChatWindow({
                   })()}
                 </div>
               </div>
-
-            </div>
           )}
         </div>
       )}
