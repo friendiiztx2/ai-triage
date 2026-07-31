@@ -24,47 +24,82 @@ export async function GET(request: NextRequest) {
   try {
     const chatMap = new Map();
 
-    // 1. Fetch all chats from 'chats' table in Supabase FIRST
-    let query = db
-      .from('chats')
-      .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, company_id, chat_issues(*), customers(*)')
+    // 1. Fetch from 'vw_triage_export' view FIRST (unrestricted view, contains all chats including pending ones like chat-0122)
+    let exportQuery = db
+      .from('vw_triage_export')
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (search && search.trim()) {
       const q = search.trim();
-      query = query.or(`summary.ilike.%${q}%,customers.name.ilike.%${q}%,customer_id.ilike.%${q}%`);
+      exportQuery = exportQuery.or(`chat_summary.ilike.%${q}%,issue_summary.ilike.%${q}%,customer_name.ilike.%${q}%,chat_id.ilike.%${q}%`);
     }
 
-    const { data: chatsData, error: chatsError } = await query.abortSignal(controller.signal);
+    const { data: exportData, error: exportError } = await exportQuery.abortSignal(controller.signal);
 
-    if (chatsError) {
-      console.warn('Supabase query chats warning:', chatsError);
+    if (exportError) {
+      console.warn('Supabase query vw_triage_export warning:', exportError);
     }
 
-    if (chatsData && chatsData.length > 0) {
-      chatsData.forEach((c: any) => {
-        chatMap.set(c.id, {
-          ...c,
-          status: determineStatus(c),
-          customer_name: c.customers?.name || c.customer_name || 'Anan (อนันต์)',
-          conversation: c.conversation || (c.summary ? `ลูกค้า: ${c.summary}` : null),
-          chat_issues: Array.isArray(c.chat_issues) ? c.chat_issues : [],
-          rawMessages: c.conversation ? [c.conversation] : [],
-          tags: c.priority === 'urgent' 
-            ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
-            : c.category_id === 'deposit_withdrawal'
-            ? ['#รอสลิป']
-            : c.category_id === 'promo_bonus'
-            ? ['#ติดตามผล']
-            : c.priority === 'high'
-            ? ['#เคสพิเศษ']
-            : [],
-          created_at: c.created_at || new Date().toISOString()
-        });
+    if (exportData && exportData.length > 0) {
+      exportData.forEach((row: any) => {
+        const id = row.chat_id || row.id;
+        if (!id) return;
+
+        const isPending = (row.status === 'pending') || (!row.category_id && !row.chat_summary && !row.issue_summary);
+        const itemStatus = isPending ? 'pending' : 'completed';
+
+        if (!chatMap.has(id)) {
+          chatMap.set(id, {
+            id: id,
+            customer_id: row.customer_id || 'cust-003',
+            customer_name: row.customer_name || 'Anan (อนันต์)',
+            summary: row.chat_summary || row.issue_summary || 'ไม่มีข้อมูลสรุป',
+            category_id: row.category_id || null,
+            priority: row.priority || null,
+            status: itemStatus,
+            confidence: 95,
+            company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+            rawMessages: row.issue_summary ? [`ลูกค้า: ${row.issue_summary}`] : [],
+            conversation: row.issue_summary ? `ลูกค้า: ${row.issue_summary}` : null,
+            chat_issues: [],
+            tags: row.priority === 'urgent' 
+              ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
+              : row.category_id === 'deposit_withdrawal'
+              ? ['#รอสลิป']
+              : row.category_id === 'promo_bonus'
+              ? ['#ติดตามผล']
+              : row.priority === 'high'
+              ? ['#เคสพิเศษ']
+              : [],
+            created_at: row.created_at || new Date().toISOString()
+          });
+        }
+
+        const existing = chatMap.get(id);
+        if (row.issue_summary) {
+          const msgText = `ลูกค้า: ${row.issue_summary}`;
+          if (!existing.rawMessages.includes(msgText)) {
+            existing.rawMessages.push(msgText);
+            existing.conversation = existing.rawMessages.join('\n');
+          }
+          if (!existing.chat_issues.some((i: any) => i.summary === row.issue_summary)) {
+            existing.chat_issues.push({
+              id: `${id}-issue-${existing.chat_issues.length + 1}`,
+              chat_id: id,
+              category_id: row.category_id,
+              priority: row.priority,
+              department: row.department,
+              summary: row.issue_summary,
+              recommended_reply: row.ai_reply,
+              created_at: row.created_at
+            });
+          }
+        }
       });
     }
 
-    // 2. Fetch all rows from 'chat_issues' table in Supabase SECOND
+    // 2. Fetch all rows from 'chat_issues' table SECOND as backup/enrichment
     const { data: issuesData } = await db
       .from('chat_issues')
       .select('*')
@@ -74,53 +109,30 @@ export async function GET(request: NextRequest) {
       issuesData.forEach((issue: any) => {
         const chatId = issue.chat_id || 'chat-001';
         const msgText = `ลูกค้า: ${issue.summary}`;
-        const issueStatus = determineStatus(issue);
 
         if (!chatMap.has(chatId)) {
+          const isPending = (issue.status === 'pending') || (!issue.category_id && !issue.summary);
           chatMap.set(chatId, {
             id: chatId,
             customer_id: 'cust-003',
             customer_name: 'Anan (อนันต์)',
             summary: issue.summary,
-            category_id: issue.category_id || 'other',
-            priority: issue.priority || 'medium',
-            status: issueStatus,
+            category_id: issue.category_id || null,
+            priority: issue.priority || null,
+            status: isPending ? 'pending' : 'completed',
             confidence: 95,
             company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
             rawMessages: [msgText],
             conversation: msgText,
             chat_issues: [issue],
-            tags: issue.priority === 'urgent' 
-              ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
-              : issue.category_id === 'deposit_withdrawal'
-              ? ['#รอสลิป']
-              : issue.category_id === 'promo_bonus'
-              ? ['#ติดตามผล']
-              : issue.priority === 'high'
-              ? ['#เคสพิเศษ']
-              : [],
+            tags: [],
             created_at: issue.created_at || new Date().toISOString()
           });
         } else {
           const existing = chatMap.get(chatId);
           if (!existing.chat_issues) existing.chat_issues = [];
-          
-          if (!existing.chat_issues.some((i: any) => i.id === issue.id)) {
+          if (!existing.chat_issues.some((i: any) => i.id === issue.id || i.summary === issue.summary)) {
             existing.chat_issues.push(issue);
-          }
-
-          if (!existing.summary && issue.summary) {
-            existing.summary = issue.summary;
-          }
-          if (!existing.category_id && issue.category_id) {
-            existing.category_id = issue.category_id;
-          }
-          if (!existing.conversation) {
-            if (!existing.rawMessages) existing.rawMessages = [];
-            if (!existing.rawMessages.includes(msgText)) {
-              existing.rawMessages.push(msgText);
-              existing.conversation = existing.rawMessages.join('\n');
-            }
           }
         }
       });
