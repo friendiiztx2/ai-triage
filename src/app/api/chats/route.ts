@@ -42,6 +42,10 @@ export async function GET(request: NextRequest) {
         const chatId = issue.chat_id || 'chat-001';
         const msgText = `ลูกค้า: ${issue.summary}`;
         
+        const issueStatus = (issue.status && issue.status.trim()) 
+          ? issue.status.trim().toLowerCase() 
+          : 'completed';
+
         if (!chatMap.has(chatId)) {
           chatMap.set(chatId, {
             id: chatId,
@@ -50,7 +54,7 @@ export async function GET(request: NextRequest) {
             summary: issue.summary,
             category_id: issue.category_id || 'other',
             priority: issue.priority || 'medium',
-            status: (issue.status && issue.status.trim()) ? issue.status.trim() : (issue.resolution ? 'completed' : 'pending'),
+            status: issueStatus,
             confidence: 95,
             company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
             rawMessages: [msgText],
@@ -81,7 +85,7 @@ export async function GET(request: NextRequest) {
             existing.priority = issue.priority;
           }
           if (issue.status && issue.status.trim()) {
-            existing.status = issue.status.trim();
+            existing.status = issue.status.trim().toLowerCase();
           }
         }
       });
@@ -90,19 +94,18 @@ export async function GET(request: NextRequest) {
     // Merge directly with any chats table data if available
     if (chatsData && chatsData.length > 0) {
       chatsData.forEach((c: any) => {
+        const cStatus = (c.status && c.status.trim()) ? c.status.trim().toLowerCase() : 'completed';
         if (!chatMap.has(c.id)) {
           chatMap.set(c.id, {
             ...c,
-            status: (c.status && c.status.trim()) ? c.status.trim() : (c.resolution ? 'completed' : 'pending'),
+            status: cStatus,
             customer_name: c.customers?.name || c.customer_name || 'Anan (อนันต์)',
             conversation: c.conversation || (c.summary ? `ลูกค้า: ${c.summary}` : null)
           });
         } else {
           const existing = chatMap.get(c.id);
           if (c.status && c.status.trim()) {
-            existing.status = c.status.trim();
-          } else if (c.resolution) {
-            existing.status = 'completed';
+            existing.status = c.status.trim().toLowerCase();
           }
           if (c.conversation && c.conversation.trim()) {
             existing.conversation = c.conversation;
