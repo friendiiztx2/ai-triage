@@ -905,8 +905,8 @@ export default function OverviewPage() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-purple-300/30 dark:bg-purple-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
           <div className="flex items-start gap-3.5">
-            <div className="bg-amber-200/80 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 p-3 rounded-2xl shadow-sm shrink-0 mt-0.5">
-              <Sparkles size={20} className="animate-pulse text-amber-700 dark:text-amber-400" />
+            <div className="bg-gradient-to-tr from-purple-700 via-indigo-600 to-purple-600 text-white border border-purple-400/40 p-3 rounded-2xl shadow-md shadow-purple-500/30 shrink-0 mt-0.5">
+              <Sparkles size={20} className="animate-pulse text-amber-200" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
