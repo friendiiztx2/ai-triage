@@ -900,22 +900,22 @@ export default function OverviewPage() {
       </div>
     </div>
 
-      {/* Feature #2: AI Smart Daily Insight & Trend Recommendation Banner (Solid Pastel Theme) */}
-      <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-amber-50 dark:from-indigo-950/80 dark:via-purple-950/60 dark:to-slate-900 text-slate-800 dark:text-slate-100 p-5 rounded-2xl shadow-sm border border-indigo-200 dark:border-indigo-800/80 relative overflow-hidden group transition-all duration-300">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-200/30 dark:bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+      {/* Feature #2: AI Smart Daily Insight & Trend Recommendation Banner (Slightly Deeper Soft Purple Pastel Theme) */}
+      <div className="bg-gradient-to-r from-purple-100/90 via-indigo-100/80 to-purple-100/60 dark:from-purple-950/80 dark:via-indigo-950/60 dark:to-slate-900 text-slate-900 dark:text-slate-100 p-5 rounded-2xl shadow-sm border-2 border-indigo-300/80 dark:border-indigo-750 relative overflow-hidden group transition-all duration-300">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-300/30 dark:bg-purple-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
           <div className="flex items-start gap-3.5">
-            <div className="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800 p-3 rounded-2xl shadow-sm shrink-0 mt-0.5">
-              <Sparkles size={20} className="animate-pulse text-amber-600 dark:text-amber-400" />
+            <div className="bg-amber-200/80 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 p-3 rounded-2xl shadow-sm shrink-0 mt-0.5">
+              <Sparkles size={20} className="animate-pulse text-amber-700 dark:text-amber-400" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 font-bold">
+                <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-purple-200/90 text-purple-900 dark:bg-purple-900/80 dark:text-purple-200 border border-purple-300 dark:border-purple-700 font-extrabold">
                   AI DAILY INSIGHT & RECOMMENDATION
                 </span>
-                <span className="text-xs text-indigo-700 dark:text-indigo-300 font-bold">• วิเคราะห์สดประจำวัน</span>
+                <span className="text-xs text-purple-900 dark:text-purple-300 font-extrabold">• วิเคราะห์สดประจำวัน</span>
               </div>
-              <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-base mt-1.5 leading-snug">
+              <h3 className="font-extrabold text-slate-950 dark:text-white text-base mt-1.5 leading-snug">
                 {stats.highPriority > 0
                   ? `พบเคสด่วนที่สุด ${stats.highPriority} เคสที่ต้องการการดูแลทันที! หมวดหมู่ยอดฮิตวันนี้คือ "${sortedChartData[0]?.name || 'ทั่วไป'}" (${sortedChartData[0]?.value || 0} เคส)`
                   : stats.totalChats > 0 && sortedChartData[0]?.value > 0
@@ -923,7 +923,7 @@ export default function OverviewPage() {
                     : `ภาพรวมระบบเรียบร้อยดี! วันนี้ยังไม่มีเคสใหม่ทักเข้ามาในระบบ (0 เคส)`
                 }
               </h3>
-              <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 font-semibold">
+              <p className="text-xs text-indigo-950 dark:text-indigo-200 mt-1 font-bold">
                 {stats.totalChats > 0 && sortedChartData[0]?.value > 0
                   ? `💡 คำแนะนำปฏิบัติงาน: ควรเตรียมข้อมูลเรื่อง ${sortedChartData[0]?.name} และเข้าตรวจสอบเคสในสถานะรอดำเนินการ (${stats.pendingTriage} เคส) เพื่อรักษารอบระยะเวลาตอบกลับให้ต่ำกว่า 5 นาที`
                   : `💡 คำแนะนำปฏิบัติงาน: ระบบพร้อมรับเรื่องและเตรียมพร้อมสำหรับการคัดกรองเคสให้อัตโนมัติ 24 ชั่วโมง`
