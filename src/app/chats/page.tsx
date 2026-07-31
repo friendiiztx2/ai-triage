@@ -1190,7 +1190,7 @@ export default function ChatsPage() {
       if (chatsData) {
         const processed = chatsData.map((c: any) => ({
           ...c,
-          status: (c.status && c.status.trim()) ? c.status.trim().toLowerCase() : 'completed'
+          status: c.status || ((c.resolution && c.resolution !== 'Pending' && c.resolution !== '[]') ? 'completed' : 'pending')
         }));
         const sorted = [...processed].sort((a, b) => 
           new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()

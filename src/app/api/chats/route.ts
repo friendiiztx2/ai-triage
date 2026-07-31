@@ -1,18 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+function determineStatus(item: any): string {
+  if (!item) return 'pending';
+  const s = typeof item.status === 'string' ? item.status.trim().toLowerCase() : '';
+  if (s === 'pending' || s === 'รอดำเนินการ' || s === 'waiting') return 'pending';
+  if (s === 'completed' || s === 'แยกแยะแล้ว' || s === 'resolved' || s === 'closed') return 'completed';
+  if (item.resolution && item.resolution !== 'Pending' && item.resolution !== '[]' && item.resolution.trim() !== '') return 'completed';
+  return 'pending';
+}
+
 export async function GET(request: NextRequest) {
+  const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   const search = request.nextUrl.searchParams.get('search');
 
   try {
-    // 1. Try querying 'chats' table directly
-    let query = supabase
+    const chatMap = new Map();
+
+    // 1. Fetch all chats from 'chats' table in Supabase FIRST
+    let query = db
       .from('chats')
       .select('id, customer_id, conversation, status, category_id, priority, summary, created_at, confidence, resolution, company_id, chat_issues(*), customers(*)')
       .order('created_at', { ascending: false });
@@ -28,23 +40,40 @@ export async function GET(request: NextRequest) {
       console.warn('Supabase query chats warning:', chatsError);
     }
 
-    // 2. Fetch all rows from 'chat_issues' table in Supabase (210 active chats / 677 issues)
-    const { data: issuesData } = await supabase
+    if (chatsData && chatsData.length > 0) {
+      chatsData.forEach((c: any) => {
+        chatMap.set(c.id, {
+          ...c,
+          status: determineStatus(c),
+          customer_name: c.customers?.name || c.customer_name || 'Anan (อนันต์)',
+          conversation: c.conversation || (c.summary ? `ลูกค้า: ${c.summary}` : null),
+          chat_issues: Array.isArray(c.chat_issues) ? c.chat_issues : [],
+          rawMessages: c.conversation ? [c.conversation] : [],
+          tags: c.priority === 'urgent' 
+            ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
+            : c.category_id === 'deposit_withdrawal'
+            ? ['#รอสลิป']
+            : c.category_id === 'promo_bonus'
+            ? ['#ติดตามผล']
+            : c.priority === 'high'
+            ? ['#เคสพิเศษ']
+            : [],
+          created_at: c.created_at || new Date().toISOString()
+        });
+      });
+    }
+
+    // 2. Fetch all rows from 'chat_issues' table in Supabase SECOND
+    const { data: issuesData } = await db
       .from('chat_issues')
       .select('*')
       .order('created_at', { ascending: false });
 
-    const chatMap = new Map();
-
-    // Map all issues into full multi-line conversations starting with "ลูกค้า: ..."
     if (issuesData && issuesData.length > 0) {
       issuesData.forEach((issue: any) => {
         const chatId = issue.chat_id || 'chat-001';
         const msgText = `ลูกค้า: ${issue.summary}`;
-        
-        const issueStatus = (issue.status && issue.status.trim()) 
-          ? issue.status.trim().toLowerCase() 
-          : 'completed';
+        const issueStatus = determineStatus(issue);
 
         if (!chatMap.has(chatId)) {
           chatMap.set(chatId, {
@@ -73,42 +102,24 @@ export async function GET(request: NextRequest) {
           });
         } else {
           const existing = chatMap.get(chatId);
-          existing.chat_issues.push(issue);
-          if (!existing.rawMessages.includes(msgText)) {
-            existing.rawMessages.push(msgText);
-            existing.conversation = existing.rawMessages.join('\n');
+          if (!existing.chat_issues) existing.chat_issues = [];
+          
+          if (!existing.chat_issues.some((i: any) => i.id === issue.id)) {
+            existing.chat_issues.push(issue);
           }
-          const priOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
-          const pCurrent = priOrder[existing.priority] || 1;
-          const pNew = priOrder[issue.priority] || 1;
-          if (pNew > pCurrent) {
-            existing.priority = issue.priority;
-          }
-          if (issue.status && issue.status.trim()) {
-            existing.status = issue.status.trim().toLowerCase();
-          }
-        }
-      });
-    }
 
-    // Merge directly with any chats table data if available
-    if (chatsData && chatsData.length > 0) {
-      chatsData.forEach((c: any) => {
-        const cStatus = (c.status && c.status.trim()) ? c.status.trim().toLowerCase() : 'completed';
-        if (!chatMap.has(c.id)) {
-          chatMap.set(c.id, {
-            ...c,
-            status: cStatus,
-            customer_name: c.customers?.name || c.customer_name || 'Anan (อนันต์)',
-            conversation: c.conversation || (c.summary ? `ลูกค้า: ${c.summary}` : null)
-          });
-        } else {
-          const existing = chatMap.get(c.id);
-          if (c.status && c.status.trim()) {
-            existing.status = c.status.trim().toLowerCase();
+          if (!existing.summary && issue.summary) {
+            existing.summary = issue.summary;
           }
-          if (c.conversation && c.conversation.trim()) {
-            existing.conversation = c.conversation;
+          if (!existing.category_id && issue.category_id) {
+            existing.category_id = issue.category_id;
+          }
+          if (!existing.conversation) {
+            if (!existing.rawMessages) existing.rawMessages = [];
+            if (!existing.rawMessages.includes(msgText)) {
+              existing.rawMessages.push(msgText);
+              existing.conversation = existing.rawMessages.join('\n');
+            }
           }
         }
       });
