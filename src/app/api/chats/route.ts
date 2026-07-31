@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
             summary: issue.summary,
             category_id: issue.category_id || 'other',
             priority: issue.priority || 'medium',
-            status: issue.status || (issue.resolution ? 'completed' : 'pending'),
+            status: (issue.status && issue.status.trim()) ? issue.status.trim() : (issue.resolution ? 'completed' : 'pending'),
             confidence: 95,
             company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
             rawMessages: [msgText],
@@ -80,8 +80,8 @@ export async function GET(request: NextRequest) {
           if (pNew > pCurrent) {
             existing.priority = issue.priority;
           }
-          if (issue.status) {
-            existing.status = issue.status;
+          if (issue.status && issue.status.trim()) {
+            existing.status = issue.status.trim();
           }
         }
       });
@@ -93,14 +93,14 @@ export async function GET(request: NextRequest) {
         if (!chatMap.has(c.id)) {
           chatMap.set(c.id, {
             ...c,
-            status: c.status || (c.resolution ? 'completed' : 'pending'),
+            status: (c.status && c.status.trim()) ? c.status.trim() : (c.resolution ? 'completed' : 'pending'),
             customer_name: c.customers?.name || c.customer_name || 'Anan (อนันต์)',
             conversation: c.conversation || (c.summary ? `ลูกค้า: ${c.summary}` : null)
           });
         } else {
           const existing = chatMap.get(c.id);
-          if (c.status) {
-            existing.status = c.status;
+          if (c.status && c.status.trim()) {
+            existing.status = c.status.trim();
           } else if (c.resolution) {
             existing.status = 'completed';
           }
