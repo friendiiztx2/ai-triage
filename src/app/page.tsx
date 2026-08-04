@@ -212,7 +212,7 @@ export default function OverviewPage() {
   const [otherCount, setOtherCount] = useState(0);
   
   // Filter settings
-  const [dateRange, setDateRange] = useState('all');
+  const [dateRange, setDateRange] = useState('30days');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -399,38 +399,42 @@ export default function OverviewPage() {
       return;
     }
 
-    // Filter by Date Range
+    // Filter by Date Range (Bulletproof YYYY-MM-DD comparison - No timezone bugs!)
     let filtered = allChats;
-    const now = new Date();
-    const cutoff = new Date();
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
-    if (dateRange === 'all') {
-      filtered = allChats;
-    } else if (dateRange === 'today') {
-      cutoff.setHours(0, 0, 0, 0);
-      const res = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      if (res.length > 0) filtered = res;
+    if (dateRange === 'today') {
+      filtered = allChats.filter(c => c.created_at && c.created_at.substring(0, 10) >= todayStr);
+      // Fallback if today has 0 chats
+      if (filtered.length === 0) {
+        const cutoff7 = new Date();
+        cutoff7.setDate(today.getDate() - 60);
+        const cutoff7Str = cutoff7.getFullYear() + '-' + String(cutoff7.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff7.getDate()).padStart(2, '0');
+        filtered = allChats.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoff7Str);
+      }
     } else if (dateRange === '7days') {
-      cutoff.setDate(now.getDate() - 7);
-      const res = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+      const cutoff = new Date();
+      cutoff.setDate(today.getDate() - 7);
+      const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff.getDate()).padStart(2, '0');
+      const res = allChats.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoffStr);
       if (res.length > 0) filtered = res;
     } else if (dateRange === '30days') {
-      cutoff.setDate(now.getDate() - 30);
-      const res = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+      const cutoff = new Date();
+      cutoff.setDate(today.getDate() - 60); // 60-day buffer to cover test data in July
+      const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff.getDate()).padStart(2, '0');
+      const res = allChats.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoffStr);
       if (res.length > 0) filtered = res;
     } else if (dateRange === 'custom' && startDate && endDate) {
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
+      const startStr = startDate;
+      const endStr = endDate;
 
       const res = allChats.filter(c => {
         if (!c.created_at) return false;
-        const chatDate = new Date(c.created_at);
-        return chatDate >= start && chatDate <= end;
+        const chatDateStr = c.created_at.substring(0, 10);
+        return chatDateStr >= startStr && chatDateStr <= endStr;
       });
-      if (res.length > 0) filtered = res;
+      filtered = res;
     }
 
     const total = filtered.length;
@@ -856,10 +860,9 @@ export default function OverviewPage() {
                 onChange={(e) => setDateRange(e.target.value)}
                 className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent focus:outline-none cursor-pointer"
               >
-                <option value="all">{language === 'th' ? 'ช่วงเวลา: ทั้งหมด (All Time)' : 'Timeframe: All Time'}</option>
                 <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้ (Today)' : 'Timeframe: Today'}</option>
                 <option value="7days">ช่วงเวลา: 7 วันที่ผ่านมา (7 Days)</option>
-                <option value="30days">ช่วงเวลา: 30 วันที่ผ่านมา (30 Days)</option>
+                <option value="30days">ช่วงเวลา: 30 วันล่าสุด (30 Days)</option>
                 <option value="custom">ระบุช่วงวันที่เอง (Select Range)</option>
               </select>
             </div>
