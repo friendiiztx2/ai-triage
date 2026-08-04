@@ -25,32 +25,78 @@ export async function GET(request: NextRequest) {
   try {
     const chatMap = new Map();
 
-    // 1. Fetch from 'vw_triage_export' view FIRST (unrestricted view, contains all chats including pending ones like chat-0122)
-    let exportQuery = db
-      .from('vw_triage_export')
+    // 1. Fetch from 'chats' table FIRST to preserve the full untruncated conversation text
+    let chatsQuery = db
+      .from('chats')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (search && search.trim()) {
       const q = search.trim();
-      exportQuery = exportQuery.or(`chat_summary.ilike.%${q}%,issue_summary.ilike.%${q}%,customer_name.ilike.%${q}%,chat_id.ilike.%${q}%`);
+      chatsQuery = chatsQuery.or(`summary.ilike.%${q}%,conversation.ilike.%${q}%,customer_name.ilike.%${q}%,id.ilike.%${q}%`);
     }
 
-    const { data: exportData, error: exportError } = await exportQuery.abortSignal(controller.signal);
+    const { data: chatsData } = await chatsQuery.abortSignal(controller.signal);
 
-    if (exportError) {
-      console.warn('Supabase query vw_triage_export warning:', exportError);
+    if (chatsData && chatsData.length > 0) {
+      chatsData.forEach((row: any) => {
+        const id = row.id;
+        if (!id) return;
+
+        const isPending = (row.status === 'pending') || (!row.category_id && !row.summary);
+        const itemStatus = isPending ? 'pending' : 'completed';
+
+        let convText = row.conversation || row.summary || '';
+        let rawMsgs: string[] = [];
+        if (typeof convText === 'string') {
+          rawMsgs = convText.split('\n').filter(Boolean);
+        } else if (Array.isArray(convText)) {
+          rawMsgs = convText;
+          convText = convText.join('\n');
+        }
+
+        chatMap.set(id, {
+          id: id,
+          customer_id: row.customer_id || 'cust-003',
+          customer_name: row.customer_name || 'Anan (อนันต์)',
+          summary: row.summary || 'ไม่มีข้อมูลสรุป',
+          category_id: row.category_id || null,
+          priority: row.priority || null,
+          status: itemStatus,
+          confidence: row.confidence || 95,
+          company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+          rawMessages: rawMsgs,
+          conversation: convText,
+          chat_issues: [],
+          tags: row.priority === 'urgent' 
+            ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
+            : row.category_id === 'deposit_withdrawal'
+            ? ['#รอสลิป']
+            : row.category_id === 'promo_bonus'
+            ? ['#ติดตามผล']
+            : row.priority === 'high'
+            ? ['#เคสพิเศษ']
+            : [],
+          created_at: row.created_at || new Date().toISOString()
+        });
+      });
     }
+
+    // 2. Fetch from 'vw_triage_export' view SECOND as enrichment for chat_issues
+    let exportQuery = db
+      .from('vw_triage_export')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    const { data: exportData } = await exportQuery.abortSignal(controller.signal);
 
     if (exportData && exportData.length > 0) {
       exportData.forEach((row: any) => {
         const id = row.chat_id || row.id;
         if (!id) return;
 
-        const isPending = (row.status === 'pending') || (!row.category_id && !row.chat_summary && !row.issue_summary);
-        const itemStatus = isPending ? 'pending' : 'completed';
-
         if (!chatMap.has(id)) {
+          const isPending = (row.status === 'pending') || (!row.category_id && !row.chat_summary && !row.issue_summary);
           chatMap.set(id, {
             id: id,
             customer_id: row.customer_id || 'cust-003',
@@ -58,32 +104,19 @@ export async function GET(request: NextRequest) {
             summary: row.chat_summary || row.issue_summary || 'ไม่มีข้อมูลสรุป',
             category_id: row.category_id || null,
             priority: row.priority || null,
-            status: itemStatus,
+            status: isPending ? 'pending' : 'completed',
             confidence: 95,
             company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
             rawMessages: row.issue_summary ? [`ลูกค้า: ${row.issue_summary}`] : [],
             conversation: row.issue_summary ? `ลูกค้า: ${row.issue_summary}` : null,
             chat_issues: [],
-            tags: row.priority === 'urgent' 
-              ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
-              : row.category_id === 'deposit_withdrawal'
-              ? ['#รอสลิป']
-              : row.category_id === 'promo_bonus'
-              ? ['#ติดตามผล']
-              : row.priority === 'high'
-              ? ['#เคสพิเศษ']
-              : [],
+            tags: [],
             created_at: row.created_at || new Date().toISOString()
           });
         }
 
         const existing = chatMap.get(id);
         if (row.issue_summary) {
-          const msgText = `ลูกค้า: ${row.issue_summary}`;
-          if (!existing.rawMessages.includes(msgText)) {
-            existing.rawMessages.push(msgText);
-            existing.conversation = existing.rawMessages.join('\n');
-          }
           if (!existing.chat_issues.some((i: any) => i.summary === row.issue_summary)) {
             existing.chat_issues.push({
               id: `${id}-issue-${existing.chat_issues.length + 1}`,
