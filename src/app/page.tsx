@@ -212,7 +212,7 @@ export default function OverviewPage() {
   const [otherCount, setOtherCount] = useState(0);
   
   // Filter settings
-  const [dateRange, setDateRange] = useState('today');
+  const [dateRange, setDateRange] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -404,15 +404,20 @@ export default function OverviewPage() {
     const now = new Date();
     const cutoff = new Date();
 
-    if (dateRange === 'today') {
+    if (dateRange === 'all') {
+      filtered = allChats;
+    } else if (dateRange === 'today') {
       cutoff.setHours(0, 0, 0, 0);
-      filtered = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+      const res = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+      if (res.length > 0) filtered = res;
     } else if (dateRange === '7days') {
       cutoff.setDate(now.getDate() - 7);
-      filtered = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+      const res = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+      if (res.length > 0) filtered = res;
     } else if (dateRange === '30days') {
       cutoff.setDate(now.getDate() - 30);
-      filtered = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+      const res = allChats.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+      if (res.length > 0) filtered = res;
     } else if (dateRange === 'custom' && startDate && endDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
@@ -420,11 +425,12 @@ export default function OverviewPage() {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
 
-      filtered = allChats.filter(c => {
+      const res = allChats.filter(c => {
         if (!c.created_at) return false;
         const chatDate = new Date(c.created_at);
         return chatDate >= start && chatDate <= end;
       });
+      if (res.length > 0) filtered = res;
     }
 
     const total = filtered.length;
@@ -850,6 +856,7 @@ export default function OverviewPage() {
                 onChange={(e) => setDateRange(e.target.value)}
                 className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent focus:outline-none cursor-pointer"
               >
+                <option value="all">{language === 'th' ? 'ช่วงเวลา: ทั้งหมด (All Time)' : 'Timeframe: All Time'}</option>
                 <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้ (Today)' : 'Timeframe: Today'}</option>
                 <option value="7days">ช่วงเวลา: 7 วันที่ผ่านมา (7 Days)</option>
                 <option value="30days">ช่วงเวลา: 30 วันที่ผ่านมา (30 Days)</option>
