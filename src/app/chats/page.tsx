@@ -223,6 +223,43 @@ function FloatingChatWindow({
     setCustomTagInput('');
   };
 
+  const inferCategoryFromText = (text: string, defaultCat?: string) => {
+    const raw = (text || '').toLowerCase();
+    
+    if (defaultCat) {
+      const match = categories.find((c: any) => 
+        c.id === defaultCat || 
+        c.name === defaultCat || 
+        c.id?.toLowerCase() === defaultCat.toLowerCase()
+      );
+      if (match) return match.id;
+    }
+
+    if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน')) {
+      return 'login_issue';
+    }
+    if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('ฟรี') || raw.includes('เครดิต') || raw.includes('bonus')) {
+      return 'promo_bonus';
+    }
+    if (raw.includes('ช้า') || raw.includes('โหลด') || raw.includes('กราฟิก') || raw.includes('หน้าหมุน') || raw.includes('ui') || raw.includes('ค้าง')) {
+      return 'ui_rendering_issue';
+    }
+    if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('เงิน')) {
+      return 'deposit_withdrawal';
+    }
+    if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp') || raw.includes('บัญชี')) {
+      return 'account_security';
+    }
+    if (raw.includes('502') || raw.includes('blocked') || raw.includes('เข้าเว็บ')) {
+      return 'access_blocked';
+    }
+    if (raw.includes('เกม') || raw.includes('game')) {
+      return 'game_issue';
+    }
+
+    return defaultCat || (categories[0]?.id || 'other');
+  };
+
   // Fetch issues & customer info
   useEffect(() => {
     async function loadData() {
@@ -231,18 +268,19 @@ function FloatingChatWindow({
         const issuesRes = await fetch('/api/chats/issues?chat_id=' + chat.id);
         if (issuesRes.ok) {
           const issuesData = await issuesRes.json();
-          setSelectedChatIssues(issuesData || []);
-          
-          const initialEditState: Record<string, any> = {};
-          if (issuesData && Array.isArray(issuesData)) {
+          if (issuesData && Array.isArray(issuesData) && issuesData.length > 0) {
+            setSelectedChatIssues(issuesData);
+            
+            const initialEditState: Record<string, any> = {};
             issuesData.forEach((issue: any) => {
+              const inferredCat = inferCategoryFromText(issue.summary, issue.category_id || chat.category_id);
               initialEditState[issue.id] = {
-                category_id: issue.category_id || '',
-                priority: issue.priority || 'low'
+                category_id: inferredCat,
+                priority: issue.priority || chat.priority || 'medium'
               };
             });
+            setEditIssues(initialEditState);
           }
-          setEditIssues(initialEditState);
         }
       } catch (err) {
         console.error('Error fetching chat issues:', err);
@@ -561,78 +599,100 @@ function FloatingChatWindow({
 
                   {/* Right Column (Span 6): Triage Category & Priority controls side-by-side */}
                   <div className="lg:col-span-6 space-y-3 pt-0.5">
-                    {(selectedChatIssues && selectedChatIssues.length > 0
-                      ? selectedChatIssues
-                      : (chat.chat_issues && chat.chat_issues.length > 0)
-                        ? chat.chat_issues
-                        : [{ id: chat.id, summary: chat.summary, category_id: chat.category_id, priority: chat.priority }]
-                    ).map((issueItem: any, idx: number) => {
-                      const issueKey = issueItem.id || 'issue-' + idx;
-                      const currentVal = editIssues[issueKey] || { 
-                        category_id: issueItem.category_id || editCategory || '', 
-                        priority: issueItem.priority || editPriority || 'low' 
-                      };
+                    {(() => {
+                      const rawConv = chat.conversation || (chat.rawMessages ? chat.rawMessages.join('\n') : chat.summary || '');
+                      const convLines = rawConv
+                        .split('\n')
+                        .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
+                        .filter((l: string) => l.length > 0);
 
-                      return (
-                        <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center gap-2 p-2 bg-slate-50/70 dark:bg-slate-850 rounded-xl border border-slate-200/50 dark:border-slate-750 min-h-[46px]">
-                          {/* Category Dropdown */}
-                          <select
-                            value={currentVal.category_id}
-                            onChange={(e) => {
-                              const newCat = e.target.value;
-                              if (issueItem.id) {
+                      let activeIssuesList = (selectedChatIssues && selectedChatIssues.length > 0)
+                        ? selectedChatIssues
+                        : (chat.chat_issues && chat.chat_issues.length > 0)
+                          ? chat.chat_issues
+                          : convLines.map((line: string, i: number) => ({
+                              id: `${chat.id}-line-${i}`,
+                              summary: line,
+                              category_id: inferCategoryFromText(line, chat.category_id),
+                              priority: chat.priority || 'medium'
+                            }));
+
+                      if (!activeIssuesList || activeIssuesList.length === 0) {
+                        activeIssuesList = [{
+                          id: chat.id,
+                          summary: chat.summary || 'ไม่มีข้อมูลสรุป',
+                          category_id: inferCategoryFromText(chat.summary, chat.category_id),
+                          priority: chat.priority || 'medium'
+                        }];
+                      }
+
+                      return activeIssuesList.map((issueItem: any, idx: number) => {
+                        const issueKey = issueItem.id || 'issue-' + idx;
+                        const inferredDefaultCat = inferCategoryFromText(issueItem.summary, issueItem.category_id || editCategory || chat.category_id);
+                        const currentVal = editIssues[issueKey] || { 
+                          category_id: inferredDefaultCat, 
+                          priority: issueItem.priority || editPriority || 'medium' 
+                        };
+
+                        const selectedCategoryVal = currentVal.category_id || inferredDefaultCat;
+
+                        return (
+                          <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center gap-2 p-2 bg-slate-50/70 dark:bg-slate-850 rounded-xl border border-slate-200/50 dark:border-slate-750 min-h-[46px]">
+                            {/* Category Dropdown */}
+                            <select
+                              value={selectedCategoryVal}
+                              onChange={(e) => {
+                                const newCat = e.target.value;
                                 setEditIssues(prev => ({
                                   ...prev,
-                                  [issueItem.id]: { ...currentVal, category_id: newCat }
+                                  [issueKey]: { ...currentVal, category_id: newCat }
                                 }));
-                              }
-                              setEditCategory(newCat);
-                            }}
-                            disabled={userProfile?.role === 'agent'}
-                            className="flex-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-sm min-w-[130px]"
-                          >
-                            <option value="">-- หมวดหมู่ --</option>
-                            {categories.map((cat: any) => (
-                              <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                          </select>
+                                setEditCategory(newCat);
+                              }}
+                              disabled={userProfile?.role === 'agent'}
+                              className="flex-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-sm min-w-[130px]"
+                            >
+                              <option value="">-- หมวดหมู่ --</option>
+                              {categories.map((cat: any) => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                              ))}
+                            </select>
 
-                          {/* Priority Buttons */}
-                          <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-sm shrink-0">
-                            {['low', 'medium', 'high', 'urgent'].map(p => {
-                              const isActive = currentVal.priority.toLowerCase() === p;
-                              let activeStyle = '';
-                              if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-sm';
-                              else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-sm';
-                              else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-sm';
-                              else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-sm';
+                            {/* Priority Buttons */}
+                            <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-sm shrink-0">
+                              {['low', 'medium', 'high', 'urgent'].map(p => {
+                                const isActive = (currentVal.priority || 'medium').toLowerCase() === p;
+                                let activeStyle = '';
+                                if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-sm';
+                                else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-sm';
+                                else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-sm';
+                                else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-sm';
 
-                              return (
-                                <button
-                                  key={p}
-                                  type="button"
-                                  onClick={() => {
-                                    if (issueItem.id) {
+                                return (
+                                  <button
+                                    key={p}
+                                    type="button"
+                                    onClick={() => {
                                       setEditIssues(prev => ({
                                         ...prev,
-                                        [issueItem.id]: { ...currentVal, priority: p }
+                                        [issueKey]: { ...currentVal, priority: p }
                                       }));
+                                      setEditPriority(p);
+                                    }}
+                                    disabled={userProfile?.role === 'agent'}
+                                    className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
+                                      (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
                                     }
-                                    setEditPriority(p);
-                                  }}
-                                  disabled={userProfile?.role === 'agent'}
-                                  className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
-                                    (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
-                                  }
-                                >
-                                  {p}
-                                </button>
-                              );
-                            })}
+                                  >
+                                    {p}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               </div>
