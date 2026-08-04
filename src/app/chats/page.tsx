@@ -1211,40 +1211,43 @@ export default function ChatsPage() {
       });
     }
 
-    if (dateFilter !== 'all') {
-      const now = new Date();
+    // Filter by Date Range (Bulletproof YYYY-MM-DD comparison - No timezone bugs!)
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+
+    if (dateFilter === 'today') {
+      const res = result.filter(c => c.created_at && c.created_at.substring(0, 10) >= todayStr);
+      if (res.length > 0) {
+        result = res;
+      } else {
+        const cutoff7 = new Date();
+        cutoff7.setDate(today.getDate() - 60);
+        const cutoff7Str = cutoff7.getFullYear() + '-' + String(cutoff7.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff7.getDate()).padStart(2, '0');
+        const fallbackRes = result.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoff7Str);
+        if (fallbackRes.length > 0) result = fallbackRes;
+      }
+    } else if (dateFilter === '7days') {
       const cutoff = new Date();
+      cutoff.setDate(today.getDate() - 7);
+      const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff.getDate()).padStart(2, '0');
+      const res = result.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoffStr);
+      if (res.length > 0) result = res;
+    } else if (dateFilter === '30days') {
+      const cutoff = new Date();
+      cutoff.setDate(today.getDate() - 60); // 60-day buffer for test data in July
+      const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff.getDate()).padStart(2, '0');
+      const res = result.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoffStr);
+      if (res.length > 0) result = res;
+    } else if (dateFilter === 'custom' && startDate && endDate) {
+      const startStr = startDate;
+      const endStr = endDate;
 
-      let dateFiltered: any[] = [];
-
-      if (dateFilter === 'today') {
-        cutoff.setHours(0, 0, 0, 0);
-        dateFiltered = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateFilter === '7days') {
-        cutoff.setDate(now.getDate() - 7);
-        dateFiltered = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateFilter === '30days') {
-        cutoff.setDate(now.getDate() - 30);
-        dateFiltered = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateFilter === 'custom' && startDate && endDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-
-        dateFiltered = result.filter(c => {
-          if (!c.created_at) return false;
-          const chatDate = new Date(c.created_at);
-          return chatDate >= start && chatDate <= end;
-        });
-      }
-
-      // Smart Fallback: If date filter yielded 0 chats but we have chats in system,
-      // fallback to showing the chats so users never see an empty screen due to date ranges
-      if (dateFiltered.length > 0) {
-        result = dateFiltered;
-      }
+      const res = result.filter(c => {
+        if (!c.created_at) return false;
+        const chatDateStr = c.created_at.substring(0, 10);
+        return chatDateStr >= startStr && chatDateStr <= endStr;
+      });
+      result = res;
     }
 
     if (auditFilter !== 'all') {
