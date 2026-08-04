@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { sanitizeText } from '@/lib/sanitize';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -170,9 +171,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData: any = {};
-    if (category_id !== undefined) updateData.category_id = category_id || null;
-    if (priority !== undefined) updateData.priority = priority || null;
-    if (status !== undefined) updateData.status = status || 'completed';
+    if (category_id !== undefined) updateData.category_id = sanitizeText(category_id) || null;
+    if (priority !== undefined) updateData.priority = sanitizeText(priority) || null;
+    if (status !== undefined) updateData.status = sanitizeText(status) || 'completed';
 
     let query = supabase.from('chats').update(updateData);
 
