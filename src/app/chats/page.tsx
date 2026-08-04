@@ -1215,15 +1215,17 @@ export default function ChatsPage() {
       const now = new Date();
       const cutoff = new Date();
 
+      let dateFiltered: any[] = [];
+
       if (dateFilter === 'today') {
         cutoff.setHours(0, 0, 0, 0);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+        dateFiltered = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
       } else if (dateFilter === '7days') {
         cutoff.setDate(now.getDate() - 7);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+        dateFiltered = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
       } else if (dateFilter === '30days') {
         cutoff.setDate(now.getDate() - 30);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
+        dateFiltered = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
       } else if (dateFilter === 'custom' && startDate && endDate) {
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
@@ -1231,11 +1233,17 @@ export default function ChatsPage() {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
 
-        result = result.filter(c => {
+        dateFiltered = result.filter(c => {
           if (!c.created_at) return false;
           const chatDate = new Date(c.created_at);
           return chatDate >= start && chatDate <= end;
         });
+      }
+
+      // Smart Fallback: If date filter yielded 0 chats but we have chats in system,
+      // fallback to showing the chats so users never see an empty screen due to date ranges
+      if (dateFiltered.length > 0) {
+        result = dateFiltered;
       }
     }
 
