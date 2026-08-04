@@ -10,5 +10,17 @@ if (supabaseUrl && !supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || DEFAULT_ANON_KEY;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
+// Base client for public queries
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-export const supabaseAdmin = serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : supabase;
+
+// Server-side admin client using SUPABASE_SERVICE_ROLE_KEY (STRICT SERVER-ONLY GUARD)
+const isServer = typeof window === 'undefined';
+
+export const supabaseAdmin = (isServer && serviceRoleKey)
+  ? createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
+  : supabase;
