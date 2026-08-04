@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { sanitizeText } from '@/lib/sanitize';
 import crypto from 'crypto';
 
 const DEFAULT_CATEGORIES = [
@@ -73,8 +74,8 @@ export async function POST(request: NextRequest) {
 
     const newCompany = {
       id: newCompanyId,
-      name: name.trim(),
-      domain: domain.trim().toLowerCase(),
+      name: sanitizeText(name),
+      domain: sanitizeText(domain).toLowerCase(),
       client_id: clientId,
       client_secret: clientSecret,
       created_at: new Date().toISOString()
