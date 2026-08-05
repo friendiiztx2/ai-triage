@@ -223,16 +223,20 @@ function FloatingChatWindow({
     setCustomTagInput('');
   };
 
+  const getBaseCatId = (id: string) => (id && typeof id === 'string' && id.includes(':')) ? id.split(':')[1] : (id || '');
+
   const inferCategoryFromText = (text: string, defaultCat?: string) => {
     const raw = (text || '').toLowerCase();
     
     if (defaultCat) {
+      const cleanDefault = getBaseCatId(defaultCat);
       const match = categories.find((c: any) => 
         c.id === defaultCat || 
+        getBaseCatId(c.id) === cleanDefault ||
         c.name === defaultCat || 
         c.id?.toLowerCase() === defaultCat.toLowerCase()
       );
-      if (match) return match.id;
+      if (match) return getBaseCatId(match.id);
     }
 
     if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน')) {
@@ -244,20 +248,20 @@ function FloatingChatWindow({
     if (raw.includes('ช้า') || raw.includes('โหลด') || raw.includes('กราฟิก') || raw.includes('หน้าหมุน') || raw.includes('ui') || raw.includes('ค้าง')) {
       return 'ui_rendering_issue';
     }
-    if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('เงิน')) {
+    if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('เงิน') || raw.includes('เลขบัญชี') || raw.includes('ยอด')) {
       return 'deposit_withdrawal';
     }
     if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp') || raw.includes('บัญชี')) {
       return 'account_security';
     }
-    if (raw.includes('502') || raw.includes('blocked') || raw.includes('เข้าเว็บ')) {
+    if (raw.includes('502') || raw.includes('blocked') || raw.includes('เข้าเว็บ') || raw.includes('ลิงก์')) {
       return 'access_blocked';
     }
     if (raw.includes('เกม') || raw.includes('game')) {
       return 'game_issue';
     }
 
-    return defaultCat || (categories[0]?.id || 'other');
+    return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
   };
 
   // Fetch issues & customer info
@@ -634,7 +638,7 @@ function FloatingChatWindow({
                           priority: issueItem.priority || editPriority || 'medium' 
                         };
 
-                        const selectedCategoryVal = currentVal.category_id || inferredDefaultCat;
+                        const selectedCategoryVal = getBaseCatId(currentVal.category_id || inferredDefaultCat);
 
                         return (
                           <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center gap-2 p-2 bg-slate-50/70 dark:bg-slate-850 rounded-xl border border-slate-200/50 dark:border-slate-750 min-h-[46px]">
@@ -653,9 +657,12 @@ function FloatingChatWindow({
                               className="flex-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-sm min-w-[130px]"
                             >
                               <option value="">-- หมวดหมู่ --</option>
-                              {categories.map((cat: any) => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                              ))}
+                              {categories.map((cat: any) => {
+                                const optionVal = getBaseCatId(cat.id);
+                                return (
+                                  <option key={cat.id} value={optionVal}>{cat.name}</option>
+                                );
+                              })}
                             </select>
 
                             {/* Priority Buttons */}
