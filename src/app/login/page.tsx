@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BrainCircuit, Lock, Mail, ArrowRight, UserCheck } from 'lucide-react';
+import { BrainCircuit, Lock, Mail, ArrowRight, UserCheck, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { saveAuditLog } from '@/lib/audit';
 
@@ -33,6 +33,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -201,12 +202,20 @@ export default function LoginPage() {
             <div className="relative">
               <Lock className="absolute left-3.5 top-3.5 text-slate-455 dark:text-slate-500" size={16} />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-855/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-3 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                className="w-full bg-slate-50 dark:bg-slate-855/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-11 py-3 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-3 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition p-0.5 rounded-lg cursor-pointer"
+                title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
