@@ -1363,6 +1363,22 @@ export default function ChatsPage() {
     };
 
     setActiveWindows(prev => [...prev, newWin]);
+
+    // Fetch full untruncated conversation history for this single chat on-demand
+    fetch(`/api/chats?id=${chat.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data[0]) {
+          const fullChat = data[0];
+          setActiveWindows(prev => prev.map(w => {
+            if (w.id === chat.id) {
+              return { ...w, chat: { ...w.chat, ...fullChat } };
+            }
+            return w;
+          }));
+        }
+      })
+      .catch(err => console.error('Error fetching full chat details:', err));
   };
 
 

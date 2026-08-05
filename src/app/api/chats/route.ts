@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
 
     if (search && search.trim()) {
       const q = search.trim();
-      chatsQuery = chatsQuery.or(`summary.ilike.%${q}%,conversation.ilike.%${q}%,customer_name.ilike.%${q}%,id.ilike.%${q}%`);
+      chatsQuery = chatsQuery.or(`summary.ilike.%${q}%,conversation.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`);
     }
 
     const { data: chatsData } = await chatsQuery.abortSignal(controller.signal);
