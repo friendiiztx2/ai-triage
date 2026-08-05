@@ -8,6 +8,8 @@ export async function saveAuditLog(action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOG
 
     const parsed = JSON.parse(savedSession);
     const body = {
+      user_id: parsed.id || parsed.user_id || parsed.email || 'unknown',
+      company_id: parsed.companyId || parsed.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
       admin_name: parsed.name || 'Unknown Admin',
       admin_email: parsed.email || 'unknown',
       action,

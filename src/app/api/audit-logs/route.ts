@@ -95,9 +95,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
+    const rawUserId = body.user_id || body.user_email || admin_email || '';
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawUserId);
+    const finalUserId = isValidUUID 
+      ? rawUserId 
+      : (rawUserId.toLowerCase().includes('aor') ? '20000000-0000-0000-0000-000000000002' : '10000000-0000-0000-0000-000000000001');
+
     const activityEntry = {
-      company_id: body.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-      user_id: admin_email || body.user_id || 'user-admin',
+      company_id: body.company_id || (rawUserId.toLowerCase().includes('aor') ? '2e65829a-6a60-4022-8289-0fe64ec98fae' : '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2'),
+      user_id: finalUserId,
       user_name: admin_name || body.user_name || 'Admin',
       action_type: action || body.action_type || 'UPDATE',
       details: typeof details === 'object' ? details : { info: details },
