@@ -37,6 +37,15 @@ export default function CategoriesPage() {
         setUserProfile(JSON.parse(savedSession));
       } catch (e) {}
     }
+    const savedTags = localStorage.getItem('system_tags');
+    if (savedTags) {
+      try {
+        const parsed = JSON.parse(savedTags);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSystemTags(parsed);
+        }
+      } catch (e) {}
+    }
   }, []);
 
   const fetchCategories = async () => {
@@ -223,7 +232,9 @@ export default function CategoriesPage() {
       alert('มีแท็กชื่อนี้ในระบบแล้ว');
       return;
     }
-    setSystemTags(prev => [...prev, tagName]);
+    const nextTags = [...systemTags, tagName];
+    setSystemTags(nextTags);
+    localStorage.setItem('system_tags', JSON.stringify(nextTags));
     setNewTagInput('');
     saveAuditLog('CREATE', `เพิ่มแท็กระบบใหม่: ${tagName}`);
     alert(`เพิ่มแท็ก "${tagName}" เข้าสู่ระบบสำเร็จ!`);
@@ -234,7 +245,9 @@ export default function CategoriesPage() {
     let updatedName = editingTag.newName.trim();
     if (!updatedName.startsWith('#')) updatedName = '#' + updatedName;
 
-    setSystemTags(prev => prev.map(t => t === oldName ? updatedName : t));
+    const nextTags = systemTags.map(t => t === oldName ? updatedName : t);
+    setSystemTags(nextTags);
+    localStorage.setItem('system_tags', JSON.stringify(nextTags));
     saveAuditLog('UPDATE', `แก้ไขชื่อแท็กระบบจาก ${oldName} เป็น ${updatedName}`);
     setEditingTag(null);
     alert(`แก้ไขชื่อแท็กจาก "${oldName}" เป็น "${updatedName}" สำเร็จ!`);
@@ -243,7 +256,9 @@ export default function CategoriesPage() {
   const handleDeleteSystemTag = (tagName: string) => {
     const isConfirmed = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบแท็ก "${tagName}" ออกจากระบบ?`);
     if (!isConfirmed) return;
-    setSystemTags(prev => prev.filter(t => t !== tagName));
+    const nextTags = systemTags.filter(t => t !== tagName);
+    setSystemTags(nextTags);
+    localStorage.setItem('system_tags', JSON.stringify(nextTags));
     saveAuditLog('DELETE', `ลบแท็กระบบ: ${tagName}`);
     alert(`ลบแท็ก "${tagName}" สำเร็จ!`);
   };
