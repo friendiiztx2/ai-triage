@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (summaryOnly) {
       let lightQuery = db
         .from('chats')
-        .select('id, customer_id, summary, category_id, priority, status, confidence, company_id, created_at')
+        .select('id, customer_id, summary, conversation, category_id, priority, status, confidence, company_id, created_at')
         .order('created_at', { ascending: false });
 
       if (targetId) {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
       if (search && search.trim()) {
         const q = search.trim();
-        lightQuery = lightQuery.or(`summary.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`);
+        lightQuery = lightQuery.or(`summary.ilike.%${q}%,conversation.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`);
       }
 
       const { data: lightData, error: lightErr } = await lightQuery.abortSignal(controller.signal);
@@ -50,18 +50,31 @@ export async function GET(request: NextRequest) {
         console.error('lightQuery error:', lightErr);
       }
 
-      const items = (lightData || []).map((row: any) => ({
-        id: row.id,
-        customer_id: row.customer_id || 'cust-003',
-        customer_name: row.customer_name || ('ลูกค้า #' + (row.customer_id || row.id?.substring(0, 8))),
-        summary: row.summary || 'ไม่มีข้อมูลสรุป',
-        category_id: row.category_id || null,
-        priority: row.priority || null,
-        status: determineStatus(row),
-        confidence: row.confidence || 95,
-        company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-        created_at: row.created_at || new Date().toISOString()
-      }));
+      const items = (lightData || []).map((row: any) => {
+        let convText = row.conversation || row.summary || '';
+        let rawMsgs: string[] = [];
+        if (typeof convText === 'string') {
+          rawMsgs = convText.split('\n').filter(Boolean);
+        } else if (Array.isArray(convText)) {
+          rawMsgs = convText;
+          convText = convText.join('\n');
+        }
+
+        return {
+          id: row.id,
+          customer_id: row.customer_id || 'cust-003',
+          customer_name: row.customer_name || ('ลูกค้า #' + (row.customer_id || row.id?.substring(0, 8))),
+          summary: row.summary || 'ไม่มีข้อมูลสรุป',
+          conversation: convText,
+          rawMessages: rawMsgs,
+          category_id: row.category_id || null,
+          priority: row.priority || null,
+          status: determineStatus(row),
+          confidence: row.confidence || 95,
+          company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+          created_at: row.created_at || new Date().toISOString()
+        };
+      });
 
       return NextResponse.json(items);
     }
