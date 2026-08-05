@@ -36,12 +36,26 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if session already exists, redirect to home page
+  // Check if session already exists, redirect to home page unless logged out
   useEffect(() => {
+    const isLoggedOut = sessionStorage.getItem('session_logout') === 'true';
+    if (isLoggedOut) {
+      document.cookie = 'user_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0;';
+      document.cookie = 'company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0;';
+      localStorage.removeItem('user_session');
+      localStorage.removeItem('company_id');
+      return;
+    }
+
     const match = document.cookie.match(/(?:^|; )user_session=([^;]*)/);
     const savedSession = match ? decodeURIComponent(match[1]) : localStorage.getItem('user_session');
     if (savedSession) {
-      window.location.href = '/';
+      try {
+        const parsed = JSON.parse(savedSession);
+        if (parsed && parsed.email) {
+          window.location.href = '/';
+        }
+      } catch (e) {}
     }
   }, []);
 
@@ -117,6 +131,7 @@ export default function LoginPage() {
   };
 
   const completeLogin = (account: any) => {
+    sessionStorage.removeItem('session_logout');
     const sessionObj = {
       email: account.email,
       name: account.name,

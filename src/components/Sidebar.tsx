@@ -42,9 +42,11 @@ export default function Sidebar() {
 
   // Initialize theme, active company, and session on client mount
   useEffect(() => {
-    setMounted(true);
+    if (pathname === '/login' || pathname.startsWith('/login/')) {
+      return;
+    }
 
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const savedTheme = (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
     
@@ -54,17 +56,7 @@ export default function Sidebar() {
     const savedCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
     setIsCollapsed(savedCollapsed);
 
-    const match = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
-    const savedCompany = match ? decodeURIComponent(match[1]) : localStorage.getItem('company_id');
-    if (savedCompany) {
-      setActiveCompany(savedCompany);
-    } else {
-      const defaultCompany = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
-      document.cookie = `company_id=${defaultCompany}; path=/; max-age=31536000`;
-      localStorage.setItem('company_id', defaultCompany);
-      setActiveCompany(defaultCompany);
-    }
-
+    const isLoggedOut = sessionStorage.getItem('session_logout') === 'true';
     let savedSession = localStorage.getItem('user_session');
     if (!savedSession) {
       const matchCookie = document.cookie.match(/(?:^|; )user_session=([^;]*)/);
@@ -74,50 +66,48 @@ export default function Sidebar() {
       }
     }
 
-    if (!savedSession) {
-      const sessionStr = JSON.stringify(defaultSession);
-      localStorage.setItem('user_session', sessionStr);
-      document.cookie = `user_session=${encodeURIComponent(sessionStr)}; path=/; max-age=31536000`;
-      setUserProfile(defaultSession);
-    } else {
-      try {
-        const parsed = JSON.parse(savedSession);
-        setUserProfile(parsed);
-
-        // Fetch all companies if system_admin
-        if (parsed.role === 'system_admin') {
-          fetch('/api/companies')
-            .then(r => r.json())
-            .then(data => {
-              if (Array.isArray(data)) setCompanies(data);
-            })
-            .catch(err => console.error("Error loading companies:", err));
-        }
-
-        // Security check for allowed companies for this specific user
-        const isSuper = parsed.role === 'super_admin' || parsed.role === 'system_admin';
-        const allowedIds = isSuper ? 
-          ['2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', '2e65829a-6a60-4022-8289-0fe64ec98fae'] : 
-          (parsed.company_id || '').split(',').filter(Boolean);
-
-        // Check current active company cookie
-        const matchCookie = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
-        const currentActive = matchCookie ? decodeURIComponent(matchCookie[1]) : localStorage.getItem('company_id');
-
-        if (currentActive && allowedIds.includes(currentActive)) {
-          setActiveCompany(currentActive);
-        } else {
-          // Reset to first allowed company automatically
-          const firstAllowed = allowedIds[0] || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
-          document.cookie = `company_id=${firstAllowed}; path=/; max-age=31536000`;
-          localStorage.setItem('company_id', firstAllowed);
-          setActiveCompany(firstAllowed);
-        }
-      } catch (e) {
-        setUserProfile(defaultSession);
-      }
+    if (!savedSession || isLoggedOut) {
+      window.location.href = '/login';
+      return;
     }
-  }, []);
+
+    try {
+      const parsed = JSON.parse(savedSession);
+      setUserProfile(parsed);
+
+      // Fetch all companies if system_admin
+      if (parsed.role === 'system_admin') {
+        fetch('/api/companies')
+          .then(r => r.json())
+          .then(data => {
+            if (Array.isArray(data)) setCompanies(data);
+          })
+          .catch(err => console.error("Error loading companies:", err));
+      }
+
+      // Security check for allowed companies for this specific user
+      const isSuper = parsed.role === 'super_admin' || parsed.role === 'system_admin';
+      const allowedIds = isSuper ? 
+        ['2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', '2e65829a-6a60-4022-8289-0fe64ec98fae'] : 
+        (parsed.company_id || '').split(',').filter(Boolean);
+
+      // Check current active company cookie
+      const matchCookie = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
+      const currentActive = matchCookie ? decodeURIComponent(matchCookie[1]) : localStorage.getItem('company_id');
+
+      if (currentActive && allowedIds.includes(currentActive)) {
+        setActiveCompany(currentActive);
+      } else {
+        // Reset to first allowed company automatically
+        const firstAllowed = allowedIds[0] || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+        document.cookie = `company_id=${firstAllowed}; path=/; max-age=31536000`;
+        localStorage.setItem('company_id', firstAllowed);
+        setActiveCompany(firstAllowed);
+      }
+    } catch (e) {
+      window.location.href = '/login';
+    }
+  }, [pathname]);
 
   const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value;
@@ -128,10 +118,12 @@ export default function Sidebar() {
   };
 
   const handleLogout = () => {
-    document.cookie = 'user_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    document.cookie = 'company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    sessionStorage.setItem('session_logout', 'true');
+    document.cookie = 'user_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0;';
+    document.cookie = 'company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0;';
     localStorage.removeItem('user_session');
     localStorage.removeItem('company_id');
+    setUserProfile(null);
     window.location.href = '/login';
   };
 
