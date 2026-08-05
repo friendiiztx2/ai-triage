@@ -133,6 +133,10 @@ export async function GET(request: NextRequest) {
       .select('*')
       .order('created_at', { ascending: false });
 
+    if (targetId) {
+      exportQuery = exportQuery.eq('chat_id', targetId);
+    }
+
     const { data: exportData } = await exportQuery.abortSignal(controller.signal);
 
     if (exportData && exportData.length > 0) {
@@ -219,7 +223,10 @@ export async function GET(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
-    const resultList = Array.from(chatMap.values());
+    let resultList = Array.from(chatMap.values());
+    if (targetId) {
+      resultList = resultList.filter((c: any) => c.id === targetId);
+    }
 
     if (resultList.length > 0) {
       // Sort by created_at descending
