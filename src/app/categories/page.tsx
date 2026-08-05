@@ -508,7 +508,7 @@ export default function CategoriesPage() {
                     {/* Header */}
                     <div className="flex justify-between items-start gap-4">
                       <div>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase tracking-wider font-semibold">Category ID: {catId}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase tracking-wider font-semibold">Category ID: {catId.includes(':') ? catId.split(':')[1] : catId}</span>
                         <h3 className="font-extrabold text-base text-slate-800 dark:text-slate-100 mt-1 font-display group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                           {catName}
                         </h3>
