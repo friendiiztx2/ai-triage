@@ -1243,7 +1243,7 @@ export default function ChatsPage() {
       const catData = await catRes.json();
       setCategories(catData);
 
-      const chatsRes = await fetch('/api/chats');
+      const chatsRes = await fetch('/api/chats?summary_only=true');
       if (!chatsRes.ok) throw new Error('Failed to load chats');
       const chatsData = await chatsRes.json();
       
