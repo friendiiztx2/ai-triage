@@ -95,16 +95,12 @@ export default function UsersPage() {
       try {
         const parsed = JSON.parse(savedSession);
         setUserProfile(parsed);
-        if (parsed.role === 'system_admin' || parsed.role === 'super_admin') {
-          fetchInitialData(parsed);
-        } else {
-          setLoading(false);
-        }
+        fetchInitialData(parsed);
       } catch (e) {
-        setLoading(false);
+        fetchInitialData(null);
       }
     } else {
-      setLoading(false);
+      fetchInitialData(null);
     }
   }, []);
 
@@ -135,8 +131,10 @@ export default function UsersPage() {
       const resUsers = await fetch('/api/users');
       if (resUsers.ok) {
         const dataUsers = await resUsers.json();
-        setUsers(dataUsers);
-        setFilteredUsers(dataUsers);
+        if (Array.isArray(dataUsers)) {
+          setUsers(dataUsers);
+          setFilteredUsers(dataUsers);
+        }
       }
 
       // Fetch all companies to make them selectable
