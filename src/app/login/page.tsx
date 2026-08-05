@@ -71,21 +71,17 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // 1. Attempt login via database query (matches either name or login ID/email)
-      const inputVal = email.trim();
-      const { data: dbUser, error: dbErr } = await supabase
-        .from('users')
-        .select('*')
-        .or(`email.eq.${inputVal.toLowerCase()},name.eq.${inputVal}`)
-        .eq('password', password.trim())
-        .maybeSingle();
+      // 1. Attempt login via Server API Proxy (bypasses RLS)
+      const res = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() })
+      });
 
-      if (dbErr) {
-        console.warn("Database login failed, attempting fallback:", dbErr.message);
-        throw dbErr;
-      }
+      const resData = await res.json();
 
-      if (dbUser) {
+      if (res.ok && resData.user) {
+        const dbUser = resData.user;
         let compName = 'Mika Co. (บริษัทเริ่มต้น)';
         if (dbUser.company_id === '2e65829a-6a60-4022-8289-0fe64ec98fae') {
           compName = 'Alpha Support Co., Ltd.';
@@ -110,10 +106,9 @@ export default function LoginPage() {
       if (mockMatch) {
         completeLogin(mockMatch);
       } else {
-        setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+        setError(resData.error || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       }
     } catch (err: any) {
-      // Check fallback even on connection or query error (e.g. table not updated yet)
       const mockMatch = QUICK_ACCOUNTS.find(
         acc => acc.email.toLowerCase() === email.toLowerCase().trim() && password.trim() === acc.password
       );
@@ -121,10 +116,7 @@ export default function LoginPage() {
       if (mockMatch) {
         completeLogin(mockMatch);
       } else {
-        setError(
-          `เกิดข้อผิดพลาด: ${err.message || err}. ` +
-          `(หากต้องการล็อกอินผ่านฐานข้อมูลจริง โปรดนำคำสั่งในไฟล์ supabase_setup.sql ไปกดรันใน SQL Editor บนเว็บ Supabase หรือยังครับ)`
-        );
+        setError(`เกิดข้อผิดพลาดในการเชื่อมต่อระบบ: ${err.message || err}`);
       }
     } finally {
       setLoading(false);
