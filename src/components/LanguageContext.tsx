@@ -80,6 +80,14 @@ const translations = {
     colTime: 'เวลา (Time)',
     loadingChats: 'กำลังดึงรายการแชตจากระบบ...',
     noChatsFound: 'ไม่พบข้อมูลแชตที่ตรงตามตัวเลือกฟิลเตอร์',
+
+    // Audit Logs
+    auditLogsTitle: 'บันทึกประวัติการทำงาน (Audit & Activity Logs)',
+    auditLogsSub: 'ตรวจสอบบันทึกกิจกรรมย้อนหลัง การแก้ไขหมวดหมู่ การคัดแยกเคส และประวัติการเข้าใช้งานระบบ',
+    auditSearchPlaceholder: 'ค้นหาชื่อผู้ดำเนินการ หรือรายละเอียดกิจกรรม...',
+    auditFilterAll: 'ประเภทกิจกรรม: ทั้งหมด',
+    auditNoData: 'ไม่พบประวัติการบันทึกกิจกรรมตามเงื่อนไขที่เลือก',
+    auditLoading: 'กำลังโหลดบันทึกกิจกรรมย้อนหลัง...',
   },
   en: {
     // Sidebar
@@ -156,6 +164,14 @@ const translations = {
     colTime: 'Time',
     loadingChats: 'Retrieving chat logs from system...',
     noChatsFound: 'No chats found matching filters',
+
+    // Audit Logs
+    auditLogsTitle: 'Audit & Activity Logs',
+    auditLogsSub: 'Audit system activity logs, category updates, triage overrides, and user session history',
+    auditSearchPlaceholder: 'Search by user name, email or details...',
+    auditFilterAll: 'Action Type: All',
+    auditNoData: 'No audit logs found for the selected criteria',
+    auditLoading: 'Loading audit logs history...',
   }
 };
 
