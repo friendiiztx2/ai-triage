@@ -20,16 +20,30 @@ export async function GET(request: NextRequest) {
   const db = supabaseAdmin || supabase;
 
   try {
-    const { data, error } = await db
-      .from('categories')
-      .select('*')
-      .abortSignal(controller.signal);
+    const { searchParams } = new URL(request.url);
+    const filterCompanyId = searchParams.get('company_id');
+
+    let query = db.from('categories').select('*');
+    if (filterCompanyId && filterCompanyId !== 'all') {
+      query = query.eq('company_id', filterCompanyId);
+    }
+
+    const { data, error } = await query.abortSignal(controller.signal);
 
     clearTimeout(timeoutId);
-    if (error || !data || data.length === 0) {
-      return NextResponse.json(defaultCategories);
-    }
-    return NextResponse.json(data);
+    const list = (!error && data && data.length > 0) ? data : defaultCategories;
+
+    // Deduplicate by base category key (e.g. deposit_withdrawal, game_issue, etc.)
+    const categoryMap = new Map<string, any>();
+    list.forEach((item: any) => {
+      const baseKey = item.id.includes(':') ? item.id.split(':')[1] : item.id;
+      if (!categoryMap.has(baseKey)) {
+        categoryMap.set(baseKey, item);
+      }
+    });
+
+    const uniqueCategories = Array.from(categoryMap.values());
+    return NextResponse.json(uniqueCategories);
   } catch (err: any) {
     clearTimeout(timeoutId);
     return NextResponse.json(defaultCategories);
