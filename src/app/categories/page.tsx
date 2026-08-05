@@ -50,7 +50,7 @@ export default function CategoriesPage() {
       }
 
       // 2. Fetch chats count to calculate stats via Server API Proxy
-      const chatsRes = await fetch('/api/chats');
+      const chatsRes = await fetch('/api/chats?summary_only=true');
       if (chatsRes.ok) {
         const chats = await chatsRes.json();
         const counts: Record<string, number> = {};

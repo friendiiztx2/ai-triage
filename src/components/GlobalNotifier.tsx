@@ -32,7 +32,7 @@ export default function GlobalNotifier() {
       if (!checkSession()) return;
 
       try {
-        const res = await fetch('/api/chats');
+        const res = await fetch('/api/chats?summary_only=true');
         if (!res.ok) return;
 
         const chats = await res.json();
@@ -81,9 +81,9 @@ export default function GlobalNotifier() {
       }
     };
 
-    // Run query immediately, then repeat every 10 seconds
+    // Run query immediately, then repeat every 30 seconds
     pollUrgentChats();
-    const intervalId = setInterval(pollUrgentChats, 10000);
+    const intervalId = setInterval(pollUrgentChats, 30000);
 
     return () => clearInterval(intervalId);
   }, []);

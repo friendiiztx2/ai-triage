@@ -21,15 +21,56 @@ export async function GET(request: NextRequest) {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   const search = request.nextUrl.searchParams.get('search');
+  const summaryOnly = request.nextUrl.searchParams.get('summary_only') === 'true' || request.nextUrl.searchParams.get('light') === 'true';
+  const targetId = request.nextUrl.searchParams.get('id');
 
   try {
     const chatMap = new Map();
 
-    // 1. Fetch from 'chats' table FIRST to preserve the full untruncated conversation text
+    // If summary_only is requested, query lightweight columns to prevent Egress bloat
+    if (summaryOnly) {
+      let lightQuery = db
+        .from('chats')
+        .select('id, customer_id, customer_name, summary, category_id, priority, status, confidence, company_id, created_at')
+        .order('created_at', { ascending: false });
+
+      if (targetId) {
+        lightQuery = lightQuery.eq('id', targetId);
+      }
+
+      if (search && search.trim()) {
+        const q = search.trim();
+        lightQuery = lightQuery.or(`summary.ilike.%${q}%,customer_name.ilike.%${q}%,id.ilike.%${q}%`);
+      }
+
+      const { data: lightData } = await lightQuery.abortSignal(controller.signal);
+      clearTimeout(timeoutId);
+
+      const items = (lightData || []).map((row: any) => ({
+        id: row.id,
+        customer_id: row.customer_id || 'cust-003',
+        customer_name: row.customer_name || 'ลูกค้าทั่วไป',
+        summary: row.summary || 'ไม่มีข้อมูลสรุป',
+        category_id: row.category_id || null,
+        priority: row.priority || null,
+        status: determineStatus(row),
+        confidence: row.confidence || 95,
+        company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+        created_at: row.created_at || new Date().toISOString()
+      }));
+
+      return NextResponse.json(items);
+    }
+
+    // 1. Fetch from 'chats' table FIRST to preserve full untruncated conversation text
     let chatsQuery = db
       .from('chats')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (targetId) {
+      chatsQuery = chatsQuery.eq('id', targetId);
+    }
 
     if (search && search.trim()) {
       const q = search.trim();

@@ -318,8 +318,8 @@ export default function OverviewPage() {
         setCategories(catMap);
       }
 
-      // 2. Fetch chats (via Server API Proxy)
-      const chatsRes = await fetch('/api/chats');
+      // 2. Fetch chats (via Server API Proxy - lightweight mode)
+      const chatsRes = await fetch('/api/chats?summary_only=true');
       if (!chatsRes.ok) {
         const errObj = await chatsRes.json();
         throw new Error(errObj.error || 'Failed to load chats');
