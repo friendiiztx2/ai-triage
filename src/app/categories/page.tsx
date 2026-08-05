@@ -55,8 +55,12 @@ export default function CategoriesPage() {
         const chats = await chatsRes.json();
         const counts: Record<string, number> = {};
         chats.forEach((c: any) => {
-          const catId = c.category_id || 'other';
-          counts[catId] = (counts[catId] || 0) + 1;
+          const rawCatId = c.category_id || 'other';
+          const baseKey = rawCatId.includes(':') ? rawCatId.split(':')[1] : rawCatId;
+          counts[rawCatId] = (counts[rawCatId] || 0) + 1;
+          if (baseKey !== rawCatId) {
+            counts[baseKey] = (counts[baseKey] || 0) + 1;
+          }
         });
         setCategoryStats(counts);
       }
