@@ -85,7 +85,7 @@ export default function ReportsPage() {
   const fetchChatsData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/chats');
+      const res = await fetch('/api/chats?summary_only=true');
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) setChats(data);
