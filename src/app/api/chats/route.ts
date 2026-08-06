@@ -156,8 +156,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (targetId && chatMap.has(targetId)) {
+      const targetChat = chatMap.get(targetId);
+      const { data: issues } = await db.from('chat_issues').select('*').eq('chat_id', targetId).abortSignal(controller.signal);
+      if (issues && issues.length > 0) {
+        targetChat.chat_issues = issues;
+      }
       clearTimeout(timeoutId);
-      return NextResponse.json([chatMap.get(targetId)]);
+      return NextResponse.json([targetChat]);
     }
 
     // 2. Fetch from 'vw_triage_export' view SECOND as enrichment for chat_issues
