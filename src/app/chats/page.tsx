@@ -120,6 +120,95 @@ function inferPriorityFromText(text: string, defaultPri?: string) {
   return defaultPri?.toLowerCase() || 'medium';
 }
 
+function inferCategoryFromText(text: string, defaultCat?: string, categories: any[] = []) {
+  if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
+    const cleanDefault = getBaseCatId(defaultCat);
+    if (cleanDefault) return cleanDefault;
+  }
+
+  const raw = (text || '').toLowerCase();
+  
+  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
+    return 'deposit_withdrawal';
+  }
+  if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('ช้า') || raw.includes('หมุน')) {
+    return 'page_load_freeze';
+  }
+  if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
+    return 'login_issue';
+  }
+  if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus')) {
+    return 'promo_bonus';
+  }
+  if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp')) {
+    return 'account_security';
+  }
+  if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์')) {
+    return 'access_blocked';
+  }
+  if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน')) {
+    return 'game_issue';
+  }
+
+  return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
+}
+
+function buildInitialIssues(targetChat: any, categories: any[] = []) {
+  if (!targetChat) return [];
+  if (targetChat.chat_issues && Array.isArray(targetChat.chat_issues) && targetChat.chat_issues.length > 0) {
+    return targetChat.chat_issues;
+  }
+
+  const rawConv = targetChat.conversation || (targetChat.rawMessages ? targetChat.rawMessages.join('\n') : targetChat.summary || '');
+  const convLines = (rawConv || '')
+    .split('\n')
+    .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
+    .filter((l: string) => l.length > 0);
+
+  if (convLines.length === 0) {
+    return [{
+      id: `${targetChat.id || 'chat'}-issue-0`,
+      summary: targetChat.summary || 'ไม่มีข้อมูลสรุป',
+      category_id: inferCategoryFromText(targetChat.summary, targetChat.category_id, categories),
+      priority: inferPriorityFromText(targetChat.summary, targetChat.priority)
+    }];
+  }
+
+  const categoryGroups: Record<string, { lines: string[]; priority: string }> = {};
+
+  convLines.forEach((line: string) => {
+    const cat = inferCategoryFromText(line, targetChat.category_id, categories);
+    const pri = inferPriorityFromText(line, targetChat.priority);
+
+    if (!categoryGroups[cat]) {
+      categoryGroups[cat] = { lines: [line], priority: pri };
+    } else {
+      categoryGroups[cat].lines.push(line);
+      const priOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
+      if ((priOrder[pri] || 1) > (priOrder[categoryGroups[cat].priority] || 1)) {
+        categoryGroups[cat].priority = pri;
+      }
+    }
+  });
+
+  const keys = Object.keys(categoryGroups);
+  if (keys.length === 1) {
+    return [{
+      id: `${targetChat.id || 'chat'}-issue-0`,
+      summary: convLines[0] || targetChat.summary || 'ไม่มีข้อมูลสรุป',
+      category_id: keys[0],
+      priority: categoryGroups[keys[0]].priority
+    }];
+  }
+
+  return keys.map((catKey, idx) => ({
+    id: `${targetChat.id || 'chat'}-issue-${idx}`,
+    summary: categoryGroups[catKey].lines[0],
+    category_id: catKey,
+    priority: categoryGroups[catKey].priority
+  }));
+}
+
 // Formats priority string to matching mockup text (Thai + English parenthetical)
 function formatPriorityLabel(priority: string) {
   const p = priority.trim().toLowerCase();
@@ -183,61 +272,7 @@ function FloatingChatWindow({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   
-  const buildInitialIssues = (targetChat: any) => {
-    if (targetChat.chat_issues && Array.isArray(targetChat.chat_issues) && targetChat.chat_issues.length > 0) {
-      return targetChat.chat_issues;
-    }
 
-    const rawConv = targetChat.conversation || (targetChat.rawMessages ? targetChat.rawMessages.join('\n') : targetChat.summary || '');
-    const convLines = rawConv
-      .split('\n')
-      .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
-      .filter((l: string) => l.length > 0);
-
-    if (convLines.length === 0) {
-      return [{
-        id: `${targetChat.id}-issue-0`,
-        summary: targetChat.summary || 'ไม่มีข้อมูลสรุป',
-        category_id: inferCategoryFromText(targetChat.summary, targetChat.category_id),
-        priority: inferPriorityFromText(targetChat.summary, targetChat.priority)
-      }];
-    }
-
-    // Group conversation lines by inferred category to prevent multi-line flickering
-    const categoryGroups: Record<string, { lines: string[]; priority: string }> = {};
-
-    convLines.forEach((line: string) => {
-      const cat = inferCategoryFromText(line, targetChat.category_id);
-      const pri = inferPriorityFromText(line, targetChat.priority);
-
-      if (!categoryGroups[cat]) {
-        categoryGroups[cat] = { lines: [line], priority: pri };
-      } else {
-        categoryGroups[cat].lines.push(line);
-        const priOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
-        if ((priOrder[pri] || 1) > (priOrder[categoryGroups[cat].priority] || 1)) {
-          categoryGroups[cat].priority = pri;
-        }
-      }
-    });
-
-    const keys = Object.keys(categoryGroups);
-    if (keys.length === 1) {
-      return [{
-        id: `${targetChat.id}-issue-0`,
-        summary: convLines[0] || targetChat.summary || 'ไม่มีข้อมูลสรุป',
-        category_id: keys[0],
-        priority: categoryGroups[keys[0]].priority
-      }];
-    }
-
-    return keys.map((catKey, idx) => ({
-      id: `${targetChat.id}-issue-${idx}`,
-      summary: categoryGroups[catKey].lines[0],
-      category_id: catKey,
-      priority: categoryGroups[catKey].priority
-    }));
-  };
 
   const [customerInfo, setCustomerInfo] = useState<any>(null);
   const [selectedChatIssues, setSelectedChatIssues] = useState<any[]>(() => buildInitialIssues(chat));
@@ -317,40 +352,7 @@ function FloatingChatWindow({
 
   const getBaseCatId = (id: string) => (id && typeof id === 'string' && id.includes(':')) ? id.split(':')[1] : (id || '');
 
-  const inferCategoryFromText = (text: string, defaultCat?: string) => {
-    // 1. If explicit valid category provided, respect it first (prevents flickering against DB/list values)
-    if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
-      const cleanDefault = getBaseCatId(defaultCat);
-      if (cleanDefault) return cleanDefault;
-    }
 
-    const raw = (text || '').toLowerCase();
-    
-    // 2. Keyword matching fallback for unassigned items
-    if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
-      return 'deposit_withdrawal';
-    }
-    if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('ช้า') || raw.includes('หมุน')) {
-      return 'page_load_freeze';
-    }
-    if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
-      return 'login_issue';
-    }
-    if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus')) {
-      return 'promo_bonus';
-    }
-    if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp')) {
-      return 'account_security';
-    }
-    if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์')) {
-      return 'access_blocked';
-    }
-    if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน')) {
-      return 'game_issue';
-    }
-
-    return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
-  };
 
   // Fetch issues & customer info in background without blocking UI render
   useEffect(() => {
