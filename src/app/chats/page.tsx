@@ -264,10 +264,9 @@ function FloatingChatWindow({
     return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
   };
 
-  // Fetch issues & customer info
+  // Fetch issues & customer info in background without blocking UI render
   useEffect(() => {
     async function loadData() {
-      setLoading(true);
       try {
         const issuesRes = await fetch('/api/chats/issues?chat_id=' + chat.id);
         if (issuesRes.ok) {
@@ -300,8 +299,6 @@ function FloatingChatWindow({
         }
       } catch (err) {
         console.error('Error fetching customer info:', err);
-      } finally {
-        setLoading(false);
       }
     }
     loadData();
@@ -576,15 +573,10 @@ function FloatingChatWindow({
         </div>
       </div>
 
-      {/* Body scroll section (Unified sequentially - No tabs!) */}
+      {/* Body scroll section (Unified sequentially - Instant 0ms Render!) */}
       {!isMinimized && (
         <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50/20 dark:bg-slate-900/10">
-          {loading ? (
-            <div className="flex justify-center py-20">
-              <RefreshCw size={24} className="animate-spin text-indigo-600 dark:text-indigo-455" />
-            </div>
-          ) : (
-            <div className="space-y-6">
+          <div className="space-y-6">
               
               {/* SECTION 1: Conversation History & Side-by-Side Category/Priority Controls */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
@@ -811,7 +803,6 @@ function FloatingChatWindow({
                         })()}
                       </div>
               </div>
-          )}
         </div>
       )}
       
