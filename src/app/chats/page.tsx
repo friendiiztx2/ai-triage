@@ -183,18 +183,74 @@ function FloatingChatWindow({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   
+  const buildInitialIssues = (targetChat: any) => {
+    if (targetChat.chat_issues && Array.isArray(targetChat.chat_issues) && targetChat.chat_issues.length > 0) {
+      return targetChat.chat_issues;
+    }
+
+    const rawConv = targetChat.conversation || (targetChat.rawMessages ? targetChat.rawMessages.join('\n') : targetChat.summary || '');
+    const convLines = rawConv
+      .split('\n')
+      .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
+      .filter((l: string) => l.length > 0);
+
+    if (convLines.length === 0) {
+      return [{
+        id: `${targetChat.id}-issue-0`,
+        summary: targetChat.summary || 'ไม่มีข้อมูลสรุป',
+        category_id: inferCategoryFromText(targetChat.summary, targetChat.category_id),
+        priority: inferPriorityFromText(targetChat.summary, targetChat.priority)
+      }];
+    }
+
+    // Group conversation lines by inferred category to prevent multi-line flickering
+    const categoryGroups: Record<string, { lines: string[]; priority: string }> = {};
+
+    convLines.forEach((line: string) => {
+      const cat = inferCategoryFromText(line, targetChat.category_id);
+      const pri = inferPriorityFromText(line, targetChat.priority);
+
+      if (!categoryGroups[cat]) {
+        categoryGroups[cat] = { lines: [line], priority: pri };
+      } else {
+        categoryGroups[cat].lines.push(line);
+        const priOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
+        if ((priOrder[pri] || 1) > (priOrder[categoryGroups[cat].priority] || 1)) {
+          categoryGroups[cat].priority = pri;
+        }
+      }
+    });
+
+    const keys = Object.keys(categoryGroups);
+    if (keys.length === 1) {
+      return [{
+        id: `${targetChat.id}-issue-0`,
+        summary: convLines[0] || targetChat.summary || 'ไม่มีข้อมูลสรุป',
+        category_id: keys[0],
+        priority: categoryGroups[keys[0]].priority
+      }];
+    }
+
+    return keys.map((catKey, idx) => ({
+      id: `${targetChat.id}-issue-${idx}`,
+      summary: categoryGroups[catKey].lines[0],
+      category_id: catKey,
+      priority: categoryGroups[catKey].priority
+    }));
+  };
+
   const [customerInfo, setCustomerInfo] = useState<any>(null);
-  const [selectedChatIssues, setSelectedChatIssues] = useState<any[]>(chat.chat_issues || []);
+  const [selectedChatIssues, setSelectedChatIssues] = useState<any[]>(() => buildInitialIssues(chat));
   const [editIssues, setEditIssues] = useState<Record<string, any>>(() => {
     const initialMap: Record<string, any> = {};
-    if (chat.chat_issues && chat.chat_issues.length > 0) {
-      chat.chat_issues.forEach((issue: any) => {
-        initialMap[issue.id] = {
-          category_id: getBaseCatId(issue.category_id || chat.category_id),
-          priority: issue.priority || inferPriorityFromText(issue.summary, chat.priority)
-        };
-      });
-    }
+    const initList = buildInitialIssues(chat);
+    initList.forEach((issue: any) => {
+      const issueKey = issue.id || 'issue-0';
+      initialMap[issueKey] = {
+        category_id: getBaseCatId(issue.category_id || chat.category_id),
+        priority: issue.priority || inferPriorityFromText(issue.summary, chat.priority)
+      };
+    });
     return initialMap;
   });
   
@@ -641,23 +697,7 @@ function FloatingChatWindow({
 
                       let activeIssuesList = (selectedChatIssues && selectedChatIssues.length > 0)
                         ? selectedChatIssues
-                        : (chat.chat_issues && chat.chat_issues.length > 0)
-                          ? chat.chat_issues
-                          : convLines.map((line: string, i: number) => ({
-                              id: `${chat.id}-line-${i}`,
-                              summary: line,
-                              category_id: inferCategoryFromText(line, chat.category_id),
-                              priority: inferPriorityFromText(line, chat.priority)
-                            }));
-
-                      if (!activeIssuesList || activeIssuesList.length === 0) {
-                        activeIssuesList = [{
-                          id: chat.id,
-                          summary: chat.summary || 'ไม่มีข้อมูลสรุป',
-                          category_id: inferCategoryFromText(chat.summary, chat.category_id),
-                          priority: inferPriorityFromText(chat.summary, chat.priority)
-                        }];
-                      }
+                        : buildInitialIssues(chat);
 
                       return activeIssuesList.map((issueItem: any, idx: number) => {
                         const issueKey = issueItem.id || 'issue-' + idx;
