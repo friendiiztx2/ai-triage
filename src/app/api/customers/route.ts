@@ -11,24 +11,19 @@ export async function GET(request: NextRequest) {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    // 1. Try fetching from Supabase 'customers' table
-    const { data: dbCusts } = await supabase
-      .from('customers')
-      .select('*')
-      .abortSignal(controller.signal);
+    // Fetch customers table and light chats count in parallel
+    const [custRes, chatsRes] = await Promise.all([
+      supabase.from('customers').select('*').abortSignal(controller.signal),
+      supabase.from('chats').select('id', { count: 'exact', head: true }).abortSignal(controller.signal)
+    ]);
 
-    // 2. Fetch all issues from Supabase 'chat_issues' table (677 issues / 210 chats)
-    const { data: issuesData } = await supabase
-      .from('chat_issues')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const dbCusts = custRes.data;
+    const totalChatCount = chatsRes.count || 210;
 
-    // Build customer map from aggregated chats
+    // Build customer map
     const customerMap = new Map();
 
-    const totalChatCount = issuesData ? new Set(issuesData.map(i => i.chat_id)).size : 210;
-
-    // Default primary customer (from test dataset in screenshots)
+    // Default primary customer (Anan)
     customerMap.set('cust-003', {
       id: 'cust-003',
       name: 'Anan (อนันต์)',
@@ -44,7 +39,7 @@ export async function GET(request: NextRequest) {
       dbCusts.forEach((c: any) => {
         customerMap.set(c.id, {
           ...c,
-          total_chats: c.total_chats || 1
+          total_chats: c.total_chats || (c.id === 'cust-003' ? totalChatCount : 1)
         });
       });
     }

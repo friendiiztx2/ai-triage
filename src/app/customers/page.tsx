@@ -32,8 +32,12 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      // 1. Fetch categories via Server API Proxy
-      const catRes = await fetch('/api/categories');
+      // Fetch categories and customers in parallel for maximum speed
+      const [catRes, custRes] = await Promise.all([
+        fetch('/api/categories'),
+        fetch('/api/customers')
+      ]);
+
       if (catRes.ok) {
         const catData = await catRes.json();
         const catMap: Record<string, string> = {};
@@ -43,8 +47,6 @@ export default function CustomersPage() {
         setCategories(catMap);
       }
 
-      // 2. Fetch customers via Server API Proxy
-      const custRes = await fetch('/api/customers');
       if (custRes.ok) {
         const custData = await custRes.json();
         setCustomers(custData || []);
