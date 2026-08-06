@@ -262,9 +262,15 @@ function FloatingChatWindow({
   const getBaseCatId = (id: string) => (id && typeof id === 'string' && id.includes(':')) ? id.split(':')[1] : (id || '');
 
   const inferCategoryFromText = (text: string, defaultCat?: string) => {
+    // 1. If explicit valid category provided, respect it first (prevents flickering against DB/list values)
+    if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
+      const cleanDefault = getBaseCatId(defaultCat);
+      if (cleanDefault) return cleanDefault;
+    }
+
     const raw = (text || '').toLowerCase();
     
-    // 1. Keyword matching takes TOP priority for accuracy
+    // 2. Keyword matching fallback for unassigned items
     if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
       return 'deposit_withdrawal';
     }
@@ -287,18 +293,6 @@ function FloatingChatWindow({
       return 'game_issue';
     }
 
-    // 2. Fallback to defaultCat if provided and valid
-    if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
-      const cleanDefault = getBaseCatId(defaultCat);
-      const match = categories.find((c: any) => 
-        c.id === defaultCat || 
-        getBaseCatId(c.id) === cleanDefault ||
-        c.name === defaultCat || 
-        c.id?.toLowerCase() === defaultCat.toLowerCase()
-      );
-      if (match) return getBaseCatId(match.id);
-    }
-
     return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
   };
 
@@ -315,15 +309,16 @@ function FloatingChatWindow({
         if (issuesRes && issuesRes.ok) {
           const issuesData = await issuesRes.json();
           if (isMounted && issuesData && Array.isArray(issuesData) && issuesData.length > 0) {
-            setSelectedChatIssues(issuesData);
+            setSelectedChatIssues(prev => (prev && prev.length > 0) ? prev : issuesData);
             setEditIssues(prev => {
               const initialEditState: Record<string, any> = { ...prev };
               issuesData.forEach((issue: any) => {
                 if (!initialEditState[issue.id]) {
                   const inferredCat = inferCategoryFromText(issue.summary, issue.category_id || chat.category_id);
+                  const inferredPri = issue.priority || inferPriorityFromText(issue.summary, chat.priority);
                   initialEditState[issue.id] = {
                     category_id: inferredCat,
-                    priority: issue.priority || chat.priority || 'medium'
+                    priority: inferredPri
                   };
                 }
               });
