@@ -154,6 +154,42 @@ function inferCategoryFromText(text: string, defaultCat?: string, categories: an
   return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
 }
 
+function inferCategoryFromTextLine(text: string, defaultCat?: string, categories: any[] = []) {
+  const raw = (text || '').toLowerCase();
+  
+  // 1. Keyword matching FIRST for individual lines to accurately separate issues in multi-message chats
+  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
+    return 'deposit_withdrawal';
+  }
+  if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('ช้า') || raw.includes('หมุน')) {
+    return 'page_load_freeze';
+  }
+  if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
+    return 'login_issue';
+  }
+  if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus') || raw.includes('แนะนำเพื่อน')) {
+    return 'promo_bonus';
+  }
+  if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp')) {
+    return 'account_security';
+  }
+  if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์')) {
+    return 'access_blocked';
+  }
+  if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน')) {
+    return 'game_issue';
+  }
+
+  // 2. Fallback to defaultCat if provided and valid
+  if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
+    const cleanDefault = getBaseCatId(defaultCat);
+    if (cleanDefault === 'ui_rendering_issue') return 'page_load_freeze';
+    if (cleanDefault) return cleanDefault;
+  }
+
+  return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
+}
+
 function buildInitialIssues(targetChat: any, categories: any[] = []) {
   if (!targetChat) return [];
   if (targetChat.chat_issues && Array.isArray(targetChat.chat_issues) && targetChat.chat_issues.length > 0) {
@@ -170,43 +206,17 @@ function buildInitialIssues(targetChat: any, categories: any[] = []) {
     return [{
       id: `${targetChat.id || 'chat'}-issue-0`,
       summary: targetChat.summary || 'ไม่มีข้อมูลสรุป',
-      category_id: inferCategoryFromText(targetChat.summary, targetChat.category_id, categories),
-      priority: inferPriorityFromText(targetChat.summary, targetChat.priority)
+      category_id: inferCategoryFromTextLine(targetChat.summary || '', targetChat.category_id, categories),
+      priority: inferPriorityFromText(targetChat.summary || '', targetChat.priority)
     }];
   }
 
-  const categoryGroups: Record<string, { lines: string[]; priority: string }> = {};
-
-  convLines.forEach((line: string) => {
-    const cat = inferCategoryFromText(line, targetChat.category_id, categories);
-    const pri = inferPriorityFromText(line, targetChat.priority);
-
-    if (!categoryGroups[cat]) {
-      categoryGroups[cat] = { lines: [line], priority: pri };
-    } else {
-      categoryGroups[cat].lines.push(line);
-      const priOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
-      if ((priOrder[pri] || 1) > (priOrder[categoryGroups[cat].priority] || 1)) {
-        categoryGroups[cat].priority = pri;
-      }
-    }
-  });
-
-  const keys = Object.keys(categoryGroups);
-  if (keys.length === 1) {
-    return [{
-      id: `${targetChat.id || 'chat'}-issue-0`,
-      summary: convLines[0] || targetChat.summary || 'ไม่มีข้อมูลสรุป',
-      category_id: keys[0],
-      priority: categoryGroups[keys[0]].priority
-    }];
-  }
-
-  return keys.map((catKey, idx) => ({
-    id: `${targetChat.id || 'chat'}-issue-${idx}`,
-    summary: categoryGroups[catKey].lines[0],
-    category_id: catKey,
-    priority: categoryGroups[catKey].priority
+  // Map 1-to-1 for EVERY conversation line so every message line in the chat box gets its own Category & Priority control!
+  return convLines.map((line: string, i: number) => ({
+    id: `${targetChat.id || 'chat'}-issue-${i}`,
+    summary: line,
+    category_id: inferCategoryFromTextLine(line, targetChat.category_id, categories),
+    priority: inferPriorityFromText(line, targetChat.priority)
   }));
 }
 
