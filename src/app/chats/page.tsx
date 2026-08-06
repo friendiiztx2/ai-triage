@@ -95,6 +95,12 @@ function parseAIRecommendation(markdown: string) {
   };
 }
 
+// Normalizes category ID by stripping multi-tenant prefix (e.g. 2e65829a...:deposit_withdrawal -> deposit_withdrawal)
+function getBaseCatId(id: string) {
+  if (!id || typeof id !== 'string') return '';
+  return id.includes(':') ? id.split(':')[1] : id;
+}
+
 // Formats priority string to matching mockup text (Thai + English parenthetical)
 function formatPriorityLabel(priority: string) {
   const p = priority.trim().toLowerCase();
@@ -1917,7 +1923,19 @@ export default function ChatsPage() {
                         <td className="px-1.5 py-2.5 whitespace-nowrap">
                           <div className="flex flex-col items-start gap-1">
                             <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-2 py-0.5 rounded-lg truncate max-w-[150px]">
-                              {categories.find(c => c.id === chat.category_id)?.name || chat.category_id || 'อื่นๆ'}
+                              {(() => {
+                                const found = categories.find(c => c.id === chat.category_id || getBaseCatId(c.id) === getBaseCatId(chat.category_id));
+                                if (found) return found.name;
+                                const base = getBaseCatId(chat.category_id);
+                                if (base === 'page_load_freeze') return 'หน้าเว็บค้าง / โหลดหมุน';
+                                if (base === 'deposit_withdrawal') return 'ฝากถอนเงิน / โอนเงิน';
+                                if (base === 'login_issue') return 'เข้าใช้งาน / เข้าสู่ระบบ';
+                                if (base === 'game_issue' || base === 'gameplay_issue') return 'ปัญหาเกม / ระบบเดิมพัน';
+                                if (base === 'promo_bonus') return 'โปรโมชั่น / โบนัส';
+                                if (base === 'account_security') return 'ความปลอดภัยของบัญชี';
+                                if (base === 'api_error') return 'ข้อผิดพลาดระบบ API';
+                                return chat.category_id || 'อื่นๆ';
+                              })()}
                             </span>
                             {chat.chat_issues && chat.chat_issues.length > 1 && (
                               <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md border border-indigo-100/60 dark:border-indigo-900/40 shrink-0 leading-none">

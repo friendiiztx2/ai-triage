@@ -106,6 +106,41 @@ function findCategoryIdByName(name: string, categoriesList: Record<string, strin
   return 'other';
 }
 
+const CATEGORY_NAMES_TH: Record<string, string> = {
+  deposit_withdrawal: 'ฝากถอนเงิน / โอนเงิน',
+  login_issue: 'เข้าใช้งาน / เข้าสู่ระบบ',
+  game_issue: 'ปัญหาเกม / ระบบเดิมพัน',
+  gameplay_issue: 'ปัญหาเกม / ระบบเดิมพัน',
+  promo_bonus: 'โปรโมชั่น / โบนัส',
+  account_security: 'ความปลอดภัยของบัญชี',
+  api_error: 'ข้อผิดพลาดระบบ API',
+  unresponsive_button: 'ปุ่มไม่ตอบสนอง / กดไม่ได้',
+  cannot_access_site: 'เข้าหน้าเว็บไม่ได้/ลิงก์เสีย',
+  page_load_freeze: 'หน้าเว็บค้าง / โหลดหมุน',
+  feedback_complaint: 'ข้อเสนอแนะ / ร้องเรียน',
+  not_a_problem: 'แนะนำเพื่อน / สอบถามสิทธิ์',
+  other: 'อื่นๆ (Other)'
+};
+
+function getCategoryDisplayName(catId: string, categoryMap: Record<string, string>): string {
+  if (!catId) return 'อื่นๆ (Other)';
+  if (categoryMap[catId] && !categoryMap[catId].includes('-') && categoryMap[catId] !== catId) {
+    return categoryMap[catId];
+  }
+
+  const baseKey = catId.includes(':') ? catId.split(':').pop()! : catId;
+  if (categoryMap[baseKey] && !categoryMap[baseKey].includes('-') && categoryMap[baseKey] !== baseKey) {
+    return categoryMap[baseKey];
+  }
+
+  if (CATEGORY_NAMES_TH[baseKey]) return CATEGORY_NAMES_TH[baseKey];
+  if (CATEGORY_NAMES_TH[catId]) return CATEGORY_NAMES_TH[catId];
+
+  if (baseKey === 'page_load_freeze') return 'หน้าเว็บค้าง / โหลดหมุน';
+
+  return categoryMap[catId] || CATEGORY_NAMES_TH[baseKey] || baseKey;
+}
+
 // Soft, soothing pastel color palette
 const PASTEL_COLORS = [
   '#c084fc', // Pastel Purple / Lavender
@@ -313,7 +348,10 @@ export default function OverviewPage() {
       const catMap: Record<string, string> = {};
       if (catData) {
         catData.forEach((c: any) => {
-          catMap[c.id] = c.name || c.title || c.id;
+          const name = c.name || c.title || c.id;
+          catMap[c.id] = name;
+          const base = c.id.includes(':') ? c.id.split(':').pop()! : c.id;
+          catMap[base] = name;
         });
         setCategories(catMap);
       }
@@ -494,10 +532,6 @@ export default function OverviewPage() {
 
     // Calculate Category Breakdown & Other Count for Chart/Cards
     const catCounts: Record<string, number> = {};
-    // Pre-populate all known categories with 0 count so that they appear on the chart as a flat line
-    Object.values(categories).forEach((catName) => {
-      catCounts[catName] = 0;
-    });
 
     let tempOtherCount = 0;
 
@@ -505,21 +539,21 @@ export default function OverviewPage() {
       if (c.chat_issues && c.chat_issues.length > 0) {
         // Multi-issue case: count each issue inside the chat
         c.chat_issues.forEach((issue: any) => {
-          const catId = issue.category_id || 'other';
-          if (catId === 'other') {
+          const rawCatId = issue.category_id || c.category_id || 'other';
+          const catName = getCategoryDisplayName(rawCatId, categories);
+          if (rawCatId === 'other' || catName === 'อื่นๆ (Other)') {
             tempOtherCount++;
           } else {
-            const catName = categories[catId] || catId;
             catCounts[catName] = (catCounts[catName] || 0) + 1;
           }
         });
       } else {
         // Single issue fallback: count the chat's primary category
-        const catId = c.category_id || 'other';
-        if (catId === 'other') {
+        const rawCatId = c.category_id || 'other';
+        const catName = getCategoryDisplayName(rawCatId, categories);
+        if (rawCatId === 'other' || catName === 'อื่นๆ (Other)') {
           tempOtherCount++;
         } else {
-          const catName = categories[catId] || catId;
           catCounts[catName] = (catCounts[catName] || 0) + 1;
         }
       }
