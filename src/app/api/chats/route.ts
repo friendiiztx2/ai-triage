@@ -140,6 +140,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    if (targetId && chatMap.has(targetId)) {
+      clearTimeout(timeoutId);
+      return NextResponse.json([chatMap.get(targetId)]);
+    }
+
     // 2. Fetch from 'vw_triage_export' view SECOND as enrichment for chat_issues
     let exportQuery = db
       .from('vw_triage_export')

@@ -266,42 +266,46 @@ function FloatingChatWindow({
 
   // Fetch issues & customer info in background without blocking UI render
   useEffect(() => {
+    let isMounted = true;
     async function loadData() {
       try {
-        const issuesRes = await fetch('/api/chats/issues?chat_id=' + chat.id);
-        if (issuesRes.ok) {
+        const [issuesRes, custRes] = await Promise.all([
+          fetch('/api/chats/issues?chat_id=' + chat.id).catch(() => null),
+          chat.customer_id ? fetch('/api/customers?customer_id=' + chat.customer_id).catch(() => null) : Promise.resolve(null)
+        ]);
+
+        if (issuesRes && issuesRes.ok) {
           const issuesData = await issuesRes.json();
-          if (issuesData && Array.isArray(issuesData) && issuesData.length > 0) {
+          if (isMounted && issuesData && Array.isArray(issuesData) && issuesData.length > 0) {
             setSelectedChatIssues(issuesData);
-            
-            const initialEditState: Record<string, any> = {};
-            issuesData.forEach((issue: any) => {
-              const inferredCat = inferCategoryFromText(issue.summary, issue.category_id || chat.category_id);
-              initialEditState[issue.id] = {
-                category_id: inferredCat,
-                priority: issue.priority || chat.priority || 'medium'
-              };
+            setEditIssues(prev => {
+              const initialEditState: Record<string, any> = { ...prev };
+              issuesData.forEach((issue: any) => {
+                if (!initialEditState[issue.id]) {
+                  const inferredCat = inferCategoryFromText(issue.summary, issue.category_id || chat.category_id);
+                  initialEditState[issue.id] = {
+                    category_id: inferredCat,
+                    priority: issue.priority || chat.priority || 'medium'
+                  };
+                }
+              });
+              return initialEditState;
             });
-            setEditIssues(initialEditState);
           }
         }
-      } catch (err) {
-        console.error('Error fetching chat issues:', err);
-      }
 
-      try {
-        if (chat.customer_id) {
-          const custRes = await fetch('/api/customers?customer_id=' + chat.customer_id);
-          if (custRes.ok) {
-            const cust = await custRes.json();
+        if (custRes && custRes.ok) {
+          const cust = await custRes.json();
+          if (isMounted && cust) {
             setCustomerInfo(cust);
           }
         }
       } catch (err) {
-        console.error('Error fetching customer info:', err);
+        console.error('Error fetching modal background data:', err);
       }
     }
     loadData();
+    return () => { isMounted = false; };
   }, [chat.id]);
 
   const handleMouseDown = (e: any) => {
@@ -1236,25 +1240,29 @@ export default function ChatsPage() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const catRes = await fetch('/api/categories');
-      if (!catRes.ok) throw new Error('Failed to load categories');
-      const catData = await catRes.json();
-      setCategories(catData);
+      const [catRes, chatsRes] = await Promise.all([
+        fetch('/api/categories'),
+        fetch('/api/chats?summary_only=true')
+      ]);
 
-      const chatsRes = await fetch('/api/chats?summary_only=true');
-      if (!chatsRes.ok) throw new Error('Failed to load chats');
-      const chatsData = await chatsRes.json();
-      
-      if (chatsData) {
-        const processed = chatsData.map((c: any) => ({
-          ...c,
-          status: c.status || 'completed'
-        }));
-        const sorted = [...processed].sort((a, b) => 
-          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-        );
-        setChats(sorted);
-        setFilteredChats(sorted);
+      if (catRes.ok) {
+        const catData = await catRes.json();
+        setCategories(catData);
+      }
+
+      if (chatsRes.ok) {
+        const chatsData = await chatsRes.json();
+        if (chatsData) {
+          const processed = chatsData.map((c: any) => ({
+            ...c,
+            status: c.status || 'completed'
+          }));
+          const sorted = [...processed].sort((a, b) => 
+            new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+          );
+          setChats(sorted);
+          setFilteredChats(sorted);
+        }
       }
     } catch (err) {
       console.error('Error fetching chats:', err);
@@ -1889,7 +1897,6 @@ export default function ChatsPage() {
                           </div>
                         </td>
 
-<<<<<<< HEAD
                         {/* Customer 360 Contact History */}
                         <td className="px-6 py-4">
                           {(() => {
@@ -1920,8 +1927,6 @@ export default function ChatsPage() {
                             );
                           })()}
                         </td>
-=======
->>>>>>> main
                         {/* Category */}
                         <td className="px-1.5 py-2.5 whitespace-nowrap">
                           <div className="flex flex-col items-start gap-1">
