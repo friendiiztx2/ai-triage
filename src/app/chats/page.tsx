@@ -274,26 +274,34 @@ function FloatingChatWindow({
   
 
 
+  if (!chat) return null;
+
   const [customerInfo, setCustomerInfo] = useState<any>(null);
-  const [selectedChatIssues, setSelectedChatIssues] = useState<any[]>(() => buildInitialIssues(chat));
+  const [selectedChatIssues, setSelectedChatIssues] = useState<any[]>(() => buildInitialIssues(chat, categories));
   const [editIssues, setEditIssues] = useState<Record<string, any>>(() => {
     const initialMap: Record<string, any> = {};
-    const initList = buildInitialIssues(chat);
-    initList.forEach((issue: any) => {
-      const issueKey = issue.id || 'issue-0';
-      initialMap[issueKey] = {
-        category_id: getBaseCatId(issue.category_id || chat.category_id),
-        priority: issue.priority || inferPriorityFromText(issue.summary, chat.priority)
-      };
-    });
+    try {
+      const initList = buildInitialIssues(chat, categories);
+      if (Array.isArray(initList)) {
+        initList.forEach((issue: any) => {
+          if (issue) {
+            const issueKey = issue.id || 'issue-0';
+            initialMap[issueKey] = {
+              category_id: getBaseCatId(issue.category_id || chat?.category_id || ''),
+              priority: issue.priority || inferPriorityFromText(issue.summary || '', chat?.priority)
+            };
+          }
+        });
+      }
+    } catch (e) {}
     return initialMap;
   });
   
-  const [editCategory, setEditCategory] = useState(chat.category_id || '');
-  const [editPriority, setEditPriority] = useState(chat.priority || 'low');
+  const [editCategory, setEditCategory] = useState(chat?.category_id || '');
+  const [editPriority, setEditPriority] = useState(chat?.priority || 'low');
   
   // Custom Tags State
-  const [tags, setTags] = useState<string[]>(chat.tags || []);
+  const [tags, setTags] = useState<string[]>(chat?.tags || []);
   const [customTagInput, setCustomTagInput] = useState('');
   
   const [updating, setUpdating] = useState(false);
