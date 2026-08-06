@@ -101,6 +101,25 @@ function getBaseCatId(id: string) {
   return id.includes(':') ? id.split(':')[1] : id;
 }
 
+function inferPriorityFromText(text: string, defaultPri?: string) {
+  const raw = (text || '').toLowerCase();
+  
+  if (raw.includes('ข้ามวัน') || raw.includes('แจ้งความ') || raw.includes('แฮก') || raw.includes('502') || raw.includes('เงินหาย') || raw.includes('ขู่')) {
+    return 'urgent';
+  }
+  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอน') || raw.includes('ยอดไม่เข้า') || raw.includes('ล็อกอิน') || raw.includes('รหัสผ่าน')) {
+    return 'high';
+  }
+  if (raw.includes('ค้าง') || raw.includes('หมุน') || raw.includes('ช้า') || raw.includes('โหลด')) {
+    return 'medium';
+  }
+  if (raw.includes('โปร') || raw.includes('โบนัส') || raw.includes('แนะนำเพื่อน') || raw.includes('ขอบคุณ') || raw.includes('สวัสดี')) {
+    return 'low';
+  }
+  
+  return defaultPri?.toLowerCase() || 'medium';
+}
+
 // Formats priority string to matching mockup text (Thai + English parenthetical)
 function formatPriorityLabel(priority: string) {
   const p = priority.trim().toLowerCase();
@@ -165,8 +184,19 @@ function FloatingChatWindow({
   const [isMaximized, setIsMaximized] = useState(false);
   
   const [customerInfo, setCustomerInfo] = useState<any>(null);
-  const [selectedChatIssues, setSelectedChatIssues] = useState<any[]>([]);
-  const [editIssues, setEditIssues] = useState<Record<string, any>>({});
+  const [selectedChatIssues, setSelectedChatIssues] = useState<any[]>(chat.chat_issues || []);
+  const [editIssues, setEditIssues] = useState<Record<string, any>>(() => {
+    const initialMap: Record<string, any> = {};
+    if (chat.chat_issues && chat.chat_issues.length > 0) {
+      chat.chat_issues.forEach((issue: any) => {
+        initialMap[issue.id] = {
+          category_id: getBaseCatId(issue.category_id || chat.category_id),
+          priority: issue.priority || inferPriorityFromText(issue.summary, chat.priority)
+        };
+      });
+    }
+    return initialMap;
+  });
   
   const [editCategory, setEditCategory] = useState(chat.category_id || '');
   const [editPriority, setEditPriority] = useState(chat.priority || 'low');
@@ -622,7 +652,7 @@ function FloatingChatWindow({
                               id: `${chat.id}-line-${i}`,
                               summary: line,
                               category_id: inferCategoryFromText(line, chat.category_id),
-                              priority: chat.priority || 'medium'
+                              priority: inferPriorityFromText(line, chat.priority)
                             }));
 
                       if (!activeIssuesList || activeIssuesList.length === 0) {
@@ -630,16 +660,17 @@ function FloatingChatWindow({
                           id: chat.id,
                           summary: chat.summary || 'ไม่มีข้อมูลสรุป',
                           category_id: inferCategoryFromText(chat.summary, chat.category_id),
-                          priority: chat.priority || 'medium'
+                          priority: inferPriorityFromText(chat.summary, chat.priority)
                         }];
                       }
 
                       return activeIssuesList.map((issueItem: any, idx: number) => {
                         const issueKey = issueItem.id || 'issue-' + idx;
                         const inferredDefaultCat = inferCategoryFromText(issueItem.summary, issueItem.category_id || editCategory || chat.category_id);
+                        const inferredDefaultPri = issueItem.priority || inferPriorityFromText(issueItem.summary, editPriority || chat.priority);
                         const currentVal = editIssues[issueKey] || { 
                           category_id: inferredDefaultCat, 
-                          priority: issueItem.priority || editPriority || 'medium' 
+                          priority: inferredDefaultPri 
                         };
 
                         const selectedCategoryVal = getBaseCatId(currentVal.category_id || inferredDefaultCat);
