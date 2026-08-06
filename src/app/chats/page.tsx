@@ -123,6 +123,7 @@ function inferPriorityFromText(text: string, defaultPri?: string) {
 function inferCategoryFromText(text: string, defaultCat?: string, categories: any[] = []) {
   if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
     const cleanDefault = getBaseCatId(defaultCat);
+    if (cleanDefault === 'ui_rendering_issue') return 'page_load_freeze';
     if (cleanDefault) return cleanDefault;
   }
 
@@ -2005,7 +2006,7 @@ export default function ChatsPage() {
                                 const found = categories.find(c => c.id === chat.category_id || getBaseCatId(c.id) === getBaseCatId(chat.category_id));
                                 if (found) return found.name;
                                 const base = getBaseCatId(chat.category_id);
-                                if (base === 'page_load_freeze') return 'หน้าเว็บค้าง / โหลดหมุน';
+                                if (base === 'page_load_freeze' || base === 'ui_rendering_issue') return 'หน้าเว็บค้าง / โหลดหมุน';
                                 if (base === 'deposit_withdrawal') return 'ฝากถอนเงิน / โอนเงิน';
                                 if (base === 'login_issue') return 'เข้าใช้งาน / เข้าสู่ระบบ';
                                 if (base === 'game_issue' || base === 'gameplay_issue') return 'ปัญหาเกม / ระบบเดิมพัน';
