@@ -1680,20 +1680,6 @@ export default function ChatsPage() {
               </div>
             )}
           </div>
-
-          {/* Right side of Row 2: Export CSV/Excel Button */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleExportCSV}
-              disabled={filteredChats.length === 0}
-              className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-955/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-extrabold border border-emerald-200/80 dark:border-emerald-800 px-4 py-2.5 rounded-xl text-xs transition cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              title="ดาวน์โหลดรายการเคสที่คัดกรองอยู่เป็นไฟล์ Excel / CSV"
-            >
-              <Download size={14} />
-              <span>📥 ส่งออก Excel/CSV ({filteredChats.length})</span>
-            </button>
-          </div>
         </div>
 
         {/* 1-Click Clear Filters Bar */}
