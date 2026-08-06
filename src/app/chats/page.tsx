@@ -234,7 +234,31 @@ function FloatingChatWindow({
   const inferCategoryFromText = (text: string, defaultCat?: string) => {
     const raw = (text || '').toLowerCase();
     
-    if (defaultCat) {
+    // 1. Keyword matching takes TOP priority for accuracy
+    if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
+      return 'deposit_withdrawal';
+    }
+    if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('ช้า') || raw.includes('หมุน')) {
+      return 'page_load_freeze';
+    }
+    if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
+      return 'login_issue';
+    }
+    if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus')) {
+      return 'promo_bonus';
+    }
+    if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp')) {
+      return 'account_security';
+    }
+    if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์')) {
+      return 'access_blocked';
+    }
+    if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน')) {
+      return 'game_issue';
+    }
+
+    // 2. Fallback to defaultCat if provided and valid
+    if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
       const cleanDefault = getBaseCatId(defaultCat);
       const match = categories.find((c: any) => 
         c.id === defaultCat || 
@@ -243,28 +267,6 @@ function FloatingChatWindow({
         c.id?.toLowerCase() === defaultCat.toLowerCase()
       );
       if (match) return getBaseCatId(match.id);
-    }
-
-    if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน')) {
-      return 'login_issue';
-    }
-    if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('ฟรี') || raw.includes('เครดิต') || raw.includes('bonus')) {
-      return 'promo_bonus';
-    }
-    if (raw.includes('ช้า') || raw.includes('โหลด') || raw.includes('กราฟิก') || raw.includes('หน้าหมุน') || raw.includes('ui') || raw.includes('ค้าง')) {
-      return 'ui_rendering_issue';
-    }
-    if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('เงิน') || raw.includes('เลขบัญชี') || raw.includes('ยอด')) {
-      return 'deposit_withdrawal';
-    }
-    if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp') || raw.includes('บัญชี')) {
-      return 'account_security';
-    }
-    if (raw.includes('502') || raw.includes('blocked') || raw.includes('เข้าเว็บ') || raw.includes('ลิงก์')) {
-      return 'access_blocked';
-    }
-    if (raw.includes('เกม') || raw.includes('game')) {
-      return 'game_issue';
     }
 
     return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');

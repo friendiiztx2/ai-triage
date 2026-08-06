@@ -60,6 +60,21 @@ export async function GET(request: NextRequest) {
           convText = convText.join('\n');
         }
 
+        const rawCat = row.category_id || null;
+        let detectedCat = rawCat;
+        if (!rawCat || rawCat === 'other' || rawCat === 'not_a_problem') {
+          const raw = (convText + ' ' + (row.summary || '')).toLowerCase();
+          if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอน') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
+            detectedCat = 'deposit_withdrawal';
+          } else if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('ช้า')) {
+            detectedCat = 'page_load_freeze';
+          } else if (raw.includes('ล็อกอิน') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
+            detectedCat = 'login_issue';
+          } else if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี')) {
+            detectedCat = 'promo_bonus';
+          }
+        }
+
         return {
           id: row.id,
           customer_id: row.customer_id || 'cust-003',
@@ -67,7 +82,7 @@ export async function GET(request: NextRequest) {
           summary: row.summary || 'ไม่มีข้อมูลสรุป',
           conversation: convText,
           rawMessages: rawMsgs,
-          category_id: row.category_id || null,
+          category_id: detectedCat,
           priority: row.priority || null,
           status: determineStatus(row),
           confidence: row.confidence || 95,
