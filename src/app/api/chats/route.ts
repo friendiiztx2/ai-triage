@@ -5,6 +5,14 @@ import { sanitizeText } from '@/lib/sanitize';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// Simple In-Memory Response Cache to eliminate PostgREST Egress for repeated requests
+interface CacheEntry {
+  timestamp: number;
+  data: any;
+}
+const serverCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 15000; // 15 Seconds TTL
+
 function determineStatus(item: any): string {
   if (!item) return 'pending';
   const s = typeof item.status === 'string' ? item.status.trim().toLowerCase() : '';
@@ -16,6 +24,19 @@ function determineStatus(item: any): string {
 }
 
 export async function GET(request: NextRequest) {
+  const cacheKey = request.url;
+  const now = Date.now();
+  const cached = serverCache.get(cacheKey);
+
+  if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
+        'X-Cache': 'HIT'
+      }
+    });
+  }
+
   const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -271,7 +292,13 @@ export async function GET(request: NextRequest) {
       resultList.sort((a: any, b: any) => 
         new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       );
-      return NextResponse.json(resultList);
+      serverCache.set(cacheKey, { timestamp: Date.now(), data: resultList });
+      return NextResponse.json(resultList, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
+          'X-Cache': 'MISS'
+        }
+      });
     }
 
     // Backup fallback chats dataset if Supabase quota is restricted or view is empty
@@ -362,6 +389,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  serverCache.clear();
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
