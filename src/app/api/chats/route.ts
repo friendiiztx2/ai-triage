@@ -16,10 +16,9 @@ const CACHE_TTL_MS = 15000; // 15 Seconds TTL
 function determineStatus(item: any): string {
   if (!item) return 'pending';
   const s = typeof item.status === 'string' ? item.status.trim().toLowerCase() : '';
-  if (s === 'completed' || s === 'แยกแยะแล้ว' || s === 'resolved' || s === 'closed') return 'completed';
   if (s === 'pending' || s === 'รอดำเนินการ' || s === 'waiting') return 'pending';
+  if (s === 'completed' || s === 'แยกแยะแล้ว' || s === 'resolved' || s === 'closed') return 'completed';
   if (item.resolution && item.resolution !== 'Pending' && item.resolution !== '[]' && item.resolution.trim() !== '') return 'completed';
-  if (item.category_id || item.summary || (Array.isArray(item.chat_issues) && item.chat_issues.length > 0)) return 'completed';
   return 'pending';
 }
 
