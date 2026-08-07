@@ -815,13 +815,13 @@ function FloatingChatWindow({
                             tags.map((t: string, idx: number) => (
                               <span 
                                 key={idx} 
-                                className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 shadow-sm"
+                                className="inline-flex items-center gap-1.5 text-xs font-extrabold px-3 py-1 rounded-lg border bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-900/80 dark:text-indigo-100 dark:border-indigo-500 shadow-sm"
                               >
                                 <span>{t}</span>
                                 <button 
                                   type="button" 
                                   onClick={() => handleRemoveTag(t)} 
-                                  className="hover:text-rose-600 text-slate-400 transition cursor-pointer font-extrabold text-[11px] ml-0.5"
+                                  className="hover:text-rose-400 text-indigo-400 dark:text-indigo-300 transition cursor-pointer font-black text-xs ml-0.5"
                                   title="ถอดแท็กนี้ออกจากแชตนี้"
                                 >
                                   ×
@@ -829,21 +829,21 @@ function FloatingChatWindow({
                               </span>
                             ))
                           ) : (
-                            <span className="text-slate-400 dark:text-slate-500 italic text-xs">ยังไม่ได้ติดแท็ก (คลิกป้ายสำเร็จรูปด้านล่างเพื่อติดแท็ก)</span>
+                            <span className="text-slate-400 dark:text-slate-400 font-medium italic text-xs">ยังไม่ได้ติดแท็ก (คลิกป้ายสำเร็จรูปด้านล่างเพื่อติดแท็ก)</span>
                           )}
                         </div>
 
                         {/* Preset Quick Tags */}
-                        <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ป้ายแท็กสำเร็จรูป:</span>
-                          <div className="flex flex-wrap gap-1.5">
+                        <div className="space-y-2 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                          <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider">ป้ายแท็กสำเร็จรูป:</span>
+                          <div className="flex flex-wrap gap-2">
                             {[
-                              { name: '#VIP', style: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50' },
-                              { name: '#ติดตามผล', style: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50' },
-                              { name: '#รอสลิป', style: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50' },
-                              { name: '#ส่งเรื่องทีมเทคนิค', style: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50' },
-                              { name: '#รอธนาคารแก้ไข', style: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50' },
-                              { name: '#เคสพิเศษ', style: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-955/30 dark:text-indigo-300 dark:border-indigo-900/50' }
+                              { name: '#VIP', style: 'bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/70 dark:text-purple-200 dark:border-purple-700' },
+                              { name: '#ติดตามผล', style: 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700' },
+                              { name: '#รอสลิป', style: 'bg-sky-50 text-sky-800 border-sky-300 dark:bg-sky-950/70 dark:text-sky-200 dark:border-sky-700' },
+                              { name: '#ส่งเรื่องทีมเทคนิค', style: 'bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-700' },
+                              { name: '#รอธนาคารแก้ไข', style: 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-700' },
+                              { name: '#เคสพิเศษ', style: 'bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-200 dark:border-indigo-700' }
                             ].map((ptag) => {
                               const isSelected = (tags || []).includes(ptag.name);
                               return (
@@ -851,8 +851,10 @@ function FloatingChatWindow({
                                   key={ptag.name}
                                   type="button"
                                   onClick={() => handleTogglePresetTag(ptag.name)}
-                                  className={`text-[11px] font-bold px-2 py-0.5 rounded-md border transition cursor-pointer flex items-center gap-1 ${
-                                    isSelected ? 'ring-2 ring-indigo-500 shadow-sm opacity-100 font-extrabold' : 'opacity-60 hover:opacity-100'
+                                  className={`text-xs font-extrabold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
+                                    isSelected 
+                                      ? 'ring-2 ring-indigo-500 dark:ring-indigo-400 scale-105 shadow-md font-black border-indigo-500' 
+                                      : 'hover:scale-[1.03]'
                                   } ${ptag.style}`}
                                 >
                                   {isSelected ? '✓ ' : '+ '}{ptag.name}
