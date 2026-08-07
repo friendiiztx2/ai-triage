@@ -1056,7 +1056,7 @@ export default function OverviewPage() {
       {/* Category Breakdown & AI Audit Column */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Category Stats List (Fully Clickable Links) */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-5 transition-all duration-250 flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4 transition-all duration-250 flex flex-col justify-start">
           <div>
             <h2 className="font-bold text-slate-800 dark:text-slate-100 text-lg flex items-center gap-2">
               <Inbox size={18} className="text-indigo-600 dark:text-indigo-400" />
@@ -1082,7 +1082,7 @@ export default function OverviewPage() {
             const hasMore = sortedChartData.length > displayLimit;
 
             return (
-              <div className="space-y-4 mt-4">
+              <div className="space-y-4 mt-1">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {itemsToRender.map((item, idx) => {
                     const borderStyle = borderColors[idx % borderColors.length];
