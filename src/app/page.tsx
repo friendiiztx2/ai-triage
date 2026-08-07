@@ -983,50 +983,50 @@ export default function OverviewPage() {
         {/* Card 1: Total Chats */}
         <Link 
           href={`/chats?dateRange=${dateRange}`}
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-indigo-150 dark:hover:border-indigo-900 transition-all duration-250 cursor-pointer group"
+          className="bg-white dark:bg-slate-855 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-250 cursor-pointer group"
         >
-          <div className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 p-3.5 rounded-2xl group-hover:scale-105 transition-transform">
+          <div className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 p-3.5 rounded-2xl group-hover:scale-105 transition-transform border border-indigo-100 dark:border-indigo-900/50">
             <MessageSquare size={24} />
           </div>
           <div>
-            <span className="text-slate-400 dark:text-slate-555 text-xs font-bold uppercase tracking-wider">{t('cardTotalChats')}</span>
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mt-1 font-display">{stats.totalChats} {t('cases')}</h3>
+            <span className="text-slate-500 dark:text-slate-350 text-xs font-extrabold uppercase tracking-wider">{t('cardTotalChats')}</span>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-display">{stats.totalChats} {t('cases')}</h3>
           </div>
         </Link>
 
         {/* Card 2: Pending Triage */}
         <Link 
           href={`/chats?status=pending&dateRange=${dateRange}`}
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-amber-200 dark:hover:border-amber-900 transition-all duration-250 cursor-pointer group"
+          className="bg-white dark:bg-slate-855 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-amber-300 dark:hover:border-amber-700 transition-all duration-250 cursor-pointer group"
         >
-          <div className="bg-amber-50 dark:bg-amber-955/40 text-amber-600 dark:text-amber-400 p-3.5 rounded-2xl group-hover:scale-105 transition-transform">
+          <div className="bg-amber-50 dark:bg-amber-955/60 text-amber-600 dark:text-amber-400 p-3.5 rounded-2xl group-hover:scale-105 transition-transform border border-amber-100 dark:border-amber-900/50">
             <Clock size={24} />
           </div>
           <div>
-            <span className="text-slate-400 dark:text-slate-555 text-xs font-bold uppercase tracking-wider">{t('cardPending')}</span>
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mt-1 font-display">{stats.pendingTriage} {t('cases')}</h3>
+            <span className="text-slate-500 dark:text-slate-350 text-xs font-extrabold uppercase tracking-wider">{t('cardPending')}</span>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-display">{stats.pendingTriage} {t('cases')}</h3>
           </div>
         </Link>
 
         {/* Card 3: Urgent / High priority */}
         <Link 
           href={`/chats?priority=urgent&dateRange=${dateRange}`}
-          className={`bg-white dark:bg-slate-900 border p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-rose-200 dark:hover:border-rose-900 transition-all duration-250 cursor-pointer group ${
+          className={`bg-white dark:bg-slate-855 border p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-rose-300 dark:hover:border-rose-700 transition-all duration-250 cursor-pointer group ${
             stats.highPriority > 0
               ? 'border-rose-300 dark:border-rose-800/80 shadow-rose-100/60 dark:shadow-rose-955/20 shadow-md'
               : 'border-slate-200 dark:border-slate-800'
           }`}
         >
-          <div className={`p-3.5 rounded-2xl group-hover:scale-105 transition-transform ${
+          <div className={`p-3.5 rounded-2xl group-hover:scale-105 transition-transform border ${
             stats.highPriority > 0
-              ? 'bg-rose-100 dark:bg-rose-955/60 text-rose-600 dark:text-rose-400 animate-bounce'
-              : 'bg-rose-50 dark:bg-rose-955/40 text-rose-600 dark:text-rose-400'
+              ? 'bg-rose-100 dark:bg-rose-955/70 text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-800 animate-bounce'
+              : 'bg-rose-50 dark:bg-rose-955/60 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
           }`}>
             <AlertTriangle size={24} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 dark:text-slate-555 text-xs font-bold uppercase tracking-wider">{t('cardUrgent')}</span>
+              <span className="text-slate-500 dark:text-slate-350 text-xs font-extrabold uppercase tracking-wider">{t('cardUrgent')}</span>
               {stats.highPriority > 0 && (
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
@@ -1034,21 +1034,21 @@ export default function OverviewPage() {
                 </span>
               )}
             </div>
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mt-1 font-display">{stats.highPriority} {t('cases')}</h3>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-display">{stats.highPriority} {t('cases')}</h3>
           </div>
         </Link>
 
         {/* Card 4: Customers */}
         <Link 
           href="/customers"
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-900 transition-all duration-250 cursor-pointer group"
+          className="bg-white dark:bg-slate-855 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex items-center gap-5 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-250 cursor-pointer group"
         >
-          <div className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 p-3.5 rounded-2xl group-hover:scale-105 transition-transform">
+          <div className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 p-3.5 rounded-2xl group-hover:scale-105 transition-transform border border-emerald-100 dark:border-emerald-900/50">
             <Users size={24} />
           </div>
           <div>
-            <span className="text-slate-400 dark:text-slate-555 text-xs font-bold uppercase tracking-wider">{t('cardActiveCustomers')}</span>
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mt-1 font-display">{stats.totalCustomers} {t('persons')}</h3>
+            <span className="text-slate-500 dark:text-slate-350 text-xs font-extrabold uppercase tracking-wider">{t('cardActiveCustomers')}</span>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-display">{stats.totalCustomers} {t('persons')}</h3>
           </div>
         </Link>
       </div>
@@ -1056,25 +1056,25 @@ export default function OverviewPage() {
       {/* Category Breakdown & AI Audit Column */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Category Stats List (Fully Clickable Links) */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4 transition-all duration-250 flex flex-col justify-start">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-855 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4 transition-all duration-250 flex flex-col justify-start">
           <div>
-            <h2 className="font-bold text-slate-800 dark:text-slate-100 text-lg flex items-center gap-2">
+            <h2 className="font-extrabold text-slate-900 dark:text-white text-lg flex items-center gap-2">
               <Inbox size={18} className="text-indigo-600 dark:text-indigo-400" />
               {t('casesByCategory')}
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">{t('casesByCategorySub')}</p>
+            <p className="text-slate-500 dark:text-slate-350 text-xs mt-1 font-medium">{t('casesByCategorySub')}</p>
           </div>
           
           {(() => {
             const borderColors = [
-              'border-l-indigo-500 dark:border-l-indigo-455',
-              'border-l-sky-500 dark:border-l-sky-455',
-              'border-l-emerald-500 dark:border-l-emerald-455',
-              'border-l-pink-500 dark:border-l-pink-455',
-              'border-l-amber-500 dark:border-l-amber-455',
-              'border-l-violet-500 dark:border-l-violet-455',
-              'border-l-rose-500 dark:border-l-rose-455',
-              'border-l-teal-500 dark:border-l-teal-455'
+              'border-l-indigo-500 dark:border-l-indigo-400',
+              'border-l-sky-500 dark:border-l-sky-400',
+              'border-l-emerald-500 dark:border-l-emerald-400',
+              'border-l-pink-500 dark:border-l-pink-400',
+              'border-l-amber-500 dark:border-l-amber-400',
+              'border-l-violet-500 dark:border-l-violet-400',
+              'border-l-rose-500 dark:border-l-rose-400',
+              'border-l-teal-500 dark:border-l-teal-400'
             ];
             
             const displayLimit = 5;
@@ -1090,10 +1090,13 @@ export default function OverviewPage() {
                       <Link 
                         key={item.name} 
                         href={`/chats?category=${item.id}&dateRange=${dateRange}`}
-                        className={`bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800/75 border-l-4 ${borderStyle} p-4 rounded-xl flex flex-col justify-between hover:bg-slate-100/50 dark:hover:bg-slate-800/80 hover:border-indigo-150 dark:hover:border-indigo-900 transition-all duration-250 cursor-pointer group`}
+                        className={`bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-750 border-l-4 ${borderStyle} p-4 rounded-xl flex flex-col justify-between hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-indigo-400 dark:hover:border-indigo-400 transition-all duration-200 cursor-pointer group shadow-sm`}
                       >
-                        <span className="text-slate-700 dark:text-slate-300 text-xs font-bold block truncate mb-2">{item.name}</span>
-                        <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-display">{item.value} {t('cases')}</span>
+                        <span className="text-slate-800 dark:text-slate-100 text-xs font-extrabold block truncate mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">{item.name}</span>
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-2xl font-black text-slate-900 dark:text-white font-display">{item.value}</span>
+                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{t('cases')}</span>
+                        </div>
                       </Link>
                     );
                   })}
@@ -1101,12 +1104,13 @@ export default function OverviewPage() {
                   {/* Fallback Unclassified check in listing */}
                   <Link 
                     href={`/chats?category=other&dateRange=${dateRange}`}
-                    className="bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800/75 border-l-4 border-l-slate-400 dark:border-l-slate-650 p-4 rounded-xl flex flex-col justify-between hover:bg-slate-100/50 dark:hover:bg-slate-800/80 hover:border-indigo-150 dark:hover:border-indigo-900 transition-all duration-250 cursor-pointer group"
+                    className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-750 border-l-4 border-l-slate-400 dark:border-l-slate-500 p-4 rounded-xl flex flex-col justify-between hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-indigo-400 dark:hover:border-indigo-400 transition-all duration-200 cursor-pointer group shadow-sm"
                   >
-                    <span className="text-slate-700 dark:text-slate-300 text-xs font-bold block truncate mb-2">อื่นๆ (Other)</span>
-                    <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                      {otherCount} {t('cases')}
-                    </span>
+                    <span className="text-slate-800 dark:text-slate-100 text-xs font-extrabold block truncate mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">อื่นๆ (Other)</span>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl font-black text-slate-900 dark:text-white font-display">{otherCount}</span>
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{t('cases')}</span>
+                    </div>
                   </Link>
                 </div>
 
