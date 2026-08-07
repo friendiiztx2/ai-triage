@@ -1153,6 +1153,11 @@ export default function ChatsPage() {
           status: newStatus
         })
       });
+
+      // 📜 Record to Audit & Activity Logs
+      const statusLabel = newStatus === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ';
+      const detailMsg = `อัปเดตสถานะแชต #${chat.id} เป็น [${statusLabel}] เรียบร้อยแล้ว`;
+      await logActivityTrail('TRIAGE_UPDATE', chat.id, chat.status || 'pending', detailMsg);
     } catch (err) {
       console.error('Failed to toggle status:', err);
     }
@@ -1206,6 +1211,15 @@ export default function ChatsPage() {
         })
       });
       if (!res.ok) throw new Error('Bulk update failed');
+
+      // 📜 Record to Audit & Activity Logs
+      for (const id of selectedIds) {
+        const detailMsg = status 
+          ? `อัปเดตสถานะแชตแบบกลุ่ม #${id} เป็น [${status === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ'}]`
+          : `ย้ายหมวดหมู่แชตแบบกลุ่ม #${id} เป็น [${categoryId}]`;
+        await logActivityTrail('BULK_UPDATE', id, 'multiple_chats', detailMsg);
+      }
+
       await fetchInitialData();
       setSelectedIds([]);
     } catch (err) {
