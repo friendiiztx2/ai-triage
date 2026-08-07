@@ -47,11 +47,11 @@ export async function GET(request: NextRequest) {
   try {
     const chatMap = new Map();
 
-    // If summary_only is requested, query lightweight columns to prevent Egress bloat
+    // If summary_only is requested, query ultra-lightweight columns (exclude raw conversation text) to eliminate Egress bloat
     if (summaryOnly) {
       let lightQuery = db
         .from('chats')
-        .select('id, customer_id, summary, conversation, category_id, priority, status, confidence, company_id, created_at')
+        .select('id, customer_id, summary, category_id, priority, status, confidence, company_id, created_at')
         .order('created_at', { ascending: false });
 
       if (targetId) {

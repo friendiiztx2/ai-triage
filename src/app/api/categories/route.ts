@@ -14,7 +14,27 @@ const defaultCategories = [
   { id: 'other', name: 'เรื่องอื่นๆ (Other Inquiries)', description: 'สอบถามข้อมูลทั่วไป', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' }
 ];
 
+interface CacheEntry {
+  timestamp: number;
+  data: any;
+}
+const serverCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 60000; // 60 Seconds TTL for categories
+
 export async function GET(request: NextRequest) {
+  const cacheKey = request.url;
+  const now = Date.now();
+  const cached = serverCache.get(cacheKey);
+
+  if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'X-Cache': 'HIT'
+      }
+    });
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
   const db = supabaseAdmin || supabase;
@@ -23,7 +43,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const filterCompanyId = searchParams.get('company_id');
 
-    let query = db.from('categories').select('*');
+    let query = db.from('categories').select('id, name, description, company_id');
     if (filterCompanyId && filterCompanyId !== 'all') {
       query = query.eq('company_id', filterCompanyId);
     }
@@ -43,7 +63,13 @@ export async function GET(request: NextRequest) {
     });
 
     const uniqueCategories = Array.from(categoryMap.values());
-    return NextResponse.json(uniqueCategories);
+    serverCache.set(cacheKey, { timestamp: now, data: uniqueCategories });
+
+    return NextResponse.json(uniqueCategories, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+      }
+    });
   } catch (err: any) {
     clearTimeout(timeoutId);
     return NextResponse.json(defaultCategories);
@@ -51,6 +77,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  serverCache.clear();
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 

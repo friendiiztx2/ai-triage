@@ -1,7 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 
+interface CacheEntry {
+  timestamp: number;
+  data: any;
+}
+const serverCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 30000; // 30 Seconds TTL for customers
+
 export async function GET(request: NextRequest) {
+  const cacheKey = request.url;
+  const now = Date.now();
+  const cached = serverCache.get(cacheKey);
+
+  if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        'X-Cache': 'HIT'
+      }
+    });
+  }
+
   const db = supabaseAdmin || supabase;
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get('customer_id');
@@ -124,7 +144,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(result);
+    serverCache.set(cacheKey, { timestamp: now, data: result });
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60'
+      }
+    });
   } catch (err: any) {
     clearTimeout(timeoutId);
     return NextResponse.json([
