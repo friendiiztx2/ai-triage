@@ -635,7 +635,12 @@ function FloatingChatWindow({
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
           <h3 className="font-extrabold text-slate-800 dark:text-slate-200 text-xs truncate">
-            {chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8))}
+            {customerInfo?.name || chat.customer_name || (
+              chat.customer_id === 'cust-003' ? 'Anan (อนันต์)' :
+              chat.customer_id === 'cust-001' ? 'Somchai (สมชาย)' :
+              chat.customer_id === 'cust-002' ? 'Somsri (สมศรี)' :
+              'ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8))
+            )}
           </h3>
         </div>
 
