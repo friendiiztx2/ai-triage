@@ -389,6 +389,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   serverCache.clear();
+  const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -405,7 +406,7 @@ export async function PATCH(request: NextRequest) {
     if (priority !== undefined) updateData.priority = sanitizeText(priority) || null;
     if (status !== undefined) updateData.status = sanitizeText(status) || 'completed';
 
-    let query = supabase.from('chats').update(updateData);
+    let query = db.from('chats').update(updateData);
 
     if (ids && Array.isArray(ids)) {
       query = query.in('id', ids);

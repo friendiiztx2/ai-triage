@@ -132,22 +132,22 @@ function inferCategoryFromText(text: string, defaultCat?: string, categories: an
   if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
     return 'deposit_withdrawal';
   }
-  if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('ช้า') || raw.includes('หมุน')) {
+  if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('โหลดนาน') || raw.includes('โหลด') || raw.includes('ช้า') || raw.includes('หมุน')) {
     return 'page_load_freeze';
   }
   if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
     return 'login_issue';
   }
-  if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus')) {
+  if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus') || raw.includes('วันเกิด') || raw.includes('กิจกรรม')) {
     return 'promo_bonus';
   }
   if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp')) {
     return 'account_security';
   }
-  if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์')) {
+  if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์') || raw.includes('ทางเข้า')) {
     return 'access_blocked';
   }
-  if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน')) {
+  if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน') || raw.includes('เว็บบอร์ด') || raw.includes('แตก')) {
     return 'game_issue';
   }
 
@@ -161,22 +161,22 @@ function inferCategoryFromTextLine(text: string, defaultCat?: string, categories
   if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
     return 'deposit_withdrawal';
   }
-  if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('ช้า') || raw.includes('หมุน')) {
+  if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('โหลดนาน') || raw.includes('โหลด') || raw.includes('ช้า') || raw.includes('หมุน')) {
     return 'page_load_freeze';
   }
   if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
     return 'login_issue';
   }
-  if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus') || raw.includes('แนะนำเพื่อน')) {
+  if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus') || raw.includes('วันเกิด') || raw.includes('กิจกรรม')) {
     return 'promo_bonus';
   }
   if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp')) {
     return 'account_security';
   }
-  if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์')) {
+  if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์') || raw.includes('ทางเข้า')) {
     return 'access_blocked';
   }
-  if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน')) {
+  if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน') || raw.includes('เว็บบอร์ด') || raw.includes('แตก')) {
     return 'game_issue';
   }
 
