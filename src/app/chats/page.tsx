@@ -129,7 +129,7 @@ function inferCategoryFromText(text: string, defaultCat?: string, categories: an
 
   const raw = (text || '').toLowerCase();
   
-  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
+  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('เช็คยอด') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
     return 'deposit_withdrawal';
   }
   if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('โหลดนาน') || raw.includes('โหลด') || raw.includes('ช้า') || raw.includes('หมุน')) {
@@ -157,8 +157,7 @@ function inferCategoryFromText(text: string, defaultCat?: string, categories: an
 function inferCategoryFromTextLine(text: string, defaultCat?: string, categories: any[] = []) {
   const raw = (text || '').toLowerCase();
   
-  // 1. Keyword matching FIRST for individual lines to accurately separate issues in multi-message chats
-  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
+  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('เช็คยอด') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
     return 'deposit_withdrawal';
   }
   if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('โหลดนาน') || raw.includes('โหลด') || raw.includes('ช้า') || raw.includes('หมุน')) {
@@ -179,15 +178,17 @@ function inferCategoryFromTextLine(text: string, defaultCat?: string, categories
   if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน') || raw.includes('เว็บบอร์ด') || raw.includes('แตก')) {
     return 'game_issue';
   }
-
-  // 2. Fallback to defaultCat if provided and valid
-  if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
-    const cleanDefault = getBaseCatId(defaultCat);
-    if (cleanDefault === 'ui_rendering_issue') return 'page_load_freeze';
-    if (cleanDefault) return cleanDefault;
+  if (raw.includes('แอดมิน') || raw.includes('แอด') || raw.includes('ไม่ตอบ') || raw.includes('ตอบหน่อย') || raw.includes('ตอบแชท') || raw.includes('ตอบด้วย')) {
+    return 'other';
   }
 
-  return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
+  // Fallback to cleaner default or 'other'
+  const cleanDefault = getBaseCatId(defaultCat || '');
+  if (cleanDefault && cleanDefault !== 'deposit_withdrawal' && cleanDefault !== 'other' && cleanDefault !== 'not_a_problem') {
+    return cleanDefault;
+  }
+
+  return 'other';
 }
 
 function buildInitialIssues(targetChat: any, categories: any[] = []) {
