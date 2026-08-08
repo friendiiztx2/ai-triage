@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       summary: summaryText,
       category_id: category_id || null,
       priority: priority || 'low',
-      status: status || 'pending',
+      status: status || 'completed',
       company_id: compId,
       created_at: new Date().toISOString()
     };
