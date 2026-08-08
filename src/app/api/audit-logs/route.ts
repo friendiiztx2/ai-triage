@@ -48,7 +48,27 @@ const DEFAULT_AUDIT_LOGS = [
   }
 ];
 
+interface CacheEntry {
+  timestamp: number;
+  data: any;
+}
+const serverCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 15000;
+
 export async function GET(request: Request) {
+  const cacheKey = request.url;
+  const now = Date.now();
+  const cached = serverCache.get(cacheKey);
+
+  if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
+        'X-Cache': 'HIT'
+      }
+    });
+  }
+
   const db = supabaseAdmin || supabase;
   try {
     // 1. Attempt to fetch from 'activity_logs' table (Admin bypass RLS)
@@ -66,6 +86,7 @@ export async function GET(request: Request) {
         details: typeof item.details === 'object' ? (item.details.info || JSON.stringify(item.details)) : String(item.details),
         created_at: item.created_at || new Date().toISOString()
       }));
+      serverCache.set(cacheKey, { timestamp: now, data: mappedLogs });
       return NextResponse.json(mappedLogs);
     }
 
@@ -76,6 +97,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false });
 
     if (auditData && auditData.length > 0) {
+      serverCache.set(cacheKey, { timestamp: now, data: auditData });
       return NextResponse.json(auditData);
     }
 
@@ -86,6 +108,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  serverCache.clear();
   const db = supabaseAdmin || supabase;
   try {
     const body = await request.json();

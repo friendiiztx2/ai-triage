@@ -111,7 +111,13 @@ export async function GET(request: NextRequest) {
         };
       });
 
-      return NextResponse.json(items);
+      serverCache.set(cacheKey, { timestamp: now, data: items });
+      return NextResponse.json(items, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
+          'X-Cache': 'MISS'
+        }
+      });
     }
 
     // 1. Fetch from 'chats' table FIRST to preserve full untruncated conversation text
