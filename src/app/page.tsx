@@ -247,7 +247,7 @@ export default function OverviewPage() {
   const [otherCount, setOtherCount] = useState(0);
   
   // Filter settings
-  const [dateRange, setDateRange] = useState('30days');
+  const [dateRange, setDateRange] = useState('today');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
