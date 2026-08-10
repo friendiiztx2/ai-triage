@@ -440,7 +440,7 @@ export async function PATCH(request: NextRequest) {
     if (category_id !== undefined) updateData.category_id = sanitizeText(category_id) || null;
     if (priority !== undefined) updateData.priority = sanitizeText(priority) || null;
     if (status !== undefined) updateData.status = sanitizeText(status) || 'completed';
-    if (tags !== undefined) updateData.tags = tags;
+    if (tags !== undefined) updateData.keywords = Array.isArray(tags) ? tags : [tags];
 
     let query = db.from('chats').update(updateData);
 
