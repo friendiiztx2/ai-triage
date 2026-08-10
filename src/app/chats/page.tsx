@@ -157,7 +157,7 @@ function inferCategoryFromText(text: string, defaultCat?: string, categories: an
 function inferCategoryFromTextLine(text: string, defaultCat?: string, categories: any[] = []) {
   const raw = (text || '').toLowerCase();
   
-  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('เช็คยอด') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
+  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('เช็คยอด') || raw.includes('ข้ามวัน') || raw.includes('โกง') || raw.includes('รอนาน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
     return 'deposit_withdrawal';
   }
   if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('โหลดนาน') || raw.includes('โหลด') || raw.includes('ช้า') || raw.includes('หมุน')) {
@@ -178,7 +178,7 @@ function inferCategoryFromTextLine(text: string, defaultCat?: string, categories
   if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน') || raw.includes('เว็บบอร์ด') || raw.includes('แตก')) {
     return 'game_issue';
   }
-  if (raw.includes('แอดมิน') || raw.includes('แอด') || raw.includes('ไม่ตอบ') || raw.includes('ตอบหน่อย') || raw.includes('ตอบแชท') || raw.includes('ตอบด้วย')) {
+  if (raw.includes('แอดมิน') || raw.includes('แอด') || raw.includes('ไม่ตอบ') || raw.includes('ตอบหน่อย') || raw.includes('ตอบแชท') || raw.includes('ตอบด้วย') || raw.includes('ตอแหล') || raw.includes('ด่า')) {
     return 'other';
   }
 
