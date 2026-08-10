@@ -512,7 +512,18 @@ function FloatingChatWindow({
       let finalPriority = editPriority;
       if (hasDbIssues && issuesToSubmit.length > 0) {
         finalCategoryId = issuesToSubmit[0].category_id || '';
-        finalPriority = issuesToSubmit[0].priority || 'low';
+        
+        const prioOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
+        let maxVal = 1;
+        let maxPrio = 'low';
+        issuesToSubmit.forEach((issue) => {
+          const p = (issue.priority || 'low').toLowerCase();
+          if (prioOrder[p] && prioOrder[p] > maxVal) {
+            maxVal = prioOrder[p];
+            maxPrio = p;
+          }
+        });
+        finalPriority = maxPrio;
       }
 
       const newLog = {

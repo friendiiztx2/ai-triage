@@ -95,6 +95,18 @@ export async function GET(request: NextRequest) {
           }
         }
 
+        let detectedPri = (row.priority || '').toLowerCase();
+        if (!detectedPri || detectedPri === 'low') {
+          const raw = (convText + ' ' + (row.summary || '')).toLowerCase();
+          if (raw.includes('โกง') || raw.includes('อายัด') || raw.includes('แจ้งความ')) {
+            detectedPri = 'urgent';
+          } else if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอน') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || raw.includes('ชั่วโมง')) {
+            detectedPri = 'high';
+          } else if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า')) {
+            detectedPri = 'medium';
+          }
+        }
+
         let parsedTags: string[] = [];
         if (Array.isArray(row.keywords) && row.keywords.length > 0) {
           parsedTags = row.keywords;
@@ -102,13 +114,13 @@ export async function GET(request: NextRequest) {
           try { parsedTags = JSON.parse(row.keywords); } catch (e) {}
         }
         if (!parsedTags || parsedTags.length === 0) {
-          parsedTags = row.priority === 'urgent' 
+          parsedTags = detectedPri === 'urgent' 
             ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
-            : row.category_id === 'deposit_withdrawal'
+            : detectedCat === 'deposit_withdrawal'
             ? ['#รอสลิป']
-            : row.category_id === 'promo_bonus'
+            : detectedCat === 'promo_bonus'
             ? ['#ติดตามผล']
-            : row.priority === 'high'
+            : detectedPri === 'high'
             ? ['#เคสพิเศษ']
             : [];
         }
@@ -121,7 +133,7 @@ export async function GET(request: NextRequest) {
           conversation: convText,
           rawMessages: rawMsgs,
           category_id: detectedCat,
-          priority: row.priority || null,
+          priority: detectedPri,
           status: determineStatus(row),
           confidence: row.confidence || 95,
           company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
@@ -173,6 +185,18 @@ export async function GET(request: NextRequest) {
           convText = convText.join('\n');
         }
 
+        let detectedPri = (row.priority || '').toLowerCase();
+        if (!detectedPri || detectedPri === 'low') {
+          const raw = (convText + ' ' + (row.summary || '')).toLowerCase();
+          if (raw.includes('โกง') || raw.includes('อายัด') || raw.includes('แจ้งความ')) {
+            detectedPri = 'urgent';
+          } else if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอน') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || raw.includes('ชั่วโมง')) {
+            detectedPri = 'high';
+          } else if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า')) {
+            detectedPri = 'medium';
+          }
+        }
+
         let parsedTags: string[] = [];
         if (Array.isArray(row.keywords) && row.keywords.length > 0) {
           parsedTags = row.keywords;
@@ -180,13 +204,13 @@ export async function GET(request: NextRequest) {
           try { parsedTags = JSON.parse(row.keywords); } catch (e) {}
         }
         if (!parsedTags || parsedTags.length === 0) {
-          parsedTags = row.priority === 'urgent' 
+          parsedTags = detectedPri === 'urgent' 
             ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
             : row.category_id === 'deposit_withdrawal'
             ? ['#รอสลิป']
             : row.category_id === 'promo_bonus'
             ? ['#ติดตามผล']
-            : row.priority === 'high'
+            : detectedPri === 'high'
             ? ['#เคสพิเศษ']
             : [];
         }
@@ -197,7 +221,7 @@ export async function GET(request: NextRequest) {
           customer_name: row.customer_name || 'Anan (อนันต์)',
           summary: row.summary || 'ไม่มีข้อมูลสรุป',
           category_id: row.category_id || null,
-          priority: row.priority || null,
+          priority: detectedPri,
           status: itemStatus,
           confidence: row.confidence || 95,
           company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
