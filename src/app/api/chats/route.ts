@@ -401,7 +401,7 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, ids, category_id, priority, status } = body;
+    const { id, ids, category_id, priority, status, tags } = body;
     
     if (!id && (!ids || ids.length === 0)) {
       return NextResponse.json({ error: 'Chat ID or IDs are required' }, { status: 400 });
@@ -411,6 +411,7 @@ export async function PATCH(request: NextRequest) {
     if (category_id !== undefined) updateData.category_id = sanitizeText(category_id) || null;
     if (priority !== undefined) updateData.priority = sanitizeText(priority) || null;
     if (status !== undefined) updateData.status = sanitizeText(status) || 'completed';
+    if (tags !== undefined) updateData.tags = tags;
 
     let query = db.from('chats').update(updateData);
 

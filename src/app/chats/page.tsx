@@ -1060,8 +1060,38 @@ export default function ChatsPage() {
     setShowTagRenameModal(false);
   };
 
-  const handleUpdateTags = (chatId: string, newTags: string[]) => {
+  const handleUpdateTags = async (chatId: string, newTags: string[]) => {
+    // 1. Instant local UI update
     setChats(prev => prev.map(c => c.id === chatId ? { ...c, tags: newTags } : c));
+    setActiveWindows(prev => prev.map(w => w.chat?.id === chatId ? { ...w, chat: { ...w.chat, tags: newTags } } : w));
+
+    // 2. Persist to Supabase DB
+    try {
+      await fetch('/api/chats', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: chatId, tags: newTags })
+      });
+    } catch (e) {
+      console.warn('Failed to update tags in DB:', e);
+    }
+
+    // 3. Log to activity_logs table for Audit Trail
+    try {
+      const tagString = newTags && newTags.length > 0 ? newTags.join(', ') : 'ไม่มีแท็ก';
+      await fetch('/api/audit-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          admin_name: userProfile?.name || 'คุณอ้อ (Admin)',
+          admin_email: userProfile?.id || 'aor@system',
+          action: 'ติดแท็กป้ายกำกับเคส',
+          details: `อัปเดตแท็กป้ายกำกับสำหรับแชตไอดี ${chatId} เป็น: ${tagString}`
+        })
+      });
+    } catch (e) {
+      console.warn('Failed to log tag activity:', e);
+    }
   };
 
   const [loading, setLoading] = useState(true);
