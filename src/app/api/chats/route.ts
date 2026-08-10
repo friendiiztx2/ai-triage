@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (summaryOnly) {
       let lightQuery = db
         .from('chats')
-        .select('id, customer_id, summary, conversation, category_id, priority, status, confidence, company_id, created_at')
+        .select('id, customer_id, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords')
         .order('created_at', { ascending: false });
 
       if (targetId) {
@@ -95,6 +95,24 @@ export async function GET(request: NextRequest) {
           }
         }
 
+        let parsedTags: string[] = [];
+        if (Array.isArray(row.keywords) && row.keywords.length > 0) {
+          parsedTags = row.keywords;
+        } else if (typeof row.keywords === 'string' && row.keywords.startsWith('[')) {
+          try { parsedTags = JSON.parse(row.keywords); } catch (e) {}
+        }
+        if (!parsedTags || parsedTags.length === 0) {
+          parsedTags = row.priority === 'urgent' 
+            ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
+            : row.category_id === 'deposit_withdrawal'
+            ? ['#รอสลิป']
+            : row.category_id === 'promo_bonus'
+            ? ['#ติดตามผล']
+            : row.priority === 'high'
+            ? ['#เคสพิเศษ']
+            : [];
+        }
+
         return {
           id: row.id,
           customer_id: row.customer_id || 'cust-003',
@@ -107,6 +125,7 @@ export async function GET(request: NextRequest) {
           status: determineStatus(row),
           confidence: row.confidence || 95,
           company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+          tags: parsedTags,
           created_at: row.created_at || new Date().toISOString()
         };
       });
@@ -154,6 +173,24 @@ export async function GET(request: NextRequest) {
           convText = convText.join('\n');
         }
 
+        let parsedTags: string[] = [];
+        if (Array.isArray(row.keywords) && row.keywords.length > 0) {
+          parsedTags = row.keywords;
+        } else if (typeof row.keywords === 'string' && row.keywords.startsWith('[')) {
+          try { parsedTags = JSON.parse(row.keywords); } catch (e) {}
+        }
+        if (!parsedTags || parsedTags.length === 0) {
+          parsedTags = row.priority === 'urgent' 
+            ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
+            : row.category_id === 'deposit_withdrawal'
+            ? ['#รอสลิป']
+            : row.category_id === 'promo_bonus'
+            ? ['#ติดตามผล']
+            : row.priority === 'high'
+            ? ['#เคสพิเศษ']
+            : [];
+        }
+
         chatMap.set(id, {
           id: id,
           customer_id: row.customer_id || 'cust-003',
@@ -167,15 +204,7 @@ export async function GET(request: NextRequest) {
           rawMessages: rawMsgs,
           conversation: convText,
           chat_issues: [],
-          tags: row.priority === 'urgent' 
-            ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
-            : row.category_id === 'deposit_withdrawal'
-            ? ['#รอสลิป']
-            : row.category_id === 'promo_bonus'
-            ? ['#ติดตามผล']
-            : row.priority === 'high'
-            ? ['#เคสพิเศษ']
-            : [],
+          tags: parsedTags,
           created_at: row.created_at || new Date().toISOString()
         });
       });
