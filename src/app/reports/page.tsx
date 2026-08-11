@@ -536,7 +536,7 @@ export default function ReportsPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-bold text-slate-450 dark:text-slate-400 font-mono">{log.size}</span>
                     <button
-                      onClick={() => alert(language === 'th' ? 'กำลังดาวน์โหลดบันทึกเก่าจาก Archive Storage...' : 'Downloading archived spreadsheet from storage...')}
+                      onClick={() => handleExport()}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition cursor-pointer select-none ${
                         log.status === 'ready'
                           ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-750 text-indigo-650 dark:text-indigo-400 hover:bg-slate-50'
