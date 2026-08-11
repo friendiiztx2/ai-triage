@@ -97,61 +97,78 @@ export default function ReportsPage() {
     }
   };
 
-  // Perform client-side calculations based on active filters
-  useEffect(() => {
-    let result = chats;
+  // Helper to apply exact active filters to chat array
+  const applyActiveFilters = (sourceChats: any[]) => {
+    let result = sourceChats;
 
-    // 1. Company Filter
     if (userProfile?.role === 'system_admin' && selectedCompanyFilter !== 'all') {
       result = result.filter(c => c.company_id === selectedCompanyFilter);
     }
-
-    // 2. Status Filter
     if (selectedStatus !== 'all') {
       result = result.filter(c => (c.status || 'pending') === selectedStatus);
     }
-
-    // 3. Priority Filter
     if (selectedPriority !== 'all') {
       result = result.filter(c => (c.priority?.toLowerCase() || 'low') === selectedPriority);
     }
-
-    // 4. Category Filter
     if (selectedCategory !== 'all') {
       result = result.filter(c => {
         if (c.chat_issues && c.chat_issues.length > 0) {
           return c.chat_issues.some((issue: any) => issue.category_id === selectedCategory);
         }
-        return c.category_id === selectedCategory;
+        return c.category_id === selectedCategory || c.category === selectedCategory;
       });
     }
 
-    // 5. Date Filter
-    if (dateRange !== 'all') {
-      const now = new Date();
-      const cutoff = new Date();
+    // Strict Date Filtering (Asia/Bangkok local date comparison)
+    const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
 
-      if (dateRange === 'today') {
-        cutoff.setHours(0, 0, 0, 0);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateRange === '7days') {
-        cutoff.setDate(now.getDate() - 7);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateRange === '30days') {
-        cutoff.setDate(now.getDate() - 30);
-        result = result.filter(c => c.created_at && new Date(c.created_at) >= cutoff);
-      } else if (dateRange === 'custom' && startDate && endDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
+    if (dateRange === 'today') {
+      result = result.filter(c => {
+        if (!c.created_at) return false;
+        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+        return itemDateStr === todayLocalStr;
+      });
+    } else if (dateRange === '7days') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 7);
+      const cutoffStr = cutoff.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+      result = result.filter(c => {
+        if (!c.created_at) return false;
+        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+        return itemDateStr >= cutoffStr;
+      });
+    } else if (dateRange === '30days') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      const cutoffStr = cutoff.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+      result = result.filter(c => {
+        if (!c.created_at) return false;
+        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+        return itemDateStr >= cutoffStr;
+      });
+    } else if (dateRange === 'custom') {
+      if (startDate) {
         result = result.filter(c => {
           if (!c.created_at) return false;
-          const chatDate = new Date(c.created_at);
-          return chatDate >= start && chatDate <= end;
+          const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+          return itemDateStr >= startDate;
+        });
+      }
+      if (endDate) {
+        result = result.filter(c => {
+          if (!c.created_at) return false;
+          const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+          return itemDateStr <= endDate;
         });
       }
     }
+
+    return result;
+  };
+
+  // Perform client-side calculations based on active filters
+  useEffect(() => {
+    const result = applyActiveFilters(chats);
 
     setFilteredCount(result.length);
 
@@ -176,42 +193,9 @@ export default function ReportsPage() {
 
   }, [chats, dateRange, startDate, endDate, selectedCategory, selectedPriority, selectedStatus, selectedCompanyFilter, userProfile]);
 
-  // Export to CSV Function querying directly from Database View vw_triage_export
+  // Export to CSV Function using filtered chats matching UI preview exactly
   const handleExport = async () => {
-    let result = chats;
-
-    // 1. Attempt to query directly from Database View vw_triage_export as requested
-    try {
-      const { data: viewData, error: viewError } = await supabase
-        .from('vw_triage_export')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!viewError && viewData && viewData.length > 0) {
-        result = viewData;
-      }
-    } catch (e) {
-      console.warn('vw_triage_export view query fallback:', e);
-    }
-
-    // Apply exact active filters if needed
-    if (userProfile?.role === 'system_admin' && selectedCompanyFilter !== 'all') {
-      result = result.filter(c => c.company_id === selectedCompanyFilter);
-    }
-    if (selectedStatus !== 'all') {
-      result = result.filter(c => (c.status || 'pending') === selectedStatus);
-    }
-    if (selectedPriority !== 'all') {
-      result = result.filter(c => (c.priority?.toLowerCase() || 'low') === selectedPriority);
-    }
-    if (selectedCategory !== 'all') {
-      result = result.filter(c => {
-        if (c.chat_issues && c.chat_issues.length > 0) {
-          return c.chat_issues.some((issue: any) => issue.category_id === selectedCategory);
-        }
-        return c.category_id === selectedCategory || c.category === selectedCategory;
-      });
-    }
+    const result = applyActiveFilters(chats);
 
     if (result.length === 0) {
       alert(language === 'th' ? 'ไม่มีข้อมูลแชตที่สอดคล้องกับฟิลเตอร์การส่งออก' : 'No chat data matched your export filters.');
