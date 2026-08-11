@@ -38,7 +38,7 @@ export default function ReportsPage() {
   const [lowCount, setLowCount] = useState(0);
 
   // History list state (starts with pre-seeded past downloads logs)
-  const [exportHistory, setExportHistory] = useState([
+  const [exportHistory, setExportHistory] = useState<any[]>([
     { id: 'EXP-1092', name: 'chats_weekly_triage_report.csv', type: 'Weekly Summary', date: '2026-07-19T14:32:15Z', size: '14.2 KB', status: 'ready', user: 'aor' },
     { id: 'EXP-1091', name: 'july_customer_support_kpi.csv', type: 'Monthly Audit', date: '2026-07-15T11:05:40Z', size: '48.9 KB', status: 'ready', user: 'system_admin' },
     { id: 'EXP-1089', name: 'categories_distribution_dataset.csv', type: 'Category Stats', date: '2026-07-10T16:45:08Z', size: '8.4 KB', status: 'ready', user: 'aor' },
@@ -47,6 +47,16 @@ export default function ReportsPage() {
 
   // Initialize session & load dependencies
   useEffect(() => {
+    const savedLogs = localStorage.getItem('ai_triage_export_history');
+    if (savedLogs) {
+      try {
+        const parsed = JSON.parse(savedLogs);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setExportHistory(parsed);
+        }
+      } catch (e) {}
+    }
+
     const savedSession = localStorage.getItem('user_session');
     if (savedSession) {
       try {
@@ -291,21 +301,26 @@ export default function ReportsPage() {
       URL.revokeObjectURL(url);
     }, 500);
 
-    // Add new dynamic export record to list
+    // Add new dynamic export record to list and persist to localStorage
     const newId = `EXP-${Math.floor(1000 + Math.random() * 9000)}`;
     const sizeStr = `${(blob.size / 1024).toFixed(1)} KB`;
-    setExportHistory(prev => [
-      {
-        id: newId,
-        name: filename,
-        type: selectedCategory === 'all' ? 'All Mapped Export' : 'Filtered Triage',
-        date: new Date().toISOString(),
-        size: sizeStr,
-        status: 'ready',
-        user: userProfile?.name || 'admin'
-      },
-      ...prev
-    ]);
+    const newLogItem = {
+      id: newId,
+      name: filename,
+      type: dateRange === 'today' ? 'วันนี้ (Today Summary)' : (selectedCategory === 'all' ? 'All Mapped Export' : 'Filtered Triage'),
+      date: new Date().toISOString(),
+      size: sizeStr,
+      status: 'ready',
+      user: userProfile?.name || 'aor (Super Admin ของ Alpha Support)'
+    };
+
+    setExportHistory(prev => {
+      const updated = [newLogItem, ...prev];
+      try {
+        localStorage.setItem('ai_triage_export_history', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
 
     // Save audit log
     fetch('/api/audit', {
