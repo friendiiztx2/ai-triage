@@ -2279,10 +2279,17 @@ export default function ChatsPage() {
                               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                                 {new Date(chat.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
                               </span>
-                              <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold text-emerald-650 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40 mt-1 shadow-2xs" title="ระยะเวลาที่ AI ใช้ในการวิเคราะห์และแยกแยะสำเร็จ">
-                                <span>⏱️</span>
-                                <span>แยกแยะ {chat.processing_time_sec || getTriageDuration(chat.id)} วิ</span>
-                              </span>
+                              {chat.status === 'completed' ? (
+                                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold text-emerald-650 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40 mt-1 shadow-2xs" title="ระยะเวลาที่ AI ใช้ในการวิเคราะห์และแยกแยะสำเร็จ">
+                                  <span>⏱️</span>
+                                  <span>แยกแยะสำเร็จ ({chat.processing_time_sec || getTriageDuration(chat.id)}วิ)</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-955/30 px-1.5 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/40 mt-1 shadow-2xs" title="ระยะเวลาที่ AI ใช้ประมวลผลวิเคราะห์ปัญหาล่วงหน้า (อยู่ระหว่างรอแอดมินดำเนินการ)">
+                                  <span>🤖</span>
+                                  <span>AI วิเคราะห์ล่วงหน้า ({chat.processing_time_sec || getTriageDuration(chat.id)}วิ)</span>
+                                </span>
+                              )}
                             </div>
                           ) : '-'}
                         </td>
