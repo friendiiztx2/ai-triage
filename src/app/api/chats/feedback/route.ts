@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { chat_id, is_correct, liked_by, issues, category_id, priority, resolution } = body;
+    const { chat_id, is_correct, liked_by, issues, category_id, priority, resolution, status } = body;
 
     if (!chat_id) {
       return NextResponse.json({ error: 'chat_id is required' }, { status: 400 });
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { error: chatError } = await supabase
       .from('chats')
       .update({
-        status: 'completed',
+        status: status || 'completed',
         category_id: category_id || null,
         priority: priority || null,
         resolution: resolution || null

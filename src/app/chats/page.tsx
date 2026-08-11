@@ -1451,7 +1451,7 @@ export default function ChatsPage() {
     try {
       const [catRes, chatsRes] = await Promise.all([
         fetch('/api/categories'),
-        fetch('/api/chats?summary_only=true')
+        fetch('/api/chats?summary_only=true&nocache=' + Date.now())
       ]);
 
       if (catRes.ok) {
