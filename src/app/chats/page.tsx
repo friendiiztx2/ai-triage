@@ -1795,39 +1795,6 @@ export default function ChatsPage() {
 
       {/* ================= LIST VIEW ================= */}
       <div className="space-y-6">
-        {/* 🚨 Flashing Urgent Alert Beacon Banner */}
-        {(urgentCount > 0 || highCount > 0) && (
-          <div className="bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 text-white p-4 rounded-2xl shadow-xl border border-rose-400/40 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse select-none">
-            <div className="flex items-center gap-3">
-              <div className="relative flex h-5 w-5 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90"></span>
-                <span className="relative inline-flex rounded-full h-5 w-5 bg-rose-200 shadow-sm"></span>
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2 font-black text-sm tracking-wide">
-                  <span>🚨 สัญญาณเตือนเคสด่วนที่สุด (URGENT / HIGH RISK ALERT)</span>
-                  {urgentCount > 0 && <span className="bg-white text-rose-700 px-2.5 py-0.5 rounded-full text-xs font-black shadow-sm">URGENT: {urgentCount} เคส</span>}
-                  {highCount > 0 && <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full text-xs font-black shadow-sm">HIGH: {highCount} เคส</span>}
-                </div>
-                <p className="text-xs text-rose-100 mt-1 font-medium">
-                  ตรวจพบเคสความเสี่ยงสูงที่มีประเด็นด่วนมาก/อาจส่งผลกระทบ ต้องได้รับการตรวจสอบและคัดแยกโดยเร่งด่วน
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => {
-                  setPriorityFilter('urgent');
-                  playAlertTone(undefined, undefined, true);
-                }}
-                className="bg-white hover:bg-rose-50 text-rose-700 text-xs font-black px-4 py-2.5 rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5 active:scale-95"
-              >
-                <span>⚡ กรองดูเคสด่วนที่สุด ({urgentCount + highCount})</span>
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Filter Bar */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col gap-4 transition-all duration-250">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-start">
