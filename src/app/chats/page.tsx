@@ -1522,42 +1522,48 @@ export default function ChatsPage() {
     }
 
     // Filter by Date Range (Bulletproof YYYY-MM-DD comparison - No timezone bugs!)
-    const today = new Date();
-    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    // Strict Date Filtering (Asia/Bangkok local date comparison)
+    const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
 
     if (dateFilter === 'today') {
-      const res = result.filter(c => c.created_at && c.created_at.substring(0, 10) >= todayStr);
-      if (res.length > 0) {
-        result = res;
-      } else {
-        const cutoff7 = new Date();
-        cutoff7.setDate(today.getDate() - 60);
-        const cutoff7Str = cutoff7.getFullYear() + '-' + String(cutoff7.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff7.getDate()).padStart(2, '0');
-        const fallbackRes = result.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoff7Str);
-        if (fallbackRes.length > 0) result = fallbackRes;
-      }
+      result = result.filter(c => {
+        if (!c.created_at) return false;
+        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+        return itemDateStr === todayLocalStr;
+      });
     } else if (dateFilter === '7days') {
       const cutoff = new Date();
-      cutoff.setDate(today.getDate() - 7);
-      const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff.getDate()).padStart(2, '0');
-      const res = result.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoffStr);
-      if (res.length > 0) result = res;
+      cutoff.setDate(cutoff.getDate() - 7);
+      const cutoffStr = cutoff.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+      result = result.filter(c => {
+        if (!c.created_at) return false;
+        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+        return itemDateStr >= cutoffStr;
+      });
     } else if (dateFilter === '30days') {
       const cutoff = new Date();
-      cutoff.setDate(today.getDate() - 60); // 60-day buffer for test data in July
-      const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff.getDate()).padStart(2, '0');
-      const res = result.filter(c => c.created_at && c.created_at.substring(0, 10) >= cutoffStr);
-      if (res.length > 0) result = res;
-    } else if (dateFilter === 'custom' && startDate && endDate) {
-      const startStr = startDate;
-      const endStr = endDate;
-
-      const res = result.filter(c => {
+      cutoff.setDate(cutoff.getDate() - 60);
+      const cutoffStr = cutoff.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+      result = result.filter(c => {
         if (!c.created_at) return false;
-        const chatDateStr = c.created_at.substring(0, 10);
-        return chatDateStr >= startStr && chatDateStr <= endStr;
+        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+        return itemDateStr >= cutoffStr;
       });
-      result = res;
+    } else if (dateFilter === 'custom') {
+      if (startDate) {
+        result = result.filter(c => {
+          if (!c.created_at) return false;
+          const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+          return itemDateStr >= startDate;
+        });
+      }
+      if (endDate) {
+        result = result.filter(c => {
+          if (!c.created_at) return false;
+          const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+          return itemDateStr <= endDate;
+        });
+      }
     }
 
     if (auditFilter !== 'all') {
