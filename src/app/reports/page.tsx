@@ -194,7 +194,7 @@ export default function ReportsPage() {
   }, [chats, dateRange, startDate, endDate, selectedCategory, selectedPriority, selectedStatus, selectedCompanyFilter, userProfile]);
 
   // Export to CSV Function using filtered chats matching UI preview exactly
-  const handleExport = async () => {
+  const handleExport = () => {
     const result = applyActiveFilters(chats);
 
     if (result.length === 0) {
@@ -276,15 +276,20 @@ export default function ReportsPage() {
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
+    const link = document.createElement('a');
+    link.href = url;
     
     const formattedDate = new Date().toISOString().split('T')[0];
-    const filename = `AI_Triage_Report_${formattedDate}.csv`;
-    link.setAttribute("download", filename);
+    const filename = `AI_Triage_Report_${dateRange}_${formattedDate}.csv`;
+    link.setAttribute('download', filename);
+    link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 500);
 
     // Add new dynamic export record to list
     const newId = `EXP-${Math.floor(1000 + Math.random() * 9000)}`;
