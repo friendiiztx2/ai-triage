@@ -1232,13 +1232,15 @@ export default function ChatsPage() {
       'Customer Name',
       'Category',
       'Priority',
-      'Status',
+      'Status (สถานะ)',
+      'Issue Count (จำนวนเรื่อง)',
       'AI Confidence (%)',
       'Triage Duration',
+      'Audit Override (การแก้ไขโดยแอดมิน)',
       'AI Summary',
       'Tags',
       'Full Conversation',
-      'Created At'
+      'Created At (วันเวลา)'
     ];
     const rows = filteredChats.map(c => {
       const catObj = categories.find((cat: any) => cat.id === c.category_id);
@@ -1247,6 +1249,21 @@ export default function ChatsPage() {
       const summaryText = c.summary || c.problem_summary || '';
       const convText = typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : summaryText);
       const durationStr = getTriageDuration(c.id) + 's';
+      const statusLabel = c.status === 'completed' || c.status === 'solved' ? 'แยกแยะแล้ว (Completed)' : 'รอดำเนินการ (Pending)';
+      const issueCount = c.chat_issues ? `${c.chat_issues.length} เรื่อง` : '1 เรื่อง';
+      
+      let auditLogStr = 'ยืนยันตาม AI';
+      try {
+        if (c.resolution && c.resolution !== 'Pending' && c.resolution !== 'Solved') {
+          const parsed = JSON.parse(c.resolution);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const last = parsed[parsed.length - 1];
+            auditLogStr = `แก้ไขโดย ${last.user || 'แอดมิน'} (${last.action || 'Manual Edit'})`;
+          }
+        }
+      } catch (e) {}
+
+      const formattedDate = c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '';
 
       return [
         `"${c.id || ''}"`,
@@ -1254,13 +1271,15 @@ export default function ChatsPage() {
         `"${(c.customer_name || '').replace(/"/g, '""')}"`,
         `"${(catName).replace(/"/g, '""')}"`,
         `"${(c.priority || '').toUpperCase()}"`,
-        `"${c.status || 'pending'}"`,
+        `"${statusLabel}"`,
+        `"${issueCount}"`,
         `"${c.confidence || 95}%"`,
         `"${durationStr}"`,
+        `"${auditLogStr}"`,
         `"${summaryText.replace(/"/g, '""')}"`,
         `"${tagsStr.replace(/"/g, '""')}"`,
         `"${convText.replace(/"/g, '""')}"`,
-        `"${c.created_at || ''}"`
+        `"${formattedDate}"`
       ];
     });
 
@@ -1269,7 +1288,7 @@ export default function ChatsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ai-triage-summary-${new Date().toISOString().substring(0, 10)}.csv`;
+    a.download = `ai-triage-${dateFilter}-${new Date().toISOString().substring(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

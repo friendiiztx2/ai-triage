@@ -210,15 +210,17 @@ export default function ReportsPage() {
       'Phone',
       'Category',
       'Priority',
-      'Status',
+      'Status (สถานะ)',
       'Department',
+      'Issue Count (จำนวนเรื่อง)',
       'AI Confidence (%)',
       'Triage Duration',
+      'Audit Override (การแก้ไขโดยแอดมิน)',
       'AI Summary',
       'AI Reply',
       'Tags',
       'Full Conversation',
-      'Created At'
+      'Created At (วันเวลา)'
     ];
 
     // Build Rows
@@ -227,9 +229,23 @@ export default function ReportsPage() {
       const customerId = c.customer_id || c.cust_id || c.customer_name || c.name || '';
       const tagsStr = (c.tags || c.keywords || []).join(' ');
       const convText = typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : (c.summary || c.issue_summary || ''));
-      const statusStr = c.status || 'completed';
+      const statusLabel = c.status === 'completed' || c.status === 'solved' ? 'แยกแยะแล้ว (Completed)' : 'รอดำเนินการ (Pending)';
+      const issueCount = c.chat_issues ? `${c.chat_issues.length} เรื่อง` : '1 เรื่อง';
       const confidenceStr = (c.confidence || 95) + '%';
       const durationStr = '0.8s';
+
+      let auditLogStr = 'ยืนยันตาม AI';
+      try {
+        if (c.resolution && c.resolution !== 'Pending' && c.resolution !== 'Solved') {
+          const parsed = JSON.parse(c.resolution);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const last = parsed[parsed.length - 1];
+            auditLogStr = `แก้ไขโดย ${last.user || 'แอดมิน'} (${last.action || 'Manual Edit'})`;
+          }
+        }
+      } catch (e) {}
+
+      const formattedDate = c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '';
 
       return [
         c.chat_id || c.id || '',
@@ -238,15 +254,17 @@ export default function ReportsPage() {
         c.phone || c.customer_phone || '-',
         catName,
         (c.priority || 'low').toUpperCase(),
-        statusStr,
+        statusLabel,
         c.department || c.dept || 'Support',
+        issueCount,
         confidenceStr,
         durationStr,
+        auditLogStr,
         (c.summary || c.problem_summary || c.issue_summary || c.ai_summary || '').replace(/\n/g, ' '),
         (c.recommended_reply || c.ai_reply || c.reply || '').replace(/\n/g, ' '),
         tagsStr,
         convText.replace(/\n/g, ' '),
-        c.created_at ? new Date(c.created_at).toLocaleString('th-TH') : ''
+        formattedDate
       ];
     });
 
