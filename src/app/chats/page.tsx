@@ -1226,21 +1226,40 @@ export default function ChatsPage() {
   // Export CSV Handler with complete fields and UTF-8 BOM
   const handleExportCSV = () => {
     if (filteredChats.length === 0) return;
-    const headers = ['Chat ID', 'Customer Name', 'Category', 'Priority', 'Status', 'AI Summary', 'Tags', 'Created At'];
+    const headers = [
+      'Chat ID',
+      'Customer ID',
+      'Customer Name',
+      'Category',
+      'Priority',
+      'Status',
+      'AI Confidence (%)',
+      'Triage Duration',
+      'AI Summary',
+      'Tags',
+      'Full Conversation',
+      'Created At'
+    ];
     const rows = filteredChats.map(c => {
       const catObj = categories.find((cat: any) => cat.id === c.category_id);
       const catName = catObj ? catObj.name : (c.category_id || '-');
       const tagsStr = (c.tags || []).join(' ');
       const summaryText = c.summary || c.problem_summary || '';
+      const convText = typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : summaryText);
+      const durationStr = getTriageDuration(c.id) + 's';
 
       return [
         `"${c.id || ''}"`,
+        `"${c.customer_id || ''}"`,
         `"${(c.customer_name || '').replace(/"/g, '""')}"`,
         `"${(catName).replace(/"/g, '""')}"`,
-        `"${c.priority || ''}"`,
+        `"${(c.priority || '').toUpperCase()}"`,
         `"${c.status || 'pending'}"`,
+        `"${c.confidence || 95}%"`,
+        `"${durationStr}"`,
         `"${summaryText.replace(/"/g, '""')}"`,
         `"${tagsStr.replace(/"/g, '""')}"`,
+        `"${convText.replace(/"/g, '""')}"`,
         `"${c.created_at || ''}"`
       ];
     });
@@ -1250,7 +1269,7 @@ export default function ChatsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ai-triage-cases-${new Date().toISOString().substring(0, 10)}.csv`;
+    a.download = `ai-triage-summary-${new Date().toISOString().substring(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
