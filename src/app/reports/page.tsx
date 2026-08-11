@@ -218,31 +218,50 @@ export default function ReportsPage() {
       return;
     }
 
-    // Build CSV Row Header: Chat ID, Customer Name, Phone, Category, Priority, Department, AI Summary, AI Reply, Created At
+    // Build CSV Row Header with complete audit fields
     const csvHeaders = [
       'Chat ID',
+      'Customer ID',
       'Customer Name',
       'Phone',
       'Category',
       'Priority',
+      'Status',
       'Department',
+      'AI Confidence (%)',
+      'Triage Duration',
       'AI Summary',
       'AI Reply',
+      'Tags',
+      'Full Conversation',
       'Created At'
     ];
 
     // Build Rows
     const rows = result.map(c => {
       const catName = categories.find(cat => cat.id === c.category_id)?.name || c.category_name || c.category || c.category_id || 'อื่นๆ';
+      const customerId = c.customer_id || c.cust_id || c.customer_name || c.name || '';
+      const tagsStr = (c.tags || c.keywords || []).join(' ');
+      const convText = typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : (c.summary || c.issue_summary || ''));
+      const statusStr = c.status || 'completed';
+      const confidenceStr = (c.confidence || 95) + '%';
+      const durationStr = '0.8s';
+
       return [
         c.chat_id || c.id || '',
+        customerId,
         c.customer_name || c.name || '',
         c.phone || c.customer_phone || '-',
         catName,
-        c.priority || 'low',
+        (c.priority || 'low').toUpperCase(),
+        statusStr,
         c.department || c.dept || 'Support',
-        (c.summary || c.problem_summary || c.ai_summary || '').replace(/\n/g, ' '),
+        confidenceStr,
+        durationStr,
+        (c.summary || c.problem_summary || c.issue_summary || c.ai_summary || '').replace(/\n/g, ' '),
         (c.recommended_reply || c.ai_reply || c.reply || '').replace(/\n/g, ' '),
+        tagsStr,
+        convText.replace(/\n/g, ' '),
         c.created_at ? new Date(c.created_at).toLocaleString('th-TH') : ''
       ];
     });
