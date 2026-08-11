@@ -1982,6 +1982,12 @@ export default function ChatsPage() {
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(AI Summary)</span>
                       </div>
                     </th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap text-center">
+                      <div className="flex flex-col leading-tight items-center">
+                        <span>{language === 'th' ? 'ประวัติลูกค้า' : 'History'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(History)</span>
+                      </div>
+                    </th>
                     <th className="px-1.5 py-2.5 whitespace-nowrap">
                       <div className="flex flex-col leading-tight">
                         <span>{language === 'th' ? 'หมวดหมู่' : 'Category'}</span>
