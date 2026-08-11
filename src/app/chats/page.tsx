@@ -2150,22 +2150,9 @@ export default function ChatsPage() {
                           )}
                         </td>
                         
-                        {/* Summary with AI Confidence Badge */}
+                        {/* Summary */}
                         <td className="px-2 py-3 max-w-[190px] text-slate-600 dark:text-slate-300 font-medium">
-                          <div className="flex flex-col gap-1.5">
-                            <span className="truncate block">{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
-                            {chat.confidence !== undefined && chat.confidence !== null && (
-                              <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold w-max px-2 py-0.5 rounded-full border leading-none select-none ${
-                                chat.confidence >= 85 
-                                  ? 'bg-emerald-50 text-emerald-600 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30' 
-                                  : chat.confidence >= 70 
-                                    ? 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-955/20 dark:text-amber-400 dark:border-amber-900/30' 
-                                    : 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-955/20 dark:text-rose-455 dark:border-rose-900/30'
-                              }`}>
-                                <Sparkles size={8} className="shrink-0" /> AI มั่นใจ {chat.confidence}%
-                              </span>
-                            )}
-                          </div>
+                          <span className="truncate block">{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
                         </td>
 
                         {/* Customer 360 Contact History */}
@@ -2269,7 +2256,7 @@ export default function ChatsPage() {
                           </button>
                         </td>
 
-                        {/* Time & Triage Latency Duration */}
+                        {/* Time */}
                         <td className="px-2 py-3 text-xs text-slate-500 dark:text-slate-400 font-semibold whitespace-nowrap text-right">
                           {chat.created_at ? (
                             <div className="flex flex-col items-end leading-tight text-[11px]">
@@ -2279,17 +2266,6 @@ export default function ChatsPage() {
                               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                                 {new Date(chat.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
                               </span>
-                              {chat.status === 'completed' ? (
-                                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold text-emerald-650 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40 mt-1 shadow-2xs" title="ระยะเวลาที่ AI ใช้ในการวิเคราะห์และแยกแยะสำเร็จ">
-                                  <span>⏱️</span>
-                                  <span>แยกแยะสำเร็จ ({chat.processing_time_sec || getTriageDuration(chat.id)}วิ)</span>
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-955/30 px-1.5 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/40 mt-1 shadow-2xs" title="ระยะเวลาที่ AI ใช้ประมวลผลวิเคราะห์ปัญหาล่วงหน้า (อยู่ระหว่างรอแอดมินดำเนินการ)">
-                                  <span>🤖</span>
-                                  <span>AI วิเคราะห์ล่วงหน้า ({chat.processing_time_sec || getTriageDuration(chat.id)}วิ)</span>
-                                </span>
-                              )}
                             </div>
                           ) : '-'}
                         </td>
