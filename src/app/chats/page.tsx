@@ -624,9 +624,50 @@ function FloatingChatWindow({
       );
     }
 
+    // Extract any image URLs in text or media_urls
+    const imageUrlRegex = /(https?:\/\/[^\s\n"']+\.(?:jpg|jpeg|png|webp|gif|svg))/gi;
+    const foundImages: string[] = [];
+    if (chat.media_urls && Array.isArray(chat.media_urls)) {
+      foundImages.push(...chat.media_urls);
+    }
+    const matches = text.match(imageUrlRegex);
+    if (matches) {
+      matches.forEach((url: string) => {
+        if (!foundImages.includes(url)) foundImages.push(url);
+      });
+    }
+
     return (
-      <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-750 text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line select-text min-h-[140px] max-h-[350px] overflow-y-auto">
-        {text}
+      <div className="space-y-3">
+        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-750 text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line select-text min-h-[140px] max-h-[350px] overflow-y-auto">
+          {text}
+        </div>
+
+        {/* 🖼️ Attached Image Slips / Screenshot Previews */}
+        {foundImages.length > 0 && (
+          <div className="bg-indigo-50/60 dark:bg-indigo-950/30 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/40 space-y-2">
+            <span className="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide flex items-center gap-1">
+              📷 รูปภาพสื่อ / สลิปโอนเงินแนบ ({foundImages.length} ไฟล์)
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {foundImages.map((imgUrl, iidx) => (
+                <a
+                  key={iidx}
+                  href={imgUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative block w-24 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-black/5 hover:opacity-90 transition shadow-xs"
+                  title="คลิกเพื่อดูรูปภาพสลิปขนาดเต็ม"
+                >
+                  <img src={imgUrl} alt={`Slip ${iidx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                  <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] font-bold text-center py-0.5 opacity-0 group-hover:opacity-100 transition">
+                    ดูสลิปขนาดเต็ม 🔍
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
