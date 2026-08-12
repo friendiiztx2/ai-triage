@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await db
       .from('chats')
-      .upsert([newChatRow])
+      .upsert([newChatRow], { onConflict: 'id' })
       .select()
       .abortSignal(controller.signal);
 
