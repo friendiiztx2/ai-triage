@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
     const newChatRow = {
       id: chatId,
       customer_id: custId,
-      customer_name: body.customer_name || body.name || undefined,
       conversation: conversationStr,
       summary: summaryText,
       category_id: category_id || null,
