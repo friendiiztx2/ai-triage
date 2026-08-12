@@ -29,14 +29,30 @@ export async function POST(request: NextRequest) {
     const compId = company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
     const summaryText = summary || conversationStr.split('\n')[0] || 'ลูกค้าสอบถามปัญหาผ่านแชท';
 
+    // 1. Ensure Customer Record exists in customers table (Auto-Registration for Live Chats)
+    try {
+      const custName = body.customer_name || body.name || `ลูกค้า #${custId}`;
+      await db
+        .from('customers')
+        .upsert([{
+          id: custId,
+          name: custName,
+          company_id: compId,
+          created_at: new Date().toISOString()
+        }], { onConflict: 'id' });
+    } catch (custErr) {
+      console.warn('Non-blocking customer upsert notice:', custErr);
+    }
+
     const newChatRow = {
       id: chatId,
       customer_id: custId,
+      customer_name: body.customer_name || body.name || undefined,
       conversation: conversationStr,
       summary: summaryText,
       category_id: category_id || null,
       priority: priority || 'low',
-      status: status || 'completed',
+      status: status || 'pending',
       company_id: compId,
       created_at: new Date().toISOString()
     };
