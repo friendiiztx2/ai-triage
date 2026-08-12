@@ -216,33 +216,55 @@ export default function ReportsPage() {
     const csvHeaders = [
       'Chat ID',
       'Customer ID',
-      'Customer Name',
-      'Phone',
-      'Category',
-      'Priority',
+      'Customer Name (ชื่อลูกค้า)',
+      'Customer History (ประวัติลูกค้า)',
+      'Category (หมวดหมู่ภาษาไทย)',
+      'Priority (ระดับความด่วน)',
       'Status (สถานะ)',
-      'Department',
       'Issue Count (จำนวนเรื่อง)',
-      'AI Confidence (%)',
-      'Triage Duration',
       'Audit Override (การแก้ไขโดยแอดมิน)',
-      'AI Summary',
-      'AI Reply',
-      'Tags',
-      'Full Conversation',
+      'AI Summary (ข้อสรุปปัญหา)',
+      'AI Reply (คำตอบแนะนำจาก AI)',
+      'Tags (ป้ายกำกับ)',
+      'Full Conversation (บทสนทนา)',
       'Created At (วันเวลา)'
     ];
 
     // Build Rows
     const rows = result.map(c => {
-      const catName = categories.find(cat => cat.id === c.category_id)?.name || c.category_name || c.category || c.category_id || 'อื่นๆ';
-      const customerId = c.customer_id || c.cust_id || c.customer_name || c.name || '';
+      const foundCat = categories.find((cat: any) => cat.id === c.category_id || cat.id?.endsWith(`:${c.category_id}`));
+      let catName = foundCat ? foundCat.name : (c.category_name || c.category);
+      if (!catName || catName === c.category_id) {
+        const catIdStr = c.category_id || '';
+        if (catIdStr.includes('page_load_freeze') || catIdStr.includes('ui_rendering')) catName = 'หน้าเว็บค้าง / โหลดหมุน';
+        else if (catIdStr.includes('deposit_withdrawal')) catName = 'ฝากถอนเงิน / โอนเงิน';
+        else if (catIdStr.includes('login_issue')) catName = 'เข้าใช้งาน / เข้าสู่ระบบ';
+        else if (catIdStr.includes('game_issue') || catIdStr.includes('gameplay')) catName = 'ปัญหาเกม / ระบบเดิมพัน';
+        else if (catIdStr.includes('promo_bonus')) catName = 'โปรโมชั่น / โบนัส';
+        else if (catIdStr.includes('account_security')) catName = 'ความปลอดภัยของบัญชี';
+        else if (catIdStr.includes('api_error')) catName = 'ข้อผิดพลาดระบบ API';
+        else catName = catIdStr || 'อื่นๆ';
+      }
+
+      const customerId = c.customer_id || c.cust_id || '';
+      const custName = c.customer_name || c.name || (
+        customerId === 'cust-003' ? 'Anan (อนันต์)' :
+        customerId === 'cust-001' ? 'Somchai (สมชาย)' :
+        customerId === 'cust-002' ? 'Somsri (สมศรี)' :
+        `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`
+      );
+
+      const repeatCount = chats.filter(item => 
+        (customerId && (item.customer_id === customerId || item.cust_id === customerId)) ||
+        (custName && item.customer_name === custName) ||
+        item.id === c.id
+      ).length;
+      const historyStr = repeatCount > 1 ? `ทักซ้ำ ${repeatCount} เคส` : 'ทักครั้งแรก';
+
       const tagsStr = (c.tags || c.keywords || []).join(' ');
       const convText = typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : (c.summary || c.issue_summary || ''));
       const statusLabel = c.status === 'completed' || c.status === 'solved' ? 'แยกแยะแล้ว (Completed)' : 'รอดำเนินการ (Pending)';
       const issueCount = c.chat_issues ? `${c.chat_issues.length} เรื่อง` : '1 เรื่อง';
-      const confidenceStr = (c.confidence || 95) + '%';
-      const durationStr = '0.8s';
 
       let auditLogStr = 'ยืนยันตาม AI';
       try {
@@ -260,15 +282,12 @@ export default function ReportsPage() {
       return [
         c.chat_id || c.id || '',
         customerId,
-        c.customer_name || c.name || '',
-        c.phone || c.customer_phone || '-',
+        custName,
+        historyStr,
         catName,
         (c.priority || 'low').toUpperCase(),
         statusLabel,
-        c.department || c.dept || 'Support',
         issueCount,
-        confidenceStr,
-        durationStr,
         auditLogStr,
         (c.summary || c.problem_summary || c.issue_summary || c.ai_summary || '').replace(/\n/g, ' '),
         (c.recommended_reply || c.ai_reply || c.reply || '').replace(/\n/g, ' '),

@@ -1297,26 +1297,50 @@ export default function ChatsPage() {
     const headers = [
       'Chat ID',
       'Customer ID',
-      'Customer Name',
-      'Category',
-      'Priority',
+      'Customer Name (ชื่อลูกค้า)',
+      'Customer History (ประวัติลูกค้า)',
+      'Category (หมวดหมู่ภาษาไทย)',
+      'Priority (ระดับความด่วน)',
       'Status (สถานะ)',
       'Issue Count (จำนวนเรื่อง)',
-      'AI Confidence (%)',
-      'Triage Duration',
       'Audit Override (การแก้ไขโดยแอดมิน)',
-      'AI Summary',
-      'Tags',
-      'Full Conversation',
+      'AI Summary (ข้อสรุปปัญหา)',
+      'Tags (ป้ายกำกับ)',
+      'Full Conversation (บทสนทนา)',
       'Created At (วันเวลา)'
     ];
     const rows = filteredChats.map(c => {
-      const catObj = categories.find((cat: any) => cat.id === c.category_id);
-      const catName = catObj ? catObj.name : (c.category_id || '-');
+      const foundCat = categories.find((cat: any) => cat.id === c.category_id || getBaseCatId(cat.id) === getBaseCatId(c.category_id));
+      let catName = foundCat ? foundCat.name : '';
+      if (!catName) {
+        const base = getBaseCatId(c.category_id);
+        if (base === 'page_load_freeze' || base === 'ui_rendering_issue') catName = 'หน้าเว็บค้าง / โหลดหมุน';
+        else if (base === 'deposit_withdrawal') catName = 'ฝากถอนเงิน / โอนเงิน';
+        else if (base === 'login_issue') catName = 'เข้าใช้งาน / เข้าสู่ระบบ';
+        else if (base === 'game_issue' || base === 'gameplay_issue') catName = 'ปัญหาเกม / ระบบเดิมพัน';
+        else if (base === 'promo_bonus') catName = 'โปรโมชั่น / โบนัส';
+        else if (base === 'account_security') catName = 'ความปลอดภัยของบัญชี';
+        else if (base === 'api_error') catName = 'ข้อผิดพลาดระบบ API';
+        else catName = c.category_id || 'อื่นๆ';
+      }
+
+      const custName = c.customer_name || (
+        c.customer_id === 'cust-003' ? 'Anan (อนันต์)' :
+        c.customer_id === 'cust-001' ? 'Somchai (สมชาย)' :
+        c.customer_id === 'cust-002' ? 'Somsri (สมศรี)' :
+        `ลูกค้า #${c.customer_id || c.id?.substring(0, 8)}`
+      );
+
+      const repeatCount = chats.filter(item => 
+        (c.customer_id && item.customer_id === c.customer_id) ||
+        (c.customer_name && item.customer_name === c.customer_name) ||
+        item.id === c.id
+      ).length;
+      const historyStr = repeatCount > 1 ? `ทักซ้ำ ${repeatCount} เคส` : 'ทักครั้งแรก';
+
       const tagsStr = (c.tags || []).join(' ');
-      const summaryText = c.summary || c.problem_summary || '';
-      const convText = typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : summaryText);
-      const durationStr = getTriageDuration(c.id) + 's';
+      const summaryText = (c.summary || c.problem_summary || '').replace(/\n/g, ' ');
+      const convText = (typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : summaryText)).replace(/\n/g, ' ');
       const statusLabel = c.status === 'completed' || c.status === 'solved' ? 'แยกแยะแล้ว (Completed)' : 'รอดำเนินการ (Pending)';
       const issueCount = c.chat_issues ? `${c.chat_issues.length} เรื่อง` : '1 เรื่อง';
       
@@ -1336,13 +1360,12 @@ export default function ChatsPage() {
       return [
         `"${c.id || ''}"`,
         `"${c.customer_id || ''}"`,
-        `"${(c.customer_name || '').replace(/"/g, '""')}"`,
+        `"${(custName).replace(/"/g, '""')}"`,
+        `"${historyStr}"`,
         `"${(catName).replace(/"/g, '""')}"`,
         `"${(c.priority || '').toUpperCase()}"`,
         `"${statusLabel}"`,
         `"${issueCount}"`,
-        `"${c.confidence || 95}%"`,
-        `"${durationStr}"`,
         `"${auditLogStr}"`,
         `"${summaryText.replace(/"/g, '""')}"`,
         `"${tagsStr.replace(/"/g, '""')}"`,
