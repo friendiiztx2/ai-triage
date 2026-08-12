@@ -606,17 +606,17 @@ function FloatingChatWindow({
   };
 
   const renderConversation = () => {
-    let text = chat.conversation;
+    let rawText = chat.conversation;
     
-    if (!text && selectedChatIssues && selectedChatIssues.length > 0) {
-      text = selectedChatIssues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
-    } else if (!text && chat.chat_issues && chat.chat_issues.length > 0) {
-      text = chat.chat_issues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
-    } else if (!text && chat.summary) {
-      text = `ลูกค้า: ${chat.summary}`;
+    if (!rawText && selectedChatIssues && selectedChatIssues.length > 0) {
+      rawText = selectedChatIssues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
+    } else if (!rawText && chat.chat_issues && chat.chat_issues.length > 0) {
+      rawText = chat.chat_issues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
+    } else if (!rawText && chat.summary) {
+      rawText = `ลูกค้า: ${chat.summary}`;
     }
 
-    if (!text) {
+    if (!rawText) {
       return (
         <div className="text-slate-400 dark:text-slate-500 italic text-xs p-4 text-center">
           ไม่มีประวัติบทสนทนา
@@ -624,45 +624,72 @@ function FloatingChatWindow({
       );
     }
 
-    // Extract any image URLs in text or media_urls
-    const imageUrlRegex = /(https?:\/\/[^\s\n"']+\.(?:jpg|jpeg|png|webp|gif|svg))/gi;
+    // Robust Image URL Extraction (handles query params & all image types)
     const foundImages: string[] = [];
     if (chat.media_urls && Array.isArray(chat.media_urls)) {
       foundImages.push(...chat.media_urls);
     }
-    const matches = text.match(imageUrlRegex);
-    if (matches) {
-      matches.forEach((url: string) => {
-        if (!foundImages.includes(url)) foundImages.push(url);
-      });
-    }
+
+    const genericUrlRegex = /(https?:\/\/[^\s\n"']+)/gi;
+    const urlMatches = rawText.match(genericUrlRegex) || [];
+    urlMatches.forEach((url: string) => {
+      const cleanUrl = url.trim().replace(/[,\.\)]$/, '');
+      const isImg = /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(cleanUrl) ||
+                    /photo-/i.test(cleanUrl) ||
+                    /images/i.test(cleanUrl) ||
+                    /slip/i.test(cleanUrl) ||
+                    /storage/i.test(cleanUrl);
+      if (isImg && !foundImages.includes(cleanUrl)) {
+        foundImages.push(cleanUrl);
+      }
+    });
+
+    // Clean text display: strip raw image URLs so message text is clean
+    let cleanedText = rawText;
+    foundImages.forEach(imgUrl => {
+      cleanedText = cleanedText.replace(imgUrl, '').trim();
+    });
 
     return (
       <div className="space-y-3">
-        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-750 text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line select-text min-h-[140px] max-h-[350px] overflow-y-auto">
-          {text}
+        {/* Chat Text Bubble */}
+        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-750 text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line select-text min-h-[100px] max-h-[300px] overflow-y-auto">
+          {cleanedText || <span className="text-slate-400 dark:text-slate-555 italic">ลูกค้าส่งรูปภาพแนบมาในบทสนทนา</span>}
         </div>
 
-        {/* 🖼️ Attached Image Slips / Screenshot Previews */}
+        {/* 🖼️ Embedded Real Image Preview Cards */}
         {foundImages.length > 0 && (
-          <div className="bg-indigo-50/60 dark:bg-indigo-950/30 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/40 space-y-2">
-            <span className="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide flex items-center gap-1">
-              📷 รูปภาพสื่อ / สลิปโอนเงินแนบ ({foundImages.length} ไฟล์)
-            </span>
-            <div className="flex flex-wrap gap-2">
+          <div className="bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-indigo-950/40 dark:to-purple-950/40 p-3.5 rounded-2xl border border-indigo-150 dark:border-indigo-900/50 space-y-2.5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-indigo-800 dark:text-indigo-300 uppercase tracking-wide flex items-center gap-1.5">
+                <span>🖼️</span>
+                <span>รูปภาพแนบจากลูกค้า / สภาพหน้าจอขัดข้อง ({foundImages.length} รูป)</span>
+              </span>
+              <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400">คลิกเพื่อดูรูปใหญ่</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {foundImages.map((imgUrl, iidx) => (
                 <a
                   key={iidx}
                   href={imgUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative block w-24 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-black/5 hover:opacity-90 transition shadow-xs"
-                  title="คลิกเพื่อดูรูปภาพสลิปขนาดเต็ม"
+                  className="group relative block rounded-xl overflow-hidden border border-indigo-200/80 dark:border-indigo-800/60 bg-black/10 hover:shadow-md transition duration-200 aspect-video"
+                  title="คลิกเพื่อเปิดรูปภาพขนาดใหญ่ความละเอียดสูง"
                 >
-                  <img src={imgUrl} alt={`Slip ${iidx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition" />
-                  <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] font-bold text-center py-0.5 opacity-0 group-hover:opacity-100 transition">
-                    ดูสลิปขนาดเต็ม 🔍
-                  </span>
+                  <img 
+                    src={imgUrl} 
+                    alt={`Customer Upload ${iidx + 1}`} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    onError={(e: any) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-between p-2 text-white">
+                    <span className="text-[10px] font-bold">🔍 ดูรูปภาพขนาดเต็ม</span>
+                    <span className="text-[9px] bg-white/30 backdrop-blur-xs px-1.5 py-0.5 rounded font-mono">#รูปภาพ-{iidx + 1}</span>
+                  </div>
                 </a>
               ))}
             </div>
