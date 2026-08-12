@@ -8,30 +8,42 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    let { id, customer_id, conversation, summary, category_id, priority, status, company_id } = body;
 
-    // Normalize conversation format (support both String and Array of strings)
+    // Robust Payload Extraction for Onebox & Third-Party Webhooks
+    const rawConv = body.conversation || body.messages || body.message || body.text || body.content || body.dialogue;
+    const rawCustId = body.customer_id || body.customerId || body.sender_id || body.senderId || body.user_id || body.userId;
+    const rawCustName = body.customer_name || body.customerName || body.name || body.sender_name || body.senderName || (body.customer && body.customer.name);
+    const rawMedia = body.media_urls || body.attachments || body.files || body.images;
+
     let conversationStr = '';
-    if (Array.isArray(conversation)) {
-      conversationStr = conversation.join('\n');
-    } else if (typeof conversation === 'string') {
-      conversationStr = conversation;
-    } else if (summary) {
-      conversationStr = `ลูกค้า: ${summary}`;
+    if (Array.isArray(rawConv)) {
+      conversationStr = rawConv.map(item => typeof item === 'string' ? item : (item.text || item.content || item.message || JSON.stringify(item))).join('\n');
+    } else if (typeof rawConv === 'string') {
+      conversationStr = rawConv;
+    } else if (body.summary) {
+      conversationStr = `ลูกค้า: ${body.summary}`;
     }
 
-    if (!conversationStr && !summary) {
-      return NextResponse.json({ error: 'โปรดระบุบทสนทนา (conversation) หรือสรุป (summary)' }, { status: 400 });
+    // Attach rawMedia URLs to conversationStr if provided
+    if (Array.isArray(rawMedia) && rawMedia.length > 0) {
+      const mediaLinksStr = rawMedia.map((m: any) => typeof m === 'string' ? m : (m.url || m.link || m.src)).filter(Boolean).join('\n');
+      if (mediaLinksStr && !conversationStr.includes(mediaLinksStr)) {
+        conversationStr += `\n${mediaLinksStr}`;
+      }
     }
 
-    const chatId = id || `chat-${Date.now()}`;
-    const custId = customer_id || 'cust-001';
-    const compId = company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
-    const summaryText = summary || conversationStr.split('\n')[0] || 'ลูกค้าสอบถามปัญหาผ่านแชท';
+    if (!conversationStr && !body.summary) {
+      return NextResponse.json({ error: 'โปรดระบุบทสนทนา (conversation / text / messages) หรือสรุป (summary)' }, { status: 400 });
+    }
+
+    const chatId = body.id || body.chat_id || body.chatId || `chat-${Date.now()}`;
+    const custId = rawCustId || 'cust-001';
+    const compId = body.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+    const summaryText = body.summary || conversationStr.split('\n')[0] || 'ลูกค้าสอบถามปัญหาผ่านแชท';
 
     // 1. Smart AI Auto-Categorization & Priority inference if not provided
-    let finalCat = category_id || null;
-    let finalPri = priority || 'low';
+    let finalCat = body.category_id || null;
+    let finalPri = body.priority || 'low';
 
     if (!finalCat) {
       if (conversationStr.includes('ถอน') || conversationStr.includes('ฝาก') || conversationStr.includes('โอน') || conversationStr.includes('บัญชี')) {
@@ -48,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Ensure Customer Record exists in customers table (Auto-Registration for Live Chats)
     try {
-      const custName = body.customer_name || body.name || `ลูกค้า #${custId}`;
+      const custName = rawCustName || `ลูกค้า #${custId}`;
       await db
         .from('customers')
         .upsert([{
