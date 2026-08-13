@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       summary: summaryText,
       category_id: finalCat,
       priority: finalPri,
-      status: status || 'completed',
+      status: body.status || 'completed',
       company_id: compId,
       created_at: new Date().toISOString()
     };
@@ -90,6 +90,21 @@ export async function POST(request: NextRequest) {
       .upsert([newChatRow], { onConflict: 'id' })
       .select()
       .abortSignal(controller.signal);
+
+    // Ensure chat_issues table entry is populated for multi-issue breakdown tracking
+    try {
+      await db
+        .from('chat_issues')
+        .upsert([{
+          chat_id: chatId,
+          summary: summaryText,
+          category_id: finalCat,
+          priority: finalPri,
+          created_at: new Date().toISOString()
+        }], { onConflict: 'chat_id' });
+    } catch (issueErr) {
+      console.warn('Non-blocking chat_issues notice:', issueErr);
+    }
 
     clearTimeout(timeoutId);
 
