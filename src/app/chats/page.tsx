@@ -2125,12 +2125,6 @@ export default function ChatsPage() {
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(AI Summary)</span>
                       </div>
                     </th>
-                    <th className="px-1.5 py-2.5 whitespace-nowrap text-center">
-                      <div className="flex flex-col leading-tight items-center">
-                        <span>{language === 'th' ? 'ประวัติลูกค้า' : 'History'}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(History)</span>
-                      </div>
-                    </th>
                     <th className="px-1.5 py-2.5 whitespace-nowrap">
                       <div className="flex flex-col leading-tight">
                         <span>{language === 'th' ? 'หมวดหมู่' : 'Category'}</span>
@@ -2213,36 +2207,6 @@ export default function ChatsPage() {
                           <span className="truncate block">{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
                         </td>
 
-                        {/* Customer 360 Contact History */}
-                        <td className="px-2 py-3">
-                          {(() => {
-                            const count = chats.filter(c => 
-                              (chat.customer_id && c.customer_id === chat.customer_id) ||
-                              (chat.customer_name && c.customer_name === chat.customer_name) ||
-                              c.id === chat.id
-                            ).length;
-
-                            if (count > 1) {
-                              return (
-                                <span 
-                                  className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50 shadow-sm whitespace-nowrap"
-                                  title={`ลูกค้ารายนี้มีประวัติทักเข้ามาในระบบรวม ${count} เคส`}
-                                >
-                                  <span>🔁 ทักซ้ำ {count} เคส</span>
-                                </span>
-                              );
-                            }
-
-                            return (
-                              <span 
-                                className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50 shadow-sm whitespace-nowrap"
-                                title="ลูกค้ารายนี้ทักเข้ามาเป็นครั้งแรก"
-                              >
-                                <span>✨ ทักครั้งแรก</span>
-                              </span>
-                            );
-                          })()}
-                        </td>
                         {/* Category */}
                         <td className="px-1.5 py-2.5 whitespace-nowrap">
                           <div className="flex flex-col items-start gap-1">
