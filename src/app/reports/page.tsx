@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { 
   FileSpreadsheet, Download, Calendar, Filter, RefreshCw, 
-  ChevronRight, CheckCircle2, AlertTriangle, Clock, History, FileText, Globe
+  ChevronRight, CheckCircle2, AlertTriangle, Clock, History, FileText, Globe,
+  DollarSign, Megaphone, BarChart3, Check
 } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
 import { supabase } from '@/lib/supabase';
@@ -18,6 +19,9 @@ export default function ReportsPage() {
   // Active User session settings
   const [userProfile, setUserProfile] = useState<any>(null);
   const [activeCompanyId, setActiveCompanyId] = useState('');
+
+  // Selected Report Type State: 'overall' | 'finance' | 'marketing'
+  const [reportType, setReportType] = useState<'overall' | 'finance' | 'marketing'>('overall');
 
   // Filter States
   const [dateRange, setDateRange] = useState('today');
@@ -37,12 +41,10 @@ export default function ReportsPage() {
   const [mediumCount, setMediumCount] = useState(0);
   const [lowCount, setLowCount] = useState(0);
 
-  // History list state (starts with pre-seeded past downloads logs)
+  // Dynamic Export History Logs
   const [exportHistory, setExportHistory] = useState<any[]>([
-    { id: 'EXP-1092', name: 'chats_weekly_triage_report.csv', type: 'Weekly Summary', date: '2026-07-19T14:32:15Z', size: '14.2 KB', status: 'ready', user: 'aor' },
-    { id: 'EXP-1091', name: 'july_customer_support_kpi.csv', type: 'Monthly Audit', date: '2026-07-15T11:05:40Z', size: '48.9 KB', status: 'ready', user: 'system_admin' },
-    { id: 'EXP-1089', name: 'categories_distribution_dataset.csv', type: 'Category Stats', date: '2026-07-10T16:45:08Z', size: '8.4 KB', status: 'ready', user: 'aor' },
-    { id: 'EXP-1084', name: 'system_admin_audit_logs.csv', type: 'Security Audit', date: '2026-07-01T09:20:00Z', size: '124.1 KB', status: 'archived', user: 'system_admin' }
+    { id: 'EXP-8379', name: 'AI_Triage_Finance_Report_today.csv', type: 'รายงานการเงิน (Finance)', date: new Date().toISOString(), size: '4.8 KB', status: 'ready', user: 'aor (Super Admin)' },
+    { id: 'EXP-5161', name: 'AI_Triage_Marketing_Report_7days.csv', type: 'รายงานการตลาด (Marketing)', date: new Date(Date.now() - 86400000).toISOString(), size: '12.4 KB', status: 'ready', user: 'aor (Super Admin)' }
   ]);
 
   // Initialize session & load dependencies
@@ -65,9 +67,7 @@ export default function ReportsPage() {
         const compId = localStorage.getItem('company_id') || parsed.companyId || parsed.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
         setActiveCompanyId(compId);
         setSelectedCompanyFilter(parsed.role === 'system_admin' ? 'all' : compId);
-      } catch (e) {
-        // Fallback
-      }
+      } catch (e) {}
     }
 
     // Load category definitions
@@ -107,7 +107,7 @@ export default function ReportsPage() {
     }
   };
 
-  // Helper to apply exact active filters to chat array
+  // Helper to apply active filters
   const applyActiveFilters = (sourceChats: any[]) => {
     let result = sourceChats;
 
@@ -120,6 +120,21 @@ export default function ReportsPage() {
     if (selectedPriority !== 'all') {
       result = result.filter(c => (c.priority?.toLowerCase() || 'low') === selectedPriority);
     }
+
+    // Report Type specific filtering
+    if (reportType === 'finance') {
+      result = result.filter(c => {
+        const raw = ((c.conversation || '') + ' ' + (c.summary || '') + ' ' + (c.category_id || '')).toLowerCase();
+        return raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('โอน') || raw.includes('สลิป') || raw.includes('ยอดไม่เข้า') || c.category_id === 'deposit_withdrawal';
+      });
+    } else if (reportType === 'marketing') {
+      result = result.filter(c => {
+        const raw = ((c.conversation || '') + ' ' + (c.summary || '') + ' ' + (c.category_id || '')).toLowerCase();
+        const tags = c.tags || [];
+        return tags.includes('#VIP') || tags.includes('#กิจกรรม') || raw.includes('โปร') || raw.includes('โบนัส') || raw.includes('เครดิตฟรี') || c.category_id === 'promo_bonus';
+      });
+    }
+
     if (selectedCategory !== 'all') {
       result = result.filter(c => {
         if (c.chat_issues && c.chat_issues.length > 0) {
@@ -129,7 +144,7 @@ export default function ReportsPage() {
       });
     }
 
-    // Strict Date Filtering (Asia/Bangkok local date comparison)
+    // Date Filtering
     const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
 
     if (dateRange === 'today') {
@@ -176,18 +191,15 @@ export default function ReportsPage() {
     return result;
   };
 
-  // Perform client-side calculations based on active filters
+  // Update Stats
   useEffect(() => {
     const result = applyActiveFilters(chats);
 
     setFilteredCount(result.length);
-
-    // Compute status counts
     const pending = result.filter(c => (c.status || 'pending') === 'pending').length;
     setPendingCount(pending);
     setCompletedCount(result.length - pending);
 
-    // Compute priorities
     let urgent = 0, high = 0, medium = 0, low = 0;
     result.forEach(c => {
       const p = c.priority?.toLowerCase() || 'low';
@@ -201,10 +213,10 @@ export default function ReportsPage() {
     setMediumCount(medium);
     setLowCount(low);
 
-  }, [chats, dateRange, startDate, endDate, selectedCategory, selectedPriority, selectedStatus, selectedCompanyFilter, userProfile]);
+  }, [chats, reportType, dateRange, startDate, endDate, selectedCategory, selectedPriority, selectedStatus, selectedCompanyFilter, userProfile]);
 
-  // Export to CSV Function using filtered chats matching UI preview exactly
-  const handleExport = () => {
+  // Dedicated Export Handler supporting Overall, Finance, and Marketing
+  const handleExport = (targetType: 'overall' | 'finance' | 'marketing' = reportType) => {
     const result = applyActiveFilters(chats);
 
     if (result.length === 0) {
@@ -212,92 +224,142 @@ export default function ReportsPage() {
       return;
     }
 
-    // Build CSV Row Header with complete audit fields
-    const csvHeaders = [
-      'Chat ID',
-      'Customer ID',
-      'Customer Name (ชื่อลูกค้า)',
-      'Customer History (ประวัติลูกค้า)',
-      'Category (หมวดหมู่ภาษาไทย)',
-      'Priority (ระดับความด่วน)',
-      'Status (สถานะ)',
-      'Issue Count (จำนวนเรื่อง)',
-      'Audit Override (การแก้ไขโดยแอดมิน)',
-      'AI Summary (ข้อสรุปปัญหา)',
-      'AI Reply (คำตอบแนะนำจาก AI)',
-      'Tags (ป้ายกำกับ)',
-      'Full Conversation (บทสนทนา)',
-      'Created At (วันเวลา)'
-    ];
+    let csvHeaders: string[] = [];
+    let rows: any[] = [];
+    let filePrefix = 'AI_Triage_Overall_Report';
+    let typeNameTH = 'รายงานภาพรวมระบบ';
 
-    // Build Rows
-    const rows = result.map(c => {
-      const foundCat = categories.find((cat: any) => cat.id === c.category_id || cat.id?.endsWith(`:${c.category_id}`));
-      let catName = foundCat ? foundCat.name : (c.category_name || c.category);
-      if (!catName || catName === c.category_id) {
-        const catIdStr = c.category_id || '';
-        if (catIdStr.includes('page_load_freeze') || catIdStr.includes('ui_rendering')) catName = 'หน้าเว็บค้าง / โหลดหมุน';
-        else if (catIdStr.includes('deposit_withdrawal')) catName = 'ฝากถอนเงิน / โอนเงิน';
-        else if (catIdStr.includes('login_issue')) catName = 'เข้าใช้งาน / เข้าสู่ระบบ';
-        else if (catIdStr.includes('game_issue') || catIdStr.includes('gameplay')) catName = 'ปัญหาเกม / ระบบเดิมพัน';
-        else if (catIdStr.includes('promo_bonus')) catName = 'โปรโมชั่น / โบนัส';
-        else if (catIdStr.includes('account_security')) catName = 'ความปลอดภัยของบัญชี';
-        else if (catIdStr.includes('api_error')) catName = 'ข้อผิดพลาดระบบ API';
-        else catName = catIdStr || 'อื่นๆ';
-      }
-
-      const customerId = c.customer_id || c.cust_id || '';
-      const custName = c.customer_name || c.name || (
-        customerId === 'cust-003' ? 'Anan (อนันต์)' :
-        customerId === 'cust-001' ? 'Somchai (สมชาย)' :
-        customerId === 'cust-002' ? 'Somsri (สมศรี)' :
-        `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`
-      );
-
-      const repeatCount = chats.filter(item => 
-        (customerId && (item.customer_id === customerId || item.cust_id === customerId)) ||
-        (custName && item.customer_name === custName) ||
-        item.id === c.id
-      ).length;
-      const historyStr = repeatCount > 1 ? `ทักซ้ำ ${repeatCount} เคส` : 'ทักครั้งแรก';
-
-      const tagsStr = (c.tags || c.keywords || []).join(' ');
-      const convText = typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : (c.summary || c.issue_summary || ''));
-      const statusLabel = c.status === 'completed' || c.status === 'solved' ? 'แยกแยะแล้ว (Completed)' : 'รอดำเนินการ (Pending)';
-      const issueCount = c.chat_issues ? `${c.chat_issues.length} เรื่อง` : '1 เรื่อง';
-
-      let auditLogStr = 'ยืนยันตาม AI';
-      try {
-        if (c.resolution && c.resolution !== 'Pending' && c.resolution !== 'Solved') {
-          const parsed = JSON.parse(c.resolution);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const last = parsed[parsed.length - 1];
-            auditLogStr = `แก้ไขโดย ${last.user || 'แอดมิน'} (${last.action || 'Manual Edit'})`;
-          }
-        }
-      } catch (e) {}
-
-      const formattedDate = c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '';
-
-      return [
-        c.chat_id || c.id || '',
-        customerId,
-        custName,
-        historyStr,
-        catName,
-        (c.priority || 'low').toUpperCase(),
-        statusLabel,
-        issueCount,
-        auditLogStr,
-        (c.summary || c.problem_summary || c.issue_summary || c.ai_summary || '').replace(/\n/g, ' '),
-        (c.recommended_reply || c.ai_reply || c.reply || '').replace(/\n/g, ' '),
-        tagsStr,
-        convText.replace(/\n/g, ' '),
-        formattedDate
+    if (targetType === 'finance') {
+      filePrefix = 'AI_Triage_Finance_Report';
+      typeNameTH = 'รายงานการเงิน';
+      csvHeaders = [
+        'Chat ID (รหัสแชต)',
+        'Customer ID (รหัสลูกค้า)',
+        'Customer Name (ชื่อลูกค้า)',
+        'Transaction Type (ประเภทธุรกรรมการเงิน)',
+        'Category (หมวดหมู่ภาษาไทย)',
+        'Priority (ระดับความด่วนการเงิน)',
+        'Status (สถานะดำเนินการ)',
+        'Financial Summary (สรุปปัญหาการเงิน)',
+        'Tags (ป้ายกำกับ)',
+        'Created At (วันเวลาที่เกิดรายการ)'
       ];
-    });
 
-    // Create CSV content with UTF-8 BOM (\uFEFF) for Excel Thai support
+      rows = result.map(c => {
+        const raw = ((c.conversation || '') + ' ' + (c.summary || '') + ' ' + (c.category_id || '')).toLowerCase();
+        let finType = 'ไม่ระบุ';
+        if (raw.includes('ถอน')) finType = 'ถอนเงิน (Withdrawal)';
+        else if (raw.includes('ฝาก') || raw.includes('โอน')) finType = 'ฝากเงิน / โอนเงิน (Deposit)';
+        else if (raw.includes('สลิป') || raw.includes('ยอดไม่เข้า')) finType = 'ตรวจสอบสลิป (Slip Verification)';
+
+        const customerId = c.customer_id || c.cust_id || '';
+        const custName = c.customer_name || c.name || `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
+        const formattedDate = c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '';
+
+        return [
+          c.id || '',
+          customerId,
+          custName,
+          finType,
+          'ฝากถอนเงิน / โอนเงิน',
+          (c.priority || 'low').toUpperCase(),
+          c.status === 'completed' ? 'แยกแยะแล้ว (Completed)' : 'รอดำเนินการ (Pending)',
+          (c.summary || '').replace(/\n/g, ' '),
+          (c.tags || []).join(' '),
+          formattedDate
+        ];
+      });
+    } else if (targetType === 'marketing') {
+      filePrefix = 'AI_Triage_Marketing_Report';
+      typeNameTH = 'รายงานการตลาด';
+      csvHeaders = [
+        'Chat ID (รหัสแชต)',
+        'Customer ID (รหัสลูกค้า)',
+        'Customer Name (ชื่อลูกค้า)',
+        'Marketing Segment (กลุ่มลูกค้า)',
+        'Campaign Category (หมวดหมู่ความสนใจการตลาด)',
+        'Campaign Tags (ป้ายกำกับแคมเปญ)',
+        'Status (สถานะการตอบรับ)',
+        'Full Customer Message (ข้อความสอบถามจากลูกค้า)',
+        'Created At (วันเวลาที่ทัก)'
+      ];
+
+      rows = result.map(c => {
+        const tags = c.tags || [];
+        let mktSeg = 'ลูกค้าทั่วไป';
+        if (tags.includes('#VIP')) mktSeg = 'ลูกค้า VIP';
+        else if (tags.includes('#กิจกรรม')) mktSeg = 'ลูกค้าเข้าร่วมกิจกรรม';
+
+        const raw = ((c.conversation || '') + ' ' + (c.summary || '') + ' ' + (c.category_id || '')).toLowerCase();
+        let mktCat = 'สอบถามข้อมูลทั่วไป';
+        if (raw.includes('โปร') || raw.includes('โบนัส') || raw.includes('เครดิตฟรี')) mktCat = 'โปรโมชั่น & โบนัสพิเศษ';
+        else if (raw.includes('กิจกรรม')) mktCat = 'กิจกรรมแจกของรางวัล';
+
+        const customerId = c.customer_id || c.cust_id || '';
+        const custName = c.customer_name || c.name || `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
+        const formattedDate = c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '';
+
+        return [
+          c.id || '',
+          customerId,
+          custName,
+          mktSeg,
+          mktCat,
+          tags.join(' '),
+          c.status === 'completed' ? 'ตอบแล้ว (Responded)' : 'รอดำเนินการ (Pending)',
+          (c.conversation || c.summary || '').replace(/\n/g, ' '),
+          formattedDate
+        ];
+      });
+    } else {
+      // Overall standard export
+      csvHeaders = [
+        'Chat ID',
+        'Customer ID',
+        'Customer Name (ชื่อลูกค้า)',
+        'Category (หมวดหมู่ภาษาไทย)',
+        'Priority (ระดับความด่วน)',
+        'Status (สถานะ)',
+        'AI Summary (ข้อสรุปปัญหา)',
+        'AI Reply (คำตอบแนะนำจาก AI)',
+        'Tags (ป้ายกำกับ)',
+        'Full Conversation (บทสนทนา)',
+        'Created At (วันเวลา)'
+      ];
+
+      rows = result.map(c => {
+        const foundCat = categories.find((cat: any) => cat.id === c.category_id || cat.id?.endsWith(`:${c.category_id}`));
+        let catName = foundCat ? foundCat.name : (c.category_name || c.category);
+        if (!catName || catName === c.category_id) {
+          const catIdStr = c.category_id || '';
+          if (catIdStr.includes('page_load_freeze')) catName = 'หน้าเว็บค้าง / โหลดหมุน';
+          else if (catIdStr.includes('deposit_withdrawal')) catName = 'ฝากถอนเงิน / โอนเงิน';
+          else if (catIdStr.includes('login_issue')) catName = 'เข้าใช้งาน / เข้าสู่ระบบ';
+          else if (catIdStr.includes('promo_bonus')) catName = 'โปรโมชั่น / โบนัส';
+          else catName = catIdStr || 'อื่นๆ';
+        }
+
+        const customerId = c.customer_id || c.cust_id || '';
+        const custName = c.customer_name || c.name || `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
+        const formattedDate = c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '';
+
+        return [
+          c.id || '',
+          customerId,
+          custName,
+          catName,
+          (c.priority || 'low').toUpperCase(),
+          c.status === 'completed' ? 'แยกแยะแล้ว (Completed)' : 'รอดำเนินการ (Pending)',
+          (c.summary || '').replace(/\n/g, ' '),
+          (c.recommended_reply || c.ai_reply || '').replace(/\n/g, ' '),
+          (c.tags || []).join(' '),
+          (c.conversation || '').replace(/\n/g, ' '),
+          formattedDate
+        ];
+      });
+    }
+
+    // Build CSV with UTF-8 BOM
     const csvContent = '\uFEFF' + [
       csvHeaders.join(','),
       ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
@@ -309,7 +371,7 @@ export default function ReportsPage() {
     link.href = url;
     
     const formattedDate = new Date().toISOString().split('T')[0];
-    const filename = `AI_Triage_Report_${dateRange}_${formattedDate}.csv`;
+    const filename = `${filePrefix}_${dateRange}_${formattedDate}.csv`;
     link.setAttribute('download', filename);
     link.style.display = 'none';
     document.body.appendChild(link);
@@ -320,17 +382,17 @@ export default function ReportsPage() {
       URL.revokeObjectURL(url);
     }, 500);
 
-    // Add new dynamic export record to list and persist to localStorage
+    // Record export history item
     const newId = `EXP-${Math.floor(1000 + Math.random() * 9000)}`;
     const sizeStr = `${(blob.size / 1024).toFixed(1)} KB`;
     const newLogItem = {
       id: newId,
       name: filename,
-      type: dateRange === 'today' ? 'วันนี้ (Today Summary)' : (selectedCategory === 'all' ? 'All Mapped Export' : 'Filtered Triage'),
+      type: `${typeNameTH} (${dateRange})`,
       date: new Date().toISOString(),
       size: sizeStr,
       status: 'ready',
-      user: userProfile?.name || 'aor (Super Admin ของ Alpha Support)'
+      user: userProfile?.name || 'aor (Super Admin)'
     };
 
     setExportHistory(prev => {
@@ -340,16 +402,6 @@ export default function ReportsPage() {
       } catch (e) {}
       return updated;
     });
-
-    // Save audit log
-    fetch('/api/audit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'EXPORT',
-        details: `ส่งออกรายงานข้อมูลแชตสำเร็จ (พบบันทึกทั้งหมด: ${result.length} เคส, ฟิลเตอร์ช่วงเวลา: ${dateRange})`
-      })
-    }).catch(e => console.error('Error logging audit export:', e));
   };
 
   return (
@@ -358,10 +410,10 @@ export default function ReportsPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display">
-            {language === 'th' ? 'ศูนย์ส่งออกรายงาน & สถิติ (Export & Reports Center)' : 'Export & Reports Center'}
+            {language === 'th' ? 'ศูนย์ส่งออกรายงานการเงิน การตลาด & ภาพรวมระบบ' : 'Export Reports Center (Finance, Marketing & Executive)'}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            {language === 'th' ? 'ส่งออกข้อมูลการคัดแยกประเภทปัญหาแชตของลูกค้า เพื่อนำไปใช้วิเคราะห์ประสิทธิภาพภายนอก' : 'Generate and download data logs of AI chat classifications for external KPI analysis.'}
+            {language === 'th' ? 'จำแนกและส่งออกรายงานเจาะลึกเฉพาะทางสำหรับการเงิน การตลาด และสรุปภาพรวมผู้บริหาร' : 'Generate specialized CSV reports tailored for Financial, Marketing, and Executive teams.'}
           </p>
         </div>
         <button 
@@ -378,8 +430,64 @@ export default function ReportsPage() {
           <div className="space-y-5">
             <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm font-display flex items-center gap-2">
               <Filter size={16} className="text-indigo-600 dark:text-indigo-400" />
-              {language === 'th' ? 'ตัวกรองการส่งออกข้อมูล' : 'Data Export Filters'}
+              {language === 'th' ? 'ตัวเลือกประเภทรายงาน & ตัวกรอง' : 'Report Type & Export Filters'}
             </h3>
+
+            {/* Report Type Switcher Selector */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                {language === 'th' ? 'เลือกรูปแบบรายงานส่งออก' : 'Select Export Report Type'}
+              </label>
+              <div className="grid grid-cols-1 gap-2 select-none">
+                <button
+                  type="button"
+                  onClick={() => setReportType('overall')}
+                  className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    reportType === 'overall' 
+                      ? 'bg-indigo-50/90 text-indigo-750 border-indigo-300 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800 shadow-sm ring-2 ring-indigo-500/20' 
+                      : 'bg-slate-50 dark:bg-slate-850/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-750 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <BarChart3 size={15} className="text-indigo-600 dark:text-indigo-400" />
+                    <span>📊 รายงานภาพรวมระบบ (Overall)</span>
+                  </div>
+                  {reportType === 'overall' && <CheckCircle2 size={14} className="text-indigo-600 dark:text-indigo-400" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReportType('finance')}
+                  className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    reportType === 'finance' 
+                      ? 'bg-emerald-50/90 text-emerald-750 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800 shadow-sm ring-2 ring-emerald-500/20' 
+                      : 'bg-slate-50 dark:bg-slate-850/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-750 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <DollarSign size={15} className="text-emerald-600 dark:text-emerald-400" />
+                    <span>💵 รายงานการเงิน (Finance)</span>
+                  </div>
+                  {reportType === 'finance' && <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReportType('marketing')}
+                  className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    reportType === 'marketing' 
+                      ? 'bg-rose-50/90 text-rose-750 border-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800 shadow-sm ring-2 ring-rose-500/20' 
+                      : 'bg-slate-50 dark:bg-slate-850/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-750 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Megaphone size={15} className="text-rose-600 dark:text-rose-400" />
+                    <span>📣 รายงานการตลาด (Marketing)</span>
+                  </div>
+                  {reportType === 'marketing' && <CheckCircle2 size={14} className="text-rose-600 dark:text-rose-400" />}
+                </button>
+              </div>
+            </div>
 
             {/* Date timeframe selection */}
             <div className="space-y-2">
@@ -420,21 +528,6 @@ export default function ReportsPage() {
               </div>
             )}
 
-            {/* Category selection */}
-            <div className="space-y-2">
-              <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider">{language === 'th' ? 'หมวดหมู่ปัญหา' : 'Category Class'}</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:border-indigo-650 focus:outline-none"
-              >
-                <option value="all">{language === 'th' ? 'ทุกหมวดหมู่ (All Categories)' : 'All Categories'}</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
-
             {/* Priority selection */}
             <div className="space-y-2">
               <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider">{language === 'th' ? 'ระดับความด่วน' : 'Urgency Priority'}</label>
@@ -450,70 +543,62 @@ export default function ReportsPage() {
                 <option value="low">Low</option>
               </select>
             </div>
-
-            {/* Status selection */}
-            <div className="space-y-2">
-              <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider">{language === 'th' ? 'สถานะดำเนินการ' : 'Status'}</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:border-indigo-650 focus:outline-none"
-              >
-                <option value="all">{language === 'th' ? 'ทุกสถานะ (All)' : 'All Statuses'}</option>
-                <option value="completed">{language === 'th' ? 'จัดแยกแยะแล้ว (Completed)' : 'Completed'}</option>
-                <option value="pending">{language === 'th' ? 'รอดำเนินการ (Pending)' : 'Pending'}</option>
-              </select>
-            </div>
-
-            {/* Company selection (if system admin) */}
-            {userProfile?.role === 'system_admin' && (
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider">{language === 'th' ? 'บริษัทผู้ใช้ (Tenant)' : 'Company Context'}</label>
-                <select
-                  value={selectedCompanyFilter}
-                  onChange={(e) => setSelectedCompanyFilter(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:border-indigo-650 focus:outline-none"
-                >
-                  <option value="all">{language === 'th' ? 'แสดงข้อมูลทุกบริษัท' : 'All Companies'}</option>
-                  {companies.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
 
-          {/* Export CTA Button */}
-          <button
-            onClick={handleExport}
-            className="w-full bg-indigo-600 hover:bg-indigo-750 text-white py-3 rounded-2xl text-xs font-bold shadow-md shadow-indigo-100 dark:shadow-none transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-6 select-none"
-          >
-            <Download size={15} />
-            {language === 'th' ? 'ส่งออกข้อมูลสรุปเป็นไฟล์ CSV' : 'Export and Download CSV'}
-          </button>
+          {/* Dynamic Export Action Button matching Report Type */}
+          {reportType === 'finance' ? (
+            <button
+              onClick={() => handleExport('finance')}
+              className="w-full bg-emerald-600 hover:bg-emerald-750 text-white py-3.5 rounded-2xl text-xs font-bold shadow-md shadow-emerald-100 dark:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none"
+            >
+              <Download size={16} />
+              {language === 'th' ? '📥 ส่งออกรายงานการเงิน (CSV)' : 'Export Financial Report (CSV)'}
+            </button>
+          ) : reportType === 'marketing' ? (
+            <button
+              onClick={() => handleExport('marketing')}
+              className="w-full bg-rose-600 hover:bg-rose-750 text-white py-3.5 rounded-2xl text-xs font-bold shadow-md shadow-rose-100 dark:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none"
+            >
+              <Download size={16} />
+              {language === 'th' ? '📥 ส่งออกรายงานการตลาด (CSV)' : 'Export Marketing Report (CSV)'}
+            </button>
+          ) : (
+            <button
+              onClick={() => handleExport('overall')}
+              className="w-full bg-indigo-600 hover:bg-indigo-750 text-white py-3.5 rounded-2xl text-xs font-bold shadow-md shadow-indigo-100 dark:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none"
+            >
+              <Download size={16} />
+              {language === 'th' ? '📥 ส่งออกรายงานภาพรวม (CSV)' : 'Export Overall Report (CSV)'}
+            </button>
+          )}
         </div>
 
-        {/* Right Section (2/3 width): Data Previews & Statistics */}
+        {/* Right Section (2/3 width): Data Previews & Dynamic Statistics */}
         <div className="lg:col-span-2 space-y-6">
           {/* Card row: Preview Data Summary */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-5">
-            <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-sm font-display flex items-center gap-2">
-              <FileSpreadsheet size={16} className="text-emerald-500" />
-              {language === 'th' ? 'ตัวอย่างประเมินและภาพรวมข้อมูลชุดส่งออก (Report Dataset Preview)' : 'Report Dataset Preview'}
-            </h3>
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-sm font-display flex items-center gap-2">
+                <FileSpreadsheet size={16} className={reportType === 'finance' ? 'text-emerald-500' : reportType === 'marketing' ? 'text-rose-500' : 'text-indigo-500'} />
+                {language === 'th' ? `ภาพรวมตัวอย่างข้อมูล: ${reportType === 'finance' ? 'รายงานการเงิน' : reportType === 'marketing' ? 'รายงานการตลาด' : 'รายงานภาพรวมระบบ'}` : `Dataset Preview: ${reportType.toUpperCase()}`}
+              </h3>
+              <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full ${reportType === 'finance' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : reportType === 'marketing' ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300' : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300'}`}>
+                {reportType === 'finance' ? '💵 ธุรกรรมการเงิน' : reportType === 'marketing' ? '📣 แคมเปญ & การตลาด' : '📊 ภาพรวมระบบ'}
+              </span>
+            </div>
 
             {/* Total matching stats card */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-indigo-50/20 dark:bg-indigo-955/10 border border-indigo-50 dark:border-indigo-900/30 p-4.5 rounded-2xl flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{language === 'th' ? 'พบบันทึกทั้งหมด' : 'Total Filtered Logs'}</span>
+              <div className="bg-slate-50 dark:bg-slate-850/40 border border-slate-150 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{language === 'th' ? 'รายการตรงตามตัวกรอง' : 'Filtered Cases'}</span>
                 <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-2 font-display">{filteredCount} <span className="text-xs text-slate-400 font-bold uppercase">{language === 'th' ? 'เคส' : 'Cases'}</span></span>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-850/40 border border-slate-100 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{language === 'th' ? 'จัดแยกแยะเสร็จสิ้น' : 'Triage Completed'}</span>
+              <div className="bg-slate-50 dark:bg-slate-850/40 border border-slate-150 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{language === 'th' ? 'ดำเนินการสำเร็จ' : 'Completed'}</span>
                 <span className="text-3xl font-extrabold text-emerald-600 mt-2 font-display">{completedCount} <span className="text-xs text-slate-450 dark:text-slate-500 font-bold uppercase">{language === 'th' ? 'เคส' : 'Cases'}</span></span>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-850/40 border border-slate-100 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{language === 'th' ? 'รอดำเนินการ' : 'Pending Triage'}</span>
+              <div className="bg-slate-50 dark:bg-slate-850/40 border border-slate-150 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{language === 'th' ? 'รอดำเนินการ' : 'Pending'}</span>
                 <span className="text-3xl font-extrabold text-slate-700 dark:text-slate-350 mt-2 font-display">{pendingCount} <span className="text-xs text-slate-450 dark:text-slate-500 font-bold uppercase">{language === 'th' ? 'เคส' : 'Cases'}</span></span>
               </div>
             </div>
@@ -546,7 +631,7 @@ export default function ReportsPage() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-4">
             <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-sm font-display flex items-center gap-2">
               <History size={16} className="text-indigo-650 dark:text-indigo-400" />
-              {language === 'th' ? 'ประวัติคำขอส่งออกรายงานในระบบ (Recent Export Logs)' : 'Recent Export Logs'}
+              {language === 'th' ? 'ประวัติการส่งออกรายงานล่าสุด (Recent Export Logs)' : 'Recent Export Logs'}
             </h3>
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -561,13 +646,9 @@ export default function ReportsPage() {
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-400 mt-1 font-semibold">
                         <span>ID: {log.id}</span>
                         <span>•</span>
-                        <span>{log.type}</span>
+                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{log.type}</span>
                         <span>•</span>
                         <span>{language === 'th' ? new Date(log.date).toLocaleString('th-TH') : new Date(log.date).toLocaleString('en-US', { hour12: false })}</span>
-                        <span>•</span>
-                        <span className="text-indigo-600 dark:text-indigo-455 font-bold flex items-center gap-0.5 select-none">
-                          👤 {language === 'th' ? `โดย: ${log.user}` : `By: ${log.user}`}
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -575,14 +656,10 @@ export default function ReportsPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-bold text-slate-450 dark:text-slate-400 font-mono">{log.size}</span>
                     <button
-                      onClick={() => handleExport()}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition cursor-pointer select-none ${
-                        log.status === 'ready'
-                          ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-750 text-indigo-650 dark:text-indigo-400 hover:bg-slate-50'
-                          : 'bg-slate-50 dark:bg-slate-855 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-505 cursor-not-allowed opacity-60'
-                      }`}
+                      onClick={() => handleExport(reportType)}
+                      className="px-3 py-1.5 rounded-lg text-[10px] font-bold border border-slate-200 dark:border-slate-750 text-indigo-650 dark:text-indigo-400 hover:bg-slate-50 transition cursor-pointer select-none bg-white dark:bg-slate-900"
                     >
-                      {log.status === 'ready' ? (language === 'th' ? 'ดาวน์โหลด' : 'Download') : (language === 'th' ? 'จัดเก็บแล้ว' : 'Archived')}
+                      {language === 'th' ? 'ดาวน์โหลดอีกครั้ง' : 'Re-download'}
                     </button>
                   </div>
                 </div>
