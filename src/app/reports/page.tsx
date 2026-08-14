@@ -737,6 +737,51 @@ export default function ReportsPage() {
                 </div>
               </div>
             )}
+
+            {/* Category selection */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider">{language === 'th' ? 'หมวดหมู่ปัญหา' : 'Category Class'}</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:border-indigo-650 focus:outline-none"
+              >
+                <option value="all">{language === 'th' ? 'ทุกหมวดหมู่ (All Categories)' : 'All Categories'}</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Priority selection */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider">{language === 'th' ? 'ระดับความด่วน' : 'Urgency Priority'}</label>
+              <select
+                value={selectedPriority}
+                onChange={(e) => setSelectedPriority(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:border-indigo-650 focus:outline-none"
+              >
+                <option value="all">{language === 'th' ? 'ทุกความเร่งด่วน (All)' : 'All Priorities'}</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+
+            {/* Status selection */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider">{language === 'th' ? 'สถานะดำเนินการ' : 'Status'}</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:border-indigo-650 focus:outline-none"
+              >
+                <option value="all">{language === 'th' ? 'ทุกสถานะ (All)' : 'All Statuses'}</option>
+                <option value="completed">{language === 'th' ? 'จัดแยกแยะแล้ว (Completed)' : 'Completed'}</option>
+                <option value="pending">{language === 'th' ? 'รอดำเนินการ (Pending)' : 'Pending'}</option>
+              </select>
+            </div>
           </div>
 
           {/* Dynamic Export Main Button */}
