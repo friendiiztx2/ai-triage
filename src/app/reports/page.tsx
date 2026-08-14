@@ -787,21 +787,23 @@ export default function ReportsPage() {
           {/* Dynamic Export Main Button */}
           {exportFormatMode === 'xlsx_multi_sheet' ? (
             <button
+              type="button"
               onClick={handleExportMain}
-              className="w-full bg-indigo-650 hover:bg-indigo-750 text-white py-3.5 rounded-2xl text-xs font-extrabold shadow-lg shadow-indigo-150 dark:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 px-4 rounded-2xl text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none shrink-0"
             >
               <Download size={16} />
-              {language === 'th' ? '📥 ส่งออกรายงานรวมไฟล์เดียว (Excel .xlsx)' : 'Export Master Report (.xlsx)'}
+              <span>{language === 'th' ? '📥 ส่งออกรายงานรวมไฟล์เดียว (Excel .xlsx)' : 'Export Master Report (.xlsx)'}</span>
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleExportMain}
-              className={`w-full text-white py-3.5 rounded-2xl text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none ${
+              className={`w-full text-white py-3.5 px-4 rounded-2xl text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none shrink-0 ${
                 reportType === 'finance' ? 'bg-emerald-600 hover:bg-emerald-700' : reportType === 'marketing' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700'
               }`}
             >
               <Download size={16} />
-              {language === 'th' ? `📥 ส่งออก${reportType === 'finance' ? 'รายงานการเงิน' : reportType === 'marketing' ? 'รายงานการตลาด' : 'รายงานภาพรวม'} (CSV)` : 'Export Selected CSV Report'}
+              <span>{language === 'th' ? `📥 ส่งออก${reportType === 'finance' ? 'รายงานการเงิน' : reportType === 'marketing' ? 'รายงานการตลาด' : 'รายงานภาพรวม'} (CSV)` : 'Export Selected CSV Report'}</span>
             </button>
           )}
         </div>
