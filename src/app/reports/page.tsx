@@ -785,27 +785,35 @@ export default function ReportsPage() {
           </div>
 
           {/* Dynamic Export Main Button */}
-          {exportFormatMode === 'xlsx_multi_sheet' ? (
-            <button
-              type="button"
-              onClick={handleExportMain}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 px-4 rounded-2xl text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none shrink-0"
-            >
-              <Download size={16} />
-              <span>{language === 'th' ? '📥 ส่งออกรายงานรวมไฟล์เดียว (Excel .xlsx)' : 'Export Master Report (.xlsx)'}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleExportMain}
-              className={`w-full text-white py-3.5 px-4 rounded-2xl text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-6 select-none shrink-0 ${
-                reportType === 'finance' ? 'bg-emerald-600 hover:bg-emerald-700' : reportType === 'marketing' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700'
-              }`}
-            >
-              <Download size={16} />
-              <span>{language === 'th' ? `📥 ส่งออก${reportType === 'finance' ? 'รายงานการเงิน' : reportType === 'marketing' ? 'รายงานการตลาด' : 'รายงานภาพรวม'} (CSV)` : 'Export Selected CSV Report'}</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleExportMain}
+            style={{
+              backgroundColor: exportFormatMode === 'xlsx_multi_sheet' ? '#4f46e5' : (reportType === 'finance' ? '#059669' : reportType === 'marketing' ? '#e11d48' : '#4f46e5'),
+              color: '#ffffff',
+              width: '100%',
+              padding: '14px 16px',
+              borderRadius: '16px',
+              fontSize: '13px',
+              fontWeight: '800',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              marginTop: '20px',
+              border: 'none',
+              boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.35)'
+            }}
+            className="hover:opacity-90 active:scale-[0.98] transition-all select-none shrink-0"
+          >
+            <Download size={18} color="#ffffff" />
+            <span style={{ color: '#ffffff', fontWeight: '800' }}>
+              {exportFormatMode === 'xlsx_multi_sheet'
+                ? (language === 'th' ? '📥 ส่งออกรายงานรวมไฟล์เดียว (Excel .xlsx)' : 'Export Master Report (.xlsx)')
+                : (language === 'th' ? `📥 ส่งออก${reportType === 'finance' ? 'รายงานการเงิน' : reportType === 'marketing' ? 'รายงานการตลาด' : 'รายงานภาพรวม'} (CSV)` : 'Export Selected CSV Report')}
+            </span>
+          </button>
         </div>
 
         {/* Right Section (2/3 width): Data Previews & Specialized Metrics */}
