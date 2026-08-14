@@ -362,7 +362,7 @@ export default function ReportsPage() {
     // Build CSV with UTF-8 BOM
     const csvContent = '\uFEFF' + [
       csvHeaders.join(','),
-      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+      ...rows.map((row: any[]) => row.map((val: any) => `"${String(val).replace(/"/g, '""')}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
