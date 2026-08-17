@@ -26,7 +26,8 @@ export default function CustomersPage() {
   const [categories, setCategories] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetchCustomers();
+    // Customers page is removed per Khun Aor directive - auto redirect to /chats
+    window.location.href = '/chats';
   }, []);
 
   const fetchCustomers = async () => {
