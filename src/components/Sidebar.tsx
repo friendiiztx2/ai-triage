@@ -165,7 +165,6 @@ export default function Sidebar() {
   }
   if (allowedPermissions.includes('view_chats')) {
     visibleMenuItems.push({ href: '/chats', label: t('chats'), icon: MessageSquare });
-    visibleMenuItems.push({ href: '/customers', label: t('customers'), icon: Users });
   }
   if (allowedPermissions.includes('manage_categories')) {
     visibleMenuItems.push({ href: '/categories', label: t('categories'), icon: Settings });
