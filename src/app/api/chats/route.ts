@@ -345,6 +345,93 @@ export async function GET(request: NextRequest) {
       resultList = resultList.filter((c: any) => c.id === targetId);
     }
 
+    // Always include the 3 simulated image-only chats at the top for Khun Aor preview
+    const imageChatsSimulated = [
+      {
+        id: 'chat-10128',
+        customer_id: 'cust-002',
+        customer_name: 'Somsri (สมศรี)',
+        summary: 'ลูกค้าแนบภาพแคปหน้าจอเว็บค้าง Error 502 Bad Gateway (ไม่ระบุข้อความพิมพ์)',
+        conversation: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5 (📷 ภาพแคปหน้าจอขัดข้อง 502 Error)',
+        category_id: 'page_load_freeze',
+        priority: 'urgent',
+        status: 'pending',
+        confidence: 97,
+        company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+        rawMessages: ['https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5 (📷 ภาพแคปหน้าจอขัดข้อง 502 Error)'],
+        chat_issues: [
+          {
+            id: 'chat-10128-issue-1',
+            chat_id: 'chat-10128',
+            category_id: 'page_load_freeze',
+            priority: 'urgent',
+            summary: 'ภาพแคปหน้าจอเว็บค้าง Error 502 Bad Gateway (รูปภาพล้วน)',
+            recommended_reply: 'กราบขออภัยในความไม่สะดวกค่ะ ขณะนี้ทางทีมเทคนิคกำลังเร่งแก้ไขระบบหน้าเว็บให้กลับมาใช้งานได้ตามปกติภายใน 5 นาทีค่ะ'
+          }
+        ],
+        tags: ['#รูปภาพล้วน', '#หน้าเว็บค้าง', '#502Error'],
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 'chat-10127',
+        customer_id: 'cust-001',
+        customer_name: 'Somchai (สมชาย)',
+        summary: 'ลูกค้าแนบสลิปโอนเงิน KBank ยอด 500 บาท (โอนสำเร็จ - ไม่ระบุข้อความพิมพ์)',
+        conversation: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44 (📷 สลิปการโอนเงิน KBank 500 บาท)',
+        category_id: 'deposit_withdrawal',
+        priority: 'high',
+        status: 'pending',
+        confidence: 96,
+        company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+        rawMessages: ['https://images.unsplash.com/photo-1559526324-4b87b5e36e44 (📷 สลิปการโอนเงิน KBank 500 บาท)'],
+        chat_issues: [
+          {
+            id: 'chat-10127-issue-1',
+            chat_id: 'chat-10127',
+            category_id: 'deposit_withdrawal',
+            priority: 'high',
+            summary: 'สลิปโอนเงิน KBank ยอด 500 บาท (รูปภาพล้วน)',
+            recommended_reply: 'แอดมินได้รับสลิปโอนเงิน KBank ยอด 500 บาทเรียบร้อยแล้วค่ะ กำลังตรวจสอบและปรับยอดเข้ายูสเซอร์ให้นะคะ'
+          }
+        ],
+        tags: ['#รูปภาพล้วน', '#สลิปโอนเงิน', '#KBank'],
+        created_at: new Date(Date.now() - 300000).toISOString()
+      },
+      {
+        id: 'chat-10129',
+        customer_id: 'cust-003',
+        customer_name: 'Anan (อนันต์)',
+        summary: 'ลูกค้าแนบภาพแจ้งเตือนรหัสผ่านไม่ถูกต้อง (Wrong Password) ขณะกดเข้าสู่ระบบ',
+        conversation: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe (📷 ภาพแคปหน้าจอล็อกอินขัดข้อง)',
+        category_id: 'login_issue',
+        priority: 'medium',
+        status: 'completed',
+        confidence: 94,
+        company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+        rawMessages: ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe (📷 ภาพแคปหน้าจอล็อกอินขัดข้อง)'],
+        chat_issues: [
+          {
+            id: 'chat-10129-issue-1',
+            chat_id: 'chat-10129',
+            category_id: 'login_issue',
+            priority: 'medium',
+            summary: 'ภาพแคปหน้าจอล็อกอินขัดข้อง Wrong Password (รูปภาพล้วน)',
+            recommended_reply: 'ลูกค้าสามารถกดปุ่ม ลืมรหัสผ่าน เพื่อตั้งรหัสผ่านใหม่ หรือแจ้งยูสเซอร์เพื่อให้แอดมินช่วยรีเซ็ตรหัสผ่านให้ได้เลยนะคะ'
+          }
+        ],
+        tags: ['#รูปภาพล้วน', '#ล็อกอินขัดข้อง', '#WrongPassword'],
+        created_at: new Date(Date.now() - 600000).toISOString()
+      }
+    ];
+
+    imageChatsSimulated.forEach(sim => {
+      if (!resultList.some((c: any) => c.id === sim.id)) {
+        if (!targetId || targetId === sim.id) {
+          resultList.unshift(sim);
+        }
+      }
+    });
+
     if (resultList.length > 0) {
       // Sort by created_at descending
       resultList.sort((a: any, b: any) => 
