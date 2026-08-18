@@ -398,20 +398,19 @@ function FloatingChatWindow({
         if (issuesRes && issuesRes.ok) {
           const issuesData = await issuesRes.json();
           if (isMounted && issuesData && Array.isArray(issuesData) && issuesData.length > 0) {
-            setSelectedChatIssues(prev => (prev && prev.length > 0) ? prev : issuesData);
+            setSelectedChatIssues(issuesData);
             setEditIssues(prev => {
-              const initialEditState: Record<string, any> = { ...prev };
+              const updatedEditState: Record<string, any> = { ...prev };
               issuesData.forEach((issue: any) => {
-                if (!initialEditState[issue.id]) {
-                  const inferredCat = issue.category_id || inferCategoryFromText(issue.summary, chat.category_id);
-                  const inferredPri = issue.priority || inferPriorityFromText(issue.summary, chat.priority);
-                  initialEditState[issue.id] = {
-                    category_id: inferredCat,
-                    priority: inferredPri
-                  };
-                }
+                const issueKey = issue.id || 'issue-0';
+                const directCat = getBaseCatId(issue.category_id || '');
+                const directPri = (issue.priority || 'medium').toLowerCase();
+                updatedEditState[issueKey] = {
+                  category_id: directCat,
+                  priority: directPri
+                };
               });
-              return initialEditState;
+              return updatedEditState;
             });
           }
         }
@@ -819,15 +818,12 @@ function FloatingChatWindow({
                       return activeIssuesList.map((issueItem: any, idx: number) => {
                         const issueKey = issueItem.id || 'issue-' + idx;
                         const issueTitle = issueItem.summary || issueItem.issue_summary || `ประเด็นย่อยที่ ${idx + 1}`;
-                        const inferredDefaultCat = issueItem.category_id || inferCategoryFromText(issueTitle, editCategory || chat.category_id);
-                        const inferredDefaultPri = issueItem.priority || inferPriorityFromText(issueTitle, editPriority || chat.priority);
-                        
                         const currentVal = editIssues[issueKey] || { 
-                          category_id: inferredDefaultCat, 
-                          priority: inferredDefaultPri 
+                          category_id: issueItem.category_id || '', 
+                          priority: issueItem.priority || 'medium' 
                         };
-
-                        const selectedCategoryVal = getBaseCatId(currentVal.category_id || inferredDefaultCat);
+                        const selectedCategoryVal = getBaseCatId(currentVal.category_id || issueItem.category_id || '');
+                        const currentPri = (currentVal.priority || issueItem.priority || 'medium').toLowerCase();
 
                         return (
                           <div key={idx} className="p-3 bg-slate-50/90 dark:bg-slate-855 rounded-xl border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-2">
@@ -867,7 +863,7 @@ function FloatingChatWindow({
                               {/* Priority Buttons (Bind to chat_issues.priority) */}
                               <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-xs shrink-0">
                                 {['low', 'medium', 'high', 'urgent'].map(p => {
-                                  const isActive = (currentVal.priority || 'medium').toLowerCase() === p;
+                                  const isActive = currentPri === p;
                                   let activeStyle = '';
                                   if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-xs';
                                   else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-xs';
