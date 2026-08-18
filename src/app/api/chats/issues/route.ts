@@ -15,8 +15,9 @@ export async function GET(request: NextRequest) {
   try {
     const { data, error } = await supabase
       .from('chat_issues')
-      .select('*, categories(name)')
+      .select('*')
       .eq('chat_id', chatId)
+      .order('created_at', { ascending: true })
       .abortSignal(controller.signal);
 
     clearTimeout(timeoutId);

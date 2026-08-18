@@ -403,7 +403,7 @@ function FloatingChatWindow({
               const initialEditState: Record<string, any> = { ...prev };
               issuesData.forEach((issue: any) => {
                 if (!initialEditState[issue.id]) {
-                  const inferredCat = inferCategoryFromText(issue.summary, issue.category_id || chat.category_id);
+                  const inferredCat = issue.category_id || inferCategoryFromText(issue.summary, chat.category_id);
                   const inferredPri = issue.priority || inferPriorityFromText(issue.summary, chat.priority);
                   initialEditState[issue.id] = {
                     category_id: inferredCat,
