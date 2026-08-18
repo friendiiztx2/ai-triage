@@ -803,23 +803,25 @@ function FloatingChatWindow({
                     {renderConversation()}
                   </div>
 
-                  {/* Right Column (Span 6): Triage Category & Priority controls side-by-side */}
+                  {/* Right Column (Span 6): Triage Category & Priority controls per child chat_issue */}
                   <div className="lg:col-span-6 space-y-3 pt-0.5">
-                    {(() => {
-                      const rawConv = chat.conversation || (chat.rawMessages ? chat.rawMessages.join('\n') : chat.summary || '');
-                      const convLines = rawConv
-                        .split('\n')
-                        .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
-                        .filter((l: string) => l.length > 0);
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        ประเด็นย่อยในตาราง chat_issues ({((selectedChatIssues && selectedChatIssues.length > 0) ? selectedChatIssues : buildInitialIssues(chat)).length} เรื่อง)
+                      </span>
+                    </div>
 
+                    {(() => {
                       let activeIssuesList = (selectedChatIssues && selectedChatIssues.length > 0)
                         ? selectedChatIssues
                         : buildInitialIssues(chat);
 
                       return activeIssuesList.map((issueItem: any, idx: number) => {
                         const issueKey = issueItem.id || 'issue-' + idx;
-                        const inferredDefaultCat = inferCategoryFromText(issueItem.summary, issueItem.category_id || editCategory || chat.category_id);
-                        const inferredDefaultPri = issueItem.priority || inferPriorityFromText(issueItem.summary, editPriority || chat.priority);
+                        const issueTitle = issueItem.summary || issueItem.issue_summary || `ประเด็นย่อยที่ ${idx + 1}`;
+                        const inferredDefaultCat = issueItem.category_id || inferCategoryFromText(issueTitle, editCategory || chat.category_id);
+                        const inferredDefaultPri = issueItem.priority || inferPriorityFromText(issueTitle, editPriority || chat.priority);
+                        
                         const currentVal = editIssues[issueKey] || { 
                           category_id: inferredDefaultCat, 
                           priority: inferredDefaultPri 
@@ -828,60 +830,71 @@ function FloatingChatWindow({
                         const selectedCategoryVal = getBaseCatId(currentVal.category_id || inferredDefaultCat);
 
                         return (
-                          <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center gap-2 p-2 bg-slate-50/70 dark:bg-slate-850 rounded-xl border border-slate-200/50 dark:border-slate-750 min-h-[46px]">
-                            {/* Category Dropdown */}
-                            <select
-                              value={selectedCategoryVal}
-                              onChange={(e) => {
-                                const newCat = e.target.value;
-                                setEditIssues(prev => ({
-                                  ...prev,
-                                  [issueKey]: { ...currentVal, category_id: newCat }
-                                }));
-                                setEditCategory(newCat);
-                              }}
-                              disabled={userProfile?.role === 'agent'}
-                              className="flex-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-sm min-w-[130px]"
-                            >
-                              <option value="">-- หมวดหมู่ --</option>
-                              {categories.map((cat: any) => {
-                                const optionVal = getBaseCatId(cat.id);
-                                return (
-                                  <option key={cat.id} value={optionVal}>{cat.name}</option>
-                                );
-                              })}
-                            </select>
+                          <div key={idx} className="p-3 bg-slate-50/90 dark:bg-slate-855 rounded-xl border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-2">
+                            {/* Card Title (chat_issues.summary) */}
+                            <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                              <span className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">📌 #{idx + 1}</span>
+                                <span className="truncate">{issueTitle}</span>
+                              </span>
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono shrink-0">ID: {issueKey.substring(0, 10)}</span>
+                            </div>
 
-                            {/* Priority Buttons */}
-                            <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-sm shrink-0">
-                              {['low', 'medium', 'high', 'urgent'].map(p => {
-                                const isActive = (currentVal.priority || 'medium').toLowerCase() === p;
-                                let activeStyle = '';
-                                if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-sm';
-                                else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-sm';
-                                else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-sm';
-                                else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-sm';
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 pt-0.5">
+                              {/* Category Dropdown (Bind to chat_issues.category_id) */}
+                              <select
+                                value={selectedCategoryVal}
+                                onChange={(e) => {
+                                  const newCat = e.target.value;
+                                  setEditIssues(prev => ({
+                                    ...prev,
+                                    [issueKey]: { ...currentVal, category_id: newCat }
+                                  }));
+                                  if (idx === 0) setEditCategory(newCat);
+                                }}
+                                disabled={userProfile?.role === 'agent'}
+                                className="flex-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-xs min-w-[130px]"
+                              >
+                                <option value="">-- เลือกหมวดหมู่ --</option>
+                                {categories.map((cat: any) => {
+                                  const optionVal = getBaseCatId(cat.id);
+                                  return (
+                                    <option key={cat.id} value={optionVal}>{cat.name}</option>
+                                  );
+                                })}
+                              </select>
 
-                                return (
-                                  <button
-                                    key={p}
-                                    type="button"
-                                    onClick={() => {
-                                      setEditIssues(prev => ({
-                                        ...prev,
-                                        [issueKey]: { ...currentVal, priority: p }
-                                      }));
-                                      setEditPriority(p);
-                                    }}
-                                    disabled={userProfile?.role === 'agent'}
-                                    className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
-                                      (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
-                                    }
-                                  >
-                                    {p}
-                                  </button>
-                                );
-                              })}
+                              {/* Priority Buttons (Bind to chat_issues.priority) */}
+                              <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-xs shrink-0">
+                                {['low', 'medium', 'high', 'urgent'].map(p => {
+                                  const isActive = (currentVal.priority || 'medium').toLowerCase() === p;
+                                  let activeStyle = '';
+                                  if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-xs';
+                                  else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-xs';
+                                  else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-xs';
+                                  else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-xs';
+
+                                  return (
+                                    <button
+                                      key={p}
+                                      type="button"
+                                      onClick={() => {
+                                        setEditIssues(prev => ({
+                                          ...prev,
+                                          [issueKey]: { ...currentVal, priority: p }
+                                        }));
+                                        if (idx === 0) setEditPriority(p);
+                                      }}
+                                      disabled={userProfile?.role === 'agent'}
+                                      className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
+                                        (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
+                                      }
+                                    >
+                                      {p}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         );
