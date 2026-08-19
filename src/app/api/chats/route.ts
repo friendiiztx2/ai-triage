@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
             }
           ],
           tags: ['#รูปภาพล้วน', '#หน้าเว็บค้าง', '#502Error'],
-          created_at: new Date().toISOString()
+          created_at: '2026-08-19T03:45:00.000Z'
         },
         {
           id: 'chat-10127',
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
             }
           ],
           tags: ['#รูปภาพล้วน', '#สลิปโอนเงิน', '#KBank'],
-          created_at: new Date(Date.now() - 300000).toISOString()
+          created_at: '2026-08-19T03:40:00.000Z'
         },
         {
           id: 'chat-10129',
@@ -216,7 +216,7 @@ export async function GET(request: NextRequest) {
             }
           ],
           tags: ['#รูปภาพล้วน', '#ล็อกอินขัดข้อง', '#WrongPassword'],
-          created_at: new Date(Date.now() - 600000).toISOString()
+          created_at: '2026-08-19T03:30:00.000Z'
         }
       ];
 
@@ -456,7 +456,7 @@ export async function GET(request: NextRequest) {
           }
         ],
         tags: ['#รูปภาพล้วน', '#หน้าเว็บค้าง', '#502Error'],
-        created_at: new Date().toISOString()
+        created_at: '2026-08-19T03:45:00.000Z'
       },
       {
         id: 'chat-10127',
@@ -481,7 +481,7 @@ export async function GET(request: NextRequest) {
           }
         ],
         tags: ['#รูปภาพล้วน', '#สลิปโอนเงิน', '#KBank'],
-        created_at: new Date(Date.now() - 300000).toISOString()
+        created_at: '2026-08-19T03:40:00.000Z'
       },
       {
         id: 'chat-10129',
@@ -506,7 +506,7 @@ export async function GET(request: NextRequest) {
           }
         ],
         tags: ['#รูปภาพล้วน', '#ล็อกอินขัดข้อง', '#WrongPassword'],
-        created_at: new Date(Date.now() - 600000).toISOString()
+        created_at: '2026-08-19T03:30:00.000Z'
       }
     ];
 
