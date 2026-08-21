@@ -59,19 +59,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Ensure Customer Record exists in customers table (Auto-Registration for Live Chats)
-    try {
-      const custName = rawCustName || `ลูกค้า #${custId}`;
-      await db
-        .from('customers')
-        .upsert([{
-          id: custId,
-          name: custName,
-          company_id: compId,
-          created_at: new Date().toISOString()
-        }], { onConflict: 'id' });
-    } catch (custErr) {
-      console.warn('Non-blocking customer upsert notice:', custErr);
-    }
+    const custName = rawCustName || `ลูกค้า #${custId}`;
+    await db
+      .from('customers')
+      .upsert([{
+        id: custId,
+        name: custName,
+        company_id: compId,
+        created_at: new Date().toISOString()
+      }], { onConflict: 'id' });
 
     const newChatRow = {
       id: chatId,
@@ -80,7 +76,7 @@ export async function POST(request: NextRequest) {
       summary: summaryText,
       category_id: finalCat,
       priority: finalPri,
-      status: body.status || 'completed',
+      status: body.status || 'pending',
       company_id: compId,
       created_at: new Date().toISOString()
     };
