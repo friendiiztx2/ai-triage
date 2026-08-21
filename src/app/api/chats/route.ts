@@ -113,16 +113,33 @@ export async function GET(request: NextRequest) {
         } else if (typeof row.keywords === 'string' && row.keywords.startsWith('[')) {
           try { parsedTags = JSON.parse(row.keywords); } catch (e) {}
         }
+
+        // Auto Image & Category Tag Generator
         if (!parsedTags || parsedTags.length === 0) {
-          parsedTags = detectedPri === 'urgent' 
-            ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
-            : detectedCat === 'deposit_withdrawal'
-            ? ['#รอสลิป']
-            : detectedCat === 'promo_bonus'
-            ? ['#ติดตามผล']
-            : detectedPri === 'high'
-            ? ['#เคสพิเศษ']
-            : [];
+          const raw = (convText + ' ' + (row.summary || '')).toLowerCase();
+          const isImg = raw.includes('photo-') || raw.includes('images') || raw.includes('slip') || raw.includes('📷') || raw.includes('.jpg') || raw.includes('.png');
+          
+          if (isImg) {
+            if (raw.includes('kbank') || raw.includes('กสิกร') || raw.includes('โอน') || raw.includes('สลิป') || detectedCat === 'deposit_withdrawal') {
+              parsedTags = ['#สลิปโอนเงิน', '#KBANK', '#ฝากถอนเงิน'];
+            } else if (raw.includes('502') || raw.includes('error') || raw.includes('ค้าง') || detectedCat === 'page_load_freeze') {
+              parsedTags = ['#หน้าเว็บค้าง', '#502Error', '#ส่งเรื่องทีมเทคนิค'];
+            } else if (raw.includes('password') || raw.includes('รหัส') || detectedCat === 'login_issue') {
+              parsedTags = ['#ล็อกอินขัดข้อง', '#WrongPassword'];
+            } else {
+              parsedTags = ['#รูปภาพแนบ', '#รอตรวจสอบ'];
+            }
+          } else {
+            parsedTags = detectedPri === 'urgent' 
+              ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
+              : detectedCat === 'deposit_withdrawal'
+              ? ['#รอสลิป']
+              : detectedCat === 'promo_bonus'
+              ? ['#ติดตามผล']
+              : detectedPri === 'high'
+              ? ['#เคสพิเศษ']
+              : ['#สอบถามข้อมูล'];
+          }
         }
 
         return {
