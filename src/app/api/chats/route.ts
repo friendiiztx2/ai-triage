@@ -107,42 +107,35 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        let parsedTags: string[] = [];
+        let rawKeyList: string[] = [];
         if (Array.isArray(row.keywords) && row.keywords.length > 0) {
-          parsedTags = row.keywords;
+          rawKeyList = row.keywords;
         } else if (typeof row.keywords === 'string' && row.keywords.startsWith('[')) {
-          try { parsedTags = JSON.parse(row.keywords); } catch (e) {}
+          try { rawKeyList = JSON.parse(row.keywords); } catch (e) {}
         }
 
+        const raw = (convText + ' ' + (row.summary || '')).toLowerCase();
+        const isImg = raw.includes('photo-') || raw.includes('images') || raw.includes('slip') || raw.includes('📷') || raw.includes('.jpg') || raw.includes('.png');
+
         // Auto Image & Category Tag Generator (High-level clean tags per Khun Aor directive)
-        if (!parsedTags || parsedTags.length === 0) {
-          const raw = (convText + ' ' + (row.summary || '')).toLowerCase();
-          const isImg = raw.includes('photo-') || raw.includes('images') || raw.includes('slip') || raw.includes('📷') || raw.includes('.jpg') || raw.includes('.png');
-          
-          if (isImg) {
-            if (raw.includes('โอน') || raw.includes('สลิป') || raw.includes('ฝาก') || detectedCat === 'deposit_withdrawal') {
-              parsedTags = ['#รูปภาพล้วน', '#ฝากถอนเงิน'];
-            } else if (raw.includes('502') || raw.includes('error') || raw.includes('ค้าง') || detectedCat === 'page_load_freeze') {
-              parsedTags = ['#รูปภาพล้วน', '#ปัญหาเข้าเว็บ'];
-            } else if (raw.includes('password') || raw.includes('รหัส') || detectedCat === 'login_issue') {
-              parsedTags = ['#รูปภาพล้วน', '#ปัญหาเข้าสู่ระบบ'];
-            } else {
-              parsedTags = ['#รูปภาพล้วน'];
-            }
-          } else {
-            parsedTags = detectedCat === 'deposit_withdrawal'
-              ? ['#ฝากถอนเงิน']
-              : detectedCat === 'page_load_freeze' || detectedCat === 'access_blocked'
-              ? ['#ปัญหาเข้าเว็บ']
-              : detectedCat === 'login_issue'
-              ? ['#ปัญหาเข้าสู่ระบบ']
-              : detectedCat === 'game_issue' || detectedCat === 'gameplay_issue'
-              ? ['#ปัญหาเกี่ยวกับเกม']
-              : detectedCat === 'promo_bonus'
-              ? ['#โปรโมชัน']
-              : ['#สอบถามข้อมูล'];
-          }
+        let parsedTags: string[] = [];
+        if (isImg) parsedTags.push('#รูปภาพล้วน');
+
+        if (detectedCat === 'deposit_withdrawal' || raw.includes('โอน') || raw.includes('สลิป') || raw.includes('ฝาก') || rawKeyList.some(k => k.includes('สลิป') || k.includes('โอน') || k.toLowerCase().includes('kbank'))) {
+          parsedTags.push('#ฝากถอนเงิน');
+        } else if (detectedCat === 'page_load_freeze' || detectedCat === 'access_blocked' || raw.includes('ค้าง') || raw.includes('502') || raw.includes('error')) {
+          parsedTags.push('#ปัญหาเข้าเว็บ');
+        } else if (detectedCat === 'login_issue' || raw.includes('ล็อกอิน') || raw.includes('รหัส') || raw.includes('password')) {
+          parsedTags.push('#ปัญหาเข้าสู่ระบบ');
+        } else if (detectedCat === 'game_issue' || detectedCat === 'gameplay_issue') {
+          parsedTags.push('#ปัญหาเกี่ยวกับเกม');
+        } else if (detectedCat === 'promo_bonus') {
+          parsedTags.push('#โปรโมชัน');
+        } else {
+          parsedTags.push('#สอบถามข้อมูล');
         }
+
+        parsedTags = Array.from(new Set(parsedTags));
 
         return {
           id: row.id,
