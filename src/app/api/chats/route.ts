@@ -114,30 +114,32 @@ export async function GET(request: NextRequest) {
           try { parsedTags = JSON.parse(row.keywords); } catch (e) {}
         }
 
-        // Auto Image & Category Tag Generator
+        // Auto Image & Category Tag Generator (High-level clean tags per Khun Aor directive)
         if (!parsedTags || parsedTags.length === 0) {
           const raw = (convText + ' ' + (row.summary || '')).toLowerCase();
           const isImg = raw.includes('photo-') || raw.includes('images') || raw.includes('slip') || raw.includes('📷') || raw.includes('.jpg') || raw.includes('.png');
           
           if (isImg) {
-            if (raw.includes('kbank') || raw.includes('กสิกร') || raw.includes('โอน') || raw.includes('สลิป') || detectedCat === 'deposit_withdrawal') {
-              parsedTags = ['#สลิปโอนเงิน', '#KBANK', '#ฝากถอนเงิน'];
+            if (raw.includes('โอน') || raw.includes('สลิป') || raw.includes('ฝาก') || detectedCat === 'deposit_withdrawal') {
+              parsedTags = ['#รูปภาพล้วน', '#ฝากถอนเงิน'];
             } else if (raw.includes('502') || raw.includes('error') || raw.includes('ค้าง') || detectedCat === 'page_load_freeze') {
-              parsedTags = ['#หน้าเว็บค้าง', '#502Error', '#ส่งเรื่องทีมเทคนิค'];
+              parsedTags = ['#รูปภาพล้วน', '#ปัญหาเข้าเว็บ'];
             } else if (raw.includes('password') || raw.includes('รหัส') || detectedCat === 'login_issue') {
-              parsedTags = ['#ล็อกอินขัดข้อง', '#WrongPassword'];
+              parsedTags = ['#รูปภาพล้วน', '#ปัญหาเข้าสู่ระบบ'];
             } else {
-              parsedTags = ['#รูปภาพแนบ', '#รอตรวจสอบ'];
+              parsedTags = ['#รูปภาพล้วน'];
             }
           } else {
-            parsedTags = detectedPri === 'urgent' 
-              ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
-              : detectedCat === 'deposit_withdrawal'
-              ? ['#รอสลิป']
+            parsedTags = detectedCat === 'deposit_withdrawal'
+              ? ['#ฝากถอนเงิน']
+              : detectedCat === 'page_load_freeze' || detectedCat === 'access_blocked'
+              ? ['#ปัญหาเข้าเว็บ']
+              : detectedCat === 'login_issue'
+              ? ['#ปัญหาเข้าสู่ระบบ']
+              : detectedCat === 'game_issue' || detectedCat === 'gameplay_issue'
+              ? ['#ปัญหาเกี่ยวกับเกม']
               : detectedCat === 'promo_bonus'
-              ? ['#ติดตามผล']
-              : detectedPri === 'high'
-              ? ['#เคสพิเศษ']
+              ? ['#โปรโมชัน']
               : ['#สอบถามข้อมูล'];
           }
         }
@@ -182,7 +184,7 @@ export async function GET(request: NextRequest) {
               recommended_reply: 'กราบขออภัยในความไม่สะดวกค่ะ ขณะนี้ทางทีมเทคนิคกำลังเร่งแก้ไขระบบหน้าเว็บให้กลับมาใช้งานได้ตามปกติภายใน 5 นาทีค่ะ'
             }
           ],
-          tags: ['#รูปภาพล้วน', '#หน้าเว็บค้าง', '#502Error'],
+          tags: ['#รูปภาพล้วน', '#ปัญหาเข้าเว็บ'],
           created_at: '2026-08-19T03:45:00.000Z'
         },
         {
@@ -207,7 +209,7 @@ export async function GET(request: NextRequest) {
               recommended_reply: 'แอดมินได้รับสลิปโอนเงิน KBank ยอด 500 บาทเรียบร้อยแล้วค่ะ กำลังตรวจสอบและปรับยอดเข้ายูสเซอร์ให้นะคะ'
             }
           ],
-          tags: ['#รูปภาพล้วน', '#สลิปโอนเงิน', '#KBank'],
+          tags: ['#รูปภาพล้วน', '#ฝากถอนเงิน'],
           created_at: '2026-08-19T03:40:00.000Z'
         },
         {
@@ -232,7 +234,7 @@ export async function GET(request: NextRequest) {
               recommended_reply: 'ลูกค้าสามารถกดปุ่ม ลืมรหัสผ่าน เพื่อตั้งรหัสผ่านใหม่ หรือแจ้งยูสเซอร์เพื่อให้แอดมินช่วยรีเซ็ตรหัสผ่านให้ได้เลยนะคะ'
             }
           ],
-          tags: ['#รูปภาพล้วน', '#ล็อกอินขัดข้อง', '#WrongPassword'],
+          tags: ['#รูปภาพล้วน', '#ปัญหาเข้าสู่ระบบ'],
           created_at: '2026-08-19T03:30:00.000Z'
         }
       ];
