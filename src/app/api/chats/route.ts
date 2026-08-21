@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
 
         // Auto Image & Category Tag Generator (High-level clean tags per Khun Aor directive)
         let parsedTags: string[] = [];
-        if (isImg) parsedTags.push('#รูปภาพล้วน');
+        if (isImg) parsedTags.push('#รูปภาพ');
 
         if (detectedCat === 'deposit_withdrawal' || raw.includes('โอน') || raw.includes('สลิป') || raw.includes('ฝาก') || rawKeyList.some(k => k.includes('สลิป') || k.includes('โอน') || k.toLowerCase().includes('kbank'))) {
           parsedTags.push('#ฝากถอนเงิน');
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
               recommended_reply: 'กราบขออภัยในความไม่สะดวกค่ะ ขณะนี้ทางทีมเทคนิคกำลังเร่งแก้ไขระบบหน้าเว็บให้กลับมาใช้งานได้ตามปกติภายใน 5 นาทีค่ะ'
             }
           ],
-          tags: ['#รูปภาพล้วน', '#ปัญหาเข้าเว็บ'],
+          tags: ['#รูปภาพ', '#ปัญหาเข้าเว็บ'],
           created_at: `${todayPrefix}T10:45:00.000Z`
         },
         {
@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
               recommended_reply: 'แอดมินได้รับสลิปโอนเงิน KBank ยอด 500 บาทเรียบร้อยแล้วค่ะ กำลังตรวจสอบและปรับยอดเข้ายูสเซอร์ให้นะคะ'
             }
           ],
-          tags: ['#รูปภาพล้วน', '#ฝากถอนเงิน'],
+          tags: ['#รูปภาพ', '#ฝากถอนเงิน'],
           created_at: `${todayPrefix}T10:40:00.000Z`
         },
         {
@@ -229,7 +229,7 @@ export async function GET(request: NextRequest) {
               recommended_reply: 'ลูกค้าสามารถกดปุ่ม ลืมรหัสผ่าน เพื่อตั้งรหัสผ่านใหม่ หรือแจ้งยูสเซอร์เพื่อให้แอดมินช่วยรีเซ็ตรหัสผ่านให้ได้เลยนะคะ'
             }
           ],
-          tags: ['#รูปภาพล้วน', '#ปัญหาเข้าสู่ระบบ'],
+          tags: ['#รูปภาพ', '#ปัญหาเข้าสู่ระบบ'],
           created_at: `${todayPrefix}T10:30:00.000Z`
         }
       ];
@@ -471,7 +471,7 @@ export async function GET(request: NextRequest) {
             recommended_reply: 'กราบขออภัยในความไม่สะดวกค่ะ ขณะนี้ทางทีมเทคนิคกำลังเร่งแก้ไขระบบหน้าเว็บให้กลับมาใช้งานได้ตามปกติภายใน 5 นาทีค่ะ'
           }
         ],
-        tags: ['#รูปภาพล้วน', '#ปัญหาเข้าเว็บ'],
+        tags: ['#รูปภาพ', '#ปัญหาเข้าเว็บ'],
         created_at: `${todayPrefix}T10:45:00.000Z`
       },
       {
@@ -496,7 +496,7 @@ export async function GET(request: NextRequest) {
             recommended_reply: 'แอดมินได้รับสลิปโอนเงิน KBank ยอด 500 บาทเรียบร้อยแล้วค่ะ กำลังตรวจสอบและปรับยอดเข้ายูสเซอร์ให้นะคะ'
           }
         ],
-        tags: ['#รูปภาพล้วน', '#ฝากถอนเงิน'],
+        tags: ['#รูปภาพ', '#ฝากถอนเงิน'],
         created_at: `${todayPrefix}T10:40:00.000Z`
       },
       {
@@ -521,7 +521,7 @@ export async function GET(request: NextRequest) {
             recommended_reply: 'ลูกค้าสามารถกดปุ่ม ลืมรหัสผ่าน เพื่อตั้งรหัสผ่านใหม่ หรือแจ้งยูสเซอร์เพื่อให้แอดมินช่วยรีเซ็ตรหัสผ่านให้ได้เลยนะคะ'
           }
         ],
-        tags: ['#รูปภาพล้วน', '#ปัญหาเข้าสู่ระบบ'],
+        tags: ['#รูปภาพ', '#ปัญหาเข้าสู่ระบบ'],
         created_at: `${todayPrefix}T10:30:00.000Z`
       }
     ];
