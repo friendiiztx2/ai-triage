@@ -161,6 +161,8 @@ export async function GET(request: NextRequest) {
         };
       });
 
+      const todayPrefix = new Date().toISOString().substring(0, 10);
+
       const imageChatsSimulated = [
         {
           id: 'chat-10128',
@@ -185,7 +187,7 @@ export async function GET(request: NextRequest) {
             }
           ],
           tags: ['#รูปภาพล้วน', '#ปัญหาเข้าเว็บ'],
-          created_at: '2026-08-19T03:45:00.000Z'
+          created_at: `${todayPrefix}T10:45:00.000Z`
         },
         {
           id: 'chat-10127',
@@ -210,7 +212,7 @@ export async function GET(request: NextRequest) {
             }
           ],
           tags: ['#รูปภาพล้วน', '#ฝากถอนเงิน'],
-          created_at: '2026-08-19T03:40:00.000Z'
+          created_at: `${todayPrefix}T10:40:00.000Z`
         },
         {
           id: 'chat-10129',
@@ -235,7 +237,7 @@ export async function GET(request: NextRequest) {
             }
           ],
           tags: ['#รูปภาพล้วน', '#ปัญหาเข้าสู่ระบบ'],
-          created_at: '2026-08-19T03:30:00.000Z'
+          created_at: `${todayPrefix}T10:30:00.000Z`
         }
       ];
 
@@ -451,6 +453,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Always include the 3 simulated image-only chats at the top for Khun Aor preview
+    const todayPrefix = new Date().toISOString().substring(0, 10);
+
     const imageChatsSimulated = [
       {
         id: 'chat-10128',
@@ -474,8 +478,8 @@ export async function GET(request: NextRequest) {
             recommended_reply: 'กราบขออภัยในความไม่สะดวกค่ะ ขณะนี้ทางทีมเทคนิคกำลังเร่งแก้ไขระบบหน้าเว็บให้กลับมาใช้งานได้ตามปกติภายใน 5 นาทีค่ะ'
           }
         ],
-        tags: ['#รูปภาพล้วน', '#หน้าเว็บค้าง', '#502Error'],
-        created_at: '2026-08-19T03:45:00.000Z'
+        tags: ['#รูปภาพล้วน', '#ปัญหาเข้าเว็บ'],
+        created_at: `${todayPrefix}T10:45:00.000Z`
       },
       {
         id: 'chat-10127',
@@ -499,8 +503,8 @@ export async function GET(request: NextRequest) {
             recommended_reply: 'แอดมินได้รับสลิปโอนเงิน KBank ยอด 500 บาทเรียบร้อยแล้วค่ะ กำลังตรวจสอบและปรับยอดเข้ายูสเซอร์ให้นะคะ'
           }
         ],
-        tags: ['#รูปภาพล้วน', '#สลิปโอนเงิน', '#KBank'],
-        created_at: '2026-08-19T03:40:00.000Z'
+        tags: ['#รูปภาพล้วน', '#ฝากถอนเงิน'],
+        created_at: `${todayPrefix}T10:40:00.000Z`
       },
       {
         id: 'chat-10129',
@@ -524,8 +528,8 @@ export async function GET(request: NextRequest) {
             recommended_reply: 'ลูกค้าสามารถกดปุ่ม ลืมรหัสผ่าน เพื่อตั้งรหัสผ่านใหม่ หรือแจ้งยูสเซอร์เพื่อให้แอดมินช่วยรีเซ็ตรหัสผ่านให้ได้เลยนะคะ'
           }
         ],
-        tags: ['#รูปภาพล้วน', '#ล็อกอินขัดข้อง', '#WrongPassword'],
-        created_at: '2026-08-19T03:30:00.000Z'
+        tags: ['#รูปภาพล้วน', '#ปัญหาเข้าสู่ระบบ'],
+        created_at: `${todayPrefix}T10:30:00.000Z`
       }
     ];
 
