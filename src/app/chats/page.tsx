@@ -311,7 +311,7 @@ function FloatingChatWindow({
             const issueKey = issue.id || 'issue-0';
             initialMap[issueKey] = {
               category_id: getBaseCatId(issue.category_id || chat?.category_id || ''),
-              priority: issue.priority || inferPriorityFromText(issue.summary || '', chat?.priority)
+              priority: (issue.priority || inferPriorityFromText(issue.summary || '', 'medium')).toLowerCase()
             };
           }
         });
