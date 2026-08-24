@@ -2000,7 +2000,6 @@ export default function ChatsPage() {
                   <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้' : 'Timeframe: Today'}</option>
                   <option value="7days">{language === 'th' ? 'ช่วงเวลา: 7 วันล่าสุด' : 'Timeframe: Last 7 Days'}</option>
                   <option value="30days">{language === 'th' ? 'ช่วงเวลา: 30 วันล่าสุด' : 'Timeframe: Last 30 Days'}</option>
-                  <option value="all">{language === 'th' ? 'ช่วงเวลา: ทั้งหมด (All Time)' : 'Timeframe: All Time'}</option>
                   <option value="custom">{language === 'th' ? 'ระบุช่วงวันที่เอง...' : 'Custom Range...'}</option>
                 </select>
               </div>
