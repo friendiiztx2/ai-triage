@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       summary: summaryText,
       category_id: finalCat,
       priority: finalPri,
-      status: body.status || 'pending',
+      status: body.status || 'completed',
       company_id: compId,
       created_at: new Date().toISOString()
     };
