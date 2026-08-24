@@ -2029,57 +2029,6 @@ export default function ChatsPage() {
               )}
             </div>
           </div>
-
-          {/* Recommendation #2: Quick Filter Pills */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100/80 dark:border-slate-800/80">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">
-              {language === 'th' ? '⚡ ปุ่มลัดคัดกรองด่วน:' : '⚡ Quick Filters:'}
-            </span>
-            <button
-              type="button"
-              onClick={() => setPriorityFilter(priorityFilter === 'urgent' ? 'all' : 'urgent')}
-              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                priorityFilter === 'urgent'
-                  ? 'bg-rose-500 text-white border-rose-600 shadow-xs scale-105'
-                  : 'bg-rose-50 dark:bg-rose-955/30 text-rose-600 dark:text-rose-400 border-rose-200/80 dark:border-rose-900/50 hover:bg-rose-100'
-              }`}
-            >
-              <span>🔴</span> {language === 'th' ? 'เคสด่วนที่สุด (URGENT)' : 'URGENT'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
-              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                statusFilter === 'pending'
-                  ? 'bg-amber-500 text-white border-amber-600 shadow-xs scale-105'
-                  : 'bg-amber-50 dark:bg-amber-955/30 text-amber-600 dark:text-amber-400 border-amber-200/80 dark:border-amber-900/50 hover:bg-amber-100'
-              }`}
-            >
-              <span>⏳</span> {language === 'th' ? 'รอดำเนินการ (PENDING)' : 'PENDING'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTagFilter(tagFilter === '#รูปภาพ' ? 'all' : '#รูปภาพ')}
-              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                tagFilter === '#รูปภาพ'
-                  ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs scale-105'
-                  : 'bg-indigo-50 dark:bg-indigo-955/30 text-indigo-600 dark:text-indigo-400 border-indigo-200/80 dark:border-indigo-900/50 hover:bg-indigo-100'
-              }`}
-            >
-              <span>📷</span> {language === 'th' ? 'เคสรูปภาพ (#รูปภาพ)' : '#รูปภาพ'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setCategoryFilter(categoryFilter === 'deposit_withdrawal' ? 'all' : 'deposit_withdrawal')}
-              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                categoryFilter === 'deposit_withdrawal'
-                  ? 'bg-sky-600 text-white border-sky-700 shadow-xs scale-105'
-                  : 'bg-sky-50 dark:bg-sky-955/30 text-sky-600 dark:text-sky-400 border-sky-200/80 dark:border-sky-900/50 hover:bg-sky-100'
-              }`}
-            >
-              <span>💳</span> {language === 'th' ? 'ฝากถอนเงิน' : 'Deposit/Withdraw'}
-            </button>
-          </div>
         </div>
 
         {/* Recommendation #3: Active Filter Chips Bar */}
