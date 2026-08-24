@@ -1986,63 +1986,160 @@ export default function ChatsPage() {
           </div>
         </div>
 
-        {/* Row 2: Date Filter */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Timeframe Filter Dropdown */}
-            <div className="w-[200px]">
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-              >
-                <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้' : 'Timeframe: Today'}</option>
-                <option value="7days">{language === 'th' ? 'ช่วงเวลา: 7 วันล่าสุด' : 'Timeframe: Last 7 Days'}</option>
-                <option value="30days">{language === 'th' ? 'ช่วงเวลา: 30 วันล่าสุด' : 'Timeframe: Last 30 Days'}</option>
-                <option value="custom">{language === 'th' ? 'ระบุช่วงวันที่เอง...' : 'Custom Range...'}</option>
-              </select>
-            </div>
-
-            {dateFilter === 'custom' && (
-              <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-555 bg-slate-50 dark:bg-slate-855/50 p-2 rounded-xl border border-slate-150 dark:border-slate-800">
-                <div className="flex items-center gap-1">
-                  <span className="font-bold">{language === 'th' ? 'จาก:' : 'From:'}</span>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-800 dark:text-slate-100 w-[130px]"
-                  />
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="font-bold">{language === 'th' ? 'ถึง:' : 'To:'}</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-800 dark:text-slate-100 w-[130px]"
-                  />
-                </div>
+        {/* Row 2: Date Filter & Quick Filter Pills */}
+        <div className="flex flex-col gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Timeframe Filter Dropdown */}
+              <div className="w-[200px]">
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
+                >
+                  <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้' : 'Timeframe: Today'}</option>
+                  <option value="7days">{language === 'th' ? 'ช่วงเวลา: 7 วันล่าสุด' : 'Timeframe: Last 7 Days'}</option>
+                  <option value="30days">{language === 'th' ? 'ช่วงเวลา: 30 วันล่าสุด' : 'Timeframe: Last 30 Days'}</option>
+                  <option value="all">{language === 'th' ? 'ช่วงเวลา: ทั้งหมด (All Time)' : 'Timeframe: All Time'}</option>
+                  <option value="custom">{language === 'th' ? 'ระบุช่วงวันที่เอง...' : 'Custom Range...'}</option>
+                </select>
               </div>
-            )}
+
+              {dateFilter === 'custom' && (
+                <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-555 bg-slate-50 dark:bg-slate-855/50 p-2 rounded-xl border border-slate-150 dark:border-slate-800">
+                  <div className="flex items-center gap-1">
+                    <span className="font-bold">{language === 'th' ? 'จาก:' : 'From:'}</span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-800 dark:text-slate-100 w-[130px]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="font-bold">{language === 'th' ? 'ถึง:' : 'To:'}</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-800 dark:text-slate-100 w-[130px]"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recommendation #2: Quick Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100/80 dark:border-slate-800/80">
+            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">
+              {language === 'th' ? '⚡ ปุ่มลัดคัดกรองด่วน:' : '⚡ Quick Filters:'}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPriorityFilter(priorityFilter === 'urgent' ? 'all' : 'urgent')}
+              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                priorityFilter === 'urgent'
+                  ? 'bg-rose-500 text-white border-rose-600 shadow-xs scale-105'
+                  : 'bg-rose-50 dark:bg-rose-955/30 text-rose-600 dark:text-rose-400 border-rose-200/80 dark:border-rose-900/50 hover:bg-rose-100'
+              }`}
+            >
+              <span>🔴</span> {language === 'th' ? 'เคสด่วนที่สุด (URGENT)' : 'URGENT'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
+              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                statusFilter === 'pending'
+                  ? 'bg-amber-500 text-white border-amber-600 shadow-xs scale-105'
+                  : 'bg-amber-50 dark:bg-amber-955/30 text-amber-600 dark:text-amber-400 border-amber-200/80 dark:border-amber-900/50 hover:bg-amber-100'
+              }`}
+            >
+              <span>⏳</span> {language === 'th' ? 'รอดำเนินการ (PENDING)' : 'PENDING'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTagFilter(tagFilter === '#รูปภาพ' ? 'all' : '#รูปภาพ')}
+              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                tagFilter === '#รูปภาพ'
+                  ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs scale-105'
+                  : 'bg-indigo-50 dark:bg-indigo-955/30 text-indigo-600 dark:text-indigo-400 border-indigo-200/80 dark:border-indigo-900/50 hover:bg-indigo-100'
+              }`}
+            >
+              <span>📷</span> {language === 'th' ? 'เคสรูปภาพ (#รูปภาพ)' : '#รูปภาพ'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCategoryFilter(categoryFilter === 'deposit_withdrawal' ? 'all' : 'deposit_withdrawal')}
+              className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                categoryFilter === 'deposit_withdrawal'
+                  ? 'bg-sky-600 text-white border-sky-700 shadow-xs scale-105'
+                  : 'bg-sky-50 dark:bg-sky-955/30 text-sky-600 dark:text-sky-400 border-sky-200/80 dark:border-sky-900/50 hover:bg-sky-100'
+              }`}
+            >
+              <span>💳</span> {language === 'th' ? 'ฝากถอนเงิน' : 'Deposit/Withdraw'}
+            </button>
           </div>
         </div>
 
-        {/* 1-Click Clear Filters Bar */}
-          {isAnyFilterActive && (
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">
-                {language === 'th' ? `พบรายการคัดกรอง ${filteredChats.length} รายการ` : `Found ${filteredChats.length} filtered results`}
+        {/* Recommendation #3: Active Filter Chips Bar */}
+        {isAnyFilterActive && (
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-400 font-semibold mr-1">
+                {language === 'th' ? `ฟิลเตอร์ที่เปิดใช้งานอยู่ (` : 'Active Filters ('}
+                <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{filteredChats.length}</span>
+                {language === 'th' ? ` รายการ):` : ` results):`}
               </span>
-              <button
-                onClick={handleClearFilters}
-                className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-bold bg-rose-50 dark:bg-rose-955/30 px-3 py-1.5 rounded-lg border border-rose-100 dark:border-rose-900/40 transition cursor-pointer"
-              >
-                <RotateCcw size={12} />
-                <span>{language === 'th' ? 'ล้างตัวกรองทั้งหมด' : 'Clear All Filters'}</span>
-              </button>
+
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-lg border border-slate-250 dark:border-slate-700 font-bold text-[11px]">
+                  🔍 {searchQuery}
+                  <button type="button" onClick={() => setSearchQuery('')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
+                </span>
+              )}
+              {statusFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-900/50 font-bold text-[11px]">
+                  ⏳ {statusFilter === 'pending' ? 'รอดำเนินการ' : 'แยกแยะแล้ว'}
+                  <button type="button" onClick={() => setStatusFilter('all')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
+                </span>
+              )}
+              {priorityFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 bg-rose-50 dark:bg-rose-955/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-lg border border-rose-200 dark:border-rose-900/50 font-bold text-[11px]">
+                  🔴 {priorityFilter.toUpperCase()}
+                  <button type="button" onClick={() => setPriorityFilter('all')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
+                </span>
+              )}
+              {categoryFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 bg-sky-50 dark:bg-sky-955/40 text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-lg border border-sky-200 dark:border-sky-900/50 font-bold text-[11px]">
+                  📌 {categories.find((c: any) => c.id === categoryFilter)?.name || categoryFilter}
+                  <button type="button" onClick={() => setCategoryFilter('all')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
+                </span>
+              )}
+              {tagFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-955/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-900/50 font-bold text-[11px]">
+                  🏷️ {tagFilter}
+                  <button type="button" onClick={() => setTagFilter('all')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
+                </span>
+              )}
+              {dateFilter !== 'today' && (
+                <span className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-955/40 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-lg border border-purple-200 dark:border-purple-900/50 font-bold text-[11px]">
+                  📅 {dateFilter === '7days' ? '7 วันล่าสุด' : dateFilter === '30days' ? '30 วันล่าสุด' : dateFilter === 'all' ? 'ทั้งหมด' : 'กำหนดเอง'}
+                  <button type="button" onClick={() => setDateFilter('today')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
+                </span>
+              )}
             </div>
-          )}
+
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-bold bg-rose-50 dark:bg-rose-955/30 px-3 py-1.5 rounded-lg border border-rose-100 dark:border-rose-900/40 transition cursor-pointer shrink-0"
+            >
+              <RotateCcw size={12} />
+              <span>{language === 'th' ? 'ล้างตัวกรองทั้งหมด' : 'Clear All Filters'}</span>
+            </button>
+          </div>
+        )}
         </div>
 
         {/* Bulk Action Bar */}
