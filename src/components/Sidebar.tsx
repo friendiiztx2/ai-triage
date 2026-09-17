@@ -198,7 +198,7 @@ export default function Sidebar() {
         {/* Luxury Logo Badge */}
         <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center gap-0' : 'gap-3.5'}`}>
           <div className="relative group cursor-pointer">
-            <div className="relative overflow-hidden bg-gradient-to-br from-purple-700 via-indigo-600 to-purple-900 text-white p-3 rounded-2xl shadow-xl shadow-purple-600/40 ring-4 ring-purple-500/25 border border-purple-300/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-purple-600/60 shrink-0 flex items-center justify-center">
+            <div className="relative overflow-hidden bg-gradient-to-br from-rose-600 via-red-500 to-rose-700 text-white p-3 rounded-2xl shadow-xl shadow-rose-600/40 ring-4 ring-rose-500/25 border border-rose-300/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-rose-600/60 shrink-0 flex items-center justify-center">
               {/* Subtle glass shimmer layer */}
               <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
               <BrainCircuit size={24} className="text-white drop-shadow-md relative z-10" />
@@ -213,7 +213,7 @@ export default function Sidebar() {
           {!isCollapsed && (
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-white dark:via-indigo-100 dark:to-slate-200 text-lg leading-none tracking-tight font-display">
+                <h1 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-rose-950 to-slate-800 dark:from-white dark:via-rose-100 dark:to-slate-200 text-lg leading-none tracking-tight font-display">
                   AI Triage
                 </h1>
                 <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/20 uppercase tracking-widest border border-amber-300/40">
@@ -221,7 +221,7 @@ export default function Sidebar() {
                 </span>
               </div>
               <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[9.5px] font-extrabold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase flex items-center gap-1">
+                <span className="text-[9.5px] font-extrabold text-rose-600 dark:text-rose-400 tracking-widest uppercase flex items-center gap-1">
                   COMMAND CENTER
                 </span>
               </div>

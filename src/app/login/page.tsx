@@ -164,7 +164,7 @@ export default function LoginPage() {
             <BrainCircuit size={28} />
           </div>
           <h1 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl leading-none">AI Triage</h1>
-          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold tracking-wider uppercase mt-1">Back Office Dashboard</span>
+          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold tracking-wider uppercase mt-1">Back Office Dashboard</span>
         </div>
 
         {error && (
