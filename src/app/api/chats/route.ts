@@ -23,7 +23,8 @@ function determineStatus(item: any): string {
 }
 
 export async function GET(request: NextRequest) {
-  const cacheKey = request.url;
+  const companyId = request.nextUrl.searchParams.get('company_id') || request.cookies.get('company_id')?.value;
+  const cacheKey = request.url + (companyId ? `_comp_${companyId}` : '');
   const now = Date.now();
   const cached = serverCache.get(cacheKey);
 
@@ -53,6 +54,10 @@ export async function GET(request: NextRequest) {
         .from('chats')
         .select('id, customer_id, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords')
         .order('created_at', { ascending: false });
+
+      if (companyId && companyId !== 'all') {
+        lightQuery = lightQuery.eq('company_id', companyId);
+      }
 
       if (targetId) {
         lightQuery = lightQuery.eq('id', targetId);
@@ -236,7 +241,8 @@ export async function GET(request: NextRequest) {
 
       imageChatsSimulated.forEach(sim => {
         if (!items.some((c: any) => c.id === sim.id)) {
-          if (!targetId || targetId === sim.id) {
+          const matchCompany = !companyId || companyId === 'all' || sim.company_id === companyId;
+          if ((!targetId || targetId === sim.id) && matchCompany) {
             items.unshift(sim);
           }
         }
@@ -256,6 +262,10 @@ export async function GET(request: NextRequest) {
       .from('chats')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (companyId && companyId !== 'all') {
+      chatsQuery = chatsQuery.eq('company_id', companyId);
+    }
 
     if (targetId) {
       chatsQuery = chatsQuery.eq('id', targetId);
@@ -349,6 +359,10 @@ export async function GET(request: NextRequest) {
       .from('vw_triage_export')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (companyId && companyId !== 'all') {
+      exportQuery = exportQuery.eq('company_id', companyId);
+    }
 
     if (targetId) {
       exportQuery = exportQuery.eq('chat_id', targetId);
@@ -528,7 +542,8 @@ export async function GET(request: NextRequest) {
 
     imageChatsSimulated.forEach(sim => {
       if (!resultList.some((c: any) => c.id === sim.id)) {
-        if (!targetId || targetId === sim.id) {
+        const matchCompany = !companyId || companyId === 'all' || sim.company_id === companyId;
+        if ((!targetId || targetId === sim.id) && matchCompany) {
           resultList.unshift(sim);
         }
       }

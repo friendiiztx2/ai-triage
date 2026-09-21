@@ -1033,6 +1033,7 @@ export default function ChatsPage() {
   const [chats, setChats] = useState<any[]>([]);
   const [filteredChats, setFilteredChats] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [activeCompanyId, setActiveCompanyId] = useState<string>('2c3f46cc-fae8-4ef8-99e1-874dec8b2af2');
   
   // Floating Windows state
   const [activeWindows, setActiveWindows] = useState<any[]>([]);
@@ -1189,13 +1190,14 @@ export default function ChatsPage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Calculate Filter Badge Counts
-  const pendingCount = chats.filter(c => (c.status || 'pending') === 'pending').length;
-  const completedCount = chats.filter(c => c.status === 'completed').length;
+  const companyFilteredChats = chats.filter(c => !activeCompanyId || activeCompanyId === 'all' || c.company_id === activeCompanyId);
+  const pendingCount = companyFilteredChats.filter(c => (c.status || 'pending') === 'pending').length;
+  const completedCount = companyFilteredChats.filter(c => c.status === 'completed').length;
 
-  const urgentCount = chats.filter(c => (c.priority || '').toLowerCase() === 'urgent').length;
-  const highCount = chats.filter(c => (c.priority || '').toLowerCase() === 'high').length;
-  const mediumCount = chats.filter(c => (c.priority || '').toLowerCase() === 'medium').length;
-  const lowCount = chats.filter(c => (c.priority || '').toLowerCase() === 'low').length;
+  const urgentCount = companyFilteredChats.filter(c => (c.priority || '').toLowerCase() === 'urgent').length;
+  const highCount = companyFilteredChats.filter(c => (c.priority || '').toLowerCase() === 'high').length;
+  const mediumCount = companyFilteredChats.filter(c => (c.priority || '').toLowerCase() === 'medium').length;
+  const lowCount = companyFilteredChats.filter(c => (c.priority || '').toLowerCase() === 'low').length;
 
   const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all' || tagFilter !== 'all' || dateFilter !== 'today' || auditFilter !== 'all';
 
@@ -1549,9 +1551,13 @@ export default function ChatsPage() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
+      const matchCookie = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )company_id=([^;]*)/) : null;
+      const compId = matchCookie ? decodeURIComponent(matchCookie[1]) : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' : '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2');
+      setActiveCompanyId(compId);
+
       const [catRes, chatsRes] = await Promise.all([
-        fetch('/api/categories'),
-        fetch('/api/chats?summary_only=true&nocache=' + Date.now())
+        fetch(`/api/categories?company_id=${compId}`),
+        fetch(`/api/chats?summary_only=true&company_id=${compId}&nocache=${Date.now()}`)
       ]);
 
       if (catRes.ok) {

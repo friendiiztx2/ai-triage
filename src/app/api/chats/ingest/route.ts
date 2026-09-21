@@ -38,7 +38,21 @@ export async function POST(request: NextRequest) {
 
     const chatId = body.id || body.chat_id || body.chatId || `chat-${Date.now()}`;
     const custId = rawCustId || 'cust-001';
-    const compId = body.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+    let compId = body.company_id || body.companyId;
+    if (!compId && (body.company_name || body.companyName || body.company)) {
+      const compName = String(body.company_name || body.companyName || body.company).toLowerCase();
+      if (compName.includes('alpha')) {
+        compId = '2e65829a-6a60-4022-8289-0fe64ec98fae';
+      } else if (compName.includes('mika')) {
+        compId = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+      } else {
+        const { data: comp } = await db.from('companies').select('id').ilike('name', `%${compName}%`).maybeSingle();
+        if (comp) compId = comp.id;
+      }
+    }
+    if (!compId) {
+      compId = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+    }
     const summaryText = body.summary || conversationStr.split('\n')[0] || 'ลูกค้าสอบถามปัญหาผ่านแชท';
 
     // 1. Smart AI Auto-Categorization & Priority inference if not provided
