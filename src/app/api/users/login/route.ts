@@ -13,17 +13,19 @@ export async function POST(request: NextRequest) {
     const passVal = password.trim();
 
     // Query users table matching email or name (case-insensitive) and password using admin bypass
-    const { data: dbUser, error } = await db
+    const { data: dbUsers, error } = await db
       .from('users')
       .select('*')
       .or(`email.ilike.${inputVal},name.ilike.${inputVal}`)
       .eq('password', passVal)
-      .maybeSingle();
+      .limit(1);
 
     if (error) {
       console.error('Login DB query error:', error);
       return NextResponse.json({ error: 'เกิดข้อผิดพลาดในการตรวจสอบบัญชี' }, { status: 500 });
     }
+
+    const dbUser = dbUsers?.[0];
 
     if (dbUser) {
       if (dbUser.is_active === false) {

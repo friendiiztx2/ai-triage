@@ -75,8 +75,8 @@ export default function Sidebar() {
       const parsed = JSON.parse(savedSession);
       setUserProfile(parsed);
 
-      // Fetch all companies if system_admin
-      if (parsed.role === 'system_admin') {
+      // Fetch all companies if system_admin or super_admin
+      if (parsed.role === 'system_admin' || parsed.role === 'super_admin') {
         fetch('/api/companies')
           .then(r => r.json())
           .then(data => {
@@ -246,7 +246,7 @@ export default function Sidebar() {
             {(() => {
               const isSuper = userProfile?.role === 'super_admin' || userProfile?.role === 'system_admin';
               const allowedIds = isSuper 
-                ? (companies.length > 0 ? companies.map(c => c.id) : ['2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', '2e65829a-6a60-4022-8289-0fe64ec98fae'])
+                ? (companies.length > 0 ? companies.map(c => c.id) : ['2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', '2e65829a-6a60-4022-8289-0fe64ec98fae', 'e8070735-9651-4dd5-8055-bd65afbc9da8'])
                 : (userProfile?.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
 
               const showDropdown = isSuper || allowedIds.length > 1;
@@ -277,6 +277,7 @@ export default function Sidebar() {
                   >
                     <option value="2c3f46cc-fae8-4ef8-99e1-874dec8b2af2">{language === 'th' ? 'Mika Co. (บริษัทเริ่มต้น)' : 'Mika Co. (Default)'}</option>
                     <option value="2e65829a-6a60-4022-8289-0fe64ec98fae">Alpha Support Co., Ltd.</option>
+                    <option value="e8070735-9651-4dd5-8055-bd65afbc9da8">DEVD เทส</option>
                   </select>
                 );
               } else {

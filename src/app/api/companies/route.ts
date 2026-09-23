@@ -11,7 +11,7 @@ async function verifySystemAdmin(request: NextRequest): Promise<boolean> {
     if (sessionCookie) {
       try {
         const parsed = JSON.parse(decodeURIComponent(sessionCookie));
-        return parsed.role === 'system_admin';
+        return parsed.role === 'system_admin' || parsed.role === 'super_admin';
       } catch (e) {
         return false;
       }
@@ -19,15 +19,14 @@ async function verifySystemAdmin(request: NextRequest): Promise<boolean> {
     return false;
   }
 
-  const { data: user, error } = await supabase
+  const { data: users, error } = await supabase
     .from('users')
     .select('role')
     .eq('email', email.trim().toLowerCase())
-    .eq('password', password.trim())
-    .maybeSingle();
+    .eq('password', password.trim());
 
-  if (error || !user) return false;
-  return user.role === 'system_admin';
+  if (error || !users || users.length === 0) return false;
+  return users.some((u: any) => u.role === 'system_admin' || u.role === 'super_admin');
 }
 
 export async function GET(request: NextRequest) {
