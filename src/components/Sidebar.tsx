@@ -87,22 +87,30 @@ export default function Sidebar() {
 
       // Security check for allowed companies for this specific user
       const isSuper = parsed.role === 'super_admin' || parsed.role === 'system_admin';
-      const allowedIds = isSuper ? 
-        ['2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', '2e65829a-6a60-4022-8289-0fe64ec98fae'] : 
-        (parsed.company_id || '').split(',').filter(Boolean);
 
       // Check current active company cookie
       const matchCookie = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
       const currentActive = matchCookie ? decodeURIComponent(matchCookie[1]) : localStorage.getItem('company_id');
 
-      if (currentActive && allowedIds.includes(currentActive)) {
-        setActiveCompany(currentActive);
+      if (isSuper) {
+        if (currentActive) {
+          setActiveCompany(currentActive);
+        } else {
+          const firstAllowed = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+          document.cookie = `company_id=${firstAllowed}; path=/; max-age=31536000`;
+          localStorage.setItem('company_id', firstAllowed);
+          setActiveCompany(firstAllowed);
+        }
       } else {
-        // Reset to first allowed company automatically
-        const firstAllowed = allowedIds[0] || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
-        document.cookie = `company_id=${firstAllowed}; path=/; max-age=31536000`;
-        localStorage.setItem('company_id', firstAllowed);
-        setActiveCompany(firstAllowed);
+        const allowedIds = (parsed.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
+        if (currentActive && allowedIds.includes(currentActive)) {
+          setActiveCompany(currentActive);
+        } else {
+          const firstAllowed = allowedIds[0] || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+          document.cookie = `company_id=${firstAllowed}; path=/; max-age=31536000`;
+          localStorage.setItem('company_id', firstAllowed);
+          setActiveCompany(firstAllowed);
+        }
       }
     } catch (e) {
       window.location.href = '/login';
@@ -237,47 +245,45 @@ export default function Sidebar() {
             </label>
             {(() => {
               const isSuper = userProfile?.role === 'super_admin' || userProfile?.role === 'system_admin';
-              const allowedIds = isSuper ? 
-                ['2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', '2e65829a-6a60-4022-8289-0fe64ec98fae'] : 
-                (userProfile?.company_id || '').split(',').filter(Boolean);
+              const allowedIds = isSuper 
+                ? (companies.length > 0 ? companies.map(c => c.id) : ['2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', '2e65829a-6a60-4022-8289-0fe64ec98fae'])
+                : (userProfile?.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
 
               const showDropdown = isSuper || allowedIds.length > 1;
 
               if (showDropdown) {
-                // If system_admin and companies list loaded, render dynamically
-                if (userProfile?.role === 'system_admin' && companies.length > 0) {
+                // If companies list loaded, render dynamically
+                if (companies.length > 0) {
+                  const filteredCompanies = isSuper ? companies : companies.filter(c => allowedIds.includes(c.id));
                   return (
                     <select
                       value={activeCompany}
                       onChange={handleCompanyChange}
                       className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition cursor-pointer"
                     >
-                      {companies.map(c => (
+                      {filteredCompanies.map(c => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>
                   );
                 }
 
-                // Otherwise render static allowed companies list
+                // Fallback while loading
                 return (
                   <select
                     value={activeCompany}
                     onChange={handleCompanyChange}
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition cursor-pointer"
                   >
-                    {allowedIds.includes('2c3f46cc-fae8-4ef8-99e1-874dec8b2af2') && (
-                      <option value="2c3f46cc-fae8-4ef8-99e1-874dec8b2af2">{language === 'th' ? 'Mika Co. (บริษัทเริ่มต้น)' : 'Mika Co. (Default)'}</option>
-                    )}
-                    {allowedIds.includes('2e65829a-6a60-4022-8289-0fe64ec98fae') && (
-                      <option value="2e65829a-6a60-4022-8289-0fe64ec98fae">Alpha Support Co., Ltd.</option>
-                    )}
+                    <option value="2c3f46cc-fae8-4ef8-99e1-874dec8b2af2">{language === 'th' ? 'Mika Co. (บริษัทเริ่มต้น)' : 'Mika Co. (Default)'}</option>
+                    <option value="2e65829a-6a60-4022-8289-0fe64ec98fae">Alpha Support Co., Ltd.</option>
                   </select>
                 );
               } else {
+                const currentName = companies.find(c => c.id === activeCompany)?.name || (activeCompany === '2e65829a-6a60-4022-8289-0fe64ec98fae' ? 'Alpha Support Co., Ltd.' : (language === 'th' ? 'Mika Co. (บริษัทเริ่มต้น)' : 'Mika Co. (Default)'));
                 return (
                   <div className="bg-slate-50 dark:bg-slate-855/50 border border-slate-100 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
-                    {activeCompany === '2e65829a-6a60-4022-8289-0fe64ec98fae' ? 'Alpha Support Co., Ltd.' : (language === 'th' ? 'Mika Co. (บริษัทเริ่มต้น)' : 'Mika Co. (Default)')}
+                    {currentName}
                   </div>
                 );
               }
