@@ -302,6 +302,7 @@ function FloatingChatWindow({
   onUpdateTags,
   onOpenChat
 }: any) {
+  const { language, t } = useLanguage();
   const [x, setX] = useState(initialX);
   const [y, setY] = useState(initialY);
   const [width, setWidth] = useState(760);
@@ -2407,6 +2408,7 @@ export default function ChatsPage() {
             setActiveWindows(prev => prev.map(w => w.id === win.id ? { ...w, x: newX, y: newY } : w));
           }}
           onUpdateTags={handleUpdateTags}
+          language={language}
         />
       ))}
 
