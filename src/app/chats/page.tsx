@@ -1559,6 +1559,13 @@ export default function ChatsPage() {
         setUserProfile(JSON.parse(savedSession));
       } catch (e) {}
     }
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const catParam = params.get('category');
+      if (catParam) {
+        setCategoryFilter(getBaseCatId(catParam));
+      }
+    }
   }, []);
 
   const previousChatsRef = useRef<Map<string, string>>(new Map());
@@ -1698,11 +1705,12 @@ export default function ChatsPage() {
     }
 
     if (categoryFilter !== 'all') {
+      const targetBase = getBaseCatId(categoryFilter);
       result = result.filter(c => {
         if (c.chat_issues && c.chat_issues.length > 0) {
-          return c.chat_issues.some((issue: any) => issue.category_id === categoryFilter);
+          return c.chat_issues.some((issue: any) => issue.category_id === categoryFilter || getBaseCatId(issue.category_id) === targetBase);
         }
-        return c.category_id === categoryFilter;
+        return c.category_id === categoryFilter || getBaseCatId(c.category_id) === targetBase;
       });
     }
 
@@ -1972,7 +1980,7 @@ export default function ChatsPage() {
             >
               <option value="all">{t('filterCategory')}</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{formatCategoryLabel(cat.name, language)}</option>
+                <option key={cat.id} value={getBaseCatId(cat.id)}>{formatCategoryLabel(cat.name, language)}</option>
               ))}
             </select>
           </div>

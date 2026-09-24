@@ -9,11 +9,68 @@ import { saveAuditLog } from '@/lib/audit';
 import Link from 'next/link';
 import { useLanguage } from '@/components/LanguageContext';
 
+function getBaseCatId(id: string): string {
+  if (!id || typeof id !== 'string') return '';
+  return id.includes(':') ? id.split(':')[1] : id;
+}
+
+function formatCategoryLabel(rawName: string, lang: 'th' | 'en' = 'th'): string {
+  if (!rawName || typeof rawName !== 'string') return '';
+  const match = rawName.match(/^(.+?)\s*\(([^)]+)\)$/);
+  if (match) {
+    const thaiPart = match[1].trim();
+    const engPart = match[2].trim();
+    if (lang === 'en') return engPart;
+    if (lang === 'th') return thaiPart;
+    return `${thaiPart} (${engPart})`;
+  }
+  return rawName;
+}
+
+const KNOWN_CATEGORY_NAMES: Record<string, { th: string; en: string }> = {
+  deposit_withdrawal: { th: 'การเงินและการชำระเงิน', en: 'Deposit & Withdrawal' },
+  page_load_freeze: { th: 'หน้าเว็บค้าง / โหลดหมุน', en: 'Page Load / Freeze' },
+  ui_rendering_issue: { th: 'ปัญหากราฟิก / การแสดงผลเว็บ', en: 'UI Rendering Issue' },
+  login_issue: { th: 'เข้าใช้งาน / เข้าสู่ระบบ', en: 'Login Issue' },
+  access_blocked: { th: 'เข้าหน้าเว็บไม่ได้ / ลิงก์เสีย', en: 'Access Blocked' },
+  promo_bonus: { th: 'โปรโมชั่นและโบนัส', en: 'Promo & Bonus' },
+  game_issue: { th: 'ปัญหาเกี่ยวกับตัวเกม', en: 'Game Issue' },
+  gameplay_issue: { th: 'ปัญหาเกี่ยวกับตัวเกม', en: 'Game Issue' },
+  account_security: { th: 'ความปลอดภัยของบัญชี', en: 'Account Security' },
+  api_error: { th: 'ข้อผิดพลาดระบบ API', en: 'API Error' },
+  payment_gateway: { th: 'ระบบการชำระเงิน / ธนาคาร', en: 'Payment Gateway' },
+  notification_issue: { th: 'ปัญหาการแจ้งเตือน', en: 'Notification Issue' },
+  interaction_lag: { th: 'ระบบการทำงานล่าช้า', en: 'System Lag' },
+  device_compatibility: { th: 'ความเข้ากันได้ของอุปกรณ์', en: 'Device Compatibility' },
+  registration: { th: 'การสมัครสมาชิก', en: 'Registration' },
+  feature_request: { th: 'ขอเพิ่มฟีเจอร์', en: 'Feature Request' },
+  feedback_complaint: { th: 'ข้อเสนอแนะและร้องเรียน', en: 'Feedback & Complaint' },
+  performance_issue: { th: 'ประสิทธิภาพระบบช้า', en: 'Performance Issue' },
+  vip_privilege: { th: 'สิทธิประโยชน์ระดับ VIP', en: 'VIP Privileges' },
+  other: { th: 'เรื่องอื่นๆ', en: 'Other Inquiries' }
+};
+
+function getCategoryDisplayName(catKey: string, categories: any[] = [], lang: 'th' | 'en' = 'th'): string {
+  const baseKey = getBaseCatId(catKey);
+  const found = categories.find(c => c.id === catKey || getBaseCatId(c.id) === baseKey);
+  if (found && (found.name || found.title)) {
+    return formatCategoryLabel(found.name || found.title, lang);
+  }
+  if (KNOWN_CATEGORY_NAMES[baseKey]) {
+    return KNOWN_CATEGORY_NAMES[baseKey][lang] || KNOWN_CATEGORY_NAMES[baseKey].th;
+  }
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(baseKey)) {
+    return lang === 'th' ? 'เรื่องอื่นๆ' : 'Other Inquiries';
+  }
+  return baseKey || (lang === 'th' ? 'เรื่องอื่นๆ' : 'Other');
+}
+
 export default function CategoriesPage() {
   const { t, language } = useLanguage();
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryStats, setCategoryStats] = useState<Record<string, number>>({});
+  const [totalChatsCount, setTotalChatsCount] = useState(0);
   
   // Add Category Modal states
   const [showModal, setShowModal] = useState(false);
@@ -48,28 +105,44 @@ export default function CategoriesPage() {
     }
   }, []);
 
+  const getActiveCompanyId = () => {
+    if (typeof document !== 'undefined') {
+      const matchCookie = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
+      if (matchCookie) return decodeURIComponent(matchCookie[1]);
+    }
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('company_id') || '';
+    }
+    return '';
+  };
+
   const fetchCategories = async () => {
     setLoading(true);
     try {
+      const compId = getActiveCompanyId();
+      const compQuery = compId && compId !== 'all' ? `?company_id=${compId}` : '';
+
       // 1. Fetch categories via Server API Proxy
-      const catRes = await fetch('/api/categories');
+      const catRes = await fetch(`/api/categories${compQuery}`);
       if (catRes.ok) {
         const cats = await catRes.json();
-        setCategories(cats);
+        setCategories(cats || []);
       }
 
       // 2. Fetch chats count to calculate stats via Server API Proxy
-      const chatsRes = await fetch('/api/chats?summary_only=true');
+      const chatsQuery = compId && compId !== 'all' ? `?summary_only=true&company_id=${compId}` : '?summary_only=true';
+      const chatsRes = await fetch(`/api/chats${chatsQuery}`);
       if (chatsRes.ok) {
         const chats = await chatsRes.json();
+        const chatList = Array.isArray(chats) ? chats : [];
+        setTotalChatsCount(chatList.length);
+
+        // Count strictly by normalized baseKey to prevent duplicate counts and unreadable UUID keys
         const counts: Record<string, number> = {};
-        chats.forEach((c: any) => {
+        chatList.forEach((c: any) => {
           const rawCatId = c.category_id || 'other';
-          const baseKey = rawCatId.includes(':') ? rawCatId.split(':')[1] : rawCatId;
-          counts[rawCatId] = (counts[rawCatId] || 0) + 1;
-          if (baseKey !== rawCatId) {
-            counts[baseKey] = (counts[baseKey] || 0) + 1;
-          }
+          const baseKey = getBaseCatId(rawCatId) || 'other';
+          counts[baseKey] = (counts[baseKey] || 0) + 1;
         });
         setCategoryStats(counts);
       }
@@ -474,41 +547,68 @@ export default function CategoriesPage() {
           {/* Feature #4: Category Usage Overview Stat Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center gap-4">
-              <div className="bg-indigo-50 dark:bg-indigo-955/40 text-indigo-600 dark:text-indigo-400 p-3 rounded-xl">
+              <div className="bg-indigo-50 dark:bg-indigo-955/40 text-indigo-600 dark:text-indigo-400 p-3 rounded-xl shrink-0">
                 <Database size={20} />
               </div>
               <div>
-                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">หมวดหมู่หลักทั้งหมด</span>
-                <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-0.5 block">{categories.length} หมวดหมู่</span>
+                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">
+                  {language === 'th' ? 'หมวดหมู่หลักทั้งหมด' : 'Total Categories'}
+                </span>
+                <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-0.5 block">
+                  {categories.length} {language === 'th' ? 'หมวดหมู่' : 'Categories'}
+                </span>
               </div>
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center gap-4">
-              <div className="bg-emerald-50 dark:bg-emerald-955/40 text-emerald-600 dark:text-emerald-400 p-3 rounded-xl">
+              <div className="bg-emerald-50 dark:bg-emerald-955/40 text-emerald-600 dark:text-emerald-400 p-3 rounded-xl shrink-0">
                 <TrendingUp size={20} />
               </div>
               <div>
-                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">เคสรวมทุกหมวดหมู่</span>
+                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">
+                  {language === 'th' ? 'เคสรวมทุกหมวดหมู่' : 'Total Cases'}
+                </span>
                 <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-0.5 block">
-                  {Object.values(categoryStats).reduce((a, b) => a + b, 0)} เคส
+                  {totalChatsCount} {language === 'th' ? 'เคส' : 'Cases'}
                 </span>
               </div>
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex items-center gap-4">
-              <div className="bg-amber-50 dark:bg-amber-955/40 text-amber-600 dark:text-amber-400 p-3 rounded-xl">
+              <div className="bg-amber-50 dark:bg-amber-955/40 text-amber-600 dark:text-amber-400 p-3 rounded-xl shrink-0">
                 <MessageSquare size={20} />
               </div>
-              <div>
-                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">หมวดหมู่ที่พบบ่อยที่สุด</span>
-                <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5 block truncate max-w-[180px]">
-                  {(() => {
-                    const sorted = Object.entries(categoryStats).sort((a, b) => b[1] - a[1]);
-                    if (sorted.length === 0) return 'ไม่มีข้อมูล';
-                    const topCat = categories.find(c => c.id === sorted[0][0]);
-                    return topCat ? `${topCat.name} (${sorted[0][1]} เคส)` : `${sorted[0][0]} (${sorted[0][1]} เคส)`;
-                  })()}
+              <div className="min-w-0 flex-1">
+                <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">
+                  {language === 'th' ? 'หมวดหมู่ที่พบบ่อยที่สุด' : 'Most Frequent Category'}
                 </span>
+                {(() => {
+                  const sorted = Object.entries(categoryStats).filter(([_, count]) => count > 0).sort((a, b) => b[1] - a[1]);
+                  if (sorted.length === 0) {
+                    return (
+                      <span className="text-sm font-bold text-slate-400 mt-0.5 block">
+                        {language === 'th' ? 'ไม่มีข้อมูล' : 'No data'}
+                      </span>
+                    );
+                  }
+                  const topKey = sorted[0][0];
+                  const topCount = sorted[0][1];
+                  const displayName = getCategoryDisplayName(topKey, categories, language);
+
+                  return (
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span 
+                        className="text-base font-extrabold text-indigo-600 dark:text-indigo-400 truncate max-w-[210px]" 
+                        title={displayName}
+                      >
+                        {displayName}
+                      </span>
+                      <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-955/50 border border-indigo-100 dark:border-indigo-900/50 px-2 py-0.5 rounded-full shrink-0">
+                        {topCount} {language === 'th' ? 'เคส' : 'cases'}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -517,9 +617,10 @@ export default function CategoriesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((cat) => {
               const catId = cat.id;
+              const baseKey = getBaseCatId(catId);
               const catName = cat.name || cat.title || catId;
-              const catDesc = cat.description || cat.desc || 'ไม่มีคำอธิบายเพิ่มเติมเกี่ยวกับหมวดหมู่นี้';
-              const ticketCount = categoryStats[catId] || 0;
+              const catDesc = cat.description || cat.desc || (language === 'th' ? 'ไม่มีคำอธิบายเพิ่มเติมเกี่ยวกับหมวดหมู่นี้' : 'No description provided');
+              const ticketCount = categoryStats[baseKey] || categoryStats[catId] || 0;
 
               return (
                 <div key={catId} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-all group duration-250">
@@ -527,9 +628,11 @@ export default function CategoriesPage() {
                     {/* Header */}
                     <div className="flex justify-between items-start gap-4">
                       <div>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase tracking-wider font-semibold">Category ID: {catId.includes(':') ? catId.split(':')[1] : catId}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase tracking-wider font-semibold">
+                          Category ID: {baseKey}
+                        </span>
                         <h3 className="font-extrabold text-base text-slate-800 dark:text-slate-100 mt-1 font-display group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          {catName}
+                          {formatCategoryLabel(catName, language)}
                         </h3>
                       </div>
                       
@@ -538,14 +641,14 @@ export default function CategoriesPage() {
                         <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleStartEdit(cat)}
-                            title="แก้ไขหมวดหมู่"
+                            title={language === 'th' ? 'แก้ไขหมวดหมู่' : 'Edit category'}
                             className="bg-indigo-50 dark:bg-indigo-955/40 text-indigo-600 dark:text-indigo-400 p-2 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors cursor-pointer"
                           >
                             <Settings size={14} />
                           </button>
                           <button
                             onClick={() => handleDeleteCategory(cat)}
-                            title="ลบหมวดหมู่"
+                            title={language === 'th' ? 'ลบหมวดหมู่' : 'Delete category'}
                             className="bg-rose-50 dark:bg-rose-955/40 text-rose-600 dark:text-rose-400 p-2 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900 transition-colors cursor-pointer"
                           >
                             <Trash2 size={14} />
@@ -562,7 +665,7 @@ export default function CategoriesPage() {
 
                   {/* Stat Footer (Clickable to view chats list) */}
                   <Link 
-                    href={`/chats?category=${cat.id}`}
+                    href={`/chats?category=${baseKey}`}
                     className="bg-slate-50 dark:bg-slate-850/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-250 transition-all cursor-pointer group/footer select-none"
                   >
                     <span className="text-slate-400 dark:text-slate-500 group-hover/footer:text-indigo-600 dark:group-hover/footer:text-indigo-400 flex items-center gap-1.5 transition-colors">
@@ -607,7 +710,7 @@ export default function CategoriesPage() {
                   <MessageSquare size={14} /> {language === 'th' ? 'เคสสะสมทั้งหมด' : 'Total Accumulated'}
                 </span>
                 <span className="text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 px-2.5 py-0.5 rounded-lg font-extrabold group-hover/footer:scale-105 transition-transform flex items-center gap-1">
-                  {categoryStats['other'] || categoryStats['Other'] || 0} {language === 'th' ? 'เคส' : 'Cases'} ➡️
+                  {categoryStats['other'] || 0} {language === 'th' ? 'เคส' : 'Cases'} ➡️
                 </span>
               </Link>
             </div>
