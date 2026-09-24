@@ -101,6 +101,20 @@ function getBaseCatId(id: string) {
   return id.includes(':') ? id.split(':')[1] : id;
 }
 
+// Formats category name cleanly according to active language (e.g. Thai only in 'th', English only in 'en')
+function formatCategoryLabel(rawName: string, lang: 'th' | 'en' = 'th'): string {
+  if (!rawName || typeof rawName !== 'string') return '';
+  const match = rawName.match(/^(.+?)\s*\(([^)]+)\)$/);
+  if (match) {
+    const thaiPart = match[1].trim();
+    const engPart = match[2].trim();
+    if (lang === 'en') return engPart;
+    if (lang === 'th') return thaiPart;
+    return `${thaiPart} (${engPart})`;
+  }
+  return rawName;
+}
+
 function inferPriorityFromText(text: string, defaultPri?: string) {
   const raw = (text || '').toLowerCase();
   
@@ -849,13 +863,13 @@ function FloatingChatWindow({
                                   if (idx === 0) setEditCategory(newCat);
                                 }}
                                 disabled={userProfile?.role === 'agent'}
-                                className="flex-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-xs min-w-[130px]"
+                                className="flex-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-xs min-w-[160px]"
                               >
-                                <option value="">-- เลือกหมวดหมู่ --</option>
+                                <option value="">{language === 'th' ? '-- เลือกหมวดหมู่ --' : '-- Select Category --'}</option>
                                 {categories.map((cat: any) => {
                                   const optionVal = getBaseCatId(cat.id);
                                   return (
-                                    <option key={cat.id} value={optionVal}>{cat.name}</option>
+                                    <option key={cat.id} value={optionVal}>{formatCategoryLabel(cat.name, language)}</option>
                                   );
                                 })}
                               </select>
@@ -992,7 +1006,7 @@ function FloatingChatWindow({
                                     <div className="text-[9px] text-slate-400 font-bold">{new Date(log.timestamp).toLocaleString('th-TH')}</div>
                                     <div className="text-slate-700 dark:text-slate-355 font-bold mt-0.5">โดย: {log.actor}</div>
                                     <div className="text-[10px] text-slate-550 dark:text-slate-405 mt-0.5 leading-relaxed">
-                                      หมวดหมู่: <span className="line-through">{oldCatName}</span> ➔ <span className="font-bold text-indigo-600">{newCatName}</span>
+                                      หมวดหมู่: <span className="line-through">{formatCategoryLabel(oldCatName, language)}</span> ➔ <span className="font-bold text-indigo-600">{formatCategoryLabel(newCatName, language)}</span>
                                     </div>
                                   </div>
                                 );
@@ -1002,7 +1016,7 @@ function FloatingChatWindow({
                                 <div className="absolute -left-[20.5px] top-1 w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 ring-2 ring-slate-100" />
                                 <div className="text-[9px] text-slate-400 font-bold">{chat.created_at ? new Date(chat.created_at).toLocaleString('th-TH') : '-'}</div>
                                 <div className="text-slate-500 font-bold mt-0.5">โดย: ระบบ AI (Gemini Triage)</div>
-                                <div className="text-[10px] text-slate-550 mt-0.5">หมวดหมู่เริ่มต้น: {categories.find((c: any) => c.id === chat.category_id)?.name || 'อื่นๆ'}</div>
+                                <div className="text-[10px] text-slate-550 mt-0.5">หมวดหมู่เริ่มต้น: {formatCategoryLabel(categories.find((c: any) => c.id === chat.category_id)?.name || (language === 'th' ? 'อื่นๆ' : 'Other'), language)}</div>
                               </div>
                             </div>
                           );
@@ -1957,7 +1971,7 @@ export default function ChatsPage() {
             >
               <option value="all">{t('filterCategory')}</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                <option key={cat.id} value={cat.id}>{formatCategoryLabel(cat.name, language)}</option>
               ))}
             </select>
           </div>
@@ -2130,7 +2144,7 @@ export default function ChatsPage() {
                 >
                   <option value="">{language === 'th' ? '-- ย้ายหมวดหมู่แชต --' : '-- Batch Move Category --'}</option>
                   {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    <option key={cat.id} value={cat.id}>{formatCategoryLabel(cat.name, language)}</option>
                   ))}
                   <option value="other">{language === 'th' ? 'อื่นๆ (Other)' : 'Other'}</option>
                 </select>
@@ -2270,10 +2284,10 @@ export default function ChatsPage() {
                         {/* Category */}
                         <td className="px-1.5 py-2.5 whitespace-nowrap">
                           <div className="flex flex-col items-start gap-1">
-                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-2 py-0.5 rounded-lg truncate max-w-[125px]">
+                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-2 py-0.5 rounded-lg truncate max-w-[170px]">
                               {(() => {
                                 const found = categories.find(c => c.id === chat.category_id || getBaseCatId(c.id) === getBaseCatId(chat.category_id));
-                                if (found) return found.name;
+                                if (found) return formatCategoryLabel(found.name, language);
                                 const base = getBaseCatId(chat.category_id);
                                 if (base === 'page_load_freeze' || base === 'ui_rendering_issue') return 'หน้าเว็บค้าง / โหลดหมุน';
                                 if (base === 'deposit_withdrawal') return 'ฝากถอนเงิน / โอนเงิน';

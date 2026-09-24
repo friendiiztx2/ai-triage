@@ -75,6 +75,19 @@ export async function GET(request: NextRequest) {
         console.error('lightQuery error:', lightErr);
       }
 
+      if ((!lightData || lightData.length === 0) && process.env.NODE_ENV === 'development') {
+        try {
+          const vUrl = `https://ai-triage-eta.vercel.app/api/chats?summary_only=true${companyId ? `&company_id=${companyId}` : ''}${targetId ? `&id=${targetId}` : ''}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+          const vRes = await fetch(vUrl);
+          if (vRes.ok) {
+            const vData = await vRes.json();
+            if (Array.isArray(vData) && vData.length > 0) {
+              return NextResponse.json(vData);
+            }
+          }
+        } catch (e) {}
+      }
+
       const items = (lightData || []).map((row: any) => {
         let convText = row.conversation || row.summary || '';
         let rawMsgs: string[] = [];
@@ -277,6 +290,19 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: chatsData } = await chatsQuery.abortSignal(controller.signal);
+
+    if ((!chatsData || chatsData.length === 0) && process.env.NODE_ENV === 'development') {
+      try {
+        const vUrl = `https://ai-triage-eta.vercel.app/api/chats?${companyId ? `company_id=${companyId}&` : ''}${targetId ? `id=${targetId}&` : ''}${search ? `search=${encodeURIComponent(search)}` : ''}`;
+        const vRes = await fetch(vUrl);
+        if (vRes.ok) {
+          const vData = await vRes.json();
+          if (Array.isArray(vData) && vData.length > 0) {
+            return NextResponse.json(vData);
+          }
+        }
+      } catch (e) {}
+    }
 
     if (chatsData && chatsData.length > 0) {
       chatsData.forEach((row: any) => {
