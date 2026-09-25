@@ -28,22 +28,40 @@ export async function POST(request: NextRequest) {
     if (chatError) throw chatError;
 
     // 2. Loop through the issues array and update each child issue in chat_issues
+    const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
     if (issues && Array.isArray(issues)) {
       for (const issue of issues) {
         if (!issue.id) continue;
         
-        const { error: issueError } = await supabase
-          .from('chat_issues')
-          .update({
-            category_id: issue.category_id || null,
-            priority: issue.priority || null
-          })
-          .eq('id', issue.id)
-          .abortSignal(controller.signal);
+        if (isUuid(issue.id)) {
+          const { error: issueError } = await supabase
+            .from('chat_issues')
+            .update({
+              category_id: issue.category_id || null,
+              priority: issue.priority || null
+            })
+            .eq('id', issue.id)
+            .abortSignal(controller.signal);
 
-        if (issueError) {
-          console.error(`Error updating chat issue ${issue.id}:`, issueError);
-          throw issueError;
+          if (issueError) {
+            console.error(`Error updating chat issue ${issue.id}:`, issueError);
+          }
+        } else if (issue.summary) {
+          try {
+            await supabase
+              .from('chat_issues')
+              .insert({
+                chat_id,
+                category_id: issue.category_id || null,
+                priority: issue.priority || 'low',
+                summary: issue.summary,
+                created_at: new Date().toISOString()
+              })
+              .abortSignal(controller.signal);
+          } catch (insertErr) {
+            console.warn('Could not insert new chat issue row:', insertErr);
+          }
         }
       }
     }

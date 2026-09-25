@@ -200,15 +200,19 @@ function getTriageDuration(id: string): string {
 
 function buildInitialIssues(targetChat: any, categories: any[] = []) {
   if (!targetChat) return [];
-  if (targetChat.chat_issues && Array.isArray(targetChat.chat_issues) && targetChat.chat_issues.length > 0) {
-    return targetChat.chat_issues;
-  }
 
   const rawConv = targetChat.conversation || (targetChat.rawMessages ? targetChat.rawMessages.join('\n') : targetChat.summary || '');
   const convLines = (rawConv || '')
     .split('\n')
     .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
     .filter((l: string) => l.length > 0);
+
+  // If chat_issues from DB exists and adequately covers the conversation lines, use it
+  if (targetChat.chat_issues && Array.isArray(targetChat.chat_issues) && targetChat.chat_issues.length > 0) {
+    if (convLines.length <= 1 || targetChat.chat_issues.length >= convLines.length) {
+      return targetChat.chat_issues;
+    }
+  }
 
   if (convLines.length === 0) {
     return [{
@@ -220,12 +224,23 @@ function buildInitialIssues(targetChat: any, categories: any[] = []) {
   }
 
   // Map 1-to-1 for EVERY conversation line so every message line in the chat box gets its own Category & Priority control!
-  return convLines.map((line: string, i: number) => ({
-    id: `${targetChat.id || 'chat'}-issue-${i}`,
-    summary: line,
-    category_id: inferCategoryFromTextLine(line, targetChat.category_id, categories),
-    priority: inferPriorityFromText(line, targetChat.priority)
-  }));
+  const dbIssues = (targetChat.chat_issues && Array.isArray(targetChat.chat_issues)) ? targetChat.chat_issues : [];
+
+  return convLines.map((line: string, i: number) => {
+    const matched = dbIssues.find((dbIssue: any) => 
+      dbIssue.summary === line || 
+      (dbIssue.summary && (dbIssue.summary.includes(line) || line.includes(dbIssue.summary)))
+    );
+
+    return {
+      id: matched?.id || `${targetChat.id || 'chat'}-issue-${i}`,
+      summary: line,
+      category_id: matched?.category_id || inferCategoryFromTextLine(line, targetChat.category_id, categories),
+      priority: matched?.priority || inferPriorityFromText(line, targetChat.priority),
+      department: matched?.department,
+      recommended_reply: matched?.recommended_reply
+    };
+  });
 }
 
 // Formats priority string to matching mockup text (Thai + English parenthetical)
@@ -395,20 +410,64 @@ function FloatingChatWindow({
         if (issuesRes && issuesRes.ok) {
           const issuesData = await issuesRes.json();
           if (isMounted && issuesData && Array.isArray(issuesData) && issuesData.length > 0) {
-            setSelectedChatIssues(issuesData);
-            setEditIssues(prev => {
-              const updatedEditState: Record<string, any> = { ...prev };
-              issuesData.forEach((issue: any) => {
-                const issueKey = issue.id || 'issue-0';
-                const directCat = getBaseCatId(issue.category_id || '');
-                const directPri = (issue.priority || 'medium').toLowerCase();
-                updatedEditState[issueKey] = {
-                  category_id: directCat,
-                  priority: directPri
-                };
+            const rawConv = chat.conversation || (chat.rawMessages ? chat.rawMessages.join('\n') : chat.summary || '');
+            const convLines = (rawConv || '')
+              .split('\n')
+              .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
+              .filter((l: string) => l.length > 0);
+
+            if (convLines.length > 1 && issuesData.length < convLines.length) {
+              // The database has fewer/partial issues (e.g. only 1 collapsed issue for 5 lines).
+              // Do NOT collapse the 5 issues into 1! Merge DB issue properties into matching lines instead.
+              setSelectedChatIssues(prev => {
+                const baseList = (prev && prev.length >= convLines.length) ? prev : buildInitialIssues(chat, categories);
+                return baseList.map((item: any) => {
+                  const matched = issuesData.find((dbIssue: any) => 
+                    dbIssue.summary === item.summary || 
+                    (item.summary && dbIssue.summary && (dbIssue.summary.includes(item.summary) || item.summary.includes(dbIssue.summary)))
+                  );
+                  if (matched) {
+                    return {
+                      ...item,
+                      id: matched.id || item.id,
+                      category_id: matched.category_id || item.category_id,
+                      priority: matched.priority || item.priority,
+                      department: matched.department || item.department,
+                      recommended_reply: matched.recommended_reply || item.recommended_reply
+                    };
+                  }
+                  return item;
+                });
               });
-              return updatedEditState;
-            });
+
+              setEditIssues(prev => {
+                const updatedEditState: Record<string, any> = { ...prev };
+                issuesData.forEach((issue: any) => {
+                  if (issue.id) {
+                    updatedEditState[issue.id] = {
+                      category_id: getBaseCatId(issue.category_id || ''),
+                      priority: (issue.priority || 'medium').toLowerCase()
+                    };
+                  }
+                });
+                return updatedEditState;
+              });
+            } else {
+              setSelectedChatIssues(issuesData);
+              setEditIssues(prev => {
+                const updatedEditState: Record<string, any> = { ...prev };
+                issuesData.forEach((issue: any) => {
+                  const issueKey = issue.id || 'issue-0';
+                  const directCat = getBaseCatId(issue.category_id || '');
+                  const directPri = (issue.priority || 'medium').toLowerCase();
+                  updatedEditState[issueKey] = {
+                    category_id: directCat,
+                    priority: directPri
+                  };
+                });
+                return updatedEditState;
+              });
+            }
           }
         }
 
@@ -802,18 +861,30 @@ function FloatingChatWindow({
 
                   {/* Right Column (Span 7): Triage Category & Priority controls per child chat_issue */}
                   <div className="lg:col-span-7 min-w-0 space-y-3 pt-0.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                        ประเด็นย่อยในตาราง chat_issues ({((selectedChatIssues && selectedChatIssues.length > 0) ? selectedChatIssues : buildInitialIssues(chat)).length} เรื่อง)
-                      </span>
-                    </div>
-
                     {(() => {
+                      const rawConv = chat.conversation || (chat.rawMessages ? chat.rawMessages.join('\n') : chat.summary || '');
+                      const convLines = (rawConv || '')
+                        .split('\n')
+                        .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
+                        .filter((l: string) => l.length > 0);
+
                       let activeIssuesList = (selectedChatIssues && selectedChatIssues.length > 0)
                         ? selectedChatIssues
-                        : buildInitialIssues(chat);
+                        : buildInitialIssues(chat, categories);
 
-                      return activeIssuesList.map((issueItem: any, idx: number) => {
+                      if (convLines.length > 1 && activeIssuesList.length < convLines.length) {
+                        activeIssuesList = buildInitialIssues({ ...chat, chat_issues: activeIssuesList }, categories);
+                      }
+
+                      return (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                              ประเด็นย่อยในตาราง chat_issues ({activeIssuesList.length} เรื่อง)
+                            </span>
+                          </div>
+
+                          {activeIssuesList.map((issueItem: any, idx: number) => {
                         const issueKey = issueItem.id || 'issue-' + idx;
                         const issueTitle = issueItem.summary || issueItem.issue_summary || `ประเด็นย่อยที่ ${idx + 1}`;
                         const currentVal = editIssues[issueKey] || { 
@@ -895,7 +966,9 @@ function FloatingChatWindow({
                             </div>
                           </div>
                         );
-                      });
+                      })}
+                        </>
+                      );
                     })()}
                   </div>
                 </div>
@@ -1808,7 +1881,22 @@ export default function ChatsPage() {
           if (fullChat) {
             setActiveWindows(prev => prev.map(w => {
               if (w.id === chat.id) {
-                return { ...w, chat: { ...w.chat, ...fullChat } };
+                const conv = fullChat.conversation || w.chat.conversation || '';
+                const convLines = conv.split('\n').map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, '')).filter(Boolean);
+                let mergedIssues = fullChat.chat_issues;
+                // If conversation has multiple lines, but fullChat has only 1 collapsed issue, don't overwrite with 1 issue
+                if (convLines.length > 1 && fullChat.chat_issues && fullChat.chat_issues.length === 1) {
+                  mergedIssues = (w.chat.chat_issues && w.chat.chat_issues.length > 1) ? w.chat.chat_issues : undefined;
+                }
+
+                return { 
+                  ...w, 
+                  chat: { 
+                    ...w.chat, 
+                    ...fullChat,
+                    ...(mergedIssues !== undefined ? { chat_issues: mergedIssues } : {})
+                  } 
+                };
               }
               return w;
             }));
