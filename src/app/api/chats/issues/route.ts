@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
     clearTimeout(timeoutId);
     if (error) throw error;
 
-    if ((!data || data.length === 0) && process.env.NODE_ENV === 'development') {
+    const isLocal = !process.env.VERCEL || process.env.NODE_ENV === 'development' || !process.env.VERCEL_ENV;
+    if ((!data || data.length === 0) && isLocal) {
       try {
         const vRes = await fetch(`https://ai-triage-eta.vercel.app/api/chats/issues?chat_id=${chatId}`);
         if (vRes.ok) {

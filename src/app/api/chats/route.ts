@@ -75,9 +75,10 @@ export async function GET(request: NextRequest) {
         console.error('lightQuery error:', lightErr);
       }
 
-      if ((!lightData || lightData.length === 0) && process.env.NODE_ENV === 'development') {
+      const isLocal = !process.env.VERCEL || process.env.NODE_ENV === 'development' || !process.env.VERCEL_ENV;
+      if ((!lightData || lightData.length === 0) && isLocal) {
         try {
-          const vUrl = `https://ai-triage-eta.vercel.app/api/chats?summary_only=true${companyId ? `&company_id=${companyId}` : ''}${targetId ? `&id=${targetId}` : ''}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+          const vUrl = `https://ai-triage-eta.vercel.app/api/chats?summary_only=true&nocache=${Date.now()}${companyId ? `&company_id=${companyId}` : ''}${targetId ? `&id=${targetId}` : ''}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
           const vRes = await fetch(vUrl);
           if (vRes.ok) {
             const vData = await vRes.json();
@@ -291,9 +292,10 @@ export async function GET(request: NextRequest) {
 
     const { data: chatsData } = await chatsQuery.abortSignal(controller.signal);
 
-    if ((!chatsData || chatsData.length === 0) && process.env.NODE_ENV === 'development') {
+    const isLocal = !process.env.VERCEL || process.env.NODE_ENV === 'development' || !process.env.VERCEL_ENV;
+    if ((!chatsData || chatsData.length === 0) && isLocal) {
       try {
-        const vUrl = `https://ai-triage-eta.vercel.app/api/chats?${companyId ? `company_id=${companyId}&` : ''}${targetId ? `id=${targetId}&` : ''}${search ? `search=${encodeURIComponent(search)}` : ''}`;
+        const vUrl = `https://ai-triage-eta.vercel.app/api/chats?nocache=${Date.now()}&${companyId ? `company_id=${companyId}&` : ''}${targetId ? `id=${targetId}&` : ''}${search ? `search=${encodeURIComponent(search)}` : ''}`;
         const vRes = await fetch(vUrl);
         if (vRes.ok) {
           const vData = await vRes.json();

@@ -95,6 +95,25 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString()
     };
 
+    // If running on local, forward to live Vercel to guarantee sync, AI triage and database storage
+    const isLocal = !process.env.VERCEL || process.env.NODE_ENV === 'development' || !process.env.VERCEL_ENV;
+    if (isLocal) {
+      try {
+        const fwdRes = await fetch('https://ai-triage-eta.vercel.app/api/chats/ingest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (fwdRes.ok) {
+          const fwdData = await fwdRes.json();
+          clearTimeout(timeoutId);
+          return NextResponse.json(fwdData, { status: fwdRes.status });
+        }
+      } catch (fwdErr: any) {
+        console.warn('Forward ingest to Vercel warning, continuing locally:', fwdErr);
+      }
+    }
+
     const { data, error } = await db
       .from('chats')
       .upsert([newChatRow], { onConflict: 'id' })
@@ -119,7 +138,7 @@ export async function POST(request: NextRequest) {
     clearTimeout(timeoutId);
 
     if (error) {
-      if (error.message?.includes('row-level security') && process.env.NODE_ENV === 'development') {
+      if (isLocal || error.message?.includes('row-level security')) {
         try {
           const fwdRes = await fetch('https://ai-triage-eta.vercel.app/api/chats/ingest', {
             method: 'POST',
