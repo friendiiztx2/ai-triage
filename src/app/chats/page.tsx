@@ -287,8 +287,8 @@ function FloatingChatWindow({
   const { language, t } = useLanguage();
   const [x, setX] = useState(initialX);
   const [y, setY] = useState(initialY);
-  const [width, setWidth] = useState(760);
-  const [height, setHeight] = useState(620);
+  const [width, setWidth] = useState(880);
+  const [height, setHeight] = useState(640);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   
@@ -709,6 +709,7 @@ function FloatingChatWindow({
         top: y + 'px',
         zIndex: initialZIndex,
         width: width + 'px',
+        maxWidth: 'calc(100vw - 20px)',
         height: isMinimized ? '48px' : height + 'px',
       }}
       className="fixed bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-shadow duration-200 focus-within:ring-2 focus-within:ring-indigo-500/20"
@@ -781,26 +782,26 @@ function FloatingChatWindow({
 
       {/* Body scroll section (Unified sequentially - Instant 0ms Render!) */}
       {!isMinimized && (
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50/20 dark:bg-slate-900/10">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-6 bg-slate-50/20 dark:bg-slate-900/10">
           <div className="space-y-6">
               
               {/* SECTION 1: Conversation History & Side-by-Side Category/Priority Controls */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                  <h4 className="font-bold text-slate-855 dark:text-slate-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
                     💬 ประวัติการคุย (CONVERSATION HISTORY)
                   </h4>
                   <span className="text-[9px] text-slate-400 font-mono font-bold select-none">แชตไอดี: {chat.id}</span>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                  {/* Left Column (Span 6): Single raw conversation history text box from Supabase */}
-                  <div className="lg:col-span-6">
+                  {/* Left Column (Span 5): Single raw conversation history text box from Supabase */}
+                  <div className="lg:col-span-5 min-w-0">
                     {renderConversation()}
                   </div>
 
-                  {/* Right Column (Span 6): Triage Category & Priority controls per child chat_issue */}
-                  <div className="lg:col-span-6 space-y-3 pt-0.5">
+                  {/* Right Column (Span 7): Triage Category & Priority controls per child chat_issue */}
+                  <div className="lg:col-span-7 min-w-0 space-y-3 pt-0.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         ประเด็นย่อยในตาราง chat_issues ({((selectedChatIssues && selectedChatIssues.length > 0) ? selectedChatIssues : buildInitialIssues(chat)).length} เรื่อง)
@@ -823,7 +824,7 @@ function FloatingChatWindow({
                         const currentPri = (currentVal.priority || issueItem.priority || 'medium').toLowerCase();
 
                         return (
-                          <div key={idx} className="p-3 bg-slate-50/90 dark:bg-slate-855 rounded-xl border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-2">
+                          <div key={idx} className="p-3 bg-slate-50/90 dark:bg-slate-855 rounded-xl border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-2 min-w-0 overflow-hidden">
                             {/* Card Title (chat_issues.summary) */}
                             <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
                               <span className="flex items-center gap-1.5 min-w-0">
@@ -833,7 +834,7 @@ function FloatingChatWindow({
                               <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono shrink-0">ID: {issueKey.substring(0, 10)}</span>
                             </div>
 
-                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 pt-0.5">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-0.5 min-w-0">
                               {/* Category Dropdown (Bind to chat_issues.category_id) */}
                               <select
                                 value={selectedCategoryVal}
@@ -846,7 +847,7 @@ function FloatingChatWindow({
                                   if (idx === 0) setEditCategory(newCat);
                                 }}
                                 disabled={userProfile?.role === 'agent'}
-                                className="flex-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-xs min-w-[160px]"
+                                className="flex-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-xs truncate"
                               >
                                 <option value="">{language === 'th' ? '-- เลือกหมวดหมู่ --' : '-- Select Category --'}</option>
                                 {categories.map((cat: any) => {
@@ -861,7 +862,7 @@ function FloatingChatWindow({
                               </select>
 
                               {/* Priority Buttons (Bind to chat_issues.priority) */}
-                              <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-xs shrink-0">
+                              <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-0.5 sm:p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-xs shrink-0">
                                 {['low', 'medium', 'high', 'urgent'].map(p => {
                                   const isActive = currentPri === p;
                                   let activeStyle = '';
@@ -882,7 +883,7 @@ function FloatingChatWindow({
                                         if (idx === 0) setEditPriority(p);
                                       }}
                                       disabled={userProfile?.role === 'agent'}
-                                      className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer ' + 
+                                      className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer shrink-0 ' + 
                                         (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
                                       }
                                     >
