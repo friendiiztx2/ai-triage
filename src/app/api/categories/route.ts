@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, supabase } from '@/lib/supabase';
+import { KNOWN_CATEGORY_NAMES, getBaseCatId, getCategoryLabel } from '@/lib/categories';
 
 const defaultCategories = [
-  { id: 'login_issue', name: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน (Login Issue)', description: 'ลืมรหัสผ่าน, ไม่ได้รับ OTP, บัญชีถูกล็อก', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'ui_rendering_issue', name: 'ปัญหากราฟิก/การแสดงผลเว็บ (UI Rendering Issue)', description: 'ภาพไม่โหลด, ปุ่มกดไม่ได้, หน้าจอกราฟิกค้าง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'deposit_withdrawal', name: 'การฝาก-ถอนเงิน (Deposit & Withdrawal)', description: 'โอนเงินแล้วยอดไม่ปรับ, รอนานเกินเวลา, สลิปไม่ตรง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'promo_bonus', name: 'สิทธิประโยชน์ระดับ VIP / โปรโมชั่น (Promo & Bonus)', description: 'ขอรับโบนัสฟรี, สอบถามยอดคืนยอดเสีย, โปรโมชั่น', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'account_security', name: 'ความปลอดภัยบัญชี (Account Security)', description: 'ขอเปลี่ยนเบอร์โทรศัพท์, ตรวจสอบการเข้าถึง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'access_blocked', name: 'การเข้าถึงถูกระงับ (Access Blocked / Error 502)', description: 'เข้าหน้าเว็บไม่ได้, ขึ้น 502 Bad Gateway', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'game_issue', name: 'ปัญหาเกี่ยวกับตัวเกม (Game Issue)', description: 'เกมค้าง, หลุดกลางคัน, API timeout', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'interaction_lag', name: 'ระบบการทำงานล่าช้า (System Lag)', description: 'การตอบสนองช้า, ปุ่มกดไม่ติด', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'vip_privilege', name: 'สิทธิประโยชน์ระดับ VIP (VIP Privileges)', description: 'บริการสมาชิกพิเศษ VIP', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'other', name: 'เรื่องอื่นๆ (Other Inquiries)', description: 'สอบถามข้อมูลทั่วไป', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' }
+  { id: 'login_issue', name: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน', name_th: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน', name_en: 'Login Issue', description: 'ลืมรหัสผ่าน, ไม่ได้รับ OTP, บัญชีถูกล็อก', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'ui_rendering_issue', name: 'ปัญหากราฟิก/การแสดงผลเว็บ', name_th: 'ปัญหากราฟิก/การแสดงผลเว็บ', name_en: 'UI Rendering Issue', description: 'ภาพไม่โหลด, ปุ่มกดไม่ได้, หน้าจอกราฟิกค้าง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'deposit_withdrawal', name: 'การเงินและการชำระเงิน', name_th: 'การเงินและการชำระเงิน', name_en: 'Deposit & Withdrawal', description: 'โอนเงินแล้วยอดไม่ปรับ, รอนานเกินเวลา, สลิปไม่ตรง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'promo_bonus', name: 'โปรโมชั่นและโบนัส', name_th: 'โปรโมชั่นและโบนัส', name_en: 'Promo & Bonus', description: 'ขอรับโบนัสฟรี, สอบถามยอดคืนยอดเสีย, โปรโมชั่น', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'account_security', name: 'ความปลอดภัยของบัญชี', name_th: 'ความปลอดภัยของบัญชี', name_en: 'Account Security', description: 'ขอเปลี่ยนเบอร์โทรศัพท์, ตรวจสอบการเข้าถึง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'access_blocked', name: 'เข้าหน้าเว็บไม่ได้/ลิงก์เสีย', name_th: 'เข้าหน้าเว็บไม่ได้/ลิงก์เสีย', name_en: 'Access Blocked', description: 'เข้าหน้าเว็บไม่ได้, ขึ้น 502 Bad Gateway', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'game_issue', name: 'ปัญหาเกี่ยวกับตัวเกม', name_th: 'ปัญหาเกี่ยวกับตัวเกม', name_en: 'Game Issue', description: 'เกมค้าง, หลุดกลางคัน, API timeout', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'interaction_lag', name: 'ระบบการทำงานล่าช้า', name_th: 'ระบบการทำงานล่าช้า', name_en: 'System Lag', description: 'การตอบสนองช้า, ปุ่มกดไม่ติด', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'vip_privilege', name: 'สิทธิประโยชน์ระดับ VIP', name_th: 'สิทธิประโยชน์ระดับ VIP', name_en: 'VIP Privileges', description: 'บริการสมาชิกพิเศษ VIP', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
+  { id: 'other', name: 'เรื่องอื่นๆ', name_th: 'เรื่องอื่นๆ', name_en: 'Other Inquiries', description: 'สอบถามข้อมูลทั่วไป', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' }
 ];
 
 interface CacheEntry {
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const filterCompanyId = searchParams.get('company_id');
 
-    let query = db.from('categories').select('id, name, description, company_id');
+    let query = db.from('categories').select('id, name, description, company_id, name_en');
     if (filterCompanyId && filterCompanyId !== 'all') {
       query = query.eq('company_id', filterCompanyId);
     }
@@ -53,12 +54,25 @@ export async function GET(request: NextRequest) {
     clearTimeout(timeoutId);
     const list = (!error && data && data.length > 0) ? data : defaultCategories;
 
-    // Deduplicate by base category key (e.g. deposit_withdrawal, game_issue, etc.)
+    // Deduplicate by base category key and enrich fields
     const categoryMap = new Map<string, any>();
     list.forEach((item: any) => {
-      const baseKey = item.id.includes(':') ? item.id.split(':')[1] : item.id;
+      const baseKey = getBaseCatId(item.id);
+      const known = KNOWN_CATEGORY_NAMES[baseKey];
+      const match = typeof item.name === 'string' ? item.name.match(/^(.+?)\s*\(([^)]+)\)$/) : null;
+
+      const cleanTh = item.name_th || (match ? match[1].trim() : item.name) || known?.th || item.name;
+      const cleanEn = item.name_en || (match ? match[2].trim() : known?.en) || item.name;
+
+      const enriched = {
+        ...item,
+        name: cleanTh,
+        name_th: cleanTh,
+        name_en: cleanEn
+      };
+
       if (!categoryMap.has(baseKey)) {
-        categoryMap.set(baseKey, item);
+        categoryMap.set(baseKey, enriched);
       }
     });
 
@@ -84,13 +98,22 @@ export async function POST(request: NextRequest) {
   const companyId = request.headers.get('x-company-id') || request.cookies.get('company_id')?.value;
 
   try {
-    const { id, name, description } = await request.json();
+    const { id, name, description, name_en, name_th } = await request.json();
 
-    if (!id || !name) {
+    if (!id || (!name && !name_th)) {
       return NextResponse.json({ error: 'โปรดระบุไอดีและชื่อหมวดหมู่' }, { status: 400 });
     }
 
-    const insertData: any = { id, name, description };
+    const baseKey = getBaseCatId(id);
+    const finalTh = name_th || name;
+    const finalEn = name_en || KNOWN_CATEGORY_NAMES[baseKey]?.en || getCategoryLabel(finalTh, 'en');
+
+    const insertData: any = {
+      id,
+      name: finalTh,
+      name_en: finalEn,
+      description
+    };
     if (companyId) {
       insertData.company_id = companyId;
     }
@@ -113,19 +136,31 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: Request) {
+  serverCache.clear();
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const { id, name, description } = await request.json();
+    const { id, name, description, name_en, name_th } = await request.json();
 
     if (!id) {
       return NextResponse.json({ error: 'โปรดระบุไอดีหมวดหมู่ที่ต้องการแก้ไข' }, { status: 400 });
     }
 
+    const updateData: any = {};
+    if (name !== undefined || name_th !== undefined) {
+      updateData.name = name_th || name;
+    }
+    if (name_en !== undefined) {
+      updateData.name_en = name_en;
+    }
+    if (description !== undefined) {
+      updateData.description = description;
+    }
+
     const { data, error } = await supabase
       .from('categories')
-      .update({ name, description })
+      .update(updateData)
       .eq('id', id)
       .select()
       .abortSignal(controller.signal);
@@ -142,6 +177,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  serverCache.clear();
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 

@@ -7,6 +7,7 @@ import {
   DollarSign, Megaphone, BarChart3, Check, Layers, Users, UserPlus, ArrowUpRight
 } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
+import { getCategoryLabel } from '@/lib/categories';
 import * as XLSX from 'xlsx';
 
 export default function ReportsPage() {
@@ -746,9 +747,11 @@ export default function ReportsPage() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:border-indigo-650 focus:outline-none"
               >
-                <option value="all">{language === 'th' ? 'ทุกหมวดหมู่ (All Categories)' : 'All Categories'}</option>
+                <option value="all">{language === 'th' ? 'ทุกหมวดหมู่' : 'All Categories'}</option>
                 {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  <option key={cat.id} value={cat.id}>
+                    {language === 'en' ? (cat.name_en || getCategoryLabel(cat, 'en')) : (cat.name_th || cat.name || getCategoryLabel(cat, 'th'))}
+                  </option>
                 ))}
               </select>
             </div>

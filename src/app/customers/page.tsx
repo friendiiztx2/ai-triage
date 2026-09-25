@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/components/LanguageContext';
+import { getCategoryLabel } from '@/lib/categories';
 
 interface CustomerSelectedState {
   cust: any;
@@ -285,7 +286,7 @@ export default function CustomersPage() {
                             >
                               <div className="flex justify-between items-start gap-2">
                                 <span className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-100 dark:border-slate-750">
-                                  {categories[chat.category_id] || chat.category_id || (language === 'th' ? 'อื่นๆ' : 'Other')}
+                                  {getCategoryLabel(chat.category_id, language)}
                                 </span>
 
                                 {(() => {

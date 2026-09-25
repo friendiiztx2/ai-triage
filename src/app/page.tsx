@@ -24,6 +24,7 @@ import { supabase } from '@/lib/supabase';
 import LanguageToggle from '@/components/LanguageToggle';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
 import { playAlertTone, isSoundEnabled } from '@/lib/audio';
+import { getCategoryLabel, getBaseCatId } from '@/lib/categories';
 
 // Custom regex-based parser for AI Recommendation Markdown structure (Multi-Issue Breakdown)
 function parseAIRecommendation(markdown: string) {
@@ -122,23 +123,11 @@ const CATEGORY_NAMES_TH: Record<string, string> = {
   other: 'อื่นๆ (Other)'
 };
 
-function getCategoryDisplayName(catId: string, categoryMap: Record<string, string>): string {
-  if (!catId) return 'อื่นๆ (Other)';
-  if (categoryMap[catId] && !categoryMap[catId].includes('-') && categoryMap[catId] !== catId) {
-    return categoryMap[catId];
-  }
-
-  const baseKey = catId.includes(':') ? catId.split(':').pop()! : catId;
-  if (categoryMap[baseKey] && !categoryMap[baseKey].includes('-') && categoryMap[baseKey] !== baseKey) {
-    return categoryMap[baseKey];
-  }
-
-  if (CATEGORY_NAMES_TH[baseKey]) return CATEGORY_NAMES_TH[baseKey];
-  if (CATEGORY_NAMES_TH[catId]) return CATEGORY_NAMES_TH[catId];
-
-  if (baseKey === 'page_load_freeze') return 'หน้าเว็บค้าง / โหลดหมุน';
-
-  return categoryMap[catId] || CATEGORY_NAMES_TH[baseKey] || baseKey;
+function getCategoryDisplayName(catId: string, rawCategories: any[] = [], lang: 'th' | 'en' = 'th'): string {
+  if (!catId) return lang === 'en' ? 'Other Inquiries' : 'เรื่องอื่นๆ';
+  const baseKey = getBaseCatId(catId);
+  const found = Array.isArray(rawCategories) ? rawCategories.find((c: any) => c.id === catId || getBaseCatId(c.id) === baseKey) : null;
+  return getCategoryLabel(found || catId, lang);
 }
 
 // Soft, soothing pastel color palette
@@ -243,6 +232,7 @@ export default function OverviewPage() {
   // Data stores
   const [allChats, setAllChats] = useState<any[]>([]);
   const [categories, setCategories] = useState<Record<string, string>>({});
+  const [rawCategories, setRawCategories] = useState<any[]>([]);
   const [totalCustomersCount, setTotalCustomersCount] = useState(0);
   const [otherCount, setOtherCount] = useState(0);
   
@@ -354,6 +344,7 @@ export default function OverviewPage() {
           catMap[base] = name;
         });
         setCategories(catMap);
+        setRawCategories(catData || []);
       }
 
       // 2. Fetch chats (via Server API Proxy - lightweight mode)
@@ -551,20 +542,22 @@ export default function OverviewPage() {
         // Multi-issue case: count each issue inside the chat
         c.chat_issues.forEach((issue: any) => {
           const rawCatId = issue.category_id || c.category_id || 'other';
-          const catName = getCategoryDisplayName(rawCatId, categories);
-          if (rawCatId === 'other' || catName === 'อื่นๆ (Other)') {
+          const baseKey = getBaseCatId(rawCatId);
+          if (rawCatId === 'other' || baseKey === 'other') {
             tempOtherCount++;
           } else {
+            const catName = getCategoryDisplayName(rawCatId, rawCategories, language);
             catCounts[catName] = (catCounts[catName] || 0) + 1;
           }
         });
       } else {
         // Single issue fallback: count the chat's primary category
         const rawCatId = c.category_id || 'other';
-        const catName = getCategoryDisplayName(rawCatId, categories);
-        if (rawCatId === 'other' || catName === 'อื่นๆ (Other)') {
+        const baseKey = getBaseCatId(rawCatId);
+        if (rawCatId === 'other' || baseKey === 'other') {
           tempOtherCount++;
         } else {
+          const catName = getCategoryDisplayName(rawCatId, rawCategories, language);
           catCounts[catName] = (catCounts[catName] || 0) + 1;
         }
       }
@@ -574,7 +567,8 @@ export default function OverviewPage() {
 
     const parsedData = Object.entries(catCounts).map(([name, value]) => {
       // Resolve original category ID
-      const catId = Object.entries(categories).find(([id, display]) => display === name)?.[0] || 'other';
+      const found = rawCategories.find((c: any) => getCategoryLabel(c, language) === name);
+      const catId = found ? getBaseCatId(found.id) : (Object.entries(categories).find(([id, display]) => display === name)?.[0] || 'other');
       return {
         name,
         value,
@@ -650,12 +644,12 @@ export default function OverviewPage() {
           if (c.chat_issues && c.chat_issues.length > 0) {
             c.chat_issues.forEach((issue: any) => {
               const catId = issue.category_id || 'other';
-              const catName = categories[catId] || 'อื่นๆ';
+              const catName = getCategoryDisplayName(catId, rawCategories, language);
               item[catName] = (item[catName] || 0) + 1;
             });
           } else {
             const catId = c.category_id || 'other';
-            const catName = categories[catId] || 'อื่นๆ';
+            const catName = getCategoryDisplayName(catId, rawCategories, language);
             item[catName] = (item[catName] || 0) + 1;
           }
         });
@@ -665,15 +659,18 @@ export default function OverviewPage() {
     } else {
       timeSeries = sortedDateKeys.map(key => {
         const d = dateMap.get(key) || new Date(key);
-        const dateLabel = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+        const dateLabel = d.toLocaleDateString(language === 'en' ? 'en-US' : 'th-TH', { day: 'numeric', month: 'short' });
         
         const item: Record<string, any> = { name: dateLabel };
         // Pre-populate all unique categories with 0
-        const uniqueCategoryNames = Array.from(new Set(Object.values(categories)));
-        uniqueCategoryNames.forEach(catName => {
+        const uniqueCatNames = rawCategories.length > 0 
+          ? Array.from(new Set(rawCategories.map((c: any) => getCategoryLabel(c, language))))
+          : Array.from(new Set(Object.values(categories)));
+        uniqueCatNames.forEach(catName => {
           item[catName] = 0;
         });
-        item['อื่นๆ'] = 0;
+        const otherLabel = language === 'en' ? 'Other Inquiries' : 'อื่นๆ';
+        item[otherLabel] = 0;
 
         // Filter chats for this date
         const dayChats = filtered.filter((c: any) => c.created_at && c.created_at.substring(0, 10) === key);
@@ -681,12 +678,12 @@ export default function OverviewPage() {
           if (c.chat_issues && c.chat_issues.length > 0) {
             c.chat_issues.forEach((issue: any) => {
               const catId = issue.category_id || 'other';
-              const catName = categories[catId] || 'อื่นๆ';
+              const catName = getCategoryDisplayName(catId, rawCategories, language);
               item[catName] = (item[catName] || 0) + 1;
             });
           } else {
             const catId = c.category_id || 'other';
-            const catName = categories[catId] || 'อื่นๆ';
+            const catName = getCategoryDisplayName(catId, rawCategories, language);
             item[catName] = (item[catName] || 0) + 1;
           }
         });
@@ -825,10 +822,12 @@ export default function OverviewPage() {
 
     setRecentChats(sortedChats);
 
-  }, [dateRange, startDate, endDate, allChats, categories, totalCustomersCount]);
+  }, [dateRange, startDate, endDate, allChats, categories, rawCategories, totalCustomersCount, language]);
 
   // Get unique display names of categories to prevent duplicate React keys/lines
-  const uniqueCategoryNames = Array.from(new Set(Object.values(categories)));
+  const uniqueCategoryNames = rawCategories.length > 0
+    ? Array.from(new Set(rawCategories.map((c: any) => getCategoryLabel(c, language))))
+    : Array.from(new Set(Object.values(categories)));
 
   // Sort categories by value descending (highest volume first)
   const sortedChartData = [...chartData].sort((a, b) => b.value - a.value);

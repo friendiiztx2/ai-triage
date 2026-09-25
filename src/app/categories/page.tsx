@@ -8,53 +8,13 @@ import {
 import { saveAuditLog } from '@/lib/audit';
 import Link from 'next/link';
 import { useLanguage } from '@/components/LanguageContext';
-
-function getBaseCatId(id: string): string {
-  if (!id || typeof id !== 'string') return '';
-  return id.includes(':') ? id.split(':')[1] : id;
-}
-
-function formatCategoryLabel(rawName: string, lang: 'th' | 'en' = 'th'): string {
-  if (!rawName || typeof rawName !== 'string') return '';
-  const match = rawName.match(/^(.+?)\s*\(([^)]+)\)$/);
-  if (match) {
-    const thaiPart = match[1].trim();
-    const engPart = match[2].trim();
-    if (lang === 'en') return engPart;
-    if (lang === 'th') return thaiPart;
-    return `${thaiPart} (${engPart})`;
-  }
-  return rawName;
-}
-
-const KNOWN_CATEGORY_NAMES: Record<string, { th: string; en: string }> = {
-  deposit_withdrawal: { th: 'การเงินและการชำระเงิน', en: 'Deposit & Withdrawal' },
-  page_load_freeze: { th: 'หน้าเว็บค้าง / โหลดหมุน', en: 'Page Load / Freeze' },
-  ui_rendering_issue: { th: 'ปัญหากราฟิก / การแสดงผลเว็บ', en: 'UI Rendering Issue' },
-  login_issue: { th: 'เข้าใช้งาน / เข้าสู่ระบบ', en: 'Login Issue' },
-  access_blocked: { th: 'เข้าหน้าเว็บไม่ได้ / ลิงก์เสีย', en: 'Access Blocked' },
-  promo_bonus: { th: 'โปรโมชั่นและโบนัส', en: 'Promo & Bonus' },
-  game_issue: { th: 'ปัญหาเกี่ยวกับตัวเกม', en: 'Game Issue' },
-  gameplay_issue: { th: 'ปัญหาเกี่ยวกับตัวเกม', en: 'Game Issue' },
-  account_security: { th: 'ความปลอดภัยของบัญชี', en: 'Account Security' },
-  api_error: { th: 'ข้อผิดพลาดระบบ API', en: 'API Error' },
-  payment_gateway: { th: 'ระบบการชำระเงิน / ธนาคาร', en: 'Payment Gateway' },
-  notification_issue: { th: 'ปัญหาการแจ้งเตือน', en: 'Notification Issue' },
-  interaction_lag: { th: 'ระบบการทำงานล่าช้า', en: 'System Lag' },
-  device_compatibility: { th: 'ความเข้ากันได้ของอุปกรณ์', en: 'Device Compatibility' },
-  registration: { th: 'การสมัครสมาชิก', en: 'Registration' },
-  feature_request: { th: 'ขอเพิ่มฟีเจอร์', en: 'Feature Request' },
-  feedback_complaint: { th: 'ข้อเสนอแนะและร้องเรียน', en: 'Feedback & Complaint' },
-  performance_issue: { th: 'ประสิทธิภาพระบบช้า', en: 'Performance Issue' },
-  vip_privilege: { th: 'สิทธิประโยชน์ระดับ VIP', en: 'VIP Privileges' },
-  other: { th: 'เรื่องอื่นๆ', en: 'Other Inquiries' }
-};
+import { getCategoryLabel, getBaseCatId, formatCategoryLabel, KNOWN_CATEGORY_NAMES } from '@/lib/categories';
 
 function getCategoryDisplayName(catKey: string, categories: any[] = [], lang: 'th' | 'en' = 'th'): string {
   const baseKey = getBaseCatId(catKey);
   const found = categories.find(c => c.id === catKey || getBaseCatId(c.id) === baseKey);
-  if (found && (found.name || found.title)) {
-    return formatCategoryLabel(found.name || found.title, lang);
+  if (found) {
+    return getCategoryLabel(found, lang);
   }
   if (KNOWN_CATEGORY_NAMES[baseKey]) {
     return KNOWN_CATEGORY_NAMES[baseKey][lang] || KNOWN_CATEGORY_NAMES[baseKey].th;
@@ -62,7 +22,7 @@ function getCategoryDisplayName(catKey: string, categories: any[] = [], lang: 't
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(baseKey)) {
     return lang === 'th' ? 'เรื่องอื่นๆ' : 'Other Inquiries';
   }
-  return baseKey || (lang === 'th' ? 'เรื่องอื่นๆ' : 'Other');
+  return baseKey || (lang === 'th' ? 'เรื่องอื่นๆ' : 'Other Inquiries');
 }
 
 export default function CategoriesPage() {
@@ -76,11 +36,13 @@ export default function CategoriesPage() {
   const [showModal, setShowModal] = useState(false);
   const [newCatId, setNewCatId] = useState('');
   const [newCatName, setNewCatName] = useState('');
+  const [newCatNameEn, setNewCatNameEn] = useState('');
   const [newCatDesc, setNewCatDesc] = useState('');
 
   // Edit Category Modal states
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [editCatName, setEditCatName] = useState('');
+  const [editCatNameEn, setEditCatNameEn] = useState('');
   const [editCatDesc, setEditCatDesc] = useState('');
 
   const [saving, setSaving] = useState(false);
@@ -178,6 +140,7 @@ export default function CategoriesPage() {
         body: JSON.stringify({
           id: cleanedId,
           name: newCatName.trim(),
+          name_en: newCatNameEn.trim(),
           description: newCatDesc.trim()
         })
       });
@@ -195,6 +158,7 @@ export default function CategoriesPage() {
       // Reset inputs & close modal
       setNewCatId('');
       setNewCatName('');
+      setNewCatNameEn('');
       setNewCatDesc('');
       setShowModal(false);
       
@@ -213,7 +177,8 @@ export default function CategoriesPage() {
   // Edit Start Handler
   const handleStartEdit = (cat: any) => {
     setEditingCategory(cat);
-    setEditCatName(cat.name || cat.title || '');
+    setEditCatName(cat.name_th || cat.name || cat.title || '');
+    setEditCatNameEn(cat.name_en || '');
     setEditCatDesc(cat.description || cat.desc || '');
   };
 
@@ -235,6 +200,7 @@ export default function CategoriesPage() {
         body: JSON.stringify({
           id: editingCategory.id,
           name: editCatName.trim(),
+          name_en: editCatNameEn.trim(),
           description: editCatDesc.trim()
         })
       });
@@ -632,7 +598,7 @@ export default function CategoriesPage() {
                           Category ID: {baseKey}
                         </span>
                         <h3 className="font-extrabold text-base text-slate-800 dark:text-slate-100 mt-1 font-display group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          {formatCategoryLabel(catName, language)}
+                          {getCategoryLabel(cat, language)}
                         </h3>
                       </div>
                       
@@ -756,10 +722,10 @@ export default function CategoriesPage() {
                 </p>
               </div>
 
-              {/* Category Name */}
+              {/* Category Name (Thai) */}
               <div>
                 <label className="block text-slate-555 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-2">
-                  ชื่อหมวดหมู่ที่ใช้แสดงผล <span className="text-rose-500">*</span>
+                  {language === 'th' ? 'ชื่อหมวดหมู่ภาษาไทย' : 'Thai Category Name'} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -767,6 +733,20 @@ export default function CategoriesPage() {
                   placeholder="ตัวอย่าง: ปัญหาการเงินและการชำระเงิน"
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-600 focus:outline-none transition font-semibold text-slate-800 dark:text-slate-100"
+                />
+              </div>
+
+              {/* Category Name (English) */}
+              <div>
+                <label className="block text-slate-555 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-2">
+                  {language === 'th' ? 'ชื่อหมวดหมู่ภาษาอังกฤษ (English Name)' : 'English Category Name'}
+                </label>
+                <input
+                  type="text"
+                  placeholder="Example: Deposit & Withdrawal"
+                  value={newCatNameEn}
+                  onChange={(e) => setNewCatNameEn(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-600 focus:outline-none transition font-semibold text-slate-800 dark:text-slate-100"
                 />
               </div>
@@ -832,10 +812,10 @@ export default function CategoriesPage() {
 
             {/* Modal Form */}
             <form onSubmit={handleEditCategory} className="p-6 space-y-5">
-              {/* Category Name */}
+              {/* Category Name (Thai) */}
               <div>
                 <label className="block text-slate-555 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-2">
-                  ชื่อหมวดหมู่ที่ใช้แสดงผล <span className="text-rose-500">*</span>
+                  {language === 'th' ? 'ชื่อหมวดหมู่ภาษาไทย' : 'Thai Category Name'} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -843,6 +823,20 @@ export default function CategoriesPage() {
                   placeholder="ตัวอย่าง: ปัญหาการเงินและการชำระเงิน"
                   value={editCatName}
                   onChange={(e) => setEditCatName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-600 focus:outline-none transition font-semibold text-slate-800 dark:text-slate-100"
+                />
+              </div>
+
+              {/* Category Name (English) */}
+              <div>
+                <label className="block text-slate-555 dark:text-slate-400 font-bold text-xs uppercase tracking-wider mb-2">
+                  {language === 'th' ? 'ชื่อหมวดหมู่ภาษาอังกฤษ (English Name)' : 'English Category Name'}
+                </label>
+                <input
+                  type="text"
+                  placeholder="Example: Deposit & Withdrawal"
+                  value={editCatNameEn}
+                  onChange={(e) => setEditCatNameEn(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-600 focus:outline-none transition font-semibold text-slate-800 dark:text-slate-100"
                 />
               </div>
