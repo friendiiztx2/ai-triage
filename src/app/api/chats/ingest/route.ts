@@ -38,18 +38,60 @@ export async function POST(request: NextRequest) {
 
     const chatId = body.id || body.chat_id || body.chatId || `chat-${Date.now()}`;
     const custId = rawCustId || 'cust-001';
+
+    // Extract Client ID & Secret from Headers or Body
+    const clientId = request.headers.get('x-client-id') || 
+                     request.headers.get('client-id') || 
+                     request.headers.get('x_client_id') || 
+                     body.client_id;
+    const clientSecret = request.headers.get('x-client-secret') || 
+                         request.headers.get('client-secret') || 
+                         request.headers.get('x_client_secret') || 
+                         body.client_secret;
+
     let compId = body.company_id || body.companyId;
-    if (!compId && (body.company_name || body.companyName || body.company)) {
-      const compName = String(body.company_name || body.companyName || body.company).toLowerCase();
-      if (compName.includes('alpha')) {
-        compId = '2e65829a-6a60-4022-8289-0fe64ec98fae';
-      } else if (compName.includes('mika')) {
-        compId = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
-      } else {
-        const { data: comp } = await db.from('companies').select('id').ilike('name', `%${compName}%`).maybeSingle();
-        if (comp) compId = comp.id;
+
+    // 1. Resolve Company by x-client-id from companies table
+    if (!compId && clientId) {
+      const { data: compByClient } = await db
+        .from('companies')
+        .select('id, name, client_secret')
+        .eq('client_id', clientId.trim())
+        .maybeSingle();
+
+      if (compByClient) {
+        if (clientSecret && compByClient.client_secret && compByClient.client_secret !== clientSecret.trim()) {
+          return NextResponse.json({ error: 'x-client-secret ไม่ถูกต้องสำหรับ client นี้' }, { status: 401 });
+        }
+        compId = compByClient.id;
       }
     }
+
+    // 2. Resolve Company by Name or Domain
+    if (!compId && (body.company_name || body.companyName || body.company || body.domain || body.company_domain)) {
+      const compName = String(body.company_name || body.companyName || body.company || '').toLowerCase();
+      const domainName = String(body.domain || body.company_domain || '').toLowerCase();
+
+      if (compName.includes('alpha') || domainName.includes('alpha')) {
+        compId = '2e65829a-6a60-4022-8289-0fe64ec98fae';
+      } else if (compName.includes('mika') || domainName.includes('mika')) {
+        compId = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+      } else if (compName.includes('dd') || domainName.includes('ddgroup')) {
+        compId = 'ccd41fa5-891c-4f5a-b092-e28f34a59f35';
+      } else if (compName.includes('devd') || domainName.includes('dev-d')) {
+        compId = 'e8070735-9651-4dd5-8055-bd65afbc9da8';
+      } else {
+        if (compName) {
+          const { data: comp } = await db.from('companies').select('id').ilike('name', `%${compName}%`).maybeSingle();
+          if (comp) compId = comp.id;
+        }
+        if (!compId && domainName) {
+          const { data: comp } = await db.from('companies').select('id').ilike('domain', `%${domainName}%`).maybeSingle();
+          if (comp) compId = comp.id;
+        }
+      }
+    }
+
     if (!compId) {
       compId = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
     }
@@ -74,16 +116,19 @@ export async function POST(request: NextRequest) {
 
     // 2. Ensure Customer Record exists in customers table (Auto-Registration for Live Chats)
     const custName = rawCustName || `ลูกค้า #${custId}`;
-    await db
-      .from('customers')
-      .upsert([{
-        id: custId,
-        name: custName,
-        company_id: compId,
-        created_at: new Date().toISOString()
-      }], { onConflict: 'id' });
+    try {
+      await db
+        .from('customers')
+        .upsert([{
+          id: custId,
+          name: custName,
+          created_at: new Date().toISOString()
+        }], { onConflict: 'id' });
+    } catch (custErr) {
+      console.warn('Customer auto-register warning (non-blocking):', custErr);
+    }
 
-    const newChatRow = {
+    let newChatRow: any = {
       id: chatId,
       customer_id: custId,
       conversation: conversationStr,
@@ -99,10 +144,14 @@ export async function POST(request: NextRequest) {
     const isLocal = !process.env.VERCEL || process.env.NODE_ENV === 'development' || !process.env.VERCEL_ENV;
     if (isLocal) {
       try {
+        const fwdHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (clientId) fwdHeaders['x-client-id'] = clientId;
+        if (clientSecret) fwdHeaders['x-client-secret'] = clientSecret;
+
         const fwdRes = await fetch('https://ai-triage-eta.vercel.app/api/chats/ingest', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+          headers: fwdHeaders,
+          body: JSON.stringify({ ...body, company_id: compId })
         });
         if (fwdRes.ok) {
           const fwdData = await fwdRes.json();
@@ -114,11 +163,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data, error } = await db
+    let { data, error } = await db
       .from('chats')
       .upsert([newChatRow], { onConflict: 'id' })
       .select()
       .abortSignal(controller.signal);
+
+    if (error && error.message?.includes('chats_customer_id_fkey')) {
+      newChatRow.customer_id = 'cust-001';
+      const retry = await db
+        .from('chats')
+        .upsert([newChatRow], { onConflict: 'id' })
+        .select()
+        .abortSignal(controller.signal);
+      data = retry.data;
+      error = retry.error;
+    }
 
     // Ensure chat_issues table entry is populated for multi-issue breakdown tracking
     try {
@@ -140,10 +200,14 @@ export async function POST(request: NextRequest) {
     if (error) {
       if (isLocal || error.message?.includes('row-level security')) {
         try {
+          const fwdHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (clientId) fwdHeaders['x-client-id'] = clientId;
+          if (clientSecret) fwdHeaders['x-client-secret'] = clientSecret;
+
           const fwdRes = await fetch('https://ai-triage-eta.vercel.app/api/chats/ingest', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            headers: fwdHeaders,
+            body: JSON.stringify({ ...body, company_id: compId })
           });
           const fwdData = await fwdRes.json();
           return NextResponse.json(fwdData, { status: fwdRes.status });

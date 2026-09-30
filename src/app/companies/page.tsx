@@ -23,6 +23,7 @@ export default function CompaniesPage() {
   // Form states
   const [name, setName] = useState('');
   const [domain, setDomain] = useState('');
+  const [isDomainCustomized, setIsDomainCustomized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<any | null>(null);
 
@@ -80,6 +81,7 @@ export default function CompaniesPage() {
   const handleOpenAdd = () => {
     setName('');
     setDomain('');
+    setIsDomainCustomized(false);
     setError(null);
     setSuccessData(null);
     setShowAddModal(true);
@@ -88,8 +90,9 @@ export default function CompaniesPage() {
   // Save new company
   const handleRegisterCompany = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !domain) {
-      setError('กรุณากรอกข้อมูลชื่อบริษัทและโดเมน');
+    const finalDomain = domain.trim() || `${name.toLowerCase().replace(/[^a-z0-9]/g, '') || 'company'}.com`;
+    if (!name.trim()) {
+      setError('กรุณากรอกชื่อบริษัท');
       return;
     }
 
@@ -101,7 +104,7 @@ export default function CompaniesPage() {
       const res = await fetch('/api/companies/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, domain })
+        body: JSON.stringify({ name: name.trim(), domain: finalDomain })
       });
 
       const data = await res.json();
@@ -281,9 +284,16 @@ export default function CompaniesPage() {
                     <input
                       type="text"
                       required
-                      placeholder="เช่น Beta Technology Co., Ltd."
+                      placeholder="เช่น DD group"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setName(val);
+                        if (!isDomainCustomized) {
+                          const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
+                          setDomain(clean ? `${clean}.com` : '');
+                        }
+                      }}
                       className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2 focus:border-indigo-600 focus:outline-none font-semibold text-slate-800 dark:text-slate-100"
                     />
                   </div>
@@ -294,10 +304,12 @@ export default function CompaniesPage() {
                       <Globe className="absolute left-3 top-2.5 text-slate-400" size={14} />
                       <input
                         type="text"
-                        required
-                        placeholder="เช่น betatech.com (ไม่ต้องใส่ https://)"
+                        placeholder="เช่น ddgroup.com (ไม่ต้องใส่ https://)"
                         value={domain}
-                        onChange={(e) => setDomain(e.target.value)}
+                        onChange={(e) => {
+                          setIsDomainCustomized(true);
+                          setDomain(e.target.value);
+                        }}
                         className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl pl-9 pr-3 py-2 focus:border-indigo-600 focus:outline-none font-semibold text-slate-800 dark:text-slate-100"
                       />
                     </div>

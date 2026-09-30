@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { AlertTriangle, X, ArrowRight, MessageSquare, Volume2, Play } from 'lucide-react';
+import { AlertTriangle, X, ArrowRight, Volume2 } from 'lucide-react';
 import { playAlertTone, getAudioContext } from '@/lib/audio';
 
 interface UrgentToast {
@@ -10,18 +9,69 @@ interface UrgentToast {
   customerName: string;
   summary: string;
   priority: string;
+  companyId?: string;
 }
 
 export default function GlobalNotifier() {
   const [toast, setToast] = useState<UrgentToast | null>(null);
-  const notifiedIdsRef = useRef<Set<string>>(new Set());
+  const [popupEnabled, setPopupEnabled] = useState(true);
+
+  // Sync popup enabled state with localStorage
+  useEffect(() => {
+    const checkPopupSetting = () => {
+      if (typeof window === 'undefined') return;
+      const saved = localStorage.getItem('desktop_popup_enabled');
+      const isEnabled = saved !== 'false'; // Default to true if not set
+      setPopupEnabled(isEnabled);
+      if (!isEnabled) {
+        setToast(null);
+      }
+    };
+
+    checkPopupSetting();
+    window.addEventListener('desktop-popup-setting-changed', checkPopupSetting);
+    window.addEventListener('storage', checkPopupSetting);
+    return () => {
+      window.removeEventListener('desktop-popup-setting-changed', checkPopupSetting);
+      window.removeEventListener('storage', checkPopupSetting);
+    };
+  }, []);
 
   const triggerSound = () => {
-    playAlertTone();
+    if (typeof window === 'undefined') return;
+    const soundOn = localStorage.getItem('chats_sound_enabled') === 'true';
+    if (!soundOn) return;
+    try {
+      playAlertTone();
+    } catch (e) {}
+  };
+
+  const getNotifiedIds = (): Set<string> => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const raw = sessionStorage.getItem('notified_urgent_ids');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch {
+      return new Set();
+    }
+  };
+
+  const markAsNotified = (id: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const current = getNotifiedIds();
+      current.add(id);
+      sessionStorage.setItem('notified_urgent_ids', JSON.stringify(Array.from(current)));
+    } catch {}
+  };
+
+  const getActiveCompanyId = () => {
+    if (typeof window === 'undefined') return null;
+    const matchCookie = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
+    return matchCookie ? decodeURIComponent(matchCookie[1]) : (localStorage.getItem('company_id') || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2');
   };
 
   useEffect(() => {
-    // Only check if user is logged in
     const checkSession = () => {
       if (typeof window === 'undefined') return false;
       const session = localStorage.getItem('user_session');
@@ -30,50 +80,72 @@ export default function GlobalNotifier() {
 
     const pollUrgentChats = async () => {
       if (!checkSession()) return;
+      
+      // If user disabled popups, do not fetch or display toasts
+      const isPopupOn = typeof window !== 'undefined' ? localStorage.getItem('desktop_popup_enabled') !== 'false' : true;
+      if (!isPopupOn) return;
 
       try {
-        const res = await fetch('/api/chats?summary_only=true');
+        const compId = getActiveCompanyId();
+        const url = compId && compId !== 'all'
+          ? `/api/chats?summary_only=true&company_id=${compId}`
+          : '/api/chats?summary_only=true';
+
+        const res = await fetch(url);
         if (!res.ok) return;
 
         const chats = await res.json();
         if (!Array.isArray(chats)) return;
 
-        // Find urgent chats
+        const notifiedSet = getNotifiedIds();
+        const now = Date.now();
+        // Only alert cases created within the last 4 hours (avoid popping up old historical cases)
+        const recentThreshold = now - (4 * 60 * 60 * 1000);
+
+        // Find urgent chats belonging to the active company that haven't been resolved
         const urgentChats = chats.filter(c => {
           const pri = (c.priority || '').toLowerCase();
-          return pri === 'urgent' || pri === 'critical';
+          const isUrgent = pri === 'urgent' || pri === 'critical';
+          if (!isUrgent) return false;
+
+          // Ignore already completed/resolved chats
+          const status = (c.status || '').toLowerCase();
+          if (status === 'completed' || status === 'resolved') return false;
+
+          const createdTime = new Date(c.created_at || 0).getTime();
+          // Must be recent
+          if (createdTime > 0 && createdTime < recentThreshold) return false;
+
+          return true;
         });
 
         if (urgentChats.length === 0) return;
 
-        // Initialize notified IDs on first run to prevent spamming old chats
-        if (notifiedIdsRef.current.size === 0) {
-          urgentChats.forEach(c => notifiedIdsRef.current.add(c.id));
+        // On very first mount when notifiedSet is empty, record existing so we don't spam
+        if (notifiedSet.size === 0 && !sessionStorage.getItem('notified_urgent_initialized')) {
+          sessionStorage.setItem('notified_urgent_initialized', 'true');
+          urgentChats.forEach(c => markAsNotified(c.id));
           return;
         }
 
-        // Find any urgent chats that haven't been notified yet
-        const newUrgentChats = urgentChats.filter(c => !notifiedIdsRef.current.has(c.id));
-        
-        if (newUrgentChats.length > 0) {
-          // Sort by created_at descending to show the newest in toast
-          const sortedNewUrgent = [...newUrgentChats].sort((a, b) => {
-            const timeA = new Date(a.created_at || 0).getTime();
-            const timeB = new Date(b.created_at || 0).getTime();
-            return timeB - timeA;
-          });
-          const newest = sortedNewUrgent[0];
-          
-          // Mark all as notified
-          newUrgentChats.forEach(c => notifiedIdsRef.current.add(c.id));
-          
+        // Find genuinely un-notified urgent cases
+        const newUrgent = urgentChats.filter(c => !notifiedSet.has(c.id));
+        if (newUrgent.length > 0) {
+          const sorted = [...newUrgent].sort((a, b) => 
+            new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+          );
+          const newest = sorted[0];
+
+          newUrgent.forEach(c => markAsNotified(c.id));
+
           setToast({
             id: newest.id,
-            customerName: newest.customer_name || 'ลูกค้าทั่วไป',
-            summary: newest.summary || 'คัดกรองปัญหาสนทนาด้วย AI',
-            priority: newest.priority
+            customerName: newest.customer_name || `ลูกค้า #${newest.customer_id || newest.id}`,
+            summary: newest.summary || 'พบเคสด่วนต้องการความช่วยเหลือเร่งด่วน',
+            priority: newest.priority || 'urgent',
+            companyId: newest.company_id
           });
-          
+
           triggerSound();
         }
       } catch (err) {
@@ -81,14 +153,42 @@ export default function GlobalNotifier() {
       }
     };
 
-    // Run query immediately, then repeat every 30 seconds
     pollUrgentChats();
-    const intervalId = setInterval(pollUrgentChats, 30000);
-
+    const intervalId = setInterval(pollUrgentChats, 25000);
     return () => clearInterval(intervalId);
   }, []);
 
-  if (!toast) return null;
+  const handleDismiss = () => {
+    if (toast) {
+      markAsNotified(toast.id);
+    }
+    setToast(null);
+  };
+
+  const handleViewChat = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!toast) return;
+
+    const targetChatId = toast.id;
+    const targetCompId = toast.companyId;
+
+    markAsNotified(targetChatId);
+    setToast(null);
+
+    // If currently on /chats, dispatch custom event to open the floating modal immediately
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/chats') {
+        window.dispatchEvent(new CustomEvent('open-chat-modal', {
+          detail: { chatId: targetChatId, companyId: targetCompId }
+        }));
+      } else {
+        // Navigate to /chats with open_chat parameter
+        window.location.href = `/chats?open_chat=${targetChatId}${targetCompId ? `&company_id=${targetCompId}` : ''}`;
+      }
+    }
+  };
+
+  if (!toast || !popupEnabled) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 max-w-sm w-full bg-white dark:bg-slate-900 border-2 border-rose-500 rounded-2xl shadow-2xl p-4 animate-slideIn select-none">
@@ -103,8 +203,8 @@ export default function GlobalNotifier() {
               🔴 เคสเร่งด่วนที่สุด! (URGENT)
             </span>
             <button 
-              onClick={() => setToast(null)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-0.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+              onClick={handleDismiss}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-0.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -124,7 +224,7 @@ export default function GlobalNotifier() {
                 getAudioContext();
                 playAlertTone(undefined, undefined, true);
               }}
-              className="flex items-center justify-center gap-1 bg-indigo-50 dark:bg-indigo-955/40 hover:bg-indigo-100 text-indigo-650 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition shadow-sm"
+              className="flex items-center justify-center gap-1 bg-indigo-50 dark:bg-indigo-955/40 hover:bg-indigo-100 text-indigo-650 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/40 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition shadow-sm cursor-pointer"
               title="กดทดสอบเสียงสัญญาณเตือน"
             >
               <Volume2 size={11} />
@@ -132,19 +232,18 @@ export default function GlobalNotifier() {
             </button>
 
             <button
-              onClick={() => setToast(null)}
-              className="flex-1 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-300 py-1.5 rounded-lg text-[10px] font-bold transition text-center"
+              onClick={handleDismiss}
+              className="flex-1 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-300 py-1.5 rounded-lg text-[10px] font-bold transition text-center cursor-pointer"
             >
               รับทราบ
             </button>
             
-            <Link
-              href="/chats"
-              onClick={() => setToast(null)}
-              className="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 shadow-sm"
+            <button
+              onClick={handleViewChat}
+              className="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 shadow-sm cursor-pointer"
             >
               ดูแชตนี้ <ArrowRight size={10} />
-            </Link>
+            </button>
           </div>
         </div>
       </div>

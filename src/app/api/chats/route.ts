@@ -483,6 +483,9 @@ export async function GET(request: NextRequest) {
     clearTimeout(timeoutId);
 
     let resultList = Array.from(chatMap.values());
+    if (companyId && companyId !== 'all') {
+      resultList = resultList.filter((c: any) => c.company_id === companyId);
+    }
     if (targetId) {
       resultList = resultList.filter((c: any) => c.id === targetId);
     }

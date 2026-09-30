@@ -15,178 +15,6 @@ import { playAlertTone, isSoundEnabled } from '@/lib/audio';
 import { supabase } from '@/lib/supabase';
 import { getCategoryLabel, getBaseCatId, formatCategoryLabel, KNOWN_CATEGORY_NAMES } from '@/lib/categories';
 
-// Custom regex-based parser for AI Recommendation Markdown structure (Multi-Issue Breakdown)
-function parseAIRecommendation(markdown: string) {
-  if (!markdown) return null;
-
-  // Split by the key indicator "📌" or "Multi-Issue Breakdown"
-  const parts = markdown.split(/📌.*:/);
-  
-  const generalRecommendation = parts[0]?.trim() || "";
-  const issuesText = parts[1]?.trim() || markdown; // Fallback to entire text if no emoji found
-  
-  const issues: any[] = [];
-  
-  if (issuesText) {
-    // Split by "- เรื่องที่"
-    const issueBlocks = issuesText.split(/(?=-\s*เรื่องที่\s*\d+)/);
-    
-    issueBlocks.forEach(block => {
-      if (!block.trim()) return;
-      if (!block.includes('เรื่องที่')) return;
-      
-      // 1. Extract issue title
-      // Format A: "- เรื่องที่ 1: [title]" or "- เรื่องที่ 1 ([title])"
-      let title = "";
-      const titleMatchA = block.match(/-\s*เรื่องที่\s*\d+\s*:\s*([^\n\r\|-]+)/);
-      const titleMatchB = block.match(/-\s*เรื่องที่\s*\d+\s*\(([^)]+)\)/);
-      if (titleMatchB) {
-        title = titleMatchB[1].trim();
-      } else if (titleMatchA) {
-        title = titleMatchA[1].trim();
-      }
-      
-      // 2. Extract sub-category
-      // Format A: "- หมวดหมู่: [cat]" or "จัดอยู่ในหมวดหมู่ [cat]"
-      let category = "";
-      const catMatchA = block.match(/(?:หมวดหมู่|จัดอยู่ในหมวดหมู่)\s*:\s*([^\n\r\|-]+)/);
-      const catMatchB = block.match(/(?:หมวดหมู่|จัดอยู่ในหมวดหมู่)\s+([^\n\r\|-]+)/);
-      if (catMatchA) {
-        category = catMatchA[1].trim();
-      } else if (catMatchB) {
-        category = catMatchB[1].trim();
-      }
-      
-      // 3. Extract department and priority
-      let department = "";
-      let priority = "low";
-      const deptMatch = block.match(/แผนก\s*:\s*([^\(\n\r\|-]+)(?:\(ความเร่งด่วน\s*:\s*([^\)\n\r\|]+)\))?/);
-      if (deptMatch) {
-        department = deptMatch[1].trim();
-        if (deptMatch[2]) {
-          priority = deptMatch[2].trim();
-        }
-      }
-      
-      // 4. Extract recommended reply
-      let reply = "";
-      const replyMatch = block.match(/(?:แนะนำบทสนทนาตอบลูกค้า|คำตอบตอบลูกค้า|คำตอบแนะนำ|แนะนำบทสนทนาตอบกลับ)\s*:\s*["'«“]([^"'»”]+)["'»”]/);
-      const replyMatchFallback = block.match(/(?:แนะนำบทสนทนาตอบลูกค้า|คำตอบตอบลูกค้า|คำตอบแนะนำ|แนะนำบทสนทนาตอบกลับ)\s*:\s*([^\n\r]+)/);
-      if (replyMatch) {
-        reply = replyMatch[1].trim();
-      } else if (replyMatchFallback) {
-        reply = replyMatchFallback[1].trim().replace(/^["'«“]|["'»”]$/g, "");
-      }
-      
-      if (title) {
-        issues.push({
-          title,
-          category,
-          department,
-          priority,
-          reply
-        });
-      }
-    });
-  }
-  
-  return {
-    generalRecommendation: generalRecommendation === markdown ? "" : generalRecommendation,
-    issues
-  };
-}
-
-
-function inferPriorityFromText(text: string, defaultPri?: string) {
-  const raw = (text || '').toLowerCase();
-  
-  if (raw.includes('ข้ามวัน') || raw.includes('แจ้งความ') || raw.includes('แฮก') || raw.includes('502') || raw.includes('เงินหาย') || raw.includes('ขู่')) {
-    return 'urgent';
-  }
-  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอน') || raw.includes('ยอดไม่เข้า') || raw.includes('ล็อกอิน') || raw.includes('รหัสผ่าน')) {
-    return 'high';
-  }
-  if (raw.includes('ค้าง') || raw.includes('หมุน') || raw.includes('ช้า') || raw.includes('โหลด')) {
-    return 'medium';
-  }
-  if (raw.includes('โปร') || raw.includes('โบนัส') || raw.includes('แนะนำเพื่อน') || raw.includes('ขอบคุณ') || raw.includes('สวัสดี')) {
-    return 'low';
-  }
-  
-  return defaultPri?.toLowerCase() || 'medium';
-}
-
-function inferCategoryFromText(text: string, defaultCat?: string, categories: any[] = []) {
-  if (defaultCat && defaultCat !== 'other' && defaultCat !== 'not_a_problem') {
-    const cleanDefault = getBaseCatId(defaultCat);
-    if (cleanDefault === 'ui_rendering_issue') return 'page_load_freeze';
-    if (cleanDefault) return cleanDefault;
-  }
-
-  const raw = (text || '').toLowerCase();
-  
-  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('เช็คยอด') || raw.includes('ข้ามวัน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
-    return 'deposit_withdrawal';
-  }
-  if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('โหลดนาน') || raw.includes('โหลด') || raw.includes('ช้า') || raw.includes('หมุน')) {
-    return 'page_load_freeze';
-  }
-  if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
-    return 'login_issue';
-  }
-  if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus') || raw.includes('วันเกิด') || raw.includes('กิจกรรม')) {
-    return 'promo_bonus';
-  }
-  if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp')) {
-    return 'account_security';
-  }
-  if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์') || raw.includes('ทางเข้า')) {
-    return 'access_blocked';
-  }
-  if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน') || raw.includes('เว็บบอร์ด') || raw.includes('แตก')) {
-    return 'game_issue';
-  }
-
-  return getBaseCatId(defaultCat || '') || (categories[0] ? getBaseCatId(categories[0].id) : 'other');
-}
-
-function inferCategoryFromTextLine(text: string, defaultCat?: string, categories: any[] = []) {
-  const raw = (text || '').toLowerCase();
-  
-  if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอนเงิน') || raw.includes('โอน') || raw.includes('เลขบัญชี') || raw.includes('ยอดไม่เข้า') || raw.includes('เช็คยอด') || raw.includes('ข้ามวัน') || raw.includes('โกง') || raw.includes('รอนาน') || (raw.includes('เงิน') && raw.includes('เข้า'))) {
-    return 'deposit_withdrawal';
-  }
-  if (raw.includes('ค้าง') || raw.includes('หน้าหมุน') || raw.includes('โหลดช้า') || raw.includes('โหลดนาน') || raw.includes('โหลด') || raw.includes('ช้า') || raw.includes('หมุน')) {
-    return 'page_load_freeze';
-  }
-  if (raw.includes('ล็อกอิน') || raw.includes('login') || raw.includes('เข้าไม่ได้') || raw.includes('รหัสผ่าน') || raw.includes('เข้าสู่ระบบ')) {
-    return 'login_issue';
-  }
-  if (raw.includes('โบนัส') || raw.includes('โปร') || raw.includes('เครดิตฟรี') || raw.includes('bonus') || raw.includes('วันเกิด') || raw.includes('กิจกรรม')) {
-    return 'promo_bonus';
-  }
-  if (raw.includes('ความปลอดภัย') || raw.includes('security') || raw.includes('otp')) {
-    return 'account_security';
-  }
-  if (raw.includes('502') || raw.includes('blocked') || raw.includes('ลิงก์') || raw.includes('ทางเข้า')) {
-    return 'access_blocked';
-  }
-  if (raw.includes('เกม') || raw.includes('game') || raw.includes('เดิมพัน') || raw.includes('เว็บบอร์ด') || raw.includes('แตก')) {
-    return 'game_issue';
-  }
-  if (raw.includes('แอดมิน') || raw.includes('แอด') || raw.includes('ไม่ตอบ') || raw.includes('ตอบหน่อย') || raw.includes('ตอบแชท') || raw.includes('ตอบด้วย') || raw.includes('ตอแหล') || raw.includes('ด่า')) {
-    return 'other';
-  }
-
-  // Fallback to cleaner default or 'other'
-  const cleanDefault = getBaseCatId(defaultCat || '');
-  if (cleanDefault && cleanDefault !== 'deposit_withdrawal' && cleanDefault !== 'other' && cleanDefault !== 'not_a_problem') {
-    return cleanDefault;
-  }
-
-  return 'other';
-}
-
 function getTriageDuration(id: string): string {
   if (!id) return '0.5';
   let hash = 0;
@@ -196,51 +24,6 @@ function getTriageDuration(id: string): string {
   }
   const val = 0.4 + (Math.abs(hash) % 8) / 10;
   return val.toFixed(1);
-}
-
-function buildInitialIssues(targetChat: any, categories: any[] = []) {
-  if (!targetChat) return [];
-
-  const rawConv = targetChat.conversation || (targetChat.rawMessages ? targetChat.rawMessages.join('\n') : targetChat.summary || '');
-  const convLines = (rawConv || '')
-    .split('\n')
-    .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
-    .filter((l: string) => l.length > 0);
-
-  // If chat_issues from DB exists and adequately covers the conversation lines, use it
-  if (targetChat.chat_issues && Array.isArray(targetChat.chat_issues) && targetChat.chat_issues.length > 0) {
-    if (convLines.length <= 1 || targetChat.chat_issues.length >= convLines.length) {
-      return targetChat.chat_issues;
-    }
-  }
-
-  if (convLines.length === 0) {
-    return [{
-      id: `${targetChat.id || 'chat'}-issue-0`,
-      summary: targetChat.summary || 'ไม่มีข้อมูลสรุป',
-      category_id: inferCategoryFromTextLine(targetChat.summary || '', targetChat.category_id, categories),
-      priority: inferPriorityFromText(targetChat.summary || '', targetChat.priority)
-    }];
-  }
-
-  // Map 1-to-1 for EVERY conversation line so every message line in the chat box gets its own Category & Priority control!
-  const dbIssues = (targetChat.chat_issues && Array.isArray(targetChat.chat_issues)) ? targetChat.chat_issues : [];
-
-  return convLines.map((line: string, i: number) => {
-    const matched = dbIssues.find((dbIssue: any) => 
-      dbIssue.summary === line || 
-      (dbIssue.summary && (dbIssue.summary.includes(line) || line.includes(dbIssue.summary)))
-    );
-
-    return {
-      id: matched?.id || `${targetChat.id || 'chat'}-issue-${i}`,
-      summary: line,
-      category_id: matched?.category_id || inferCategoryFromTextLine(line, targetChat.category_id, categories),
-      priority: matched?.priority || inferPriorityFromText(line, targetChat.priority),
-      department: matched?.department,
-      recommended_reply: matched?.recommended_reply
-    };
-  });
 }
 
 // Formats priority string to matching mockup text (Thai + English parenthetical)
@@ -312,25 +95,12 @@ function FloatingChatWindow({
   if (!chat) return null;
 
   const [customerInfo, setCustomerInfo] = useState<any>(null);
-  const [selectedChatIssues, setSelectedChatIssues] = useState<any[]>(() => buildInitialIssues(chat, categories));
-  const [editIssues, setEditIssues] = useState<Record<string, any>>(() => {
-    const initialMap: Record<string, any> = {};
-    try {
-      const initList = buildInitialIssues(chat, categories);
-      if (Array.isArray(initList)) {
-        initList.forEach((issue: any) => {
-          if (issue) {
-            const issueKey = issue.id || 'issue-0';
-            initialMap[issueKey] = {
-              category_id: getBaseCatId(issue.category_id || chat?.category_id || ''),
-              priority: (issue.priority || inferPriorityFromText(issue.summary || '', 'medium')).toLowerCase()
-            };
-          }
-        });
-      }
-    } catch (e) {}
-    return initialMap;
-  });
+  const [chatIssues, setChatIssues] = useState<any[]>([]);
+  const [loadingIssues, setLoadingIssues] = useState<boolean>(true);
+  const [retryingTriage, setRetryingTriage] = useState<boolean>(false);
+  const [triageError, setTriageError] = useState<string | null>(null);
+  const [triageSuccess, setTriageSuccess] = useState<string | null>(null);
+  const [editIssues, setEditIssues] = useState<Record<string, { category_id: string; priority: string }>>({});
   
   const [editCategory, setEditCategory] = useState(chat?.category_id || '');
   const [editPriority, setEditPriority] = useState(chat?.priority || 'low');
@@ -340,7 +110,7 @@ function FloatingChatWindow({
   const [customTagInput, setCustomTagInput] = useState('');
   
   const [updating, setUpdating] = useState(false);
-  const [copiedId, setCopiedId] = useState(null);
+  const [copiedId, setCopiedId] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   // Inline tag editing state
@@ -395,95 +165,129 @@ function FloatingChatWindow({
 
   const getBaseCatId = (id: string) => (id && typeof id === 'string' && id.includes(':')) ? id.split(':')[1] : (id || '');
 
+  // Requirement 2: Fetch directly from Supabase table 'chat_issues'
+  const loadChatIssues = async () => {
+    setLoadingIssues(true);
+    setTriageError(null);
+    try {
+      const { data: issues, error } = await supabase
+        .from('chat_issues')
+        .select('id, category_id, priority, department, summary, recommended_reply')
+        .eq('chat_id', chat.id);
 
+      let issuesList = issues;
+      if (error || !issuesList || issuesList.length === 0) {
+        // Fallback to internal API proxy if direct client had any RLS / local network difference
+        try {
+          const apiRes = await fetch(`/api/chats/issues?chat_id=${chat.id}`);
+          if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            if (Array.isArray(apiData) && apiData.length > 0) {
+              issuesList = apiData;
+            }
+          }
+        } catch (e) {}
+      }
 
-  // Fetch issues & customer info in background without blocking UI render
+      if (issuesList && Array.isArray(issuesList) && issuesList.length > 0) {
+        setChatIssues(issuesList);
+        const initialMap: Record<string, any> = {};
+        issuesList.forEach((issue: any) => {
+          const issueKey = issue.id || 'issue-0';
+          initialMap[issueKey] = {
+            category_id: getBaseCatId(issue.category_id || ''),
+            priority: (issue.priority || 'medium').toLowerCase()
+          };
+        });
+        setEditIssues(initialMap);
+      } else {
+        setChatIssues([]);
+        if (chat.status === 'completed') {
+          const primaryKey = `${chat.id}-primary`;
+          setEditIssues({
+            [primaryKey]: {
+              category_id: getBaseCatId(chat.category_id || ''),
+              priority: (chat.priority || 'medium').toLowerCase()
+            }
+          });
+        }
+      }
+    } catch (err: any) {
+      console.error('Error fetching chat_issues from Supabase:', err);
+      setChatIssues([]);
+    } finally {
+      setLoadingIssues(false);
+    }
+  };
+
+  // Requirement 4: Trigger AI Triage re-analysis
+  const handleTriggerTriage = async () => {
+    setRetryingTriage(true);
+    setTriageError(null);
+    setTriageSuccess(null);
+    try {
+      let res;
+      // 1. Try local microservice directly (port 4000)
+      try {
+        res = await fetch(`http://localhost:4000/api/chats/${chat.id}/triage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (directErr) {
+        // 2. Fallback to Next.js API proxy route
+        res = await fetch(`/api/chats/${chat.id}/triage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Server responded with status ${res.status}`);
+      }
+
+      setTriageSuccess(language === 'th' ? 'วิเคราะห์ด้วย AI ซ้ำสำเร็จ' : 'AI Triage completed');
+      setTimeout(() => setTriageSuccess(null), 3500);
+
+      // Re-fetch updated issues from Supabase
+      await loadChatIssues();
+      if (onSaved) onSaved();
+    } catch (err: any) {
+      console.error('Failed to trigger AI triage:', err);
+      setTriageError(err.message || 'ไม่สามารถเรียก AI Triage ได้ กรุณาตรวจสอบว่า Service ที่พอร์ต 4000 เปิดทำงานอยู่');
+    } finally {
+      setRetryingTriage(false);
+    }
+  };
+
+  // Fetch issues & customer info
   useEffect(() => {
     let isMounted = true;
     async function loadData() {
-      try {
-        const [issuesRes, custRes] = await Promise.all([
-          fetch('/api/chats/issues?chat_id=' + chat.id).catch(() => null),
-          chat.customer_id ? fetch('/api/customers?customer_id=' + chat.customer_id).catch(() => null) : Promise.resolve(null)
-        ]);
-
-        if (issuesRes && issuesRes.ok) {
-          const issuesData = await issuesRes.json();
-          if (isMounted && issuesData && Array.isArray(issuesData) && issuesData.length > 0) {
-            const rawConv = chat.conversation || (chat.rawMessages ? chat.rawMessages.join('\n') : chat.summary || '');
-            const convLines = (rawConv || '')
-              .split('\n')
-              .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
-              .filter((l: string) => l.length > 0);
-
-            if (convLines.length > 1 && issuesData.length < convLines.length) {
-              // The database has fewer/partial issues (e.g. only 1 collapsed issue for 5 lines).
-              // Do NOT collapse the 5 issues into 1! Merge DB issue properties into matching lines instead.
-              setSelectedChatIssues(prev => {
-                const baseList = (prev && prev.length >= convLines.length) ? prev : buildInitialIssues(chat, categories);
-                return baseList.map((item: any) => {
-                  const matched = issuesData.find((dbIssue: any) => 
-                    dbIssue.summary === item.summary || 
-                    (item.summary && dbIssue.summary && (dbIssue.summary.includes(item.summary) || item.summary.includes(dbIssue.summary)))
-                  );
-                  if (matched) {
-                    return {
-                      ...item,
-                      id: matched.id || item.id,
-                      category_id: matched.category_id || item.category_id,
-                      priority: matched.priority || item.priority,
-                      department: matched.department || item.department,
-                      recommended_reply: matched.recommended_reply || item.recommended_reply
-                    };
-                  }
-                  return item;
-                });
-              });
-
-              setEditIssues(prev => {
-                const updatedEditState: Record<string, any> = { ...prev };
-                issuesData.forEach((issue: any) => {
-                  if (issue.id) {
-                    updatedEditState[issue.id] = {
-                      category_id: getBaseCatId(issue.category_id || ''),
-                      priority: (issue.priority || 'medium').toLowerCase()
-                    };
-                  }
-                });
-                return updatedEditState;
-              });
-            } else {
-              setSelectedChatIssues(issuesData);
-              setEditIssues(prev => {
-                const updatedEditState: Record<string, any> = { ...prev };
-                issuesData.forEach((issue: any) => {
-                  const issueKey = issue.id || 'issue-0';
-                  const directCat = getBaseCatId(issue.category_id || '');
-                  const directPri = (issue.priority || 'medium').toLowerCase();
-                  updatedEditState[issueKey] = {
-                    category_id: directCat,
-                    priority: directPri
-                  };
-                });
-                return updatedEditState;
-              });
-            }
+      await loadChatIssues();
+      if (chat.customer_id) {
+        try {
+          const custRes = await fetch('/api/customers?customer_id=' + chat.customer_id);
+          if (custRes.ok && isMounted) {
+            const cust = await custRes.json();
+            if (cust) setCustomerInfo(cust);
           }
-        }
-
-        if (custRes && custRes.ok) {
-          const cust = await custRes.json();
-          if (isMounted && cust) {
-            setCustomerInfo(cust);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching modal background data:', err);
+        } catch (e) {}
       }
     }
     loadData();
     return () => { isMounted = false; };
   }, [chat.id]);
+
+  // Polling check if status is pending
+  useEffect(() => {
+    if (chat.status === 'pending') {
+      const timer = setInterval(() => {
+        loadChatIssues();
+      }, 4000);
+      return () => clearInterval(timer);
+    }
+  }, [chat.id, chat.status]);
 
   const handleMouseDown = (e: any) => {
     onFocus();
@@ -538,10 +342,10 @@ function FloatingChatWindow({
         }
       } catch (e) {}
 
-      const hasDbIssues = selectedChatIssues && selectedChatIssues.length > 0;
+      const hasDbIssues = chatIssues && chatIssues.length > 0;
       let isCorrect = true;
       if (hasDbIssues) {
-        selectedChatIssues.forEach((issue) => {
+        chatIssues.forEach((issue) => {
           const currentEdit = editIssues[issue.id];
           if (currentEdit) {
             if (currentEdit.category_id !== (issue.category_id || '') || currentEdit.priority !== (issue.priority || 'low')) {
@@ -550,18 +354,30 @@ function FloatingChatWindow({
           }
         });
       } else {
-        if (editCategory !== (chat.category_id || '') || editPriority !== (chat.priority || 'low')) {
+        const primaryKey = `${chat.id}-primary`;
+        const currentEdit = editIssues[primaryKey];
+        if (currentEdit) {
+          if (currentEdit.category_id !== (chat.category_id || '') || currentEdit.priority !== (chat.priority || 'low')) {
+            isCorrect = false;
+          }
+        } else if (editCategory !== (chat.category_id || '') || editPriority !== (chat.priority || 'low')) {
           isCorrect = false;
         }
       }
 
       const issuesToSubmit = hasDbIssues
-        ? selectedChatIssues.map((issue) => ({
+        ? chatIssues.map((issue) => ({
             id: issue.id,
             category_id: editIssues[issue.id]?.category_id || null,
-            priority: editIssues[issue.id]?.priority || 'low'
+            priority: editIssues[issue.id]?.priority || 'low',
+            summary: issue.summary
           }))
-        : [];
+        : [{
+            id: `${chat.id}-primary`,
+            category_id: editIssues[`${chat.id}-primary`]?.category_id || editCategory || chat.category_id || null,
+            priority: editIssues[`${chat.id}-primary`]?.priority || editPriority || chat.priority || 'low',
+            summary: chat.summary || 'ประเด็นหลัก'
+          }];
 
       let finalCategoryId = editCategory;
       let finalPriority = editPriority;
@@ -663,8 +479,8 @@ function FloatingChatWindow({
   const renderConversation = () => {
     let rawText = chat.conversation;
     
-    if (!rawText && selectedChatIssues && selectedChatIssues.length > 0) {
-      rawText = selectedChatIssues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
+    if (!rawText && chatIssues && chatIssues.length > 0) {
+      rawText = chatIssues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
     } else if (!rawText && chat.chat_issues && chat.chat_issues.length > 0) {
       rawText = chat.chat_issues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
     } else if (!rawText && chat.summary) {
@@ -862,111 +678,236 @@ function FloatingChatWindow({
                   {/* Right Column (Span 7): Triage Category & Priority controls per child chat_issue */}
                   <div className="lg:col-span-7 min-w-0 space-y-3 pt-0.5">
                     {(() => {
-                      const rawConv = chat.conversation || (chat.rawMessages ? chat.rawMessages.join('\n') : chat.summary || '');
-                      const convLines = (rawConv || '')
-                        .split('\n')
-                        .map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, ''))
-                        .filter((l: string) => l.length > 0);
+                      const isWaitingForAI = loadingIssues || retryingTriage || chat.status === 'pending' || (chatIssues.length === 0 && chat.status !== 'completed');
 
-                      let activeIssuesList = (selectedChatIssues && selectedChatIssues.length > 0)
-                        ? selectedChatIssues
-                        : buildInitialIssues(chat, categories);
+                      if (isWaitingForAI) {
+                        return (
+                          <div className="bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/80 dark:border-indigo-900/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center space-y-4 shadow-xs">
+                            <div className="relative">
+                              <RefreshCw size={36} className="animate-spin text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-sm font-black text-indigo-900 dark:text-indigo-200 flex items-center justify-center gap-1.5">
+                                <span>⏳ กำลังวิเคราะห์ข้อมูลด้วย AI...</span>
+                              </div>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {language === 'th' ? 'ระบบ AI (Qwen 2.5 14B) กำลังประมวลผลแยกประเด็นปัญหา' : 'AI system (Qwen 2.5 14B) is analyzing and extracting issues'}
+                              </p>
+                            </div>
 
-                      if (convLines.length > 1 && activeIssuesList.length < convLines.length) {
-                        activeIssuesList = buildInitialIssues({ ...chat, chat_issues: activeIssuesList }, categories);
+                            {triageError && (
+                              <div className="w-full max-w-md bg-rose-50 dark:bg-rose-955/50 border border-rose-200 dark:border-rose-900/60 p-3 rounded-xl text-xs text-rose-700 dark:text-rose-300 font-semibold text-left">
+                                ⚠️ {triageError}
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-2 pt-1">
+                              <button
+                                type="button"
+                                onClick={handleTriggerTriage}
+                                disabled={retryingTriage}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50"
+                              >
+                                <RotateCcw size={13} className={retryingTriage ? 'animate-spin' : ''} />
+                                <span>{retryingTriage ? 'กำลังส่งคำขอ...' : '🔄 สั่งวิเคราะห์ด้วย AI ซ้ำ'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={loadChatIssues}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 text-xs font-bold transition cursor-pointer"
+                              >
+                                <RefreshCw size={13} />
+                                <span>ตรวจสอบผลลัพธ์</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
                       }
+
+                      // If completed and no rows in chat_issues, display 1 primary issue from chat
+                      const issuesToDisplay = (chatIssues && chatIssues.length > 0)
+                        ? chatIssues
+                        : [{
+                            id: `${chat.id}-primary`,
+                            summary: chat.summary || 'ประเด็นหลักจากบทสนทนา',
+                            category_id: chat.category_id || '',
+                            priority: chat.priority || 'medium',
+                            department: chat.department || null,
+                            recommended_reply: chat.recommended_reply || null
+                          }];
+
+                      const isSingleFallback = chatIssues.length === 0;
 
                       return (
                         <>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                              ประเด็นย่อยในตาราง chat_issues ({activeIssuesList.length} เรื่อง)
+                              {isSingleFallback 
+                                ? (language === 'th' ? 'ประเด็นหลักของแชต (1 เรื่อง)' : 'Primary Chat Issue (1 issue)')
+                                : `${language === 'th' ? 'ประเด็นย่อยในตาราง chat_issues' : 'Sub-issues in chat_issues'} (${issuesToDisplay.length} ${language === 'th' ? 'เรื่อง' : 'issues'})`
+                              }
+                            </span>
+                            <span className="text-[9px] text-slate-400 font-bold">
+                              {isSingleFallback ? 'ตาราง chats' : 'AI Qwen 2.5 14B'}
                             </span>
                           </div>
 
-                          {activeIssuesList.map((issueItem: any, idx: number) => {
-                        const issueKey = issueItem.id || 'issue-' + idx;
-                        const issueTitle = issueItem.summary || issueItem.issue_summary || `ประเด็นย่อยที่ ${idx + 1}`;
-                        const currentVal = editIssues[issueKey] || { 
-                          category_id: issueItem.category_id || '', 
-                          priority: issueItem.priority || 'medium' 
-                        };
-                        const selectedCategoryVal = getBaseCatId(currentVal.category_id || issueItem.category_id || '');
-                        const currentPri = (currentVal.priority || issueItem.priority || 'medium').toLowerCase();
+                          <div className="space-y-3">
+                            {issuesToDisplay.map((issueItem: any, idx: number) => {
+                              const issueKey = issueItem.id || 'issue-' + idx;
+                              const issueTitle = issueItem.summary || issueItem.issue_summary || `ประเด็นที่ ${idx + 1}`;
+                              const currentVal = editIssues[issueKey] || { 
+                                category_id: issueItem.category_id || '', 
+                                priority: issueItem.priority || 'medium' 
+                              };
+                              const selectedCategoryVal = getBaseCatId(currentVal.category_id || issueItem.category_id || '');
+                              const currentPri = (currentVal.priority || issueItem.priority || 'medium').toLowerCase();
 
-                        return (
-                          <div key={idx} className="p-3 bg-slate-50/90 dark:bg-slate-855 rounded-xl border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-2 min-w-0 overflow-hidden">
-                            {/* Card Title (chat_issues.summary) */}
-                            <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
-                              <span className="flex items-center gap-1.5 min-w-0">
-                                <span className="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">📌 #{idx + 1}</span>
-                                <span className="truncate">{issueTitle}</span>
-                              </span>
-                              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono shrink-0">ID: {issueKey.substring(0, 10)}</span>
-                            </div>
+                              return (
+                                <div key={idx} className="p-3.5 bg-slate-50/90 dark:bg-slate-855 rounded-xl border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-2.5 min-w-0 overflow-hidden">
+                                  {/* Card Title (chat_issues.summary) */}
+                                  <div className="flex items-start justify-between gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    <div className="flex items-start gap-1.5 min-w-0 flex-1">
+                                      <span className="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0 mt-0.5">📌 #{idx + 1}</span>
+                                      <div className="space-y-1 min-w-0">
+                                        <div className="font-bold text-slate-800 dark:text-slate-100 text-xs leading-snug">{issueTitle}</div>
+                                        {issueItem.department && (
+                                          <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-955/40 dark:text-purple-300 dark:border-purple-800">
+                                            🏢 {issueItem.department}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono shrink-0">
+                                      ID: {issueKey.substring(0, 10)}
+                                    </span>
+                                  </div>
 
-                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-0.5 min-w-0">
-                              {/* Category Dropdown (Bind to chat_issues.category_id) */}
-                              <select
-                                value={selectedCategoryVal}
-                                onChange={(e) => {
-                                  const newCat = e.target.value;
-                                  setEditIssues(prev => ({
-                                    ...prev,
-                                    [issueKey]: { ...currentVal, category_id: newCat }
-                                  }));
-                                  if (idx === 0) setEditCategory(newCat);
-                                }}
-                                disabled={userProfile?.role === 'agent'}
-                                className="flex-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-xs truncate"
-                              >
-                                <option value="">{language === 'th' ? '-- เลือกหมวดหมู่ --' : '-- Select Category --'}</option>
-                                {categories.map((cat: any) => {
-                                  const optionVal = getBaseCatId(cat.id);
-                                  const label = language === 'en' 
-                                    ? (cat.name_en || getCategoryLabel(cat, 'en')) 
-                                    : (cat.name_th || cat.name || getCategoryLabel(cat, 'th'));
-                                  return (
-                                    <option key={cat.id} value={optionVal}>{label}</option>
-                                  );
-                                })}
-                              </select>
-
-                              {/* Priority Buttons (Bind to chat_issues.priority) */}
-                              <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-0.5 sm:p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-xs shrink-0">
-                                {['low', 'medium', 'high', 'urgent'].map(p => {
-                                  const isActive = currentPri === p;
-                                  let activeStyle = '';
-                                  if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-xs';
-                                  else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-xs';
-                                  else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-xs';
-                                  else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-xs';
-
-                                  return (
-                                    <button
-                                      key={p}
-                                      type="button"
-                                      onClick={() => {
+                                  {/* Category Dropdown and Priority Buttons */}
+                                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-0.5 min-w-0">
+                                    {/* Category Dropdown (Bind to chat_issues.category_id) */}
+                                    <select
+                                      value={selectedCategoryVal}
+                                      onChange={(e) => {
+                                        const newCat = e.target.value;
                                         setEditIssues(prev => ({
                                           ...prev,
-                                          [issueKey]: { ...currentVal, priority: p }
+                                          [issueKey]: { ...currentVal, category_id: newCat }
                                         }));
-                                        if (idx === 0) setEditPriority(p);
+                                        if (idx === 0) setEditCategory(newCat);
                                       }}
                                       disabled={userProfile?.role === 'agent'}
-                                      className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer shrink-0 ' + 
-                                        (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
-                                      }
+                                      className="flex-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-xs truncate"
                                     >
-                                      {p}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
+                                      <option value="">{language === 'th' ? '-- เลือกหมวดหมู่ --' : '-- Select Category --'}</option>
+                                      {categories.map((cat: any) => {
+                                        const optionVal = getBaseCatId(cat.id);
+                                        const label = language === 'en' 
+                                          ? (cat.name_en || getCategoryLabel(cat, 'en')) 
+                                          : (cat.name_th || cat.name || getCategoryLabel(cat, 'th'));
+                                        return (
+                                          <option key={cat.id} value={optionVal}>{label}</option>
+                                        );
+                                      })}
+                                    </select>
+
+                                    {/* Priority Buttons (Bind to chat_issues.priority) */}
+                                    <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-0.5 sm:p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-xs shrink-0">
+                                      {['low', 'medium', 'high', 'urgent'].map(p => {
+                                        const isActive = currentPri === p;
+                                        let activeStyle = '';
+                                        if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-xs';
+                                        else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-xs';
+                                        else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-xs';
+                                        else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-xs';
+
+                                        return (
+                                          <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() => {
+                                              setEditIssues(prev => ({
+                                                ...prev,
+                                                [issueKey]: { ...currentVal, priority: p }
+                                              }));
+                                              if (idx === 0) setEditPriority(p);
+                                            }}
+                                            disabled={userProfile?.role === 'agent'}
+                                            className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer shrink-0 ' + 
+                                              (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
+                                            }
+                                          >
+                                            {p}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
+                                  {/* Recommended Reply Box (if provided by AI) */}
+                                  {issueItem.recommended_reply && (
+                                    <div className="bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/40 p-2.5 rounded-xl space-y-1.5">
+                                      <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                                        <span className="flex items-center gap-1">
+                                          <Sparkles size={12} className="text-emerald-600 dark:text-emerald-400" />
+                                          <span>{language === 'th' ? 'คำตอบแนะนำตอบลูกค้า (Recommended Reply):' : 'Recommended Reply:'}</span>
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyText(issueItem.recommended_reply, `reply-${issueKey}`)}
+                                          className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 cursor-pointer transition shadow-2xs"
+                                        >
+                                          {copiedId === `reply-${issueKey}` ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
+                                          <span>{copiedId === `reply-${issueKey}` ? (language === 'th' ? 'คัดลอกแล้ว!' : 'Copied!') : (language === 'th' ? 'คัดลอกคำตอบ' : 'Copy')}</span>
+                                        </button>
+                                      </div>
+                                      <div className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed bg-white/70 dark:bg-slate-900/60 p-2 rounded-lg border border-emerald-100/60 dark:border-emerald-900/30 select-text">
+                                        &ldquo;{issueItem.recommended_reply}&rdquo;
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+
+                          {/* Action Toolbar: Re-run AI Triage & Save Changes Buttons */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={handleTriggerTriage}
+                                disabled={retryingTriage}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                title="ส่งคำขอวิเคราะห์ด้วย AI ใหม่ (POST http://localhost:4000/api/chats/[id]/triage)"
+                              >
+                                <RotateCcw size={13} className={retryingTriage ? 'animate-spin text-indigo-600' : ''} />
+                                <span>{retryingTriage ? (language === 'th' ? 'กำลังวิเคราะห์...' : 'Analyzing...') : (language === 'th' ? '🔄 วิเคราะห์ด้วย AI ซ้ำ' : '🔄 Re-run AI Triage')}</span>
+                              </button>
+
+                              {triageSuccess && (
+                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                  <CheckCircle size={14} />
+                                  <span>{triageSuccess}</span>
+                                </span>
+                              )}
+                              {triageError && (
+                                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
+                                  ⚠️ {triageError}
+                                </span>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={handleSaveChanges}
+                              disabled={updating || userProfile?.role === 'agent'}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-100 dark:shadow-none transition cursor-pointer disabled:opacity-50"
+                            >
+                              {updating ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                              <span>{updating ? (language === 'th' ? 'กำลังบันทึก...' : 'Saving...') : (language === 'th' ? '💾 บันทึกการแก้ไข' : '💾 Save Changes')}</span>
+                            </button>
+                          </div>
                         </>
                       );
                     })()}
@@ -1316,38 +1257,35 @@ export default function ChatsPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeWindows]);
 
-  // Desktop Notification State
+  // Desktop & In-App Popup Notification State
   const [desktopNotifyEnabled, setDesktopNotifyEnabled] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      setDesktopNotifyEnabled(Notification.permission === 'granted');
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('desktop_popup_enabled');
+      if (saved !== null) {
+        setDesktopNotifyEnabled(saved === 'true');
+      } else {
+        const hasPermission = 'Notification' in window && Notification.permission === 'granted';
+        setDesktopNotifyEnabled(hasPermission);
+      }
     }
   }, []);
 
   const handleToggleDesktopNotification = async () => {
-    if (!('Notification' in window)) {
-      alert(language === 'th' ? 'เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนเดสก์ท็อป' : 'Desktop notification is not supported');
-      return;
-    }
+    const nextState = !desktopNotifyEnabled;
+    setDesktopNotifyEnabled(nextState);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('desktop_popup_enabled', String(nextState));
+      window.dispatchEvent(new Event('desktop-popup-setting-changed'));
 
-    if (Notification.permission === 'granted') {
-      new Notification('🔔 AI Triage Manager', {
-        body: 'การแจ้งเตือนป๊อปอัพหน้าจอเปิดใช้งานเรียบร้อยแล้ว!',
-        icon: '/favicon.ico'
-      });
-      setDesktopNotifyEnabled(true);
-    } else if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        new Notification('🔔 AI Triage Manager', {
-          body: 'การแจ้งเตือนป๊อปอัพหน้าจอเปิดใช้งานเรียบร้อยแล้ว!',
-          icon: '/favicon.ico'
-        });
-        setDesktopNotifyEnabled(true);
+      if (nextState) {
+        if ('Notification' in window && Notification.permission === 'default') {
+          try {
+            await Notification.requestPermission();
+          } catch (e) {}
+        }
       }
-    } else {
-      alert(language === 'th' ? 'กรุณาอนุญาตการแจ้งเตือน (Notifications) ในการตั้งค่าเบราว์เซอร์ของคุณ' : 'Please allow notifications in browser settings');
     }
   };
 
@@ -1669,7 +1607,9 @@ export default function ChatsPage() {
 
           // Trigger sound if new Urgent/High cases detected
           if (hasNewUrgentOrHigh && previousChatsRef.current.size > sorted.length) {
-            playAlertTone(undefined, undefined, false);
+            if (soundEnabled) {
+              playAlertTone(undefined, undefined, false);
+            }
             if (desktopNotifyEnabled && latestUrgentChat) {
               try {
                 new Notification('🚨 เคสด่วนที่สุดยิงเข้ามาใหม่!', {
@@ -1881,20 +1821,11 @@ export default function ChatsPage() {
           if (fullChat) {
             setActiveWindows(prev => prev.map(w => {
               if (w.id === chat.id) {
-                const conv = fullChat.conversation || w.chat.conversation || '';
-                const convLines = conv.split('\n').map((l: string) => l.trim().replace(/^ลูกค้า:\s*/, '')).filter(Boolean);
-                let mergedIssues = fullChat.chat_issues;
-                // If conversation has multiple lines, but fullChat has only 1 collapsed issue, don't overwrite with 1 issue
-                if (convLines.length > 1 && fullChat.chat_issues && fullChat.chat_issues.length === 1) {
-                  mergedIssues = (w.chat.chat_issues && w.chat.chat_issues.length > 1) ? w.chat.chat_issues : undefined;
-                }
-
                 return { 
                   ...w, 
                   chat: { 
                     ...w.chat, 
-                    ...fullChat,
-                    ...(mergedIssues !== undefined ? { chat_issues: mergedIssues } : {})
+                    ...fullChat
                   } 
                 };
               }
@@ -1906,7 +1837,52 @@ export default function ChatsPage() {
       .catch(err => console.error('Error fetching full chat details:', err));
   };
 
+  // Open chat from custom event (GlobalNotifier) or URL search parameters
+  useEffect(() => {
+    const openChatById = async (targetChatId: string) => {
+      if (!targetChatId) return;
 
+      // 1. Check in currently loaded chats
+      let found = chats.find(c => c.id === targetChatId);
+      if (!found) {
+        try {
+          const res = await fetch(`/api/chats?id=${targetChatId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              found = data[0];
+            }
+          }
+        } catch (e) {
+          console.error('Failed to fetch chat by id:', e);
+        }
+      }
+
+      if (found) {
+        handleSelectChat(found);
+      }
+    };
+
+    // Check URL parameters for open_chat or chat_id
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const openId = urlParams.get('open_chat') || urlParams.get('chat_id');
+      if (openId) {
+        openChatById(openId);
+      }
+    }
+
+    // Event listener for opening chat from GlobalNotifier
+    const handleOpenEvent = (e: any) => {
+      const targetId = e.detail?.chatId;
+      if (targetId) {
+        openChatById(targetId);
+      }
+    };
+
+    window.addEventListener('open-chat-modal', handleOpenEvent);
+    return () => window.removeEventListener('open-chat-modal', handleOpenEvent);
+  }, [chats]);
 
   const isAllSelected = filteredChats.length > 0 && selectedIds.length === filteredChats.length;
   const isSomeSelected = selectedIds.length > 0 && selectedIds.length < filteredChats.length;
