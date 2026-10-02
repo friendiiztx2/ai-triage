@@ -1591,6 +1591,7 @@ export default function ChatsPage() {
           // Automated Sound & Notification trigger for NEW Urgent/High cases
           let hasNewUrgentOrHigh = false;
           let latestUrgentChat: any = null;
+          const isFirstRun = previousChatsRef.current.size === 0;
 
           sorted.forEach((c: any) => {
             const pri = (c.priority || 'low').toLowerCase();
@@ -1605,8 +1606,8 @@ export default function ChatsPage() {
             previousChatsRef.current.set(c.id, pri);
           });
 
-          // Trigger sound if new Urgent/High cases detected
-          if (hasNewUrgentOrHigh && previousChatsRef.current.size > sorted.length) {
+          // Trigger sound and toast if new Urgent/High cases detected (after initial load)
+          if (!isFirstRun && hasNewUrgentOrHigh) {
             if (soundEnabled) {
               playAlertTone(undefined, undefined, false);
             }
@@ -1616,6 +1617,21 @@ export default function ChatsPage() {
                   body: `ลูกค้า ${latestUrgentChat.customer_name || latestUrgentChat.id}: ${latestUrgentChat.summary || 'ต้องการการช่วยเหลือด่วน'}`,
                   icon: '/favicon.ico'
                 });
+              } catch (e) {}
+            }
+
+            // Dispatch custom event to immediately show GlobalNotifier popup toast
+            if (latestUrgentChat && ((latestUrgentChat.priority || '').toLowerCase() === 'urgent' || (latestUrgentChat.priority || '').toLowerCase() === 'critical')) {
+              try {
+                window.dispatchEvent(new CustomEvent('urgent-chat-detected', {
+                  detail: {
+                    id: latestUrgentChat.id,
+                    customerName: latestUrgentChat.customer_name,
+                    summary: latestUrgentChat.summary,
+                    priority: latestUrgentChat.priority,
+                    companyId: latestUrgentChat.company_id
+                  }
+                }));
               } catch (e) {}
             }
           }

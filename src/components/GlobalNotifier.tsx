@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, X, ArrowRight, Volume2 } from 'lucide-react';
 import { playAlertTone, getAudioContext } from '@/lib/audio';
+import { supabase } from '@/lib/supabase';
 
 interface UrgentToast {
   id: string;
@@ -88,10 +89,16 @@ export default function GlobalNotifier() {
       try {
         const compId = getActiveCompanyId();
         const url = compId && compId !== 'all'
-          ? `/api/chats?summary_only=true&company_id=${compId}`
-          : '/api/chats?summary_only=true';
+          ? `/api/chats?summary_only=true&company_id=${compId}&nocache=${Date.now()}`
+          : `/api/chats?summary_only=true&nocache=${Date.now()}`;
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
         if (!res.ok) return;
 
         const chats = await res.json();
@@ -154,8 +161,72 @@ export default function GlobalNotifier() {
     };
 
     pollUrgentChats();
-    const intervalId = setInterval(pollUrgentChats, 25000);
-    return () => clearInterval(intervalId);
+    // Shorter fallback poll interval (8s)
+    const intervalId = setInterval(pollUrgentChats, 8000);
+
+    // 🔔 Realtime listener for instant notification without refreshing
+    const channel = supabase
+      .channel('global-urgent-notifier-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, (payload: any) => {
+        if (payload?.eventType === 'INSERT' || payload?.eventType === 'UPDATE') {
+          const row = payload.new;
+          if (row) {
+            const pri = (row.priority || '').toLowerCase();
+            const isUrgent = pri === 'urgent' || pri === 'critical';
+            const status = (row.status || '').toLowerCase();
+            const isPending = status !== 'completed' && status !== 'resolved';
+            const compId = getActiveCompanyId();
+            const matchesComp = !compId || compId === 'all' || row.company_id === compId;
+
+            if (isUrgent && isPending && matchesComp) {
+              const notifiedSet = getNotifiedIds();
+              if (!notifiedSet.has(row.id)) {
+                markAsNotified(row.id);
+                setToast({
+                  id: row.id,
+                  customerName: row.customer_name || `ลูกค้า #${row.customer_id || row.id}`,
+                  summary: row.summary || 'พบเคสด่วนต้องการความช่วยเหลือเร่งด่วน',
+                  priority: row.priority || 'urgent',
+                  companyId: row.company_id
+                });
+                triggerSound();
+                return;
+              }
+            }
+          }
+        }
+        pollUrgentChats();
+      })
+      .subscribe();
+
+    // Listen to urgent-chat-detected custom event from other pages
+    const handleUrgentEvent = (e: any) => {
+      if (e?.detail) {
+        const { id, customerName, summary, priority, companyId } = e.detail;
+        const compId = getActiveCompanyId();
+        if (!compId || compId === 'all' || companyId === compId) {
+          const notifiedSet = getNotifiedIds();
+          if (!notifiedSet.has(id)) {
+            markAsNotified(id);
+            setToast({
+              id,
+              customerName: customerName || `ลูกค้า #${id}`,
+              summary: summary || 'พบเคสด่วนต้องการความช่วยเหลือเร่งด่วน',
+              priority: priority || 'urgent',
+              companyId
+            });
+            triggerSound();
+          }
+        }
+      }
+    };
+    window.addEventListener('urgent-chat-detected', handleUrgentEvent);
+
+    return () => {
+      clearInterval(intervalId);
+      supabase.removeChannel(channel);
+      window.removeEventListener('urgent-chat-detected', handleUrgentEvent);
+    };
   }, []);
 
   const handleDismiss = () => {
