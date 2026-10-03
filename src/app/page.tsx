@@ -350,7 +350,10 @@ export default function OverviewPage() {
       // 2. Fetch chats (via Server API Proxy - lightweight mode)
       const matchCookie = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )company_id=([^;]*)/) : null;
       const compId = matchCookie ? decodeURIComponent(matchCookie[1]) : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' : '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2');
-      const chatsRes = await fetch(`/api/chats?summary_only=true&company_id=${compId}`);
+      const chatsRes = await fetch(`/api/chats?summary_only=true&company_id=${compId}&nocache=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+      });
       if (!chatsRes.ok) {
         const errObj = await chatsRes.json();
         throw new Error(errObj.error || 'Failed to load chats');
@@ -359,7 +362,9 @@ export default function OverviewPage() {
       setAllChats(chats || []);
 
       // 3. Fetch customers (via Server API Proxy)
-      const custRes = await fetch(`/api/customers?company_id=${compId}`);
+      const custRes = await fetch(`/api/customers?company_id=${compId}&nocache=${Date.now()}`, {
+        cache: 'no-store'
+      });
       if (!custRes.ok) {
         const errObj = await custRes.json();
         throw new Error(errObj.error || 'Failed to load customers');
@@ -385,14 +390,19 @@ export default function OverviewPage() {
       const matchCookie = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )company_id=([^;]*)/) : null;
       const compId = matchCookie ? decodeURIComponent(matchCookie[1]) : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' : '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2');
       // 1. Fetch chats (via Server API Proxy)
-      const chatsRes = await fetch(`/api/chats?company_id=${compId}`);
+      const chatsRes = await fetch(`/api/chats?company_id=${compId}&nocache=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+      });
       if (chatsRes.ok) {
         const chats = await chatsRes.json();
         setAllChats(chats || []);
       }
 
       // 2. Fetch customers (via Server API Proxy)
-      const custRes = await fetch('/api/customers');
+      const custRes = await fetch(`/api/customers?company_id=${compId}&nocache=${Date.now()}`, {
+        cache: 'no-store'
+      });
       if (custRes.ok) {
         const customersList = await custRes.json();
         setTotalCustomersCount(customersList ? customersList.length : 0);

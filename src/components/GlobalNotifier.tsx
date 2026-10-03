@@ -106,8 +106,8 @@ export default function GlobalNotifier() {
 
         const notifiedSet = getNotifiedIds();
         const now = Date.now();
-        // Only alert cases created within the last 4 hours (avoid popping up old historical cases)
-        const recentThreshold = now - (4 * 60 * 60 * 1000);
+        // Only alert cases created within the last 2 hours (avoid popping up old historical cases)
+        const recentThreshold = now - (2 * 60 * 60 * 1000);
 
         // Find urgent chats belonging to the active company that haven't been resolved
         const urgentChats = chats.filter(c => {
@@ -120,7 +120,7 @@ export default function GlobalNotifier() {
           if (status === 'completed' || status === 'resolved') return false;
 
           const createdTime = new Date(c.created_at || 0).getTime();
-          // Must be recent
+          // Must be recent (within 2 hours)
           if (createdTime > 0 && createdTime < recentThreshold) return false;
 
           return true;
@@ -128,14 +128,7 @@ export default function GlobalNotifier() {
 
         if (urgentChats.length === 0) return;
 
-        // On very first mount when notifiedSet is empty, record existing so we don't spam
-        if (notifiedSet.size === 0 && !sessionStorage.getItem('notified_urgent_initialized')) {
-          sessionStorage.setItem('notified_urgent_initialized', 'true');
-          urgentChats.forEach(c => markAsNotified(c.id));
-          return;
-        }
-
-        // Find genuinely un-notified urgent cases
+        // Find genuinely un-notified urgent cases (not yet shown or dismissed)
         const newUrgent = urgentChats.filter(c => !notifiedSet.has(c.id));
         if (newUrgent.length > 0) {
           const sorted = [...newUrgent].sort((a, b) => 
@@ -143,7 +136,7 @@ export default function GlobalNotifier() {
           );
           const newest = sorted[0];
 
-          newUrgent.forEach(c => markAsNotified(c.id));
+          markAsNotified(newest.id);
 
           setToast({
             id: newest.id,
