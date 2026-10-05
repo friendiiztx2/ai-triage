@@ -214,6 +214,7 @@ export default function OverviewPage() {
     totalChats: 0,
     pendingTriage: 0,
     highPriority: 0,
+    highOnlyCount: 0,
     totalCustomers: 0
   });
   const [aiMetrics, setAiMetrics] = useState({
@@ -421,6 +422,7 @@ export default function OverviewPage() {
         totalChats: 0,
         pendingTriage: 0,
         highPriority: 0,
+        highOnlyCount: 0,
         totalCustomers: totalCustomersCount
       });
       setAiMetrics({
@@ -489,15 +491,22 @@ export default function OverviewPage() {
 
     const total = filtered.length;
     const pending = filtered.filter((c: any) => c.status === 'pending' || !c.status).length;
-    const high = filtered.filter((c: any) => 
-      c.priority?.toLowerCase() === 'high' || 
-      c.priority?.toLowerCase() === 'urgent'
-    ).length;
+    const urgentCases = filtered.filter((c: any) => {
+      const pri = (c.priority || '').toLowerCase();
+      const urg = (c.urgency || '').toLowerCase();
+      return pri === 'urgent' || pri === 'critical' || urg === 'urgent';
+    }).length;
+    const highCases = filtered.filter((c: any) => {
+      const pri = (c.priority || '').toLowerCase();
+      const urg = (c.urgency || '').toLowerCase();
+      return (pri === 'high' || urg === 'high') && pri !== 'urgent' && urg !== 'urgent';
+    }).length;
 
     setStats({
       totalChats: total,
       pendingTriage: pending,
-      highPriority: high,
+      highPriority: urgentCases,
+      highOnlyCount: highCases,
       totalCustomers: totalCustomersCount
     });
 
@@ -981,7 +990,7 @@ export default function OverviewPage() {
               </div>
               <h3 className="font-extrabold text-slate-950 dark:text-white text-base mt-1.5 leading-snug">
                 {stats.highPriority > 0
-                  ? `พบเคสด่วนที่สุด ${stats.highPriority} เคสที่ต้องการการดูแลทันที! หมวดหมู่ยอดฮิตวันนี้คือ "${sortedChartData[0]?.name || 'ทั่วไป'}" (${sortedChartData[0]?.value || 0} เคส)`
+                  ? `พบเคสด่วนที่สุด ${stats.highPriority} เคส${stats.highOnlyCount > 0 ? ` (และเคสด่วนสูง ${stats.highOnlyCount} เคส)` : ''} ที่ต้องการการดูแลทันที! หมวดหมู่ยอดฮิตวันนี้คือ "${sortedChartData[0]?.name || 'ทั่วไป'}" (${sortedChartData[0]?.value || 0} เคส)`
                   : stats.totalChats > 0 && sortedChartData[0]?.value > 0
                     ? `ภาพรวมระบบเรียบร้อยดี! มีเคสเข้ามาทั้งหมด ${stats.totalChats} เคส หมวดหมู่หลักวันนี้คือ "${sortedChartData[0]?.name}" (${sortedChartData[0]?.value} เคส)`
                     : `ภาพรวมระบบเรียบร้อยดี! วันนี้ยังไม่มีเคสใหม่ทักเข้ามาในระบบ (0 เคส)`
@@ -1055,6 +1064,11 @@ export default function OverviewPage() {
               )}
             </div>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-display">{stats.highPriority} {t('cases')}</h3>
+            {stats.highOnlyCount > 0 && (
+              <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-0.5">
+                (+ ด่วนสูง {stats.highOnlyCount} เคส)
+              </p>
+            )}
           </div>
         </Link>
 

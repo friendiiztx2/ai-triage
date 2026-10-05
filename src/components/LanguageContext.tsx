@@ -28,7 +28,7 @@ const translations = {
     dashSub: 'สรุปปริมาณสถิติการคัดกรองปัญหาของลูกค้าอัตโนมัติด้วย AI',
     cardTotalChats: 'แชตลูกค้าทั้งหมด',
     cardPending: 'รอการดำเนินการคัดแยก',
-    cardUrgent: 'ด่วน / ด่วนที่สุด',
+    cardUrgent: 'ด่วนที่สุด (Urgent)',
     cardActiveCustomers: 'จำนวนลูกค้าลงทะเบียน',
     casesByCategory: 'จำนวนเคสแยกตามประเภทปัญหา (Simulated Cases by Category)',
     casesByCategorySub: 'สรุปจำนวนเคสปัญหาที่คัดแยกแล้วของแต่ละประเด็นย่อย (คลิกเพื่อดูรายการแชต)',
