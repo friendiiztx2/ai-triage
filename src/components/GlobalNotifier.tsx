@@ -16,6 +16,8 @@ interface UrgentToast {
 export default function GlobalNotifier() {
   const [toast, setToast] = useState<UrgentToast | null>(null);
   const [popupEnabled, setPopupEnabled] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Sync popup enabled state with localStorage
   useEffect(() => {
@@ -229,6 +231,33 @@ export default function GlobalNotifier() {
     setToast(null);
   };
 
+  // Reset 60s countdown whenever a new toast appears
+  useEffect(() => {
+    if (toast) {
+      setTimeLeft(60);
+      setIsPaused(false);
+    }
+  }, [toast?.id]);
+
+  // ⏱️ Auto-dismiss countdown timer (60s)
+  useEffect(() => {
+    if (!toast || isPaused) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => Math.max(0, prev - 1));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [toast?.id, isPaused]);
+
+  // When timer hits 0, auto dismiss
+  useEffect(() => {
+    if (!toast) return;
+    if (timeLeft === 0) {
+      handleDismiss();
+    }
+  }, [timeLeft, toast]);
+
   const handleViewChat = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!toast) return;
@@ -255,7 +284,11 @@ export default function GlobalNotifier() {
   if (!toast || !popupEnabled) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 max-w-sm w-full bg-white dark:bg-slate-900 border-2 border-rose-500 rounded-2xl shadow-2xl p-4 animate-slideIn select-none">
+    <div 
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className="fixed bottom-6 right-6 z-50 max-w-sm w-full bg-white dark:bg-slate-900 border-2 border-rose-500 rounded-2xl shadow-2xl p-4 animate-slideIn select-none transition-all duration-200"
+    >
       <div className="flex items-start gap-3">
         <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-955/30 text-rose-600 dark:text-rose-400 shrink-0 animate-bounce">
           <AlertTriangle size={20} />
@@ -266,12 +299,25 @@ export default function GlobalNotifier() {
             <span className="text-[11px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
               🔴 เคสเร่งด่วนที่สุด! (URGENT)
             </span>
-            <button 
-              onClick={handleDismiss}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-0.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              <X size={14} />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <span 
+                className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md transition-colors ${
+                  isPaused 
+                    ? 'bg-amber-100 dark:bg-amber-955/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700' 
+                    : 'bg-rose-50 dark:bg-rose-955/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40'
+                }`}
+                title={isPaused ? "หยุดนับเวลาชั่วคราวขณะชี้เมาส์" : `จะปิดอัตโนมัติในอีก ${timeLeft} วินาที`}
+              >
+                ⏱️ {isPaused ? 'หยุดเวลา' : `${timeLeft}s`}
+              </span>
+              <button 
+                onClick={handleDismiss}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-0.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                title="ปิดการแจ้งเตือน"
+              >
+                <X size={14} />
+              </button>
+            </div>
           </div>
           
           <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs mt-1.5 truncate">
@@ -281,6 +327,14 @@ export default function GlobalNotifier() {
           <p className="text-[10px] text-slate-550 dark:text-slate-400 mt-1 leading-normal line-clamp-2">
             {toast.summary}
           </p>
+
+          {/* Animated Countdown Progress Bar */}
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-1000 ease-linear rounded-full ${isPaused ? 'bg-amber-500' : 'bg-rose-500'}`} 
+              style={{ width: `${(timeLeft / 60) * 100}%` }} 
+            />
+          </div>
 
           <div className="flex items-center gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
             <button
