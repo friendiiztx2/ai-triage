@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     if (summaryOnly) {
       let lightQuery = db
         .from('chats')
-        .select('id, customer_id, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords')
+        .select('id, customer_id, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords, urgency, resolution')
         .order('created_at', { ascending: false });
 
       if (companyId && companyId !== 'all') {
@@ -115,9 +115,12 @@ export async function GET(request: NextRequest) {
         }
 
         let detectedPri = (row.priority || '').toLowerCase();
-        if (!detectedPri || detectedPri === 'low') {
+        const rowUrg = (row.urgency || '').toLowerCase();
+        if (rowUrg === 'urgent' || detectedPri === 'urgent' || detectedPri === 'critical') {
+          detectedPri = 'urgent';
+        } else if (!detectedPri || detectedPri === 'low') {
           const raw = (convText + ' ' + (row.summary || '')).toLowerCase();
-          if (raw.includes('โกง') || raw.includes('อายัด') || raw.includes('แจ้งความ')) {
+          if (raw.includes('โกง') || raw.includes('อายัด') || raw.includes('แจ้งความ') || raw.includes('ด่วนที่สุด') || raw.includes('แอบอ้าง')) {
             detectedPri = 'urgent';
           } else if (raw.includes('ฝาก') || raw.includes('ถอน') || raw.includes('สลิป') || raw.includes('โอน') || raw.includes('ยอดไม่เข้า') || raw.includes('ข้ามวัน') || raw.includes('ชั่วโมง')) {
             detectedPri = 'high';
@@ -165,6 +168,8 @@ export async function GET(request: NextRequest) {
           rawMessages: rawMsgs,
           category_id: detectedCat,
           priority: detectedPri,
+          urgency: row.urgency || (detectedPri === 'urgent' ? 'urgent' : 'low'),
+          resolution: row.resolution || 'Pending',
           status: determineStatus(row),
           confidence: row.confidence || 95,
           company_id: row.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
@@ -184,6 +189,8 @@ export async function GET(request: NextRequest) {
           conversation: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5 (📷 ภาพแคปหน้าจอขัดข้อง 502 Error)',
           category_id: 'page_load_freeze',
           priority: 'urgent',
+          urgency: 'urgent',
+          resolution: 'Pending',
           status: 'pending',
           confidence: 97,
           company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
@@ -209,6 +216,8 @@ export async function GET(request: NextRequest) {
           conversation: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44 (📷 สลิปการโอนเงิน KBank 500 บาท)',
           category_id: 'deposit_withdrawal',
           priority: 'high',
+          urgency: 'high',
+          resolution: 'Pending',
           status: 'pending',
           confidence: 96,
           company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
@@ -234,6 +243,8 @@ export async function GET(request: NextRequest) {
           conversation: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe (📷 ภาพแคปหน้าจอล็อกอินขัดข้อง)',
           category_id: 'login_issue',
           priority: 'medium',
+          urgency: 'medium',
+          resolution: 'Solved',
           status: 'completed',
           confidence: 94,
           company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',

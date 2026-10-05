@@ -114,12 +114,15 @@ export default function GlobalNotifier() {
         // Find urgent chats belonging to the active company that haven't been resolved
         const urgentChats = chats.filter(c => {
           const pri = (c.priority || '').toLowerCase();
-          const isUrgent = pri === 'urgent' || pri === 'critical';
+          const urg = (c.urgency || '').toLowerCase();
+          const isUrgent = pri === 'urgent' || pri === 'critical' || urg === 'urgent';
           if (!isUrgent) return false;
 
-          // Ignore already completed/resolved chats
+          // Ignore already resolved chats
+          const res = (c.resolution || '').toLowerCase();
+          if (res === 'solved' || res === 'closed') return false;
           const status = (c.status || '').toLowerCase();
-          if (status === 'completed' || status === 'resolved') return false;
+          if (status === 'resolved' || status === 'closed') return false;
 
           const createdTime = new Date(c.created_at || 0).getTime();
           // Must be recent (within 2 hours)
@@ -147,6 +150,8 @@ export default function GlobalNotifier() {
             priority: newest.priority || 'urgent',
             companyId: newest.company_id
           });
+          setTimeLeft(60);
+          setIsPaused(false);
 
           triggerSound();
         }
@@ -167,13 +172,15 @@ export default function GlobalNotifier() {
           const row = payload.new;
           if (row) {
             const pri = (row.priority || '').toLowerCase();
-            const isUrgent = pri === 'urgent' || pri === 'critical';
+            const urg = (row.urgency || '').toLowerCase();
+            const isUrgent = pri === 'urgent' || pri === 'critical' || urg === 'urgent';
+            const res = (row.resolution || '').toLowerCase();
             const status = (row.status || '').toLowerCase();
-            const isPending = status !== 'completed' && status !== 'resolved';
+            const isResolved = res === 'solved' || res === 'closed' || status === 'resolved' || status === 'closed';
             const compId = getActiveCompanyId();
             const matchesComp = !compId || compId === 'all' || row.company_id === compId;
 
-            if (isUrgent && isPending && matchesComp) {
+            if (isUrgent && !isResolved && matchesComp) {
               const notifiedSet = getNotifiedIds();
               if (!notifiedSet.has(row.id)) {
                 markAsNotified(row.id);
@@ -184,6 +191,8 @@ export default function GlobalNotifier() {
                   priority: row.priority || 'urgent',
                   companyId: row.company_id
                 });
+                setTimeLeft(60);
+                setIsPaused(false);
                 triggerSound();
                 return;
               }

@@ -128,14 +128,17 @@ export async function POST(request: NextRequest) {
       console.warn('Customer auto-register warning (non-blocking):', custErr);
     }
 
+    const isUrgentCase = finalPri === 'urgent' || (body.urgency || '').toLowerCase() === 'urgent';
     let newChatRow: any = {
       id: chatId,
       customer_id: custId,
       conversation: conversationStr,
       summary: summaryText,
       category_id: finalCat,
-      priority: finalPri,
-      status: body.status || 'completed',
+      priority: isUrgentCase ? 'urgent' : finalPri,
+      urgency: isUrgentCase ? 'urgent' : (body.urgency || 'low'),
+      status: body.status ? body.status : (isUrgentCase ? 'pending' : 'completed'),
+      resolution: body.resolution || 'Pending',
       company_id: compId,
       created_at: new Date().toISOString()
     };
