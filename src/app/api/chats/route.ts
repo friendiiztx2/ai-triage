@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     if (summaryOnly) {
       let lightQuery = db
         .from('chats')
-        .select('id, customer_id, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords, urgency, resolution')
+        .select('id, customer_id, customer_name, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords, tags, urgency, resolution')
         .order('created_at', { ascending: false });
 
       if (companyId && companyId !== 'all') {
@@ -141,7 +141,16 @@ export async function GET(request: NextRequest) {
 
         // Auto Image & Category Tag Generator (High-level clean tags per Khun Aor directive)
         let parsedTags: string[] = [];
-        if (isImg) parsedTags.push('#รูปภาพ');
+        if (Array.isArray(row.tags) && row.tags.length > 0) {
+          parsedTags = [...row.tags];
+        }
+        if (isImg) {
+          if (!parsedTags.includes('#รูปภาพ')) parsedTags.push('#รูปภาพ');
+          const stripped = convText.replace(/(https?:\/\/[^\s\n"']+)/gi, '').replace(/\(📷[^\)]*\)/g, '').replace(/📷[^\n]*/g, '').trim();
+          if (!stripped && !parsedTags.includes('#รูปภาพล้วน')) {
+            parsedTags.push('#รูปภาพล้วน');
+          }
+        }
 
         if (detectedCat === 'deposit_withdrawal' || raw.includes('โอน') || raw.includes('สลิป') || raw.includes('ฝาก') || rawKeyList.some(k => k.includes('สลิป') || k.includes('โอน') || k.toLowerCase().includes('kbank'))) {
           parsedTags.push('#ฝากถอนเงิน');

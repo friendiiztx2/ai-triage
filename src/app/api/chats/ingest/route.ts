@@ -95,24 +95,86 @@ export async function POST(request: NextRequest) {
     if (!compId) {
       compId = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
     }
-    const summaryText = body.summary || conversationStr.split('\n')[0] || 'ลูกค้าสอบถามปัญหาผ่านแชท';
+    // Detect if this is an image-only message (customer sent image without typed text)
+    const genericUrlRegex = /(https?:\/\/[^\s\n"']+)/gi;
+    const urlMatches = conversationStr.match(genericUrlRegex) || [];
+    let textWithoutUrls = conversationStr;
+    urlMatches.forEach(u => { textWithoutUrls = textWithoutUrls.replace(u, '').trim(); });
+    // Strip common image placeholder tags if any
+    textWithoutUrls = textWithoutUrls.replace(/\(📷[^\)]*\)/g, '').replace(/📷[^\n]*/g, '').trim();
+
+    const isImageOnly = (urlMatches.length > 0 || (Array.isArray(rawMedia) && rawMedia.length > 0)) && !textWithoutUrls.trim();
 
     // 1. Smart AI Auto-Categorization & Priority inference if not provided
     let finalCat = body.category_id || null;
     let finalPri = body.priority || 'low';
+    let summaryText = body.summary || null;
+    let recommendedReply = body.recommended_reply || null;
+    let deptName = body.department || 'ฝ่ายบริการลูกค้า';
 
-    if (!finalCat) {
-      if (conversationStr.includes('ถอน') || conversationStr.includes('ฝาก') || conversationStr.includes('โอน') || conversationStr.includes('บัญชี')) {
-        finalCat = 'deposit_withdrawal';
-        finalPri = 'high';
-      } else if (conversationStr.includes('ค้าง') || conversationStr.includes('หมุน') || conversationStr.includes('หน้าเว็บ')) {
-        finalCat = 'page_load_freeze';
-        finalPri = 'high';
-      } else if (conversationStr.includes('เข้าไม่ได้') || conversationStr.includes('เข้าสู่ระบบ') || conversationStr.includes('รหัส')) {
-        finalCat = 'login_issue';
-        finalPri = 'medium';
+    if (isImageOnly) {
+      const lowerUrls = (conversationStr + ' ' + (Array.isArray(rawMedia) ? rawMedia.join(' ') : '') + ' ' + (body.summary || '')).toLowerCase();
+      
+      if (lowerUrls.includes('502') || lowerUrls.includes('500') || lowerUrls.includes('error') || lowerUrls.includes('bad_gateway') || lowerUrls.includes('crash') || lowerUrls.includes('freeze') || lowerUrls.includes('เว็บค้าง')) {
+        finalCat = finalCat || 'page_load_freeze';
+        finalPri = finalPri === 'low' ? 'urgent' : finalPri;
+        summaryText = summaryText || '[รูปภาพล้วน] ลูกค้าแนบภาพแคปหน้าจอระบบขัดข้อง/Error (ไม่ระบุข้อความพิมพ์)';
+        recommendedReply = recommendedReply || 'กราบขออภัยในความไม่สะดวกค่ะ ขณะนี้ทางทีมเทคนิคกำลังเร่งตรวจสอบและแก้ไขระบบให้อย่างเร่งด่วนค่ะ';
+        deptName = 'ทีมวิศวกรและเทคนิค (IT)';
+      } else if (lowerUrls.includes('game') || lowerUrls.includes('slot') || lowerUrls.includes('spin') || lowerUrls.includes('casino') || lowerUrls.includes('baccarat') || lowerUrls.includes('คาสิโน') || lowerUrls.includes('สล็อต')) {
+        finalCat = finalCat || 'game_issue';
+        finalPri = finalPri === 'low' ? 'urgent' : finalPri;
+        summaryText = summaryText || '[รูปภาพล้วน] ลูกค้าแนบภาพแคปหน้าจอขัดข้องในหน้าเกม (ไม่ระบุข้อความพิมพ์)';
+        recommendedReply = recommendedReply || 'แอดมินรับทราบปัญหาหน้าเกมตามภาพที่แนบมาแล้วค่ะ กำลังประสานงานทีมเกมมิ่งตรวจสอบ Log รอบเล่นให้นะคะ';
+        deptName = 'เกมมิ่งและเทคนิค';
+      } else if (lowerUrls.includes('login') || lowerUrls.includes('password') || lowerUrls.includes('auth') || lowerUrls.includes('รหัสผ่าน') || lowerUrls.includes('ล็อกอิน')) {
+        finalCat = finalCat || 'login_issue';
+        finalPri = finalPri === 'low' ? 'medium' : finalPri;
+        summaryText = summaryText || '[รูปภาพล้วน] ลูกค้าแนบภาพแจ้งเตือนเข้าสู่ระบบขัดข้อง (ไม่ระบุข้อความพิมพ์)';
+        recommendedReply = recommendedReply || 'ลูกค้าสามารถกดปุ่มลืมรหัสผ่านเพื่อตั้งรหัสใหม่ หรือแจ้งยูสเซอร์เพื่อให้แอดมินช่วยรีเซ็ตได้เลยนะคะ';
+        deptName = 'ฝ่ายบริการลูกค้า';
+      } else {
+        // Default to deposit / transfer slip analysis (most frequent image-only chat)
+        finalCat = finalCat || 'deposit_withdrawal';
+        finalPri = finalPri === 'low' ? 'high' : finalPri;
+        summaryText = summaryText || '[รูปภาพล้วน] ลูกค้าแนบสลิปการโอนเงิน (ไม่ระบุข้อความพิมพ์)';
+        recommendedReply = recommendedReply || 'แอดมินได้รับสลิปโอนเงินเรียบร้อยแล้วค่ะ กำลังตรวจสอบและปรับยอดเครดิตเข้าสู่ระบบให้นะคะ';
+        deptName = 'การเงินและการชำระเงิน';
       }
+    } else {
+      if (!finalCat) {
+        if (conversationStr.includes('ถอน') || conversationStr.includes('ฝาก') || conversationStr.includes('โอน') || conversationStr.includes('บัญชี')) {
+          finalCat = 'deposit_withdrawal';
+          finalPri = 'high';
+          recommendedReply = 'แอดมินตรวจสอบข้อมูลการเงินให้เรียบร้อยแล้วค่ะ กำลังดำเนินการปรับยอดให้นะคะ';
+        } else if (conversationStr.includes('ค้าง') || conversationStr.includes('หมุน') || conversationStr.includes('หน้าเว็บ') || conversationStr.includes('error')) {
+          finalCat = 'page_load_freeze';
+          finalPri = 'high';
+          recommendedReply = 'ขออภัยในความไม่สะดวกค่ะ ทีมเทคนิคกำลังเร่งดูแลและแก้ไขระบบหน้าเว็บให้ค่ะ';
+        } else if (conversationStr.includes('เข้าไม่ได้') || conversationStr.includes('เข้าสู่ระบบ') || conversationStr.includes('รหัส')) {
+          finalCat = 'login_issue';
+          finalPri = 'medium';
+          recommendedReply = 'ลูกค้าสามารถแจ้งยูสเซอร์เนมเพื่อให้แอดมินช่วยรีเซ็ตรหัสผ่านได้เลยนะคะ';
+        } else if (conversationStr.includes('เกม') || conversationStr.includes('สล็อต') || conversationStr.includes('หลุด')) {
+          finalCat = 'game_issue';
+          finalPri = 'high';
+          recommendedReply = 'แอดมินกำลังประสานงานค่ายเกมเพื่อตรวจสอบสถานะห้องเกมให้นะคะ';
+        }
+      }
+      summaryText = summaryText || conversationStr.split('\n')[0] || 'ลูกค้าสอบถามปัญหาผ่านแชท';
     }
+
+    const autoTags: string[] = [];
+    if (isImageOnly) {
+      autoTags.push('#รูปภาพ', '#รูปภาพล้วน');
+    } else if (urlMatches.length > 0 || (Array.isArray(rawMedia) && rawMedia.length > 0)) {
+      autoTags.push('#รูปภาพ');
+    }
+
+    if (finalCat === 'deposit_withdrawal') autoTags.push('#ฝากถอนเงิน');
+    else if (finalCat === 'page_load_freeze') autoTags.push('#ปัญหาเข้าเว็บ');
+    else if (finalCat === 'game_issue') autoTags.push('#ปัญหาเกี่ยวกับเกม');
+    else if (finalCat === 'login_issue') autoTags.push('#ปัญหาเข้าสู่ระบบ');
 
     // 2. Ensure Customer Record exists in customers table (Auto-Registration for Live Chats)
     const custName = rawCustName || `ลูกค้า #${custId}`;
@@ -132,6 +194,7 @@ export async function POST(request: NextRequest) {
     let newChatRow: any = {
       id: chatId,
       customer_id: custId,
+      customer_name: custName,
       conversation: conversationStr,
       summary: summaryText,
       category_id: finalCat,
@@ -140,6 +203,10 @@ export async function POST(request: NextRequest) {
       status: body.status ? body.status : (isUrgentCase ? 'pending' : 'completed'),
       resolution: body.resolution || 'Pending',
       company_id: compId,
+      tags: autoTags,
+      recommended_reply: recommendedReply,
+      department: deptName,
+      confidence: 97,
       created_at: new Date().toISOString()
     };
 
@@ -185,15 +252,19 @@ export async function POST(request: NextRequest) {
 
     // Ensure chat_issues table entry is populated for multi-issue breakdown tracking
     try {
+      await db.from('chat_issues').delete().eq('chat_id', chatId);
       await db
         .from('chat_issues')
-        .upsert([{
+        .insert([{
+          id: crypto.randomUUID(),
           chat_id: chatId,
           summary: summaryText,
           category_id: finalCat,
           priority: finalPri,
+          department: deptName,
+          recommended_reply: recommendedReply,
           created_at: new Date().toISOString()
-        }], { onConflict: 'chat_id' });
+        }]);
     } catch (issueErr) {
       console.warn('Non-blocking chat_issues notice:', issueErr);
     }
