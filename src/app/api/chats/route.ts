@@ -347,11 +347,20 @@ export async function GET(request: NextRequest) {
         }
 
         let parsedTags: string[] = [];
-        if (Array.isArray(row.keywords) && row.keywords.length > 0) {
-          parsedTags = row.keywords;
+        if (Array.isArray(row.tags) && row.tags.length > 0) {
+          parsedTags = [...row.tags];
+        } else if (Array.isArray(row.keywords) && row.keywords.length > 0) {
+          parsedTags = [...row.keywords];
         } else if (typeof row.keywords === 'string' && row.keywords.startsWith('[')) {
           try { parsedTags = JSON.parse(row.keywords); } catch (e) {}
         }
+
+        const rawForTags = (convText + ' ' + (row.summary || '')).toLowerCase();
+        const hasImg = rawForTags.includes('photo-') || rawForTags.includes('images') || rawForTags.includes('slip') || rawForTags.includes('📷') || rawForTags.includes('.jpg') || rawForTags.includes('.png');
+        if (hasImg && !parsedTags.includes('#รูปภาพ')) {
+          parsedTags.unshift('#รูปภาพ');
+        }
+
         if (!parsedTags || parsedTags.length === 0) {
           parsedTags = detectedPri === 'urgent' 
             ? ['#VIP', '#ส่งเรื่องทีมเทคนิค'] 
