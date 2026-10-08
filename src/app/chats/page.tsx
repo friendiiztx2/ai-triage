@@ -520,13 +520,44 @@ function FloatingChatWindow({
     foundImages.forEach(imgUrl => {
       cleanedText = cleanedText.replace(imgUrl, '').trim();
     });
+    // Strip image placeholder labels if any like (📷 ...)
+    cleanedText = cleanedText.replace(/\(📷[^\)]*\)/g, '').replace(/📷[^\n]*/g, '').trim();
+
+    const isImageOnlyChat = foundImages.length > 0 && !cleanedText;
 
     return (
       <div className="space-y-3">
-        {/* Chat Text Bubble */}
-        <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-750 text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line select-text min-h-[100px] max-h-[300px] overflow-y-auto">
-          {cleanedText || <span className="text-slate-400 dark:text-slate-555 italic">ลูกค้าส่งรูปภาพแนบมาในบทสนทนา</span>}
-        </div>
+        {/* If image-only: Render explicit informative banner */}
+        {isImageOnlyChat ? (
+          <div className="bg-gradient-to-r from-indigo-50/90 via-purple-50/70 to-blue-50/80 dark:from-indigo-950/40 dark:via-purple-950/40 dark:to-blue-950/40 p-4 rounded-xl border border-indigo-200/80 dark:border-indigo-800/60 flex items-center justify-between gap-3 text-xs shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-600/10 dark:bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg shrink-0">
+                📷
+              </div>
+              <div>
+                <div className="font-extrabold text-indigo-950 dark:text-indigo-200 text-xs flex items-center gap-2">
+                  <span>{language === 'th' ? 'ลูกค้าส่งเฉพาะรูปภาพ' : 'Image-Only Message'}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-955/40 dark:text-rose-300">
+                    {language === 'th' ? 'ไม่ได้พิมพ์ข้อความ' : 'No text typed'}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  {language === 'th' 
+                    ? 'ระบบ AI วิเคราะห์และสกัดข้อมูลจากรูปภาพที่แนบมาด้านล่างโดยอัตโนมัติ' 
+                    : 'AI analyzed and extracted details from the attached image below'}
+                </div>
+              </div>
+            </div>
+            <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-indigo-600 text-white dark:bg-indigo-500 shadow-xs shrink-0 uppercase tracking-wider">
+              {language === 'th' ? 'รูปภาพล้วน' : 'Image Only'}
+            </span>
+          </div>
+        ) : (
+          /* Normal Chat Text Bubble */
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-750 text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line select-text min-h-[80px] max-h-[300px] overflow-y-auto">
+            {cleanedText || <span className="text-slate-400 dark:text-slate-555 italic">ลูกค้าส่งรูปภาพแนบมาในบทสนทนา</span>}
+          </div>
+        )}
 
         {/* 🖼️ Embedded Real Image Preview Cards */}
         {foundImages.length > 0 && (
@@ -1078,6 +1109,8 @@ export default function ChatsPage() {
 
   // System Tags & Tag Manager State
   const [allAvailableTags, setAllAvailableTags] = useState([
+    { name: '#รูปภาพ', desc: 'มีภาพแนบ', style: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-955/30 dark:text-indigo-300 dark:border-indigo-900/50' },
+    { name: '#รูปภาพล้วน', desc: 'ไม่มีข้อความพิมพ์', style: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-955/30 dark:text-fuchsia-300 dark:border-fuchsia-900/50' },
     { name: '#VIP', desc: 'ป้ายสีม่วง', style: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50' },
     { name: '#ติดตามผล', desc: 'ป้ายสีส้ม', style: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50' },
     { name: '#รอสลิป', desc: 'ป้ายสีฟ้า', style: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50' },
@@ -2355,8 +2388,24 @@ export default function ChatsPage() {
                         </td>
                         
                         {/* Summary */}
-                        <td className="px-2 py-3 max-w-[190px] text-slate-600 dark:text-slate-300 font-medium">
-                          <span className="truncate block">{chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}</span>
+                        <td className="px-2 py-3 max-w-[210px] text-slate-600 dark:text-slate-300 font-medium">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {(() => {
+                              const isImgOnly = (chat.tags && chat.tags.includes('#รูปภาพล้วน')) || 
+                                (typeof chat.summary === 'string' && (chat.summary.includes('รูปภาพล้วน') || chat.summary.includes('ไม่ระบุข้อความพิมพ์')));
+                              if (isImgOnly) {
+                                return (
+                                  <span className="inline-flex items-center gap-0.5 bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-955/60 dark:text-fuchsia-300 text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border border-fuchsia-200 dark:border-fuchsia-800">
+                                    📷 {language === 'th' ? 'รูปภาพล้วน' : 'Img only'}
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                            <span className="truncate block flex-1">
+                              {chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}
+                            </span>
+                          </div>
                         </td>
 
                         {/* Category */}
