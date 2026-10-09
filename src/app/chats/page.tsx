@@ -75,14 +75,12 @@ function FloatingChatWindow({
   categories, 
   userProfile, 
   allChats,
-  filteredChats,
   onClose, 
   onFocus, 
   onSaved,
   onPositionChange,
   onUpdateTags,
-  onOpenChat,
-  onSwitchChat
+  onOpenChat
 }: any) {
   const { language, t } = useLanguage();
   const [x, setX] = useState(initialX);
@@ -93,12 +91,6 @@ function FloatingChatWindow({
   const [isMaximized, setIsMaximized] = useState(false);
 
   if (!chat) return null;
-
-  // Next / Prev Ticket Navigation
-  const chatList = (filteredChats && filteredChats.length > 0) ? filteredChats : (allChats || []);
-  const currentIndex = chatList.findIndex((c: any) => c.id === chat.id);
-  const prevChat = currentIndex > 0 ? chatList[currentIndex - 1] : null;
-  const nextChat = (currentIndex >= 0 && currentIndex < chatList.length - 1) ? chatList[currentIndex + 1] : null;
 
   // Hover Zoom State for Images
   const [hoveredImg, setHoveredImg] = useState<string | null>(null);
@@ -346,7 +338,7 @@ function FloatingChatWindow({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSaveChanges = async (advanceNext: boolean = false) => {
+  const handleSaveChanges = async () => {
     setUpdating(true);
     try {
       let history: any[] = [];
@@ -457,18 +449,8 @@ function FloatingChatWindow({
         }
 
         onSaved();
-
-        if (advanceNext) {
-          if (nextChat && onSwitchChat) {
-            onSwitchChat(chat.id, nextChat);
-          } else {
-            setTriageSuccess(language === 'th' ? '✓ บันทึกสำเร็จ! (สิ้นสุดรายการเคสแล้ว)' : '✓ Saved! (End of queue)');
-            setTimeout(() => setTriageSuccess(null), 3000);
-          }
-        } else {
-          setTriageSuccess(language === 'th' ? '✓ บันทึกการแก้ไขสำเร็จ' : '✓ Saved changes successfully');
-          setTimeout(() => setTriageSuccess(null), 3000);
-        }
+        setTriageSuccess(language === 'th' ? '✓ บันทึกการแก้ไขสำเร็จ' : '✓ Saved changes successfully');
+        setTimeout(() => setTriageSuccess(null), 3000);
       }
     } catch (err) {
       console.error('Error saving chat feedback:', err);
@@ -477,8 +459,8 @@ function FloatingChatWindow({
     }
   };
 
-  // 1-Click AI Approve & Next handler
-  const handleApproveAndNext = async () => {
+  // 1-Click AI Approve handler
+  const handleApproveAI = async () => {
     setUpdating(true);
     try {
       let history: any[] = [];
@@ -560,13 +542,8 @@ function FloatingChatWindow({
         }
 
         onSaved();
-
-        if (nextChat && onSwitchChat) {
-          onSwitchChat(chat.id, nextChat);
-        } else {
-          setTriageSuccess(language === 'th' ? '✓ อนุมัติตาม AI สำเร็จ! (สิ้นสุดรายการเคสแล้ว)' : '✓ AI Approved! (End of queue)');
-          setTimeout(() => setTriageSuccess(null), 3500);
-        }
+        setTriageSuccess(language === 'th' ? '✓ อนุมัติตาม AI สำเร็จ!' : '✓ AI Approved successfully!');
+        setTimeout(() => setTriageSuccess(null), 3000);
       }
     } catch (err) {
       console.error('Error approving AI triage:', err);
@@ -574,32 +551,6 @@ function FloatingChatWindow({
       setUpdating(false);
     }
   };
-
-  // Keyboard Shortcuts inside Modal: Ctrl+Enter (Approve), Alt+Left/Right (Prev/Next), Esc (Close)
-  useEffect(() => {
-    const handleModalKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleApproveAndNext();
-      } else if (e.altKey && e.key === 'ArrowRight') {
-        e.preventDefault();
-        if (nextChat && onSwitchChat) {
-          onSwitchChat(chat.id, nextChat);
-        }
-      } else if (e.altKey && e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (prevChat && onSwitchChat) {
-          onSwitchChat(chat.id, prevChat);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleModalKeyDown);
-    return () => window.removeEventListener('keydown', handleModalKeyDown);
-  }, [chat.id, nextChat, prevChat, chatIssues, editIssues, editCategory, editPriority, userProfile]);
 
   const handleResizeMouseDown = (e: any) => {
     e.preventDefault();
@@ -792,34 +743,7 @@ function FloatingChatWindow({
           </h3>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Prev/Next Case Navigation Buttons */}
-          {chatList.length > 1 && (
-            <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shadow-2xs mr-1">
-              <button
-                type="button"
-                onClick={() => prevChat && onSwitchChat && onSwitchChat(chat.id, prevChat)}
-                disabled={!prevChat}
-                className="w-5 h-5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
-                title="เคสก่อนหน้า (Alt+←)"
-              >
-                <ChevronLeft size={13} />
-              </button>
-              <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 px-1 select-none">
-                {currentIndex >= 0 ? `${currentIndex + 1}/${chatList.length}` : '-'}
-              </span>
-              <button
-                type="button"
-                onClick={() => nextChat && onSwitchChat && onSwitchChat(chat.id, nextChat)}
-                disabled={!nextChat}
-                className="w-5 h-5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
-                title="เคสถัดไป (Alt+→)"
-              >
-                <ChevronRight size={13} />
-              </button>
-            </div>
-          )}
-
+        <div className="flex items-center gap-1 shrink-0">
           {/* Minimize button */}
           <button 
             type="button"
@@ -1112,68 +1036,30 @@ function FloatingChatWindow({
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
-                              {/* 1-Click AI Approve & Next */}
+                              {/* 1-Click AI Approve */}
                               <button
                                 type="button"
-                                onClick={handleApproveAndNext}
+                                onClick={handleApproveAI}
                                 disabled={updating || userProfile?.role === 'agent'}
                                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm hover:shadow-md shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
-                                title="อนุมัติตามที่ AI คัดแยกทันที และเปิดเคสถัดไปอัตโนมัติ (Ctrl+Enter)"
+                                title="อนุมัติตามที่ AI คัดแยกทันที และทำเครื่องหมายว่าแยกแยะแล้ว"
                               >
                                 <Check size={14} strokeWidth={3} />
-                                <span>{language === 'th' ? '✓ อนุมัติตาม AI & เคสถัดไป' : '✓ AI Approve & Next'}</span>
-                                <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-emerald-700/60 rounded text-[9px] font-mono font-normal">Ctrl+↵</kbd>
+                                <span>{language === 'th' ? '✓ อนุมัติตาม AI ทันที' : '✓ AI Approve'}</span>
                               </button>
 
-                              {/* Save & Next */}
+                              {/* Regular Save Changes */}
                               <button
                                 type="button"
-                                onClick={() => handleSaveChanges(true)}
+                                onClick={handleSaveChanges}
                                 disabled={updating || userProfile?.role === 'agent'}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
-                                title="บันทึกการแก้ไขและเปิดเคสถัดไป"
-                              >
-                                <span>{language === 'th' ? '💾 บันทึก & ถัดไป ▶' : '💾 Save & Next ▶'}</span>
-                              </button>
-
-                              {/* Regular Save */}
-                              <button
-                                type="button"
-                                onClick={() => handleSaveChanges(false)}
-                                disabled={updating || userProfile?.role === 'agent'}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer disabled:opacity-50"
-                                title="บันทึกการแก้ไขเฉพาะเคสนี้"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-100 dark:shadow-none transition cursor-pointer disabled:opacity-50"
+                                title="บันทึกการแก้ไขข้อมูล"
                               >
                                 {updating ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                                <span>{updating ? (language === 'th' ? 'กำลังบันทึก...' : 'Saving...') : (language === 'th' ? 'บันทึก' : 'Save')}</span>
+                                <span>{updating ? (language === 'th' ? 'กำลังบันทึก...' : 'Saving...') : (language === 'th' ? '💾 บันทึกการแก้ไข' : '💾 Save Changes')}</span>
                               </button>
                             </div>
-                          </div>
-
-                          {/* Keyboard Shortcuts Hint Bar */}
-                          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                            <div className="flex items-center gap-2">
-                              <span>💡 คีย์ลัด:</span>
-                              <span className="flex items-center gap-1">
-                                <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[9px] font-bold text-slate-600 dark:text-slate-300">Ctrl+Enter</kbd>
-                                <span>อนุมัติตาม AI</span>
-                              </span>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[9px] font-bold text-slate-600 dark:text-slate-300">Alt+→ / Alt+←</kbd>
-                                <span>เปลี่ยนเคส</span>
-                              </span>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[9px] font-bold text-slate-600 dark:text-slate-300">Esc</kbd>
-                                <span>ปิด</span>
-                              </span>
-                            </div>
-                            {currentIndex >= 0 && (
-                              <span className="font-mono text-indigo-500 dark:text-indigo-400 font-semibold">
-                                เคสที่ {currentIndex + 1} จาก {chatList.length} เคส
-                              </span>
-                            )}
                           </div>
                         </>
                       );
@@ -1358,43 +1244,6 @@ export default function ChatsPage() {
     const match = text.match(/(https?:\/\/[^\s\n"']+\.(jpg|jpeg|png|webp|gif|svg)(\?[^\s\n"']*)?)/i) ||
                   text.match(/(https?:\/\/[^\s\n"']*(images|photos|slip|storage)[^\s\n"']*)/i);
     return match ? match[1] || match[0] : null;
-  };
-
-  // Switch chat in active floating window seamlessly
-  const handleSwitchChatInWindow = (currentId: string, nextChat: any) => {
-    setActiveWindows(prev => prev.map(w => {
-      if (w.id === currentId) {
-        return {
-          ...w,
-          id: nextChat.id,
-          chat: nextChat
-        };
-      }
-      return w;
-    }));
-
-    fetch(`/api/chats?id=${nextChat.id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          const fullChat = data.find((c: any) => c.id === nextChat.id) || data[0];
-          if (fullChat) {
-            setActiveWindows(prev => prev.map(w => {
-              if (w.id === nextChat.id) {
-                return {
-                  ...w,
-                  chat: {
-                    ...w.chat,
-                    ...fullChat
-                  }
-                };
-              }
-              return w;
-            }));
-          }
-        }
-      })
-      .catch(err => console.error('Error fetching full chat details:', err));
   };
   
   // Sound alarm state
@@ -2900,9 +2749,7 @@ export default function ChatsPage() {
           categories={categories}
           userProfile={userProfile}
           allChats={chats}
-          filteredChats={filteredChats}
           onOpenChat={handleSelectChat}
-          onSwitchChat={handleSwitchChatInWindow}
           onClose={() => {
             setActiveWindows(prev => prev.filter(w => w.id !== win.id));
           }}
