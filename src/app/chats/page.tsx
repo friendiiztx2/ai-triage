@@ -5,7 +5,7 @@ import { useLanguage } from '@/components/LanguageContext';
 import Link from 'next/link';
 import { 
   Search, Filter, Clock, AlertTriangle, MessageSquare, 
-  User, Mail, Phone, Calendar, RefreshCw, ChevronRight,
+  User, Mail, Phone, Calendar, RefreshCw, ChevronRight, ChevronLeft,
   CheckCircle, ArrowLeft, Download, Copy, Sparkles, BookOpen, Check, X, Minus,
   FileSpreadsheet, RotateCcw
 } from 'lucide-react';
@@ -75,12 +75,14 @@ function FloatingChatWindow({
   categories, 
   userProfile, 
   allChats,
+  filteredChats,
   onClose, 
   onFocus, 
   onSaved,
   onPositionChange,
   onUpdateTags,
-  onOpenChat
+  onOpenChat,
+  onSwitchChat
 }: any) {
   const { language, t } = useLanguage();
   const [x, setX] = useState(initialX);
@@ -89,10 +91,17 @@ function FloatingChatWindow({
   const [height, setHeight] = useState(640);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  
-
 
   if (!chat) return null;
+
+  // Next / Prev Ticket Navigation
+  const chatList = (filteredChats && filteredChats.length > 0) ? filteredChats : (allChats || []);
+  const currentIndex = chatList.findIndex((c: any) => c.id === chat.id);
+  const prevChat = currentIndex > 0 ? chatList[currentIndex - 1] : null;
+  const nextChat = (currentIndex >= 0 && currentIndex < chatList.length - 1) ? chatList[currentIndex + 1] : null;
+
+  // Hover Zoom State for Images
+  const [hoveredImg, setHoveredImg] = useState<string | null>(null);
 
   const [customerInfo, setCustomerInfo] = useState<any>(null);
   const [chatIssues, setChatIssues] = useState<any[]>([]);
@@ -260,9 +269,17 @@ function FloatingChatWindow({
     }
   };
 
-  // Fetch issues & customer info
+  // Fetch issues & customer info, reset local edit state on chat change
   useEffect(() => {
     let isMounted = true;
+    setEditCategory(chat?.category_id || '');
+    setEditPriority(chat?.priority || 'low');
+    setTags(chat?.tags || []);
+    setTriageError(null);
+    setTriageSuccess(null);
+    setEditingTagIndex(null);
+    setHoveredImg(null);
+
     async function loadData() {
       await loadChatIssues();
       if (chat.customer_id) {
@@ -329,7 +346,7 @@ function FloatingChatWindow({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = async (advanceNext: boolean = false) => {
     setUpdating(true);
     try {
       let history: any[] = [];
@@ -399,7 +416,7 @@ function FloatingChatWindow({
 
       const newLog = {
         timestamp: new Date().toISOString(),
-        actor: 'คุณอ้อ (Admin)',
+        actor: userProfile?.name || 'คุณอ้อ (Admin)',
         old_category: chat.category_id || '',
         new_category: finalCategoryId || '',
         old_priority: chat.priority || 'low',
@@ -416,10 +433,11 @@ function FloatingChatWindow({
         body: JSON.stringify({
           chat_id: chat.id,
           is_correct: isCorrect,
-          liked_by: customerInfo?.name || chat.customer_id || 'admin',
+          liked_by: userProfile?.name || customerInfo?.name || chat.customer_id || 'admin',
           issues: issuesToSubmit,
           category_id: finalCategoryId || null,
           priority: finalPriority || null,
+          status: 'completed',
           resolution: JSON.stringify(updatedHistory)
         })
       });
@@ -439,6 +457,18 @@ function FloatingChatWindow({
         }
 
         onSaved();
+
+        if (advanceNext) {
+          if (nextChat && onSwitchChat) {
+            onSwitchChat(chat.id, nextChat);
+          } else {
+            setTriageSuccess(language === 'th' ? '✓ บันทึกสำเร็จ! (สิ้นสุดรายการเคสแล้ว)' : '✓ Saved! (End of queue)');
+            setTimeout(() => setTriageSuccess(null), 3000);
+          }
+        } else {
+          setTriageSuccess(language === 'th' ? '✓ บันทึกการแก้ไขสำเร็จ' : '✓ Saved changes successfully');
+          setTimeout(() => setTriageSuccess(null), 3000);
+        }
       }
     } catch (err) {
       console.error('Error saving chat feedback:', err);
@@ -446,6 +476,130 @@ function FloatingChatWindow({
       setUpdating(false);
     }
   };
+
+  // 1-Click AI Approve & Next handler
+  const handleApproveAndNext = async () => {
+    setUpdating(true);
+    try {
+      let history: any[] = [];
+      try {
+        if (chat.resolution && chat.resolution !== 'Pending' && chat.resolution !== 'Solved') {
+          const parsed = JSON.parse(chat.resolution);
+          if (Array.isArray(parsed)) history = parsed;
+        }
+      } catch (e) {}
+
+      const hasDbIssues = chatIssues && chatIssues.length > 0;
+      const issuesToSubmit = hasDbIssues
+        ? chatIssues.map((issue) => ({
+            id: issue.id,
+            category_id: issue.category_id || null,
+            priority: issue.priority || 'low',
+            summary: issue.summary
+          }))
+        : [{
+            id: `${chat.id}-primary`,
+            category_id: chat.category_id || null,
+            priority: chat.priority || 'low',
+            summary: chat.summary || 'ประเด็นหลัก'
+          }];
+
+      let finalCategoryId = chat.category_id || (issuesToSubmit[0]?.category_id) || '';
+      let finalPriority = chat.priority || 'low';
+      if (hasDbIssues && issuesToSubmit.length > 0) {
+        finalCategoryId = issuesToSubmit[0].category_id || '';
+        const prioOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
+        let maxVal = 1;
+        let maxPrio = 'low';
+        issuesToSubmit.forEach((issue) => {
+          const p = (issue.priority || 'low').toLowerCase();
+          if (prioOrder[p] && prioOrder[p] > maxVal) {
+            maxVal = prioOrder[p];
+            maxPrio = p;
+          }
+        });
+        finalPriority = maxPrio;
+      }
+
+      const newLog = {
+        timestamp: new Date().toISOString(),
+        actor: `${userProfile?.name || 'คุณอ้อ (Admin)'} (อนุมัติตาม AI)`,
+        old_category: chat.category_id || '',
+        new_category: finalCategoryId || '',
+        old_priority: chat.priority || 'low',
+        new_priority: finalPriority || 'low'
+      };
+      const updatedHistory = [newLog, ...history];
+
+      const res = await fetch('/api/chats/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chat.id,
+          is_correct: true,
+          liked_by: userProfile?.name || 'คุณอ้อ (Admin)',
+          issues: issuesToSubmit,
+          category_id: finalCategoryId || null,
+          priority: finalPriority || null,
+          status: 'completed',
+          resolution: JSON.stringify(updatedHistory)
+        })
+      });
+
+      if (res.ok) {
+        try {
+          await supabase.from('activity_logs').insert([{
+            company_id: userProfile?.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+            user_id: userProfile?.id || 'admin-01',
+            user_name: userProfile?.name || 'Admin',
+            action_type: 'APPROVE_AI_TRIAGE',
+            details: { chat_id: chat.id, category: finalCategoryId, priority: finalPriority }
+          }]);
+        } catch (e) {
+          console.warn('activity_logs insert:', e);
+        }
+
+        onSaved();
+
+        if (nextChat && onSwitchChat) {
+          onSwitchChat(chat.id, nextChat);
+        } else {
+          setTriageSuccess(language === 'th' ? '✓ อนุมัติตาม AI สำเร็จ! (สิ้นสุดรายการเคสแล้ว)' : '✓ AI Approved! (End of queue)');
+          setTimeout(() => setTriageSuccess(null), 3500);
+        }
+      }
+    } catch (err) {
+      console.error('Error approving AI triage:', err);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Keyboard Shortcuts inside Modal: Ctrl+Enter (Approve), Alt+Left/Right (Prev/Next), Esc (Close)
+  useEffect(() => {
+    const handleModalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleApproveAndNext();
+      } else if (e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (nextChat && onSwitchChat) {
+          onSwitchChat(chat.id, nextChat);
+        }
+      } else if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (prevChat && onSwitchChat) {
+          onSwitchChat(chat.id, prevChat);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleModalKeyDown);
+    return () => window.removeEventListener('keydown', handleModalKeyDown);
+  }, [chat.id, nextChat, prevChat, chatIssues, editIssues, editCategory, editPriority, userProfile]);
 
   const handleResizeMouseDown = (e: any) => {
     e.preventDefault();
@@ -572,13 +726,13 @@ function FloatingChatWindow({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {foundImages.map((imgUrl, iidx) => (
-                <a
+                <div
                   key={iidx}
-                  href={imgUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block rounded-xl overflow-hidden border border-indigo-200/80 dark:border-indigo-800/60 bg-black/10 hover:shadow-md transition duration-200 aspect-video"
-                  title="คลิกเพื่อเปิดรูปภาพขนาดใหญ่ความละเอียดสูง"
+                  onMouseEnter={() => setHoveredImg(imgUrl)}
+                  onMouseLeave={() => setHoveredImg(null)}
+                  onClick={() => window.open(imgUrl, '_blank')}
+                  className="group relative block rounded-xl overflow-hidden border border-indigo-200/80 dark:border-indigo-800/60 bg-black/10 hover:shadow-lg transition duration-200 aspect-video cursor-zoom-in"
+                  title="ชี้เมาส์เพื่อซูมดูรูปใหญ่ (Hover Zoom) หรือคลิกเพื่อเปิดแท็บใหม่"
                 >
                   <img 
                     src={imgUrl} 
@@ -589,10 +743,10 @@ function FloatingChatWindow({
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-between p-2 text-white">
-                    <span className="text-[10px] font-bold">🔍 ดูรูปภาพขนาดเต็ม</span>
+                    <span className="text-[10px] font-bold">🔍 ชี้เพื่อซูมรูป</span>
                     <span className="text-[9px] bg-white/30 backdrop-blur-xs px-1.5 py-0.5 rounded font-mono">#รูปภาพ-{iidx + 1}</span>
                   </div>
-                </a>
+                </div>
               ))}
             </div>
           </div>
@@ -638,7 +792,34 @@ function FloatingChatWindow({
           </h3>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Prev/Next Case Navigation Buttons */}
+          {chatList.length > 1 && (
+            <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shadow-2xs mr-1">
+              <button
+                type="button"
+                onClick={() => prevChat && onSwitchChat && onSwitchChat(chat.id, prevChat)}
+                disabled={!prevChat}
+                className="w-5 h-5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+                title="เคสก่อนหน้า (Alt+←)"
+              >
+                <ChevronLeft size={13} />
+              </button>
+              <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 px-1 select-none">
+                {currentIndex >= 0 ? `${currentIndex + 1}/${chatList.length}` : '-'}
+              </span>
+              <button
+                type="button"
+                onClick={() => nextChat && onSwitchChat && onSwitchChat(chat.id, nextChat)}
+                disabled={!nextChat}
+                className="w-5 h-5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+                title="เคสถัดไป (Alt+→)"
+              >
+                <ChevronRight size={13} />
+              </button>
+            </div>
+          )}
+
           {/* Minimize button */}
           <button 
             type="button"
@@ -709,7 +890,8 @@ function FloatingChatWindow({
                   {/* Right Column (Span 7): Triage Category & Priority controls per child chat_issue */}
                   <div className="lg:col-span-7 min-w-0 space-y-3 pt-0.5">
                     {(() => {
-                      const isWaitingForAI = loadingIssues || retryingTriage || chat.status === 'pending' || (chatIssues.length === 0 && chat.status !== 'completed');
+                      const hasIssues = (chatIssues && chatIssues.length > 0) || !!chat.category_id || !!chat.summary;
+                      const isWaitingForAI = retryingTriage || (loadingIssues && !hasIssues);
 
                       if (isWaitingForAI) {
                         return (
@@ -929,15 +1111,69 @@ function FloatingChatWindow({
                               )}
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={handleSaveChanges}
-                              disabled={updating || userProfile?.role === 'agent'}
-                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-100 dark:shadow-none transition cursor-pointer disabled:opacity-50"
-                            >
-                              {updating ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                              <span>{updating ? (language === 'th' ? 'กำลังบันทึก...' : 'Saving...') : (language === 'th' ? '💾 บันทึกการแก้ไข' : '💾 Save Changes')}</span>
-                            </button>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {/* 1-Click AI Approve & Next */}
+                              <button
+                                type="button"
+                                onClick={handleApproveAndNext}
+                                disabled={updating || userProfile?.role === 'agent'}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm hover:shadow-md shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
+                                title="อนุมัติตามที่ AI คัดแยกทันที และเปิดเคสถัดไปอัตโนมัติ (Ctrl+Enter)"
+                              >
+                                <Check size={14} strokeWidth={3} />
+                                <span>{language === 'th' ? '✓ อนุมัติตาม AI & เคสถัดไป' : '✓ AI Approve & Next'}</span>
+                                <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-emerald-700/60 rounded text-[9px] font-mono font-normal">Ctrl+↵</kbd>
+                              </button>
+
+                              {/* Save & Next */}
+                              <button
+                                type="button"
+                                onClick={() => handleSaveChanges(true)}
+                                disabled={updating || userProfile?.role === 'agent'}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                                title="บันทึกการแก้ไขและเปิดเคสถัดไป"
+                              >
+                                <span>{language === 'th' ? '💾 บันทึก & ถัดไป ▶' : '💾 Save & Next ▶'}</span>
+                              </button>
+
+                              {/* Regular Save */}
+                              <button
+                                type="button"
+                                onClick={() => handleSaveChanges(false)}
+                                disabled={updating || userProfile?.role === 'agent'}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                                title="บันทึกการแก้ไขเฉพาะเคสนี้"
+                              >
+                                {updating ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                                <span>{updating ? (language === 'th' ? 'กำลังบันทึก...' : 'Saving...') : (language === 'th' ? 'บันทึก' : 'Save')}</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Keyboard Shortcuts Hint Bar */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                            <div className="flex items-center gap-2">
+                              <span>💡 คีย์ลัด:</span>
+                              <span className="flex items-center gap-1">
+                                <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[9px] font-bold text-slate-600 dark:text-slate-300">Ctrl+Enter</kbd>
+                                <span>อนุมัติตาม AI</span>
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[9px] font-bold text-slate-600 dark:text-slate-300">Alt+→ / Alt+←</kbd>
+                                <span>เปลี่ยนเคส</span>
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[9px] font-bold text-slate-600 dark:text-slate-300">Esc</kbd>
+                                <span>ปิด</span>
+                              </span>
+                            </div>
+                            {currentIndex >= 0 && (
+                              <span className="font-mono text-indigo-500 dark:text-indigo-400 font-semibold">
+                                เคสที่ {currentIndex + 1} จาก {chatList.length} เคส
+                              </span>
+                            )}
                           </div>
                         </>
                       );
@@ -1074,6 +1310,24 @@ function FloatingChatWindow({
           </svg>
         </div>
       )}
+
+      {/* Hover Zoom Modal Overlay for Enlarged Images */}
+      {hoveredImg && (
+        <div className="pointer-events-none fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950/95 p-3 rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-md max-w-[500px] max-h-[500px] flex flex-col items-center animate-fade-in">
+          <div className="w-full flex items-center justify-between pb-2 text-[11px] font-bold text-slate-300">
+            <span className="flex items-center gap-1.5">
+              <span>🔍</span>
+              <span>พรีวิวรูปภาพความละเอียดสูง (Hover Zoom)</span>
+            </span>
+            <span className="text-[10px] text-indigo-400 font-mono">เลื่อนเมาส์ออกเพื่อปิด</span>
+          </div>
+          <img 
+            src={hoveredImg} 
+            alt="Zoom preview" 
+            className="max-w-[460px] max-h-[420px] object-contain rounded-xl shadow-lg border border-slate-800"
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -1091,6 +1345,57 @@ export default function ChatsPage() {
 
   // Bulk selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  
+  // Table Hover Zoom state
+  const [tableHoveredImg, setTableHoveredImg] = useState<string | null>(null);
+
+  // Helper to get first image URL for any chat
+  const getChatFirstImageUrl = (c: any): string | null => {
+    if (c?.media_urls && Array.isArray(c.media_urls) && c.media_urls.length > 0) {
+      return c.media_urls[0];
+    }
+    const text = typeof c?.conversation === 'string' ? c.conversation : '';
+    const match = text.match(/(https?:\/\/[^\s\n"']+\.(jpg|jpeg|png|webp|gif|svg)(\?[^\s\n"']*)?)/i) ||
+                  text.match(/(https?:\/\/[^\s\n"']*(images|photos|slip|storage)[^\s\n"']*)/i);
+    return match ? match[1] || match[0] : null;
+  };
+
+  // Switch chat in active floating window seamlessly
+  const handleSwitchChatInWindow = (currentId: string, nextChat: any) => {
+    setActiveWindows(prev => prev.map(w => {
+      if (w.id === currentId) {
+        return {
+          ...w,
+          id: nextChat.id,
+          chat: nextChat
+        };
+      }
+      return w;
+    }));
+
+    fetch(`/api/chats?id=${nextChat.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const fullChat = data.find((c: any) => c.id === nextChat.id) || data[0];
+          if (fullChat) {
+            setActiveWindows(prev => prev.map(w => {
+              if (w.id === nextChat.id) {
+                return {
+                  ...w,
+                  chat: {
+                    ...w.chat,
+                    ...fullChat
+                  }
+                };
+              }
+              return w;
+            }));
+          }
+        }
+      })
+      .catch(err => console.error('Error fetching full chat details:', err));
+  };
   
   // Sound alarm state
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -2016,6 +2321,76 @@ export default function ChatsPage() {
 
       {/* ================= LIST VIEW ================= */}
       <div className="space-y-6">
+        {/* Quick View Tabs Bar (Admin Shortcut Queues) */}
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100/90 dark:bg-slate-855 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+          {[
+            {
+              id: 'all',
+              label: language === 'th' ? '📋 ทั้งหมด' : '📋 All',
+              count: companyFilteredChats.length,
+              isActive: statusFilter === 'all' && priorityFilter === 'all' && tagFilter === 'all',
+              onClick: () => { setStatusFilter('all'); setPriorityFilter('all'); setTagFilter('all'); }
+            },
+            {
+              id: 'urgent',
+              label: language === 'th' ? '🚨 เคสด่วนที่สุด' : '🚨 Urgent Cases',
+              count: urgentCount,
+              isActive: priorityFilter === 'urgent',
+              onClick: () => { setPriorityFilter('urgent'); setStatusFilter('all'); setTagFilter('all'); },
+              badgeColor: 'bg-rose-500 text-white'
+            },
+            {
+              id: 'image-only',
+              label: language === 'th' ? '📷 รูปภาพล้วน' : '📷 Image Only',
+              count: companyFilteredChats.filter(c => 
+                (c.tags && c.tags.includes('#รูปภาพล้วน')) || 
+                (typeof c.summary === 'string' && (c.summary.includes('รูปภาพล้วน') || c.summary.includes('ไม่ระบุข้อความพิมพ์')))
+              ).length,
+              isActive: tagFilter === '#รูปภาพล้วน',
+              onClick: () => { setTagFilter('#รูปภาพล้วน'); setStatusFilter('all'); setPriorityFilter('all'); },
+              badgeColor: 'bg-fuchsia-500 text-white'
+            },
+            {
+              id: 'pending',
+              label: language === 'th' ? '⏳ รอดำเนินการ' : '⏳ Pending',
+              count: pendingCount,
+              isActive: statusFilter === 'pending' && priorityFilter === 'all' && tagFilter === 'all',
+              onClick: () => { setStatusFilter('pending'); setPriorityFilter('all'); setTagFilter('all'); },
+              badgeColor: 'bg-amber-500 text-white'
+            },
+            {
+              id: 'completed',
+              label: language === 'th' ? '✅ แยกแยะแล้ว' : '✅ Completed',
+              count: completedCount,
+              isActive: statusFilter === 'completed' && priorityFilter === 'all' && tagFilter === 'all',
+              onClick: () => { setStatusFilter('completed'); setPriorityFilter('all'); setTagFilter('all'); },
+              badgeColor: 'bg-emerald-500 text-white'
+            }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={tab.onClick}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none ${
+                tab.isActive
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 font-extrabold scale-[1.02]'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800 shadow-2xs'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                  tab.isActive
+                    ? 'bg-white/20 text-white'
+                    : tab.badgeColor || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
         {/* Filter Bar */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col gap-4 transition-all duration-250">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-start">
@@ -2393,14 +2768,30 @@ export default function ChatsPage() {
                             {(() => {
                               const isImgOnly = (chat.tags && chat.tags.includes('#รูปภาพล้วน')) || 
                                 (typeof chat.summary === 'string' && (chat.summary.includes('รูปภาพล้วน') || chat.summary.includes('ไม่ระบุข้อความพิมพ์')));
-                              if (isImgOnly) {
-                                return (
-                                  <span className="inline-flex items-center gap-0.5 bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-955/60 dark:text-fuchsia-300 text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border border-fuchsia-200 dark:border-fuchsia-800">
-                                    📷 {language === 'th' ? 'รูปภาพล้วน' : 'Img only'}
-                                  </span>
-                                );
-                              }
-                              return null;
+                              const firstImg = getChatFirstImageUrl(chat);
+                              return (
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {isImgOnly && (
+                                    <span className="inline-flex items-center gap-0.5 bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-955/60 dark:text-fuchsia-300 text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border border-fuchsia-200 dark:border-fuchsia-800">
+                                      📷 {language === 'th' ? 'รูปภาพล้วน' : 'Img only'}
+                                    </span>
+                                  )}
+                                  {firstImg && (
+                                    <span
+                                      onMouseEnter={() => setTableHoveredImg(firstImg)}
+                                      onMouseLeave={() => setTableHoveredImg(null)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(firstImg, '_blank');
+                                      }}
+                                      className="inline-flex items-center gap-0.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-1.5 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800 cursor-zoom-in transition"
+                                      title="ชี้เมาส์เพื่อซูมดูรูปภาพทันที (Hover Zoom)"
+                                    >
+                                      🖼️ ดูรูป
+                                    </span>
+                                  )}
+                                </div>
+                              );
                             })()}
                             <span className="truncate block flex-1">
                               {chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}
@@ -2509,7 +2900,9 @@ export default function ChatsPage() {
           categories={categories}
           userProfile={userProfile}
           allChats={chats}
+          filteredChats={filteredChats}
           onOpenChat={handleSelectChat}
+          onSwitchChat={handleSwitchChatInWindow}
           onClose={() => {
             setActiveWindows(prev => prev.filter(w => w.id !== win.id));
           }}
@@ -2667,6 +3060,24 @@ export default function ChatsPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Table Hover Zoom Modal Overlay */}
+      {tableHoveredImg && (
+        <div className="pointer-events-none fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950/95 p-3 rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-md max-w-[500px] max-h-[500px] flex flex-col items-center animate-fade-in">
+          <div className="w-full flex items-center justify-between pb-2 text-[11px] font-bold text-slate-300">
+            <span className="flex items-center gap-1.5">
+              <span>🔍</span>
+              <span>พรีวิวรูปภาพจากแชต (Hover Zoom)</span>
+            </span>
+            <span className="text-[10px] text-indigo-400 font-mono">เลื่อนเมาส์ออกเพื่อปิด</span>
+          </div>
+          <img 
+            src={tableHoveredImg} 
+            alt="Table hover zoom preview" 
+            className="max-w-[460px] max-h-[420px] object-contain rounded-xl shadow-lg border border-slate-800"
+          />
         </div>
       )}
     </div>
