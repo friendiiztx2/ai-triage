@@ -18,8 +18,8 @@ const sarabun = Sarabun({
 });
 
 export const metadata: Metadata = {
-  title: "AI Triage Back Office",
-  description: "ระบบคัดแยกปัญหาแชตลูกค้าวิเคราะห์ด้วย AI",
+  title: "Sift AI Back Office",
+  description: "ระบบคัดแยกปัญหาแชตลูกค้าวิเคราะห์ด้วย AI (Sift AI)",
 };
 
 export default function RootLayout({

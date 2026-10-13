@@ -163,7 +163,7 @@ export default function LoginPage() {
           <div className="bg-gradient-to-br from-red-500 to-rose-600 text-white p-3 rounded-2xl shadow-lg shadow-rose-500/25 dark:shadow-none mb-3">
             <BrainCircuit size={28} />
           </div>
-          <h1 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl leading-none">AI Triage</h1>
+          <h1 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl leading-none">Sift AI</h1>
           <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold tracking-wider uppercase mt-1">Back Office Dashboard</span>
         </div>
 

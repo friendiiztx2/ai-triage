@@ -308,10 +308,10 @@ export default function CategoriesPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display">
-            {language === 'th' ? 'ศูนย์จัดการหมวดหมู่และแท็กระบบ (Category & Tag Manager)' : 'Category & Tag Manager'}
+            {language === 'th' ? 'ศูนย์จัดการหมวดหมู่และแท็กระบบ (Sift AI Category & Tag Manager)' : 'Sift AI Category & Tag Manager'}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            {language === 'th' ? 'จัดการเพิ่ม/แก้ไข/ลบหมวดหมู่หลัก และแท็กติดเคสระบบสำหรับใช้งานทั่วทั้งแอปพลิเคชัน' : 'Manage main categories and system tag labels across the application'}
+            {language === 'th' ? 'จัดการเพิ่ม/แก้ไข/ลบหมวดหมู่หลัก และแท็กติดเคสระบบสำหรับ Sift AI ทั่วทั้งแอปพลิเคชัน' : 'Manage main categories and system tag labels across Sift AI'}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -501,7 +501,7 @@ export default function CategoriesPage() {
           <div className="bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100 dark:border-indigo-900/30 p-4 rounded-xl flex items-start gap-3">
             <BadgeInfo size={20} className="text-indigo-600 dark:text-indigo-400 mt-0.5" />
             <div className="text-sm text-indigo-900 dark:text-indigo-300 leading-relaxed font-medium">
-              หมวดหมู่ด้านล่างนี้คือกลุ่มหัวข้อหลักที่ AI (Triage Agent) จะนำไปพิจารณาจัดกลุ่มเมื่อลูกค้าแจ้งแชตเข้ามา หากประเด็นไหนไม่ตรงเลย จะถูกจัดเป็น **`other (อื่นๆ)`** พนักงานสามารถดูแนวโน้มปริมาณของแต่ละหัวข้อได้จากตัวเลขเคสสะสม
+              หมวดหมู่ด้านล่างนี้คือกลุ่มหัวข้อหลักที่ Sift AI จะนำไปพิจารณาจัดกลุ่มเมื่อลูกค้าแจ้งแชตเข้ามา หากประเด็นไหนไม่ตรงเลย จะถูกจัดเป็น **`other (อื่นๆ)`** พนักงานสามารถดูแนวโน้มปริมาณของแต่ละหัวข้อได้จากตัวเลขเคสสะสม
               {!(userProfile?.role === 'super_admin' || userProfile?.role === 'system_admin') && (
                 <div className="mt-2 text-xs font-bold text-amber-600 dark:text-amber-400">
                   🔒 หมายเหตุ: เนื่องจากสิทธิ์ผู้ใช้ของคุณคือ {userProfile?.role?.replace('_', ' ') || 'Guest'} หน้านี้จึงแสดงผลเพื่อดูสถิติได้อย่างเดียว (แก้ไขไม่ได้) หากต้องการเพิ่ม/แก้ไขหมวดหมู่หลักกรุณาติดต่อทีม Super Admin หรือ System Admin
@@ -663,7 +663,7 @@ export default function CategoriesPage() {
 
                 {/* Description */}
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed line-clamp-3">
-                  {language === 'th' ? 'กลุ่มสำหรับแชตที่ AI ไม่สามารถจำแนกลงในหมวดหมู่หลักทั้ง 4 ด้านข้างต้นได้ พนักงานจะเป็นผู้เข้ามาพิจารณาสร้างหมวดหมู่ใหม่เป็นกรณีพิเศษ' : 'Chats that AI cannot categorize into the main mapped categories. Admins will manually triage or setup a new category.'}
+                  {language === 'th' ? 'กลุ่มสำหรับแชตที่ Sift AI ไม่สามารถจำแนกลงในหมวดหมู่หลักด้านข้างต้นได้ พนักงานจะเป็นผู้เข้ามาพิจารณาสร้างหมวดหมู่ใหม่เป็นกรณีพิเศษ' : 'Chats that Sift AI cannot categorize into the main mapped categories. Admins will manually categorize or setup a new category.'}
                 </p>
               </div>
 

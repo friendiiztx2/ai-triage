@@ -32,8 +32,8 @@ export async function POST(
     const isConnectionRefused = err?.cause?.code === 'ECONNREFUSED' || err?.message?.includes('fetch failed');
     return NextResponse.json({
       error: isConnectionRefused
-        ? `ไม่สามารถเชื่อมต่อ AI Triage Backend ที่ ${backendUrl} ได้ (กรุณาตรวจสอบว่า Service ทำงานอยู่ที่พอร์ต 4000)`
-        : (err.message || 'เกิดข้อผิดพลาดในการประมวลผล AI Triage')
+        ? `ไม่สามารถเชื่อมต่อ Sift AI Backend ที่ ${backendUrl} ได้ (กรุณาตรวจสอบว่า Service ทำงานอยู่ที่พอร์ต 4000)`
+        : (err.message || 'เกิดข้อผิดพลาดในการประมวลผล Sift AI')
     }, { status: 502 });
   }
 }

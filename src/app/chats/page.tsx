@@ -247,15 +247,15 @@ function FloatingChatWindow({
         throw new Error(errData.error || `Server responded with status ${res.status}`);
       }
 
-      setTriageSuccess(language === 'th' ? 'วิเคราะห์ด้วย AI ซ้ำสำเร็จ' : 'AI Triage completed');
+      setTriageSuccess(language === 'th' ? 'วิเคราะห์ด้วย Sift AI ซ้ำสำเร็จ' : 'Sift AI completed');
       setTimeout(() => setTriageSuccess(null), 3500);
 
       // Re-fetch updated issues from Supabase
       await loadChatIssues();
       if (onSaved) onSaved();
     } catch (err: any) {
-      console.error('Failed to trigger AI triage:', err);
-      setTriageError(err.message || 'ไม่สามารถเรียก AI Triage ได้ กรุณาตรวจสอบว่า Service ที่พอร์ต 4000 เปิดทำงานอยู่');
+      console.error('Failed to trigger Sift AI:', err);
+      setTriageError(err.message || 'ไม่สามารถเรียก Sift AI ได้ กรุณาตรวจสอบว่า Service ที่พอร์ต 4000 เปิดทำงานอยู่');
     } finally {
       setRetryingTriage(false);
     }
@@ -825,10 +825,10 @@ function FloatingChatWindow({
                             </div>
                             <div className="space-y-1">
                               <div className="text-sm font-black text-indigo-900 dark:text-indigo-200 flex items-center justify-center gap-1.5">
-                                <span>⏳ กำลังวิเคราะห์ข้อมูลด้วย AI...</span>
+                                <span>⏳ กำลังวิเคราะห์ข้อมูลด้วย Sift AI...</span>
                               </div>
                               <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {language === 'th' ? 'ระบบ AI (Qwen 2.5 14B) กำลังประมวลผลแยกประเด็นปัญหา' : 'AI system (Qwen 2.5 14B) is analyzing and extracting issues'}
+                                {language === 'th' ? 'ระบบ Sift AI กำลังประมวลผลแยกประเด็นปัญหา' : 'Sift AI system is analyzing and extracting issues'}
                               </p>
                             </div>
 
@@ -846,7 +846,7 @@ function FloatingChatWindow({
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50"
                               >
                                 <RotateCcw size={13} className={retryingTriage ? 'animate-spin' : ''} />
-                                <span>{retryingTriage ? 'กำลังส่งคำขอ...' : '🔄 สั่งวิเคราะห์ด้วย AI ซ้ำ'}</span>
+                                <span>{retryingTriage ? 'กำลังส่งคำขอ...' : '🔄 สั่งวิเคราะห์ด้วย Sift AI ซ้ำ'}</span>
                               </button>
                               <button
                                 type="button"
@@ -885,7 +885,7 @@ function FloatingChatWindow({
                               }
                             </span>
                             <span className="text-[9px] text-slate-400 font-bold">
-                              {isSingleFallback ? 'ตาราง chats' : 'AI Qwen 2.5 14B'}
+                              {isSingleFallback ? 'ตาราง chats' : 'Sift AI Engine'}
                             </span>
                           </div>
 
@@ -1008,7 +1008,7 @@ function FloatingChatWindow({
                             })}
                           </div>
 
-                          {/* Action Toolbar: Re-run AI Triage & Save Changes Buttons */}
+                          {/* Action Toolbar: Re-run Sift AI & Save Changes Buttons */}
                           <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2">
                               <button
@@ -1016,10 +1016,10 @@ function FloatingChatWindow({
                                 onClick={handleTriggerTriage}
                                 disabled={retryingTriage}
                                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer disabled:opacity-50"
-                                title="ส่งคำขอวิเคราะห์ด้วย AI ใหม่ (POST http://localhost:4000/api/chats/[id]/triage)"
+                                title="ส่งคำขอวิเคราะห์ด้วย Sift AI ใหม่ (POST http://localhost:4000/api/chats/[id]/triage)"
                               >
                                 <RotateCcw size={13} className={retryingTriage ? 'animate-spin text-indigo-600' : ''} />
-                                <span>{retryingTriage ? (language === 'th' ? 'กำลังวิเคราะห์...' : 'Analyzing...') : (language === 'th' ? '🔄 วิเคราะห์ด้วย AI ซ้ำ' : '🔄 Re-run AI Triage')}</span>
+                                <span>{retryingTriage ? (language === 'th' ? 'กำลังวิเคราะห์...' : 'Analyzing...') : (language === 'th' ? '🔄 วิเคราะห์ด้วย Sift AI ซ้ำ' : '🔄 Re-run Sift AI')}</span>
                               </button>
 
                               {triageSuccess && (
@@ -1042,10 +1042,10 @@ function FloatingChatWindow({
                                 onClick={handleApproveAI}
                                 disabled={updating || userProfile?.role === 'agent'}
                                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm hover:shadow-md shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
-                                title="อนุมัติตามที่ AI คัดแยกทันที และทำเครื่องหมายว่าแยกแยะแล้ว"
+                                title="อนุมัติตามที่ Sift AI คัดแยกทันที และทำเครื่องหมายว่าแยกแยะแล้ว"
                               >
                                 <Check size={14} strokeWidth={3} />
-                                <span>{language === 'th' ? '✓ อนุมัติตาม AI ทันที' : '✓ AI Approve'}</span>
+                                <span>{language === 'th' ? '✓ อนุมัติตาม Sift AI ทันที' : '✓ Sift AI Approve'}</span>
                               </button>
 
                               {/* Regular Save Changes */}
@@ -1133,10 +1133,10 @@ function FloatingChatWindow({
                         </div>
                       </div>
 
-                      {/* SECTION 3: Triage History Timeline */}
+                      {/* SECTION 3: Sift AI History Timeline */}
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
                         <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                          📜 ประวัติการแก้ไข (Triage History Timeline)
+                          📜 ประวัติการแก้ไข (Sift AI History Timeline)
                         </h4>
                         {(() => {
                           let history: any[] = [];
@@ -1171,7 +1171,7 @@ function FloatingChatWindow({
                               <div className="relative text-xs">
                                 <div className="absolute -left-[20.5px] top-1 w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 ring-2 ring-slate-100" />
                                 <div className="text-[9px] text-slate-400 font-bold">{chat.created_at ? new Date(chat.created_at).toLocaleString('th-TH') : '-'}</div>
-                                <div className="text-slate-500 font-bold mt-0.5">{language === 'th' ? 'โดย: ระบบ AI (Gemini Triage)' : 'By: AI System (Gemini Triage)'}</div>
+                                <div className="text-slate-500 font-bold mt-0.5">{language === 'th' ? 'โดย: ระบบ Sift AI' : 'By: Sift AI System'}</div>
                                 <div className="text-[10px] text-slate-550 mt-0.5">
                                   {language === 'th' ? 'หมวดหมู่เริ่มต้น:' : 'Initial Category:'} {getCategoryLabel(categories.find((c: any) => c.id === chat.category_id || getBaseCatId(c.id) === getBaseCatId(chat.category_id)) || chat.category_id, language)}
                                 </div>
@@ -1582,7 +1582,7 @@ export default function ChatsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ai-triage-${dateFilter}-${new Date().toISOString().substring(0, 10)}.csv`;
+    a.download = `sift-ai-${dateFilter}-${new Date().toISOString().substring(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1715,7 +1715,7 @@ export default function ChatsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             admin_name: user.name || 'Admin',
-            admin_email: user.email || 'admin@aitriage.com',
+            admin_email: user.email || 'admin@siftai.com',
             action: actionType,
             ...logPayload
           })

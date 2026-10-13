@@ -984,9 +984,9 @@ export default function OverviewPage() {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-purple-200/90 text-purple-900 dark:bg-purple-900/80 dark:text-purple-200 border border-purple-300 dark:border-purple-700 font-extrabold">
-                  AI DAILY INSIGHT & RECOMMENDATION
+                  SIFT AI DAILY INSIGHT & RECOMMENDATION
                 </span>
-                <span className="text-xs text-purple-900 dark:text-purple-300 font-extrabold">• วิเคราะห์สดประจำวัน</span>
+                <span className="text-xs text-purple-900 dark:text-purple-300 font-extrabold">• วิเคราะห์สดประจำวันด้วย Sift AI</span>
               </div>
               <h3 className="font-extrabold text-slate-950 dark:text-white text-base mt-1.5 leading-snug">
                 {stats.highPriority > 0

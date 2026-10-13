@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-// Model Context Protocol (MCP) Server Endpoint for AI Triage System
+// Model Context Protocol (MCP) Server Endpoint for Sift AI System
 // Allows external AI tools or agents to query triage status, get chat issues, and analyze SLA metrics.
 
 export async function GET(request: NextRequest) {
   return NextResponse.json({
-    name: 'AI Triage MCP Server',
+    name: 'Sift AI MCP Server',
     version: '1.0.0',
-    description: 'Model Context Protocol server for AI Triage ticket classification and status monitoring',
+    description: 'Model Context Protocol server for Sift AI ticket classification and status monitoring',
     endpoints: {
       tools: '/api/mcp',
     },

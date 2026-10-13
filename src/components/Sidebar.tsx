@@ -222,7 +222,7 @@ export default function Sidebar() {
             <div>
               <div className="flex items-center gap-1.5">
                 <h1 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-rose-950 to-slate-800 dark:from-white dark:via-rose-100 dark:to-slate-200 text-lg leading-none tracking-tight font-display">
-                  AI Triage
+                  Sift AI
                 </h1>
                 <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/20 uppercase tracking-widest border border-amber-300/40">
                   ENTERPRISE

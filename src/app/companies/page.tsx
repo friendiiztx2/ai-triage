@@ -155,8 +155,8 @@ export default function CompaniesPage() {
       {/* Title & Add Button */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display font-bold">จัดการข้อมูลบริษัท (Company Management)</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">ลงทะเบียนบริษัทใหม่พร้อมสร้าง Client Credentials และจัดหมวดหมู่อัตโนมัติ (เฉพาะ System Admin)</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display font-bold">จัดการข้อมูลบริษัท (Sift AI Company Management)</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">ลงทะเบียนบริษัทใหม่พร้อมสร้าง Client Credentials และจัดหมวดหมู่อัตโนมัติด้วย Sift AI (เฉพาะ System Admin)</p>
         </div>
         
         <button 

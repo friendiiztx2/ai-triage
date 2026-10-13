@@ -53,9 +53,9 @@ export default function ReportsPage() {
 
   // Dynamic Export History Logs
   const [exportHistory, setExportHistory] = useState<any[]>([
-    { id: 'EXP-9920', name: 'AI_Triage_Master_Report_today.xlsx', type: 'Excel 3 แท็บชีต (ภาพรวม/การเงิน/การตลาด)', date: new Date().toISOString(), size: '28.4 KB', status: 'ready', user: 'aor (Super Admin)' },
-    { id: 'EXP-8379', name: 'AI_Triage_Finance_Report_today.csv', type: 'รายงานการเงิน (รายการฝาก-ถอน)', date: new Date(Date.now() - 3600000).toISOString(), size: '5.2 KB', status: 'ready', user: 'aor (Super Admin)' },
-    { id: 'EXP-5161', name: 'AI_Triage_Marketing_Report_7days.csv', type: 'รายงานการตลาด (ยอดลูกค้าใหม่)', date: new Date(Date.now() - 86400000).toISOString(), size: '14.1 KB', status: 'ready', user: 'aor (Super Admin)' }
+    { id: 'EXP-9920', name: 'Sift_AI_Master_Report_today.xlsx', type: 'Excel 3 แท็บชีต (ภาพรวม/การเงิน/การตลาด)', date: new Date().toISOString(), size: '28.4 KB', status: 'ready', user: 'aor (Super Admin)' },
+    { id: 'EXP-8379', name: 'Sift_AI_Finance_Report_today.csv', type: 'รายงานการเงิน (รายการฝาก-ถอน)', date: new Date(Date.now() - 3600000).toISOString(), size: '5.2 KB', status: 'ready', user: 'aor (Super Admin)' },
+    { id: 'EXP-5161', name: 'Sift_AI_Marketing_Report_7days.csv', type: 'รายงานการตลาด (ยอดลูกค้าใหม่)', date: new Date(Date.now() - 86400000).toISOString(), size: '14.1 KB', status: 'ready', user: 'aor (Super Admin)' }
   ]);
 
   // Initialize session & load dependencies
@@ -381,7 +381,7 @@ export default function ReportsPage() {
 
     // Export Workbook File (.xlsx)
     const formattedDate = new Date().toISOString().split('T')[0];
-    const filename = `AI_Triage_Master_Report_${dateRange}_${formattedDate}.xlsx`;
+    const filename = `Sift_AI_Master_Report_${dateRange}_${formattedDate}.xlsx`;
     XLSX.writeFile(workbook, filename);
 
     // Save Export Log
@@ -416,11 +416,11 @@ export default function ReportsPage() {
 
     let csvHeaders: string[] = [];
     let rows: any[] = [];
-    let filePrefix = 'AI_Triage_Overall_Report';
+    let filePrefix = 'Sift_AI_Overall_Report';
     let typeNameTH = 'รายงานภาพรวมระบบ';
 
     if (targetType === 'finance') {
-      filePrefix = 'AI_Triage_Finance_Report';
+      filePrefix = 'Sift_AI_Finance_Report';
       typeNameTH = 'รายงานการเงิน (รายการฝาก-ถอน)';
       csvHeaders = [
         'Chat ID (รหัสแชต)',
@@ -462,7 +462,7 @@ export default function ReportsPage() {
         ];
       });
     } else if (targetType === 'marketing') {
-      filePrefix = 'AI_Triage_Marketing_Report';
+      filePrefix = 'Sift_AI_Marketing_Report';
       typeNameTH = 'รายงานการตลาด (ยอดลูกค้าใหม่)';
       csvHeaders = [
         'Chat ID (รหัสแชต)',
@@ -578,10 +578,10 @@ export default function ReportsPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display">
-            {language === 'th' ? 'ศูนย์ส่งออกรายงานการเงิน การตลาด & ภาพรวมระบบ' : 'Export Reports Center (Finance, Marketing & Executive)'}
+            {language === 'th' ? 'ศูนย์ส่งออกรายงานการเงิน การตลาด & ภาพรวมระบบ (Sift AI Reports Center)' : 'Sift AI Export Reports Center (Finance, Marketing & Executive)'}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            {language === 'th' ? 'เลือกส่งออกรายงานแบบไฟล์เดียวมีหลายแท็บชีต Excel หรือเลือกส่งออกไฟล์ CSV แยกตามแผนก' : 'Export reports as a multi-tab Excel workbook or individual CSV files for Finance & Marketing.'}
+            {language === 'th' ? 'เลือกส่งออกรายงาน Sift AI แบบไฟล์เดียวมีหลายแท็บชีต Excel หรือเลือกส่งออกไฟล์ CSV แยกตามแผนก' : 'Export Sift AI reports as a multi-tab Excel workbook or individual CSV files for Finance & Marketing.'}
           </p>
         </div>
         <button 

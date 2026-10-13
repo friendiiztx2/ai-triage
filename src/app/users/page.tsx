@@ -424,8 +424,8 @@ export default function UsersPage() {
       {/* Title & Add Button */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display font-bold">จัดการบัญชีผู้ใช้งาน (User Management)</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">บริหารสิทธิ์ความปลอดภัย กำหนดสิทธิ์ย่อยแยกรายฟังก์ชันด้วยระบบ Checklist Permissions</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display font-bold">จัดการบัญชีผู้ใช้งาน (Sift AI User Management)</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">บริหารสิทธิ์ความปลอดภัย กำหนดสิทธิ์ย่อยแยกรายฟังก์ชันในระบบ Sift AI ด้วย Checklist Permissions</p>
         </div>
         
         <button 

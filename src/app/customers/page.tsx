@@ -130,10 +130,10 @@ export default function CustomersPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display">
-            {language === 'th' ? 'บันทึกและจัดการทะเบียนลูกค้า (Customer 360 & Registry)' : 'Customer 360 & Registry'}
+            {language === 'th' ? 'บันทึกและจัดการทะเบียนลูกค้า (Sift AI Customer 360 & Registry)' : 'Sift AI Customer 360 & Registry'}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            {language === 'th' ? 'ค้นหาและเปรียบเทียบข้อมูลประวัติลูกค้าแบบเรียลไทม์' : 'Track customer portfolio and compare chat history'}
+            {language === 'th' ? 'ค้นหาและเปรียบเทียบข้อมูลประวัติลูกค้าในระบบ Sift AI แบบเรียลไทม์' : 'Track customer portfolio and compare Sift AI chat history'}
           </p>
         </div>
       </div>
