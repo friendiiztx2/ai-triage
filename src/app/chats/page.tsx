@@ -2516,7 +2516,7 @@ export default function ChatsPage() {
                         className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-1.5 py-2.5 whitespace-nowrap">
+                    <th className="px-2 py-2.5 w-[115px] min-w-[105px] max-w-[125px] whitespace-nowrap">
                       <div className="flex flex-col leading-tight">
                         <span>{language === 'th' ? 'แชทไอดี' : 'Chat ID'}</span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Chat ID)</span>
@@ -2552,7 +2552,7 @@ export default function ChatsPage() {
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Status)</span>
                       </div>
                     </th>
-                    <th className="px-2.5 py-2.5 w-[105px] min-w-[105px] whitespace-nowrap text-right">
+                    <th className="px-3 py-2.5 w-[115px] min-w-[110px] whitespace-nowrap text-right">
                       <div className="flex flex-col leading-tight items-end">
                         <span>{language === 'th' ? 'เวลา' : 'Time'}</span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Time)</span>
@@ -2582,8 +2582,13 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Chat ID */}
-                        <td className="px-2 py-3 font-mono text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                          {chat.id}
+                        <td className="px-2 py-3 w-[115px] max-w-[125px]">
+                          <span 
+                            className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-slate-750 block truncate cursor-help"
+                            title={`แชทไอดีเต็ม:\n${chat.id}`}
+                          >
+                            {chat.id && chat.id.length > 15 ? `${chat.id.slice(0, 7)}...${chat.id.slice(-4)}` : chat.id}
+                          </span>
                         </td>
 
                         {/* Customer */}
@@ -2700,13 +2705,13 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Time */}
-                        <td className="px-2 py-3 text-xs text-slate-500 dark:text-slate-400 font-semibold whitespace-nowrap text-right">
+                        <td className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 font-semibold whitespace-nowrap text-right w-[115px]">
                           {chat.created_at ? (
                             <div className="flex flex-col items-end leading-tight text-[11px]">
                               <span className="font-bold text-slate-700 dark:text-slate-200">
                                 {new Date(chat.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'numeric', year: '2-digit' })}
                               </span>
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
                                 {new Date(chat.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
                               </span>
                             </div>
