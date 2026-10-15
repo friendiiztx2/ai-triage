@@ -2587,28 +2587,17 @@ export default function ChatsPage() {
                         </td>
 
                         {/* Customer */}
-                        <td className="px-2 py-3 font-bold text-slate-800 dark:text-slate-200">
-                          <div>
-                            {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
+                        <td className="px-2 py-3 font-bold text-slate-800 dark:text-slate-200 min-w-[130px] max-w-[180px]">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="truncate" title={chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}>
+                              {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
+                            </span>
+                            {chat.tags && chat.tags.includes('#VIP') && (
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-955/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shrink-0 select-none">
+                                ⭐ VIP
+                              </span>
+                            )}
                           </div>
-                          {chat.tags && chat.tags.length > 0 && (
-                            <div className="flex items-center gap-1 flex-wrap mt-1 select-none">
-                              {chat.tags.map((tag: string, tidx: number) => {
-                                let badgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800';
-                                if (tag === '#VIP') badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50';
-                                else if (tag === '#ติดตามผล') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50';
-                                else if (tag === '#รอสลิป') badgeColor = 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50';
-                                else if (tag === '#ส่งเรื่องทีมเทคนิค') badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50';
-                                else if (tag === '#รอธนาคารแก้ไข') badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50';
-                                
-                                return (
-                                  <span key={tidx} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${badgeColor}`}>
-                                    {tag}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
                         </td>
                         
                         {/* Summary */}

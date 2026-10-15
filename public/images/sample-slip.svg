@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560" width="400" height="560">
+  <defs>
+    <linearGradient id="slipGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="400" height="560" rx="20" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+  
+  <!-- Header Green Banner -->
+  <path d="M 0 20 Q 0 0 20 0 L 380 0 Q 400 0 400 20 L 400 110 L 0 110 Z" fill="url(#slipGrad)"/>
+  
+  <!-- Checkmark Circle -->
+  <circle cx="200" cy="70" r="28" fill="#ffffff"/>
+  <path d="M 188 70 L 196 78 L 213 61" stroke="#059669" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <text x="200" y="140" font-family="'Segoe UI', Tahoma, sans-serif" font-size="18" font-weight="bold" fill="#0f172a" text-anchor="middle">โอนเงินสำเร็จ</text>
+  <text x="200" y="162" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" fill="#64748b" text-anchor="middle">14 ต.ค. 2569 - 18:02 น.</text>
+  
+  <!-- Amount -->
+  <text x="200" y="215" font-family="'Segoe UI', Tahoma, sans-serif" font-size="32" font-weight="900" fill="#047857" text-anchor="middle">฿ 1,500.00</text>
+  
+  <line x1="30" y1="240" x2="370" y2="240" stroke="#f1f5f9" stroke-width="2" stroke-dasharray="6 6"/>
+  
+  <!-- From -->
+  <text x="40" y="275" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" font-weight="bold" fill="#94a3b8">จาก</text>
+  <text x="40" y="295" font-family="'Segoe UI', Tahoma, sans-serif" font-size="14" font-weight="bold" fill="#1e293b">นายสมชาย ใจดี</text>
+  <text x="40" y="315" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" fill="#64748b">ธ.กสิกรไทย xxx-x-x1234-x</text>
+  
+  <!-- Arrow -->
+  <circle cx="200" cy="340" r="16" fill="#f8fafc" stroke="#cbd5e1"/>
+  <path d="M 200 332 L 200 348 M 195 343 L 200 348 L 205 343" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  
+  <!-- To -->
+  <text x="40" y="375" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" font-weight="bold" fill="#94a3b8">ไปยัง</text>
+  <text x="40" y="395" font-family="'Segoe UI', Tahoma, sans-serif" font-size="14" font-weight="bold" fill="#1e293b">SIFT AI ENTERTAINMENT CO.</text>
+  <text x="40" y="415" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" fill="#64748b">ธ.ไทยพาณิชย์ xxx-x-x9876-x</text>
+  
+  <line x1="30" y1="440" x2="370" y2="440" stroke="#f1f5f9" stroke-width="2"/>
+  
+  <!-- Details -->
+  <text x="40" y="470" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" fill="#64748b">เลขที่รายการ:</text>
+  <text x="360" y="470" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" font-weight="bold" fill="#334155" text-anchor="end">202610149876543210</text>
+  
+  <text x="40" y="495" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" fill="#64748b">ค่าธรรมเนียม:</text>
+  <text x="360" y="495" font-family="'Segoe UI', Tahoma, sans-serif" font-size="12" font-weight="bold" fill="#334155" text-anchor="end">0.00 บาท</text>
+  
+  <!-- QR Mockup bottom -->
+  <rect x="175" y="510" width="50" height="30" rx="4" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="200" y="530" font-family="'Segoe UI', Tahoma, sans-serif" font-size="10" font-weight="bold" fill="#64748b" text-anchor="middle">[ QR SCAN ]</text>
+</svg>
