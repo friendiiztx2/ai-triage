@@ -71,12 +71,21 @@ export async function PUT(
       updateData.permissions = permissions;
     }
 
-    // Verify company accessibility for super_admin
-    if (requester.role === 'super_admin') {
-      const { data: targetUser } = await supabase.from('users').select('company_id').eq('id', id).maybeSingle();
-      const allowedIds = (requester.company_id || '').split(',').filter(Boolean);
-      if (targetUser && allowedIds.length > 0 && !allowedIds.includes(targetUser.company_id)) {
+    // Verify company accessibility for non-system_admin
+    if (requester.role !== 'system_admin') {
+      const { data: targetUser } = await supabase.from('users').select('company_id, role').eq('id', id).maybeSingle();
+      if (!targetUser) {
+        return NextResponse.json({ error: 'ไม่พบผู้ใช้ที่ต้องการแก้ไข' }, { status: 404 });
+      }
+      if (targetUser.role === 'system_admin') {
+        return NextResponse.json({ error: 'คุณไม่มีสิทธิ์แก้ไข System Admin' }, { status: 403 });
+      }
+      const allowedIds = (requester.company_id || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (targetUser.company_id && !allowedIds.includes(targetUser.company_id)) {
         return NextResponse.json({ error: 'คุณไม่มีสิทธิ์แก้ไขผู้ใช้งานนอกเหนือจากบริษัทตนเอง' }, { status: 403 });
+      }
+      if (role === 'system_admin') {
+        return NextResponse.json({ error: 'คุณไม่มีสิทธิ์กำหนดบทบาทเป็น System Admin' }, { status: 403 });
       }
     }
 

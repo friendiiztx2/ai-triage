@@ -3,16 +3,16 @@ import { supabaseAdmin, supabase } from '@/lib/supabase';
 import { KNOWN_CATEGORY_NAMES, getBaseCatId, getCategoryLabel } from '@/lib/categories';
 
 const defaultCategories = [
-  { id: 'login_issue', name: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน', name_th: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน', name_en: 'Login Issue', description: 'ลืมรหัสผ่าน, ไม่ได้รับ OTP, บัญชีถูกล็อก', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'ui_rendering_issue', name: 'ปัญหากราฟิก/การแสดงผลเว็บ', name_th: 'ปัญหากราฟิก/การแสดงผลเว็บ', name_en: 'UI Rendering Issue', description: 'ภาพไม่โหลด, ปุ่มกดไม่ได้, หน้าจอกราฟิกค้าง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'deposit_withdrawal', name: 'การเงินและการชำระเงิน', name_th: 'การเงินและการชำระเงิน', name_en: 'Deposit & Withdrawal', description: 'โอนเงินแล้วยอดไม่ปรับ, รอนานเกินเวลา, สลิปไม่ตรง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'promo_bonus', name: 'โปรโมชั่นและโบนัส', name_th: 'โปรโมชั่นและโบนัส', name_en: 'Promo & Bonus', description: 'ขอรับโบนัสฟรี, สอบถามยอดคืนยอดเสีย, โปรโมชั่น', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'account_security', name: 'ความปลอดภัยของบัญชี', name_th: 'ความปลอดภัยของบัญชี', name_en: 'Account Security', description: 'ขอเปลี่ยนเบอร์โทรศัพท์, ตรวจสอบการเข้าถึง', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'access_blocked', name: 'เข้าหน้าเว็บไม่ได้/ลิงก์เสีย', name_th: 'เข้าหน้าเว็บไม่ได้/ลิงก์เสีย', name_en: 'Access Blocked', description: 'เข้าหน้าเว็บไม่ได้, ขึ้น 502 Bad Gateway', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'game_issue', name: 'ปัญหาเกี่ยวกับตัวเกม', name_th: 'ปัญหาเกี่ยวกับตัวเกม', name_en: 'Game Issue', description: 'เกมค้าง, หลุดกลางคัน, API timeout', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'interaction_lag', name: 'ระบบการทำงานล่าช้า', name_th: 'ระบบการทำงานล่าช้า', name_en: 'System Lag', description: 'การตอบสนองช้า, ปุ่มกดไม่ติด', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'vip_privilege', name: 'สิทธิประโยชน์ระดับ VIP', name_th: 'สิทธิประโยชน์ระดับ VIP', name_en: 'VIP Privileges', description: 'บริการสมาชิกพิเศษ VIP', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' },
-  { id: 'other', name: 'เรื่องอื่นๆ', name_th: 'เรื่องอื่นๆ', name_en: 'Other Inquiries', description: 'สอบถามข้อมูลทั่วไป', company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' }
+  { id: 'login_issue', name: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน', name_th: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน', name_en: 'Login Issue', description: 'ลืมรหัสผ่าน, ไม่ได้รับ OTP, บัญชีถูกล็อก', company_id: null },
+  { id: 'ui_rendering_issue', name: 'ปัญหากราฟิก/การแสดงผลเว็บ', name_th: 'ปัญหากราฟิก/การแสดงผลเว็บ', name_en: 'UI Rendering Issue', description: 'ภาพไม่โหลด, ปุ่มกดไม่ได้, หน้าจอกราฟิกค้าง', company_id: null },
+  { id: 'deposit_withdrawal', name: 'การเงินและการชำระเงิน', name_th: 'การเงินและการชำระเงิน', name_en: 'Deposit & Withdrawal', description: 'โอนเงินแล้วยอดไม่ปรับ, รอนานเกินเวลา, สลิปไม่ตรง', company_id: null },
+  { id: 'promo_bonus', name: 'โปรโมชั่นและโบนัส', name_th: 'โปรโมชั่นและโบนัส', name_en: 'Promo & Bonus', description: 'ขอรับโบนัสฟรี, สอบถามยอดคืนยอดเสีย, โปรโมชั่น', company_id: null },
+  { id: 'account_security', name: 'ความปลอดภัยของบัญชี', name_th: 'ความปลอดภัยของบัญชี', name_en: 'Account Security', description: 'ขอเปลี่ยนเบอร์โทรศัพท์, ตรวจสอบการเข้าถึง', company_id: null },
+  { id: 'access_blocked', name: 'เข้าหน้าเว็บไม่ได้/ลิงก์เสีย', name_th: 'เข้าหน้าเว็บไม่ได้/ลิงก์เสีย', name_en: 'Access Blocked', description: 'เข้าหน้าเว็บไม่ได้, ขึ้น 502 Bad Gateway', company_id: null },
+  { id: 'game_issue', name: 'ปัญหาเกี่ยวกับตัวเกม', name_th: 'ปัญหาเกี่ยวกับตัวเกม', name_en: 'Game Issue', description: 'เกมค้าง, หลุดกลางคัน, API timeout', company_id: null },
+  { id: 'interaction_lag', name: 'ระบบการทำงานล่าช้า', name_th: 'ระบบการทำงานล่าช้า', name_en: 'System Lag', description: 'การตอบสนองช้า, ปุ่มกดไม่ติด', company_id: null },
+  { id: 'vip_privilege', name: 'สิทธิประโยชน์ระดับ VIP', name_th: 'สิทธิประโยชน์ระดับ VIP', name_en: 'VIP Privileges', description: 'บริการสมาชิกพิเศษ VIP', company_id: null },
+  { id: 'other', name: 'เรื่องอื่นๆ', name_th: 'เรื่องอื่นๆ', name_en: 'Other Inquiries', description: 'สอบถามข้อมูลทั่วไป', company_id: null }
 ];
 
 interface CacheEntry {

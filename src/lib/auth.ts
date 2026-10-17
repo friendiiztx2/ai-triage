@@ -82,11 +82,11 @@ export function verifyApiAuth(request: NextRequest, allowedRoles?: string[]): { 
 /**
  * Resolves active company context for Multi-Tenant Isolation
  */
-export function getCompanyContext(request: NextRequest, session?: UserSession | null): string {
+export function getCompanyContext(request: NextRequest, session?: UserSession | null): string | null {
   const cookieCompany = request.cookies.get('company_id')?.value;
   if (cookieCompany) return cookieCompany;
 
   if (session && session.company_id) return session.company_id;
 
-  return '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2'; // Default fallback company ID
+  return null;
 }

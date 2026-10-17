@@ -43,8 +43,8 @@ export default function SchemaPage() {
       {/* Page Title & Status */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display">โครงสร้างข้อมูลในฐาน (Database Schema)</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">เครื่องมือตรวจสอบคอลัมน์ข้อมูลแถวแรกแบบเรียลไทม์ผ่าน API Server Proxy</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100 tracking-tight font-display">โครงสร้างข้อมูลในฐาน (Database Schema)</h1>
+          <p className="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm mt-0.5 font-normal">เครื่องมือตรวจสอบคอลัมน์ข้อมูลแถวแรกแบบเรียลไทม์ผ่าน API Server Proxy</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export default function SchemaPage() {
           )}
           <button 
             onClick={fetchSchemaData} 
-            className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 p-2.5 rounded-xl shadow-sm transition-all cursor-pointer"
+            className="backdrop-blur-md bg-white/70 dark:bg-neutral-900/70 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-800/80 text-neutral-700 dark:text-neutral-200 p-2.5 rounded-xl shadow-xs transition-all cursor-pointer"
             title="โหลดข้อมูลใหม่"
           >
             <RefreshCw size={16} />
@@ -74,15 +74,15 @@ export default function SchemaPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800">
         {(['chats', 'customers', 'categories'] as const).map((table) => (
           <button
             key={table}
             onClick={() => setActiveTable(table)}
             className={`px-6 py-3 border-b-2 text-sm font-semibold transition-all cursor-pointer ${
               activeTable === table
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 hover:text-slate-750 dark:hover:text-slate-350'
+                ? 'border-[#1a73e8] text-[#1a73e8] dark:text-blue-400'
+                : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
             }`}
           >
             ตาราง: {table}
@@ -91,45 +91,45 @@ export default function SchemaPage() {
       </div>
 
       {/* Content */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-250">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850/50 flex items-center justify-between">
-          <h2 className="font-bold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
-            <Table size={18} className="text-slate-400 dark:text-slate-500" />
-            ตาราง: <span className="text-indigo-600 dark:text-indigo-400 font-mono">{activeTable}</span>
+      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 rounded-2xl shadow-xs overflow-hidden transition-all duration-250">
+        <div className="p-6 border-b border-neutral-100 dark:border-neutral-800/60 bg-neutral-50/70 dark:bg-neutral-900/60 flex items-center justify-between">
+          <h2 className="font-bold text-neutral-800 dark:text-neutral-100 text-base flex items-center gap-2">
+            <Table size={18} className="text-neutral-400 dark:text-neutral-500" />
+            ตาราง: <span className="text-[#1a73e8] dark:text-blue-400 font-mono">{activeTable}</span>
           </h2>
-          <span className="text-xs text-slate-400 dark:text-slate-550 font-medium">แสดงข้อมูลฟิลด์แถวแรก</span>
+          <span className="text-xs text-neutral-400 dark:text-neutral-500 font-medium">แสดงข้อมูลฟิลด์แถวแรก</span>
         </div>
 
         <div className="p-6">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400 dark:text-slate-500">
-              <RefreshCw size={32} className="animate-spin text-indigo-600 dark:text-indigo-400" />
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-neutral-400 dark:text-neutral-500">
+              <RefreshCw size={32} className="animate-spin text-[#1a73e8]" />
               <span className="text-sm font-medium">กำลังโหลดข้อมูลโครงสร้าง...</span>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-16 text-center max-w-md mx-auto gap-4">
-              <div className="bg-rose-50 dark:bg-rose-950/30 text-rose-500 p-4 rounded-full">
+              <div className="bg-rose-50 dark:bg-rose-955/30 text-rose-500 p-4 rounded-full">
                 <XCircle size={32} />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">ดึงข้อมูลล้มเหลว</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{error}</p>
-                <p className="text-slate-400 dark:text-slate-550 text-xs mt-2 font-mono bg-slate-50 dark:bg-slate-900 p-2 border border-slate-100 dark:border-slate-800 rounded-lg">
+                <h3 className="font-bold text-neutral-800 dark:text-neutral-100 text-lg">ดึงข้อมูลล้มเหลว</h3>
+                <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">{error}</p>
+                <p className="text-neutral-400 dark:text-neutral-500 text-xs mt-2 font-mono bg-neutral-50 dark:bg-neutral-900 p-2 border border-neutral-200 dark:border-neutral-800 rounded-lg">
                   โปรดตรวจสอบว่าได้ตั้งค่า API URL และ anon key ใน .env ถูกต้อง และรัน Supabase ปลดล็อก RLS แล้ว
                 </p>
               </div>
-              <button onClick={fetchSchemaData} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition shadow-lg shadow-indigo-100 dark:shadow-none cursor-pointer">
+              <button onClick={fetchSchemaData} className="bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-xs px-4 py-2 rounded-lg transition shadow-xs cursor-pointer">
                 ลองอีกครั้ง
               </button>
             </div>
           ) : !schemaData ? (
             <div className="flex flex-col items-center justify-center py-20 text-center max-w-md mx-auto gap-3">
-              <div className="bg-slate-50 dark:bg-slate-850 p-4 rounded-full text-slate-400">
+              <div className="bg-neutral-100 dark:bg-neutral-800 p-4 rounded-full text-neutral-400">
                 <Database size={32} />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">เชื่อมต่อตารางได้ แต่ไม่มีข้อมูล</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                <h3 className="font-bold text-neutral-800 dark:text-neutral-100 text-base">เชื่อมต่อตารางได้ แต่ไม่มีข้อมูล</h3>
+                <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">
                   พบตาราง <code className="font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 rounded">{activeTable}</code> ในฐานข้อมูล แต่ไม่มีข้อมูลเลยสักแถวเดียวครับ รบกวนป้อนข้อมูลจำลองลงตารางก่อนครับ
                 </p>
               </div>
@@ -137,27 +137,27 @@ export default function SchemaPage() {
           ) : (
             <div className="space-y-6">
               {/* Field mapping table */}
-              <div className="border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-inner">
+              <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-inner">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-850/50 border-b border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold">
-                      <th className="px-5 py-3 flex items-center gap-1.5"><Key size={14} className="text-slate-400" /> ชื่อคอลัมน์ (Column Name)</th>
+                    <tr className="bg-neutral-50/70 dark:bg-neutral-900/60 border-b border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 font-bold">
+                      <th className="px-5 py-3 flex items-center gap-1.5"><Key size={14} className="text-neutral-400" /> ชื่อคอลัมน์ (Column Name)</th>
                       <th className="px-5 py-3">ประเภทข้อมูล (Data Type)</th>
                       <th className="px-5 py-3">ตัวอย่างข้อมูลจริง (Sample Value)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                     {Object.entries(schemaData).map(([key, val]) => (
-                      <tr key={key} className="hover:bg-slate-50 dark:hover:bg-slate-850/30 transition-colors">
+                      <tr key={key} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40 transition-colors">
                         <td className="px-5 py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">{key}</td>
-                        <td className="px-5 py-3 text-slate-500 dark:text-slate-400 font-mono text-xs">
+                        <td className="px-5 py-3 text-neutral-500 dark:text-neutral-400 font-mono text-xs">
                           {val === null ? 'unknown' : typeof val}
                         </td>
-                        <td className="px-5 py-3 text-slate-700 dark:text-slate-350">
+                        <td className="px-5 py-3 text-neutral-700 dark:text-neutral-300">
                           {val === null ? (
-                            <span className="text-slate-400 italic">null</span>
+                            <span className="text-neutral-400 italic">null</span>
                           ) : typeof val === 'object' ? (
-                            <pre className="text-xs bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 p-2 rounded-lg max-w-lg overflow-x-auto text-slate-700 dark:text-slate-300">
+                            <pre className="text-xs bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200 dark:border-neutral-800 p-2 rounded-lg max-w-lg overflow-x-auto text-neutral-700 dark:text-neutral-300">
                               {JSON.stringify(val, null, 2)}
                             </pre>
                           ) : (
@@ -172,8 +172,8 @@ export default function SchemaPage() {
 
               {/* Raw JSON panel */}
               <div>
-                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-3">ข้อมูลแถวแรกแบบ Raw JSON</h3>
-                <pre className="text-xs bg-slate-900 dark:bg-slate-950 text-slate-300 dark:text-slate-400 border border-slate-950 dark:border-slate-800 p-4 rounded-xl overflow-x-auto font-mono max-h-[350px] shadow-sm">
+                <h3 className="font-bold text-neutral-800 dark:text-neutral-100 text-sm mb-3">ข้อมูลแถวแรกแบบ Raw JSON</h3>
+                <pre className="text-xs bg-neutral-900 dark:bg-neutral-950 text-neutral-300 dark:text-neutral-400 border border-neutral-800 p-4 rounded-xl overflow-x-auto font-mono max-h-[350px] shadow-sm">
                   {JSON.stringify(schemaData, null, 2)}
                 </pre>
               </div>

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Sarabun } from "next/font/google";
-import Sidebar from "@/components/Sidebar";
-import GlobalNotifier from "@/components/GlobalNotifier";
 import ThemeInitializer from "@/components/ThemeInitializer";
 import { LanguageProvider } from "@/components/LanguageContext";
+import AppShell from "@/components/layout/AppShell";
 import "./globals.css";
 
 const inter = Inter({
@@ -36,20 +35,9 @@ export default function RootLayout({
       <head>
         <ThemeInitializer />
       </head>
-      <body className="font-sans h-screen overflow-hidden flex bg-slate-50 dark:bg-slate-955 text-slate-805 dark:text-slate-100 transition-colors duration-250">
+      <body className="font-sans h-screen overflow-hidden antialiased">
         <LanguageProvider>
-          {/* Sidebar Navigation */}
-          <Sidebar />
-          
-          {/* Global Realtime Notifier */}
-          <GlobalNotifier />
-          
-          {/* Main Content Area */}
-          <div className="flex-1 h-screen overflow-y-auto">
-            <main className="p-8 md:p-10 max-w-7xl mx-auto w-full">
-              {children}
-            </main>
-          </div>
+          <AppShell>{children}</AppShell>
         </LanguageProvider>
       </body>
     </html>

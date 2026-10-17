@@ -9,7 +9,7 @@ export async function saveAuditLog(action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOG
     const parsed = JSON.parse(savedSession);
     const body = {
       user_id: parsed.id || parsed.user_id || parsed.email || 'unknown',
-      company_id: parsed.companyId || parsed.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+      company_id: parsed.companyId || parsed.company_id || (typeof document !== 'undefined' ? (document.cookie.match(/(?:^|; )company_id=([^;]*)/)?.[1] || null) : null),
       admin_name: parsed.name || 'Unknown Admin',
       admin_email: parsed.email || 'unknown',
       action,
@@ -21,7 +21,8 @@ export async function saveAuditLog(action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOG
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      keepalive: true
     });
   } catch (err) {
     console.error('Failed to save audit log action:', err);

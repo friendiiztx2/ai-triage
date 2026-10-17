@@ -46,47 +46,17 @@ export async function GET(request: NextRequest) {
     // 2. Count real-time chats per customer_id
     const chatCounts: Record<string, number> = {};
     chatsData.forEach((c: any) => {
-      const cid = c.customer_id || 'cust-003';
-      chatCounts[cid] = (chatCounts[cid] || 0) + 1;
-    });
-
-    // 3. Known default customer dictionary (fallback details)
-    const knownCustomerProfiles: Record<string, any> = {
-      'cust-003': {
-        id: 'cust-003',
-        name: 'Anan (อนันต์)',
-        email: 'anan.c@example.com',
-        phone: '0834567890',
-        tier: 'VIP',
-        risk_level: 'low',
-        created_at: '2026-07-24T06:35:21Z'
-      },
-      'cust-001': {
-        id: 'cust-001',
-        name: 'Somchai (สมชาย)',
-        email: 'somchai@example.com',
-        phone: '0812345678',
-        tier: 'Regular',
-        risk_level: 'low',
-        created_at: '2026-07-09T08:16:56Z'
-      },
-      'cust-002': {
-        id: 'cust-002',
-        name: 'Somsri (สมศรี)',
-        email: 'somsri@example.com',
-        phone: '0823456789',
-        tier: 'Regular',
-        risk_level: 'low',
-        created_at: '2026-07-09T08:16:56Z'
+      if (c.customer_id) {
+        chatCounts[c.customer_id] = (chatCounts[c.customer_id] || 0) + 1;
       }
-    };
+    });
 
     const customerMap = new Map<string, any>();
 
     // Add DB customers
     dbCusts.forEach((c: any) => {
       const cid = c.id;
-      const count = chatCounts[cid] || c.total_chats || (cid === 'cust-003' ? 267 : (cid === 'cust-001' ? 20 : 1));
+      const count = chatCounts[cid] || c.total_chats || 0;
       customerMap.set(cid, {
         ...c,
         total_chats: count
@@ -96,28 +66,15 @@ export async function GET(request: NextRequest) {
     // Ensure all customer_ids found in chats table are included
     Object.keys(chatCounts).forEach((cid) => {
       if (!customerMap.has(cid)) {
-        const base = knownCustomerProfiles[cid] || {
+        customerMap.set(cid, {
           id: cid,
           name: `ลูกค้า #${cid}`,
-          email: `${cid}@example.com`,
-          phone: '0810000000',
+          email: '',
+          phone: '',
           tier: 'Regular',
           risk_level: 'low',
-          created_at: new Date().toISOString()
-        };
-        customerMap.set(cid, {
-          ...base,
+          created_at: new Date().toISOString(),
           total_chats: chatCounts[cid]
-        });
-      }
-    });
-
-    // Ensure all known defaults (cust-001, cust-002, cust-003) are present if missing
-    Object.keys(knownCustomerProfiles).forEach((cid) => {
-      if (!customerMap.has(cid)) {
-        customerMap.set(cid, {
-          ...knownCustomerProfiles[cid],
-          total_chats: chatCounts[cid] || (cid === 'cust-003' ? 267 : (cid === 'cust-001' ? 20 : 1))
         });
       }
     });
@@ -152,37 +109,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (err: any) {
     clearTimeout(timeoutId);
-    return NextResponse.json([
-      {
-        id: 'cust-003',
-        name: 'Anan (อนันต์)',
-        email: 'anan.c@example.com',
-        phone: '0834567890',
-        tier: 'VIP',
-        risk_level: 'low',
-        total_chats: 267,
-        created_at: '2026-07-24T06:35:21Z'
-      },
-      {
-        id: 'cust-001',
-        name: 'Somchai (สมชาย)',
-        email: 'somchai@example.com',
-        phone: '0812345678',
-        tier: 'Regular',
-        risk_level: 'low',
-        total_chats: 20,
-        created_at: '2026-07-09T08:16:56Z'
-      },
-      {
-        id: 'cust-002',
-        name: 'Somsri (สมศรี)',
-        email: 'somsri@example.com',
-        phone: '0823456789',
-        tier: 'Regular',
-        risk_level: 'low',
-        total_chats: 1,
-        created_at: '2026-07-09T08:16:56Z'
-      }
-    ]);
+    console.error('Customers API error:', err);
+    return NextResponse.json([]);
   }
 }

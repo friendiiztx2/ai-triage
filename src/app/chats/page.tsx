@@ -1,1256 +1,42 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/components/LanguageContext';
-import Link from 'next/link';
-import { 
-  Search, Filter, Clock, AlertTriangle, MessageSquare, 
-  User, Mail, Phone, Calendar, RefreshCw, ChevronRight, ChevronLeft,
-  CheckCircle, ArrowLeft, Download, Copy, Sparkles, BookOpen, Check, X, Minus,
-  FileSpreadsheet, RotateCcw
-} from 'lucide-react';
-import LanguageToggle from '@/components/LanguageToggle';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
-import { playAlertTone, isSoundEnabled } from '@/lib/audio';
-import { supabase } from '@/lib/supabase';
-import { getCategoryLabel, getBaseCatId, formatCategoryLabel, KNOWN_CATEGORY_NAMES } from '@/lib/categories';
-
-function getTriageDuration(id: string): string {
-  if (!id) return '0.5';
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash << 5) - hash + id.charCodeAt(i);
-    hash |= 0;
-  }
-  const val = 0.4 + (Math.abs(hash) % 8) / 10;
-  return val.toFixed(1);
-}
-
-// Formats priority string to matching mockup text (Thai + English parenthetical)
-function formatPriorityLabel(priority: string) {
-  const p = priority.trim().toLowerCase();
-  if (p === 'urgent' || p === 'ด่วนที่สุด' || p === 'เร่งด่วน') return 'เร่งด่วน (Urgent)';
-  if (p === 'high' || p === 'ด่วนสูง' || p === 'สูง') return 'สูง (High)';
-  if (p === 'medium' || p === 'ปานกลาง') return 'ปานกลาง (Medium)';
-  if (p === 'low' || p === 'ด่วนน้อย' || p === 'ต่ำ') return 'ต่ำ (Low)';
-  return priority;
-}
-
-// Renders left side bullet icons matching mockup
-function getIssueIcon(department: string, category: string) {
-  const dept = department.toLowerCase();
-  const cat = category.toLowerCase();
-  
-  if (dept.includes('finance') || dept.includes('บัญชี') || dept.includes('เงิน') || cat.includes('deposit') || cat.includes('withdraw') || cat.includes('โอน')) {
-    return (
-      <div className="w-7 h-7 rounded-full bg-purple-50 dark:bg-purple-955/40 flex items-center justify-center text-purple-650 dark:text-purple-400 font-extrabold text-sm border border-purple-200/50 dark:border-purple-900/50 shrink-0 select-none">
-        $
-      </div>
-    );
-  }
-  
-  if (dept.includes('developer') || dept.includes('tech') || dept.includes('ระบบ') || cat.includes('freeze') || cat.includes('page') || cat.includes('button') || cat.includes('ค้าง')) {
-    return (
-      <div className="w-7 h-7 rounded-full bg-rose-50 dark:bg-rose-955/40 flex items-center justify-center text-rose-600 dark:text-rose-455 font-extrabold text-sm border border-rose-200/50 dark:border-rose-900/30 shrink-0 select-none">
-        ★
-      </div>
-    );
-  }
-
-  // Support / Generic
-  return (
-    <div className="w-7 h-7 rounded-full bg-blue-50 dark:bg-blue-955/40 flex items-center justify-center text-blue-600 dark:text-blue-455 font-extrabold text-sm border border-blue-200/50 dark:border-blue-900/30 shrink-0 select-none">
-      ⓘ
-    </div>
-  );
-}
-
-// ================= FLOATING CHAT WINDOW COMPONENT =================
-// ================= FLOATING CHAT WINDOW COMPONENT (UNIFIED VIEW - NO TABS) =================
-function FloatingChatWindow({ 
-  chat, 
-  initialX, 
-  initialY, 
-  initialZIndex, 
-  categories, 
-  userProfile, 
-  allChats,
-  onClose, 
-  onFocus, 
-  onSaved,
-  onPositionChange,
-  onUpdateTags,
-  onOpenChat
-}: any) {
-  const { language, t } = useLanguage();
-  const [x, setX] = useState(initialX);
-  const [y, setY] = useState(initialY);
-  const [width, setWidth] = useState(880);
-  const [height, setHeight] = useState(640);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
-
-  if (!chat) return null;
-
-  // Hover Zoom State for Images
-  const [hoveredImg, setHoveredImg] = useState<string | null>(null);
-
-  const [customerInfo, setCustomerInfo] = useState<any>(null);
-  const [chatIssues, setChatIssues] = useState<any[]>([]);
-  const [loadingIssues, setLoadingIssues] = useState<boolean>(true);
-  const [retryingTriage, setRetryingTriage] = useState<boolean>(false);
-  const [triageError, setTriageError] = useState<string | null>(null);
-  const [triageSuccess, setTriageSuccess] = useState<string | null>(null);
-  const [editIssues, setEditIssues] = useState<Record<string, { category_id: string; priority: string }>>({});
-  
-  const [editCategory, setEditCategory] = useState(chat?.category_id || '');
-  const [editPriority, setEditPriority] = useState(chat?.priority || 'low');
-  
-  // Custom Tags State
-  const [tags, setTags] = useState<string[]>(chat?.tags || []);
-  const [customTagInput, setCustomTagInput] = useState('');
-  
-  const [updating, setUpdating] = useState(false);
-  const [copiedId, setCopiedId] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
-  // Inline tag editing state
-  const [editingTagIndex, setEditingTagIndex] = useState<number | null>(null);
-  const [editingTagValue, setEditingTagValue] = useState('');
-
-  const handleStartEditTag = (index: number, currentVal: string) => {
-    setEditingTagIndex(index);
-    setEditingTagValue(currentVal);
-  };
-
-  const handleSaveEditTag = (index: number) => {
-    if (!editingTagValue.trim()) return;
-    let formatted = editingTagValue.trim();
-    if (!formatted.startsWith('#')) formatted = '#' + formatted;
-    
-    const nextTags = [...tags];
-    nextTags[index] = formatted;
-    setTags(nextTags);
-    if (onUpdateTags) onUpdateTags(chat.id, nextTags);
-    setEditingTagIndex(null);
-  };
-
-  const handleTogglePresetTag = (tagName: string) => {
-    let nextTags: string[];
-    if (tags.includes(tagName)) {
-      nextTags = tags.filter(t => t !== tagName);
-    } else {
-      nextTags = [...tags, tagName];
-    }
-    setTags(nextTags);
-    if (onUpdateTags) onUpdateTags(chat.id, nextTags);
-  };
-
-  const handleRemoveTag = (tagName: string) => {
-    const nextTags = tags.filter(t => t !== tagName);
-    setTags(nextTags);
-    if (onUpdateTags) onUpdateTags(chat.id, nextTags);
-  };
-
-  const handleAddCustomTag = () => {
-    if (!customTagInput.trim()) return;
-    let formatted = customTagInput.trim();
-    if (!formatted.startsWith('#')) formatted = '#' + formatted;
-    if (!tags.includes(formatted)) {
-      const nextTags = [...tags, formatted];
-      setTags(nextTags);
-      if (onUpdateTags) onUpdateTags(chat.id, nextTags);
-    }
-    setCustomTagInput('');
-  };
-
-  const getBaseCatId = (id: string) => (id && typeof id === 'string' && id.includes(':')) ? id.split(':')[1] : (id || '');
-
-  // Requirement 2: Fetch directly from Supabase table 'chat_issues'
-  const loadChatIssues = async () => {
-    setLoadingIssues(true);
-    setTriageError(null);
-    try {
-      const { data: issues, error } = await supabase
-        .from('chat_issues')
-        .select('id, category_id, priority, department, summary, recommended_reply')
-        .eq('chat_id', chat.id);
-
-      let issuesList = issues;
-      if (error || !issuesList || issuesList.length === 0) {
-        // Fallback to internal API proxy if direct client had any RLS / local network difference
-        try {
-          const apiRes = await fetch(`/api/chats/issues?chat_id=${chat.id}`);
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (Array.isArray(apiData) && apiData.length > 0) {
-              issuesList = apiData;
-            }
-          }
-        } catch (e) {}
-      }
-
-      if (issuesList && Array.isArray(issuesList) && issuesList.length > 0) {
-        setChatIssues(issuesList);
-        const initialMap: Record<string, any> = {};
-        issuesList.forEach((issue: any) => {
-          const issueKey = issue.id || 'issue-0';
-          initialMap[issueKey] = {
-            category_id: getBaseCatId(issue.category_id || ''),
-            priority: (issue.priority || 'medium').toLowerCase()
-          };
-        });
-        setEditIssues(initialMap);
-      } else {
-        setChatIssues([]);
-        if (chat.status === 'completed') {
-          const primaryKey = `${chat.id}-primary`;
-          setEditIssues({
-            [primaryKey]: {
-              category_id: getBaseCatId(chat.category_id || ''),
-              priority: (chat.priority || 'medium').toLowerCase()
-            }
-          });
-        }
-      }
-    } catch (err: any) {
-      console.error('Error fetching chat_issues from Supabase:', err);
-      setChatIssues([]);
-    } finally {
-      setLoadingIssues(false);
-    }
-  };
-
-  // Requirement 4: Trigger AI Triage re-analysis
-  const handleTriggerTriage = async () => {
-    setRetryingTriage(true);
-    setTriageError(null);
-    setTriageSuccess(null);
-    try {
-      let res;
-      // 1. Try local microservice directly (port 4000)
-      try {
-        res = await fetch(`http://localhost:4000/api/chats/${chat.id}/triage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-      } catch (directErr) {
-        // 2. Fallback to Next.js API proxy route
-        res = await fetch(`/api/chats/${chat.id}/triage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Server responded with status ${res.status}`);
-      }
-
-      setTriageSuccess(language === 'th' ? 'วิเคราะห์ด้วย Sift AI ซ้ำสำเร็จ' : 'Sift AI completed');
-      setTimeout(() => setTriageSuccess(null), 3500);
-
-      // Re-fetch updated issues from Supabase
-      await loadChatIssues();
-      if (onSaved) onSaved();
-    } catch (err: any) {
-      console.error('Failed to trigger Sift AI:', err);
-      setTriageError(err.message || 'ไม่สามารถเรียก Sift AI ได้ กรุณาตรวจสอบว่า Service ที่พอร์ต 4000 เปิดทำงานอยู่');
-    } finally {
-      setRetryingTriage(false);
-    }
-  };
-
-  // Fetch issues & customer info, reset local edit state on chat change
-  useEffect(() => {
-    let isMounted = true;
-    setEditCategory(chat?.category_id || '');
-    setEditPriority(chat?.priority || 'low');
-    setTags(chat?.tags || []);
-    setTriageError(null);
-    setTriageSuccess(null);
-    setEditingTagIndex(null);
-    setHoveredImg(null);
-
-    async function loadData() {
-      await loadChatIssues();
-      if (chat.customer_id) {
-        try {
-          const custRes = await fetch('/api/customers?customer_id=' + chat.customer_id);
-          if (custRes.ok && isMounted) {
-            const cust = await custRes.json();
-            if (cust) setCustomerInfo(cust);
-          }
-        } catch (e) {}
-      }
-    }
-    loadData();
-    return () => { isMounted = false; };
-  }, [chat.id]);
-
-  // Polling check if status is pending
-  useEffect(() => {
-    if (chat.status === 'pending') {
-      const timer = setInterval(() => {
-        loadChatIssues();
-      }, 4000);
-      return () => clearInterval(timer);
-    }
-  }, [chat.id, chat.status]);
-
-  const handleMouseDown = (e: any) => {
-    onFocus();
-    
-    // Don't drag if maximized or clicking buttons, select, or inputs
-    const target = e.target as HTMLElement;
-    if (isMaximized || target.closest('button') || target.closest('select') || target.closest('input')) {
-      return;
-    }
-
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const currentX = x;
-    const currentY = y;
-
-    const handleMouseMove = (moveEvent: any) => {
-      const dx = moveEvent.clientX - startX;
-      const dy = moveEvent.clientY - startY;
-      const newX = Math.max(10, currentX + dx);
-      const newY = Math.max(10, currentY + dy);
-      setX(newX);
-      setY(newY);
-      onPositionChange(newX, newY);
-    };
-
-    const handleMouseUp = () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-  };
-
-  const handleCopyText = (text: any, id: any) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleSaveChanges = async () => {
-    setUpdating(true);
-    try {
-      let history: any[] = [];
-      try {
-        if (chat.resolution && chat.resolution !== 'Pending' && chat.resolution !== 'Solved') {
-          const parsed = JSON.parse(chat.resolution);
-          if (Array.isArray(parsed)) {
-            history = parsed;
-          }
-        }
-      } catch (e) {}
-
-      const hasDbIssues = chatIssues && chatIssues.length > 0;
-      let isCorrect = true;
-      if (hasDbIssues) {
-        chatIssues.forEach((issue) => {
-          const currentEdit = editIssues[issue.id];
-          if (currentEdit) {
-            if (currentEdit.category_id !== (issue.category_id || '') || currentEdit.priority !== (issue.priority || 'low')) {
-              isCorrect = false;
-            }
-          }
-        });
-      } else {
-        const primaryKey = `${chat.id}-primary`;
-        const currentEdit = editIssues[primaryKey];
-        if (currentEdit) {
-          if (currentEdit.category_id !== (chat.category_id || '') || currentEdit.priority !== (chat.priority || 'low')) {
-            isCorrect = false;
-          }
-        } else if (editCategory !== (chat.category_id || '') || editPriority !== (chat.priority || 'low')) {
-          isCorrect = false;
-        }
-      }
-
-      const issuesToSubmit = hasDbIssues
-        ? chatIssues.map((issue) => ({
-            id: issue.id,
-            category_id: editIssues[issue.id]?.category_id || null,
-            priority: editIssues[issue.id]?.priority || 'low',
-            summary: issue.summary
-          }))
-        : [{
-            id: `${chat.id}-primary`,
-            category_id: editIssues[`${chat.id}-primary`]?.category_id || editCategory || chat.category_id || null,
-            priority: editIssues[`${chat.id}-primary`]?.priority || editPriority || chat.priority || 'low',
-            summary: chat.summary || 'ประเด็นหลัก'
-          }];
-
-      let finalCategoryId = editCategory;
-      let finalPriority = editPriority;
-      if (hasDbIssues && issuesToSubmit.length > 0) {
-        finalCategoryId = issuesToSubmit[0].category_id || '';
-        
-        const prioOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
-        let maxVal = 1;
-        let maxPrio = 'low';
-        issuesToSubmit.forEach((issue) => {
-          const p = (issue.priority || 'low').toLowerCase();
-          if (prioOrder[p] && prioOrder[p] > maxVal) {
-            maxVal = prioOrder[p];
-            maxPrio = p;
-          }
-        });
-        finalPriority = maxPrio;
-      }
-
-      const newLog = {
-        timestamp: new Date().toISOString(),
-        actor: userProfile?.name || 'คุณอ้อ (Admin)',
-        old_category: chat.category_id || '',
-        new_category: finalCategoryId || '',
-        old_priority: chat.priority || 'low',
-        new_priority: finalPriority || 'low'
-      };
-      
-      const updatedHistory = [newLog, ...history];
-
-      const res = await fetch('/api/chats/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          chat_id: chat.id,
-          is_correct: isCorrect,
-          liked_by: userProfile?.name || customerInfo?.name || chat.customer_id || 'admin',
-          issues: issuesToSubmit,
-          category_id: finalCategoryId || null,
-          priority: finalPriority || null,
-          status: 'completed',
-          resolution: JSON.stringify(updatedHistory)
-        })
-      });
-
-      if (res.ok) {
-        // Log to activity_logs table
-        try {
-          await supabase.from('activity_logs').insert([{
-            company_id: userProfile?.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-            user_id: userProfile?.id || 'admin-01',
-            user_name: userProfile?.name || 'Admin',
-            action_type: 'UPDATE_CATEGORY',
-            details: { chat_id: chat.id, old_category: chat.category_id, new_category: finalCategoryId, old_priority: chat.priority, new_priority: finalPriority }
-          }]);
-        } catch (e) {
-          console.warn('activity_logs insert:', e);
-        }
-
-        onSaved();
-        setTriageSuccess(language === 'th' ? '✓ บันทึกการแก้ไขสำเร็จ' : '✓ Saved changes successfully');
-        setTimeout(() => setTriageSuccess(null), 3000);
-      }
-    } catch (err) {
-      console.error('Error saving chat feedback:', err);
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  // 1-Click AI Approve handler
-  const handleApproveAI = async () => {
-    setUpdating(true);
-    try {
-      let history: any[] = [];
-      try {
-        if (chat.resolution && chat.resolution !== 'Pending' && chat.resolution !== 'Solved') {
-          const parsed = JSON.parse(chat.resolution);
-          if (Array.isArray(parsed)) history = parsed;
-        }
-      } catch (e) {}
-
-      const hasDbIssues = chatIssues && chatIssues.length > 0;
-      const issuesToSubmit = hasDbIssues
-        ? chatIssues.map((issue) => ({
-            id: issue.id,
-            category_id: issue.category_id || null,
-            priority: issue.priority || 'low',
-            summary: issue.summary
-          }))
-        : [{
-            id: `${chat.id}-primary`,
-            category_id: chat.category_id || null,
-            priority: chat.priority || 'low',
-            summary: chat.summary || 'ประเด็นหลัก'
-          }];
-
-      let finalCategoryId = chat.category_id || (issuesToSubmit[0]?.category_id) || '';
-      let finalPriority = chat.priority || 'low';
-      if (hasDbIssues && issuesToSubmit.length > 0) {
-        finalCategoryId = issuesToSubmit[0].category_id || '';
-        const prioOrder: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
-        let maxVal = 1;
-        let maxPrio = 'low';
-        issuesToSubmit.forEach((issue) => {
-          const p = (issue.priority || 'low').toLowerCase();
-          if (prioOrder[p] && prioOrder[p] > maxVal) {
-            maxVal = prioOrder[p];
-            maxPrio = p;
-          }
-        });
-        finalPriority = maxPrio;
-      }
-
-      const newLog = {
-        timestamp: new Date().toISOString(),
-        actor: `${userProfile?.name || 'คุณอ้อ (Admin)'} (อนุมัติตาม AI)`,
-        old_category: chat.category_id || '',
-        new_category: finalCategoryId || '',
-        old_priority: chat.priority || 'low',
-        new_priority: finalPriority || 'low'
-      };
-      const updatedHistory = [newLog, ...history];
-
-      const res = await fetch('/api/chats/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chat.id,
-          is_correct: true,
-          liked_by: userProfile?.name || 'คุณอ้อ (Admin)',
-          issues: issuesToSubmit,
-          category_id: finalCategoryId || null,
-          priority: finalPriority || null,
-          status: 'completed',
-          resolution: JSON.stringify(updatedHistory)
-        })
-      });
-
-      if (res.ok) {
-        try {
-          await supabase.from('activity_logs').insert([{
-            company_id: userProfile?.company_id || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-            user_id: userProfile?.id || 'admin-01',
-            user_name: userProfile?.name || 'Admin',
-            action_type: 'APPROVE_AI_TRIAGE',
-            details: { chat_id: chat.id, category: finalCategoryId, priority: finalPriority }
-          }]);
-        } catch (e) {
-          console.warn('activity_logs insert:', e);
-        }
-
-        onSaved();
-        setTriageSuccess(language === 'th' ? '✓ อนุมัติตาม AI สำเร็จ!' : '✓ AI Approved successfully!');
-        setTimeout(() => setTriageSuccess(null), 3000);
-      }
-    } catch (err) {
-      console.error('Error approving AI triage:', err);
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleResizeMouseDown = (e: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const startWidth = width;
-    const startHeight = height;
-    const startX = e.clientX;
-    const startY = e.clientY;
-
-    const handleMouseMove = (moveEvent: any) => {
-      const dx = moveEvent.clientX - startX;
-      const dy = moveEvent.clientY - startY;
-      
-      const newWidth = Math.max(680, startWidth + dx);
-      const newHeight = Math.max(350, startHeight + dy);
-      
-      setWidth(newWidth);
-      setHeight(newHeight);
-    };
-
-    const handleMouseUp = () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-  };
-
-  const renderConversation = () => {
-    let rawText = chat.conversation;
-    
-    if (!rawText && chatIssues && chatIssues.length > 0) {
-      rawText = chatIssues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
-    } else if (!rawText && chat.chat_issues && chat.chat_issues.length > 0) {
-      rawText = chat.chat_issues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
-    } else if (!rawText && chat.summary) {
-      rawText = `ลูกค้า: ${chat.summary}`;
-    }
-
-    if (!rawText) {
-      return (
-        <div className="text-slate-400 dark:text-slate-500 italic text-xs p-4 text-center">
-          ไม่มีประวัติบทสนทนา
-        </div>
-      );
-    }
-
-    // Robust Image URL Extraction (handles query params & all image types)
-    const foundImages: string[] = [];
-    if (chat.media_urls && Array.isArray(chat.media_urls)) {
-      foundImages.push(...chat.media_urls);
-    }
-
-    const genericUrlRegex = /(https?:\/\/[^\s\n"']+)/gi;
-    const urlMatches = rawText.match(genericUrlRegex) || [];
-    urlMatches.forEach((url: string) => {
-      const cleanUrl = url.trim().replace(/[,\.\)]$/, '');
-      const isImg = /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(cleanUrl) ||
-                    /photo-/i.test(cleanUrl) ||
-                    /images/i.test(cleanUrl) ||
-                    /slip/i.test(cleanUrl) ||
-                    /storage/i.test(cleanUrl);
-      if (isImg && !foundImages.includes(cleanUrl)) {
-        foundImages.push(cleanUrl);
-      }
-    });
-
-    // Clean text display: strip raw image URLs so message text is clean
-    let cleanedText = rawText;
-    foundImages.forEach(imgUrl => {
-      cleanedText = cleanedText.replace(imgUrl, '').trim();
-    });
-    // Strip image placeholder labels if any like (📷 ...)
-    cleanedText = cleanedText.replace(/\(📷[^\)]*\)/g, '').replace(/📷[^\n]*/g, '').trim();
-
-    const isImageOnlyChat = foundImages.length > 0 && !cleanedText;
-
-    return (
-      <div className="space-y-3">
-        {/* If image-only: Render explicit informative banner */}
-        {isImageOnlyChat ? (
-          <div className="bg-gradient-to-r from-indigo-50/90 via-purple-50/70 to-blue-50/80 dark:from-indigo-950/40 dark:via-purple-950/40 dark:to-blue-950/40 p-4 rounded-xl border border-indigo-200/80 dark:border-indigo-800/60 flex items-center justify-between gap-3 text-xs shadow-xs">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600/10 dark:bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg shrink-0">
-                📷
-              </div>
-              <div>
-                <div className="font-extrabold text-indigo-950 dark:text-indigo-200 text-xs flex items-center gap-2">
-                  <span>{language === 'th' ? 'ลูกค้าส่งเฉพาะรูปภาพ' : 'Image-Only Message'}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-955/40 dark:text-rose-300">
-                    {language === 'th' ? 'ไม่ได้พิมพ์ข้อความ' : 'No text typed'}
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  {language === 'th' 
-                    ? 'ระบบ AI วิเคราะห์และสกัดข้อมูลจากรูปภาพที่แนบมาด้านล่างโดยอัตโนมัติ' 
-                    : 'AI analyzed and extracted details from the attached image below'}
-                </div>
-              </div>
-            </div>
-            <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-indigo-600 text-white dark:bg-indigo-500 shadow-xs shrink-0 uppercase tracking-wider">
-              {language === 'th' ? 'รูปภาพล้วน' : 'Image Only'}
-            </span>
-          </div>
-        ) : (
-          /* Normal Chat Text Bubble */
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-750 text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line select-text min-h-[80px] max-h-[300px] overflow-y-auto">
-            {cleanedText || <span className="text-slate-400 dark:text-slate-555 italic">ลูกค้าส่งรูปภาพแนบมาในบทสนทนา</span>}
-          </div>
-        )}
-
-        {/* 🖼️ Embedded Real Image Preview Cards */}
-        {foundImages.length > 0 && (
-          <div className="bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-indigo-950/40 dark:to-purple-950/40 p-3.5 rounded-2xl border border-indigo-150 dark:border-indigo-900/50 space-y-2.5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold text-indigo-800 dark:text-indigo-300 uppercase tracking-wide flex items-center gap-1.5">
-                <span>🖼️</span>
-                <span>รูปภาพแนบจากลูกค้า / สภาพหน้าจอขัดข้อง ({foundImages.length} รูป)</span>
-              </span>
-              <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400">คลิกเพื่อดูรูปใหญ่</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {foundImages.map((imgUrl, iidx) => (
-                <div
-                  key={iidx}
-                  onMouseEnter={() => setHoveredImg(imgUrl)}
-                  onMouseLeave={() => setHoveredImg(null)}
-                  onClick={() => window.open(imgUrl, '_blank')}
-                  className="group relative block rounded-xl overflow-hidden border border-indigo-200/80 dark:border-indigo-800/60 bg-black/10 hover:shadow-lg transition duration-200 aspect-video cursor-zoom-in"
-                  title="ชี้เมาส์เพื่อซูมดูรูปใหญ่ (Hover Zoom) หรือคลิกเพื่อเปิดแท็บใหม่"
-                >
-                  <img 
-                    src={imgUrl} 
-                    alt={`Customer Upload ${iidx + 1}`} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                    onError={(e: any) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-between p-2 text-white">
-                    <span className="text-[10px] font-bold">🔍 ชี้เพื่อซูมรูป</span>
-                    <span className="text-[9px] bg-white/30 backdrop-blur-xs px-1.5 py-0.5 rounded font-mono">#รูปภาพ-{iidx + 1}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <div 
-      style={isMaximized ? {
-        left: '2.5%',
-        top: '7.5%',
-        width: '95%',
-        height: '85%',
-        zIndex: 1000,
-        transform: 'none'
-      } : {
-        left: x + 'px',
-        top: y + 'px',
-        zIndex: initialZIndex,
-        width: width + 'px',
-        maxWidth: 'calc(100vw - 20px)',
-        height: isMinimized ? '48px' : height + 'px',
-      }}
-      className="fixed bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-shadow duration-200 focus-within:ring-2 focus-within:ring-indigo-500/20"
-      onClick={onFocus}
-    >
-      {/* Header bar (Draggable) */}
-      <div 
-        onMouseDown={handleMouseDown}
-        className="p-3 bg-slate-50 dark:bg-slate-855 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between cursor-move select-none shrink-0"
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
-          <h3 className="font-extrabold text-slate-800 dark:text-slate-200 text-xs truncate">
-            {customerInfo?.name || chat.customer_name || (
-              chat.customer_id === 'cust-003' ? 'Anan (อนันต์)' :
-              chat.customer_id === 'cust-001' ? 'Somchai (สมชาย)' :
-              chat.customer_id === 'cust-002' ? 'Somsri (สมศรี)' :
-              'ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8))
-            )}
-          </h3>
-        </div>
-
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Minimize button */}
-          <button 
-            type="button"
-            onClick={() => {
-              setIsMinimized(!isMinimized);
-              if (isMaximized) setIsMaximized(false); // Restore if minimized
-            }}
-            className="w-6 h-6 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center transition cursor-pointer"
-            title={isMinimized ? 'ย่อหน้าต่าง' : 'พับหน้าต่าง'}
-          >
-            <Minus size={12} />
-          </button>
-
-          {/* Maximize button */}
-          <button 
-            type="button"
-            onClick={() => {
-              setIsMaximized(!isMaximized);
-              setIsMinimized(false); // Expand height if maximized
-            }}
-            className="w-6 h-6 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center transition cursor-pointer"
-            title={isMaximized ? 'ย่อกลับขนาดปกติ' : 'ขยายเต็มหน้าจอ'}
-          >
-            {isMaximized ? (
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
-                <rect x="3" y="1" width="6" height="6" rx="0.5" />
-                <rect x="1" y="3" width="6" height="6" rx="0.5" fill="white" className="dark:fill-slate-900" />
-              </svg>
-            ) : (
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
-                <rect x="1.5" y="1.5" width="7" height="7" rx="0.5" />
-              </svg>
-            )}
-          </button>
-          
-          {/* Close button */}
-          <button 
-            type="button"
-            onClick={onClose}
-            className="w-6 h-6 rounded-md hover:bg-rose-50 dark:hover:bg-rose-955/20 text-slate-500 hover:text-rose-600 dark:text-slate-400 flex items-center justify-center transition cursor-pointer"
-            title="ปิด"
-          >
-            <X size={12} />
-          </button>
-        </div>
-      </div>
-
-      {/* Body scroll section (Unified sequentially - Instant 0ms Render!) */}
-      {!isMinimized && (
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-6 bg-slate-50/20 dark:bg-slate-900/10">
-          <div className="space-y-6">
-              
-              {/* SECTION 1: Conversation History & Side-by-Side Category/Priority Controls */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-slate-855 dark:text-slate-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
-                    💬 ประวัติการคุย (CONVERSATION HISTORY)
-                  </h4>
-                  <span className="text-[9px] text-slate-400 font-mono font-bold select-none">แชตไอดี: {chat.id}</span>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                  {/* Left Column (Span 5): Single raw conversation history text box from Supabase */}
-                  <div className="lg:col-span-5 min-w-0">
-                    {renderConversation()}
-                  </div>
-
-                  {/* Right Column (Span 7): Triage Category & Priority controls per child chat_issue */}
-                  <div className="lg:col-span-7 min-w-0 space-y-3 pt-0.5">
-                    {(() => {
-                      const hasIssues = (chatIssues && chatIssues.length > 0) || !!chat.category_id || !!chat.summary;
-                      const isWaitingForAI = retryingTriage || (loadingIssues && !hasIssues);
-
-                      if (isWaitingForAI) {
-                        return (
-                          <div className="bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/80 dark:border-indigo-900/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center space-y-4 shadow-xs">
-                            <div className="relative">
-                              <RefreshCw size={36} className="animate-spin text-indigo-600 dark:text-indigo-400" />
-                            </div>
-                            <div className="space-y-1">
-                              <div className="text-sm font-black text-indigo-900 dark:text-indigo-200 flex items-center justify-center gap-1.5">
-                                <span>⏳ กำลังวิเคราะห์ข้อมูลด้วย Sift AI...</span>
-                              </div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {language === 'th' ? 'ระบบ Sift AI กำลังประมวลผลแยกประเด็นปัญหา' : 'Sift AI system is analyzing and extracting issues'}
-                              </p>
-                            </div>
-
-                            {triageError && (
-                              <div className="w-full max-w-md bg-rose-50 dark:bg-rose-955/50 border border-rose-200 dark:border-rose-900/60 p-3 rounded-xl text-xs text-rose-700 dark:text-rose-300 font-semibold text-left">
-                                ⚠️ {triageError}
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-2 pt-1">
-                              <button
-                                type="button"
-                                onClick={handleTriggerTriage}
-                                disabled={retryingTriage}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50"
-                              >
-                                <RotateCcw size={13} className={retryingTriage ? 'animate-spin' : ''} />
-                                <span>{retryingTriage ? 'กำลังส่งคำขอ...' : '🔄 สั่งวิเคราะห์ด้วย Sift AI ซ้ำ'}</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={loadChatIssues}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 text-xs font-bold transition cursor-pointer"
-                              >
-                                <RefreshCw size={13} />
-                                <span>ตรวจสอบผลลัพธ์</span>
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      // If completed and no rows in chat_issues, display 1 primary issue from chat
-                      const issuesToDisplay = (chatIssues && chatIssues.length > 0)
-                        ? chatIssues
-                        : [{
-                            id: `${chat.id}-primary`,
-                            summary: chat.summary || 'ประเด็นหลักจากบทสนทนา',
-                            category_id: chat.category_id || '',
-                            priority: chat.priority || 'medium',
-                            department: chat.department || null,
-                            recommended_reply: chat.recommended_reply || null
-                          }];
-
-                      const isSingleFallback = chatIssues.length === 0;
-
-                      return (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                              {isSingleFallback 
-                                ? (language === 'th' ? 'ประเด็นหลักของแชต (1 เรื่อง)' : 'Primary Chat Issue (1 issue)')
-                                : `${language === 'th' ? 'ประเด็นย่อยในตาราง chat_issues' : 'Sub-issues in chat_issues'} (${issuesToDisplay.length} ${language === 'th' ? 'เรื่อง' : 'issues'})`
-                              }
-                            </span>
-                            <span className="text-[9px] text-slate-400 font-bold">
-                              {isSingleFallback ? 'ตาราง chats' : 'Sift AI Engine'}
-                            </span>
-                          </div>
-
-                          <div className="space-y-3">
-                            {issuesToDisplay.map((issueItem: any, idx: number) => {
-                              const issueKey = issueItem.id || 'issue-' + idx;
-                              const issueTitle = issueItem.summary || issueItem.issue_summary || `ประเด็นที่ ${idx + 1}`;
-                              const currentVal = editIssues[issueKey] || { 
-                                category_id: issueItem.category_id || '', 
-                                priority: issueItem.priority || 'medium' 
-                              };
-                              const selectedCategoryVal = getBaseCatId(currentVal.category_id || issueItem.category_id || '');
-                              const currentPri = (currentVal.priority || issueItem.priority || 'medium').toLowerCase();
-
-                              return (
-                                <div key={idx} className="p-3.5 bg-slate-50/90 dark:bg-slate-855 rounded-xl border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-2.5 min-w-0 overflow-hidden">
-                                  {/* Card Title (chat_issues.summary) */}
-                                  <div className="flex items-start justify-between gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-                                    <div className="flex items-start gap-1.5 min-w-0 flex-1">
-                                      <span className="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0 mt-0.5">📌 #{idx + 1}</span>
-                                      <div className="space-y-1 min-w-0">
-                                        <div className="font-bold text-slate-800 dark:text-slate-100 text-xs leading-snug">{issueTitle}</div>
-                                        {issueItem.department && (
-                                          <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-955/40 dark:text-purple-300 dark:border-purple-800">
-                                            🏢 {issueItem.department}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono shrink-0">
-                                      ID: {issueKey.substring(0, 10)}
-                                    </span>
-                                  </div>
-
-                                  {/* Category Dropdown and Priority Buttons */}
-                                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-0.5 min-w-0">
-                                    {/* Category Dropdown (Bind to chat_issues.category_id) */}
-                                    <select
-                                      value={selectedCategoryVal}
-                                      onChange={(e) => {
-                                        const newCat = e.target.value;
-                                        setEditIssues(prev => ({
-                                          ...prev,
-                                          [issueKey]: { ...currentVal, category_id: newCat }
-                                        }));
-                                        if (idx === 0) setEditCategory(newCat);
-                                      }}
-                                      disabled={userProfile?.role === 'agent'}
-                                      className="flex-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-2 py-1.5 rounded-lg focus:border-indigo-600 focus:outline-none cursor-pointer shadow-xs truncate"
-                                    >
-                                      <option value="">{language === 'th' ? '-- เลือกหมวดหมู่ --' : '-- Select Category --'}</option>
-                                      {categories.map((cat: any) => {
-                                        const optionVal = getBaseCatId(cat.id);
-                                        const label = language === 'en' 
-                                          ? (cat.name_en || getCategoryLabel(cat, 'en')) 
-                                          : (cat.name_th || cat.name || getCategoryLabel(cat, 'th'));
-                                        return (
-                                          <option key={cat.id} value={optionVal}>{label}</option>
-                                        );
-                                      })}
-                                    </select>
-
-                                    {/* Priority Buttons (Bind to chat_issues.priority) */}
-                                    <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 p-0.5 sm:p-1 rounded-lg border border-slate-250 dark:border-slate-700 shadow-xs shrink-0">
-                                      {['low', 'medium', 'high', 'urgent'].map(p => {
-                                        const isActive = currentPri === p;
-                                        let activeStyle = '';
-                                        if (p === 'urgent') activeStyle = 'bg-rose-500 text-white font-extrabold shadow-xs';
-                                        else if (p === 'high') activeStyle = 'bg-orange-500 text-white font-extrabold shadow-xs';
-                                        else if (p === 'medium') activeStyle = 'bg-amber-500 text-white font-extrabold shadow-xs';
-                                        else if (p === 'low') activeStyle = 'bg-blue-500 text-white font-extrabold shadow-xs';
-
-                                        return (
-                                          <button
-                                            key={p}
-                                            type="button"
-                                            onClick={() => {
-                                              setEditIssues(prev => ({
-                                                ...prev,
-                                                [issueKey]: { ...currentVal, priority: p }
-                                              }));
-                                              if (idx === 0) setEditPriority(p);
-                                            }}
-                                            disabled={userProfile?.role === 'agent'}
-                                            className={'px-1.5 py-0.5 rounded text-[9px] font-bold uppercase transition cursor-pointer shrink-0 ' + 
-                                              (isActive ? activeStyle : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300')
-                                            }
-                                          >
-                                            {p}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-
-                                  {/* Recommended Reply Box (if provided by AI) */}
-                                  {issueItem.recommended_reply && (
-                                    <div className="bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/40 p-2.5 rounded-xl space-y-1.5">
-                                      <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-                                        <span className="flex items-center gap-1">
-                                          <Sparkles size={12} className="text-emerald-600 dark:text-emerald-400" />
-                                          <span>{language === 'th' ? 'คำตอบแนะนำตอบลูกค้า (Recommended Reply):' : 'Recommended Reply:'}</span>
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleCopyText(issueItem.recommended_reply, `reply-${issueKey}`)}
-                                          className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 cursor-pointer transition shadow-2xs"
-                                        >
-                                          {copiedId === `reply-${issueKey}` ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
-                                          <span>{copiedId === `reply-${issueKey}` ? (language === 'th' ? 'คัดลอกแล้ว!' : 'Copied!') : (language === 'th' ? 'คัดลอกคำตอบ' : 'Copy')}</span>
-                                        </button>
-                                      </div>
-                                      <div className="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed bg-white/70 dark:bg-slate-900/60 p-2 rounded-lg border border-emerald-100/60 dark:border-emerald-900/30 select-text">
-                                        &ldquo;{issueItem.recommended_reply}&rdquo;
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* Action Toolbar: Re-run Sift AI & Save Changes Buttons */}
-                          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={handleTriggerTriage}
-                                disabled={retryingTriage}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer disabled:opacity-50"
-                                title="ส่งคำขอวิเคราะห์ด้วย Sift AI ใหม่ (POST http://localhost:4000/api/chats/[id]/triage)"
-                              >
-                                <RotateCcw size={13} className={retryingTriage ? 'animate-spin text-indigo-600' : ''} />
-                                <span>{retryingTriage ? (language === 'th' ? 'กำลังวิเคราะห์...' : 'Analyzing...') : (language === 'th' ? '🔄 วิเคราะห์ด้วย Sift AI ซ้ำ' : '🔄 Re-run Sift AI')}</span>
-                              </button>
-
-                              {triageSuccess && (
-                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                  <CheckCircle size={14} />
-                                  <span>{triageSuccess}</span>
-                                </span>
-                              )}
-                              {triageError && (
-                                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                                  ⚠️ {triageError}
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-2">
-                              {/* 1-Click AI Approve */}
-                              <button
-                                type="button"
-                                onClick={handleApproveAI}
-                                disabled={updating || userProfile?.role === 'agent'}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm hover:shadow-md shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
-                                title="อนุมัติตามที่ Sift AI คัดแยกทันที และทำเครื่องหมายว่าแยกแยะแล้ว"
-                              >
-                                <Check size={14} strokeWidth={3} />
-                                <span>{language === 'th' ? '✓ อนุมัติตาม Sift AI ทันที' : '✓ Sift AI Approve'}</span>
-                              </button>
-
-                              {/* Regular Save Changes */}
-                              <button
-                                type="button"
-                                onClick={handleSaveChanges}
-                                disabled={updating || userProfile?.role === 'agent'}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-100 dark:shadow-none transition cursor-pointer disabled:opacity-50"
-                                title="บันทึกการแก้ไขข้อมูล"
-                              >
-                                {updating ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                                <span>{updating ? (language === 'th' ? 'กำลังบันทึก...' : 'Saving...') : (language === 'th' ? '💾 บันทึกการแก้ไข' : '💾 Save Changes')}</span>
-                              </button>
-                            </div>
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>
-
-                      {/* SECTION: Custom Tags Management */}
-                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-sm">
-                        <div className="flex items-center justify-between">
-                          <h5 className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                            🏷️ แท็กป้ายกำกับเคส (Custom Tags)
-                          </h5>
-                          <span className="text-[10px] text-slate-400 font-bold">{(tags || []).length} แท็ก</span>
-                        </div>
-
-                        {/* Current Active Tags */}
-                        <div className="flex flex-wrap items-center gap-1.5 min-h-[28px]">
-                          {(tags || []).length > 0 ? (
-                            tags.map((t: string, idx: number) => (
-                              <span 
-                                key={idx} 
-                                className="inline-flex items-center gap-1.5 text-xs font-extrabold px-3 py-1 rounded-lg border bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-900/80 dark:text-indigo-100 dark:border-indigo-500 shadow-sm"
-                              >
-                                <span>{t}</span>
-                                <button 
-                                  type="button" 
-                                  onClick={() => handleRemoveTag(t)} 
-                                  className="hover:text-rose-400 text-indigo-400 dark:text-indigo-300 transition cursor-pointer font-black text-xs ml-0.5"
-                                  title="ถอดแท็กนี้ออกจากแชตนี้"
-                                >
-                                  ×
-                                </button>
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-slate-400 dark:text-slate-400 font-medium italic text-xs">ยังไม่ได้ติดแท็ก (คลิกป้ายสำเร็จรูปด้านล่างเพื่อติดแท็ก)</span>
-                          )}
-                        </div>
-
-                        {/* Preset Quick Tags */}
-                        <div className="space-y-2 pt-2.5 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider">ป้ายแท็กสำเร็จรูป:</span>
-                          <div className="flex flex-wrap gap-2">
-                            {[
-                              { name: '#VIP', style: 'bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/70 dark:text-purple-200 dark:border-purple-700' },
-                              { name: '#ติดตามผล', style: 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700' },
-                              { name: '#รอสลิป', style: 'bg-sky-50 text-sky-800 border-sky-300 dark:bg-sky-950/70 dark:text-sky-200 dark:border-sky-700' },
-                              { name: '#ส่งเรื่องทีมเทคนิค', style: 'bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-700' },
-                              { name: '#รอธนาคารแก้ไข', style: 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-700' },
-                              { name: '#เคสพิเศษ', style: 'bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-200 dark:border-indigo-700' }
-                            ].map((ptag) => {
-                              const isSelected = (tags || []).includes(ptag.name);
-                              return (
-                                <button
-                                  key={ptag.name}
-                                  type="button"
-                                  onClick={() => handleTogglePresetTag(ptag.name)}
-                                  className={`text-xs font-extrabold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
-                                    isSelected 
-                                      ? 'ring-2 ring-indigo-500 dark:ring-indigo-400 scale-105 shadow-md font-black border-indigo-500' 
-                                      : 'hover:scale-[1.03]'
-                                  } ${ptag.style}`}
-                                >
-                                  {isSelected ? '✓ ' : '+ '}{ptag.name}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* SECTION 3: Sift AI History Timeline */}
-                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-                        <h4 className="font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                          📜 ประวัติการแก้ไข (Sift AI History Timeline)
-                        </h4>
-                        {(() => {
-                          let history: any[] = [];
-                          try {
-                            if (chat.resolution && chat.resolution !== 'Pending' && chat.resolution !== 'Solved') {
-                              const parsed = JSON.parse(chat.resolution);
-                              if (Array.isArray(parsed)) {
-                                history = parsed;
-                              }
-                            }
-                          } catch (e) {}
-
-                          return (
-                            <div className="relative border-l border-slate-200 dark:border-slate-800 pl-4 ml-1.5 space-y-4">
-                              {history.map((log: any, idx: number) => {
-                                const oldCatObj = categories.find((c: any) => c.id === log.old_category || getBaseCatId(c.id) === getBaseCatId(log.old_category));
-                                const newCatObj = categories.find((c: any) => c.id === log.new_category || getBaseCatId(c.id) === getBaseCatId(log.new_category));
-                                const oldCatLabel = getCategoryLabel(oldCatObj || log.old_category, language);
-                                const newCatLabel = getCategoryLabel(newCatObj || log.new_category, language);
-                                return (
-                                  <div key={idx} className="relative text-xs">
-                                    <div className="absolute -left-[20.5px] top-1 w-1.5 h-1.5 rounded-full bg-indigo-600 ring-2 ring-indigo-50 dark:ring-indigo-955" />
-                                    <div className="text-[9px] text-slate-400 font-bold">{new Date(log.timestamp).toLocaleString('th-TH')}</div>
-                                    <div className="text-slate-700 dark:text-slate-355 font-bold mt-0.5">{language === 'th' ? 'โดย:' : 'By:'} {log.actor}</div>
-                                    <div className="text-[10px] text-slate-550 dark:text-slate-405 mt-0.5 leading-relaxed">
-                                      {language === 'th' ? 'หมวดหมู่:' : 'Category:'} <span className="line-through">{oldCatLabel}</span> ➔ <span className="font-bold text-indigo-600">{newCatLabel}</span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                              
-                              <div className="relative text-xs">
-                                <div className="absolute -left-[20.5px] top-1 w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 ring-2 ring-slate-100" />
-                                <div className="text-[9px] text-slate-400 font-bold">{chat.created_at ? new Date(chat.created_at).toLocaleString('th-TH') : '-'}</div>
-                                <div className="text-slate-500 font-bold mt-0.5">{language === 'th' ? 'โดย: ระบบ Sift AI' : 'By: Sift AI System'}</div>
-                                <div className="text-[10px] text-slate-550 mt-0.5">
-                                  {language === 'th' ? 'หมวดหมู่เริ่มต้น:' : 'Initial Category:'} {getCategoryLabel(categories.find((c: any) => c.id === chat.category_id || getBaseCatId(c.id) === getBaseCatId(chat.category_id)) || chat.category_id, language)}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                      </div>
-              </div>
-        </div>
-      )}
-      
-      {/* Resize Handle at the bottom right corner (Drag to Resize) */}
-      {!isMinimized && !isMaximized && (
-        <div 
-          onMouseDown={handleResizeMouseDown}
-          className="absolute bottom-1 right-1 w-5 h-5 cursor-se-resize flex items-end justify-end p-0.5 select-none z-50 group"
-          title="ลากเพื่อปรับขนาดหน้าต่าง"
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" className="text-slate-350 dark:text-slate-600 group-hover:text-indigo-550 transition-colors">
-            <path d="M8 0 L0 8 M8 3 L3 8 M8 6 L6 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
-        </div>
-      )}
-
-      {/* Hover Zoom Modal Overlay for Enlarged Images */}
-      {hoveredImg && (
-        <div className="pointer-events-none fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950/95 p-3 rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-md max-w-[500px] max-h-[500px] flex flex-col items-center animate-fade-in">
-          <div className="w-full flex items-center justify-between pb-2 text-[11px] font-bold text-slate-300">
-            <span className="flex items-center gap-1.5">
-              <span>🔍</span>
-              <span>พรีวิวรูปภาพความละเอียดสูง (Hover Zoom)</span>
-            </span>
-            <span className="text-[10px] text-indigo-400 font-mono">เลื่อนเมาส์ออกเพื่อปิด</span>
-          </div>
-          <img 
-            src={hoveredImg} 
-            alt="Zoom preview" 
-            className="max-w-[460px] max-h-[420px] object-contain rounded-xl shadow-lg border border-slate-800"
-          />
-        </div>
-      )}
-    </div>
-  );
-}
+import { isSoundEnabled } from '@/lib/audio';
+import { filterChats } from '@/lib/chatFilters';
+import { exportChatsToCSV } from '@/lib/chatExport';
+import { DEFAULT_SYSTEM_TAGS } from '@/lib/tags';
+import { useFloatingWindows } from '@/hooks/useFloatingWindows';
+import { useChatsData } from '@/hooks/useChatsData';
+
+import ChatHeader from '@/components/chats/ChatHeader';
+import FloatingWindowsContainer from '@/components/chats/FloatingWindowsContainer';
+import TagRenameModal from '@/components/chats/TagRenameModal';
+import TagManagerModal from '@/components/chats/TagManagerModal';
+import ImageHoverZoom from '@/components/ui/ImageHoverZoom';
+import ChatQuickTabs from '@/components/chats/ChatQuickTabs';
+import ChatFilterBar from '@/components/chats/ChatFilterBar';
+import ChatTable from '@/components/chats/ChatTable';
 
 export default function ChatsPage() {
-  const { t, language } = useLanguage();
-  const [chats, setChats] = useState<any[]>([]);
-  const [filteredChats, setFilteredChats] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [activeCompanyId, setActiveCompanyId] = useState<string>('2c3f46cc-fae8-4ef8-99e1-874dec8b2af2');
-  
-  // Floating Windows state
-  const [activeWindows, setActiveWindows] = useState<any[]>([]);
-  const [maxZIndex, setMaxZIndex] = useState(50);
+  const { language } = useLanguage();
 
-  // Bulk selection state
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  
-  // Table Hover Zoom state
-  const [tableHoveredImg, setTableHoveredImg] = useState<string | null>(null);
-
-  // Helper to get first image URL for any chat
-  const getChatFirstImageUrl = (c: any): string | null => {
-    if (c?.media_urls && Array.isArray(c.media_urls) && c.media_urls.length > 0) {
-      return c.media_urls[0];
-    }
-    const text = typeof c?.conversation === 'string' ? c.conversation : '';
-    const match = text.match(/(https?:\/\/[^\s\n"']+\.(jpg|jpeg|png|webp|gif|svg)(\?[^\s\n"']*)?)/i) ||
-                  text.match(/(https?:\/\/[^\s\n"']*(images|photos|slip|storage)[^\s\n"']*)/i);
-    return match ? match[1] || match[0] : null;
-  };
-  
-  // Sound alarm state
+  // Sound & Desktop Notification
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showSoundModal, setShowSoundModal] = useState(false);
-  
-  // Filters & Search
+  const [desktopNotifyEnabled, setDesktopNotifyEnabled] = useState(false);
+
+  // Hover Zoom
+  const [tableHoveredImg, setTableHoveredImg] = useState<string | null>(null);
+
+  // System Tags
+  const [allAvailableTags, setAllAvailableTags] = useState(DEFAULT_SYSTEM_TAGS);
+  const [showTagManagerModal, setShowTagManagerModal] = useState(false);
+  const [showTagRenameModal, setShowTagRenameModal] = useState(false);
+  const [tagToRename] = useState<string | null>(null);
+
+  // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -1261,152 +47,151 @@ export default function ChatsPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // System Tags & Tag Manager State
-  const [allAvailableTags, setAllAvailableTags] = useState([
-    { name: '#รูปภาพ', desc: 'มีภาพแนบ', style: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-955/30 dark:text-indigo-300 dark:border-indigo-900/50' },
-    { name: '#รูปภาพล้วน', desc: 'ไม่มีข้อความพิมพ์', style: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-955/30 dark:text-fuchsia-300 dark:border-fuchsia-900/50' },
-    { name: '#VIP', desc: 'ป้ายสีม่วง', style: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-955/30 dark:text-purple-300 dark:border-purple-900/50' },
-    { name: '#ติดตามผล', desc: 'ป้ายสีส้ม', style: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-300 dark:border-amber-900/50' },
-    { name: '#รอสลิป', desc: 'ป้ายสีฟ้า', style: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-955/30 dark:text-sky-300 dark:border-sky-900/50' },
-    { name: '#ส่งเรื่องทีมเทคนิค', desc: 'ป้ายสีแดง', style: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-300 dark:border-rose-900/50' },
-    { name: '#รอธนาคารแก้ไข', desc: 'ป้ายสีเขียว', style: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-955/30 dark:text-emerald-300 dark:border-emerald-900/50' },
-    { name: '#เคสพิเศษ', desc: 'ป้ายสีอินดิโก้', style: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-955/30 dark:text-indigo-300 dark:border-indigo-900/50' }
-  ]);
+  // Init local notification preferences
+  useEffect(() => {
+    setSoundEnabled(isSoundEnabled());
+    if (typeof window !== 'undefined') {
+      const savedPopup = localStorage.getItem('desktop_popup_enabled');
+      if (savedPopup !== null) {
+        setDesktopNotifyEnabled(savedPopup === 'true');
+      } else {
+        const hasPermission = 'Notification' in window && Notification.permission === 'granted';
+        setDesktopNotifyEnabled(hasPermission);
+      }
+    }
+  }, []);
 
-  const [showTagManagerModal, setShowTagManagerModal] = useState(false);
-  const [editingSystemTagIndex, setEditingSystemTagIndex] = useState<number | null>(null);
-  const [editingSystemTagValue, setEditingSystemTagValue] = useState('');
+  // Custom Hooks
+  const {
+    chats,
+    setChats,
+    categories,
+    loading,
+    userProfile,
+    activeCompanyId,
+    fetchInitialData,
+  } = useChatsData({ soundEnabled, desktopNotifyEnabled });
 
-  const handleOpenTagManagerModal = () => {
-    setShowTagManagerModal(true);
-    setEditingSystemTagIndex(null);
+  const {
+    activeWindows,
+    maxZIndex,
+    openChatWindow,
+    closeWindow,
+    focusWindow,
+    updateWindowPosition,
+    updateWindowTags,
+    setActiveWindows,
+  } = useFloatingWindows();
+
+  // 1. Filter by Active Company first
+  const companyFilteredChats = useMemo(() => {
+    return chats.filter(
+      (c) => !activeCompanyId || activeCompanyId === 'all' || c.company_id === activeCompanyId
+    );
+  }, [chats, activeCompanyId]);
+
+  // 2. Filter by Active Timeframe (for badge counts & filter dropdowns)
+  const timeframeFilteredChats = useMemo(() => {
+    return filterChats(companyFilteredChats, {
+      dateFilter,
+      startDate,
+      endDate,
+    });
+  }, [companyFilteredChats, dateFilter, startDate, endDate]);
+
+  // 3. Fully Filtered Chats (applied to the main table)
+  const filteredChats = useMemo(() => {
+    return filterChats(companyFilteredChats, {
+      searchQuery,
+      statusFilter,
+      priorityFilter,
+      categoryFilter,
+      tagFilter,
+      dateFilter,
+      startDate,
+      endDate,
+      auditFilter,
+    });
+  }, [companyFilteredChats, searchQuery, statusFilter, priorityFilter, categoryFilter, tagFilter, dateFilter, startDate, endDate, auditFilter]);
+
+  // Badge & Dropdown Counts (calculated from the currently selected timeframe)
+  const totalCount = timeframeFilteredChats.length;
+  const pendingCount = timeframeFilteredChats.filter((c) => (c.status || 'pending') === 'pending').length;
+  const completedCount = timeframeFilteredChats.filter((c) => c.status === 'completed').length;
+  const urgentCount = timeframeFilteredChats.filter((c) => {
+    const pri = c.priority?.toLowerCase() || 'low';
+    const urg = (c.urgency || '').toLowerCase();
+    let issueMatch = false;
+    if (c.chat_issues && c.chat_issues.length > 0) {
+      issueMatch = c.chat_issues.some((issue: any) => issue.priority?.toLowerCase() === 'urgent');
+    }
+    return pri === 'urgent' || pri === 'critical' || urg === 'urgent' || issueMatch;
+  }).length;
+  const highCount = timeframeFilteredChats.filter((c) => {
+    const pri = c.priority?.toLowerCase() || 'low';
+    let issueMatch = false;
+    if (c.chat_issues && c.chat_issues.length > 0) {
+      issueMatch = c.chat_issues.some((issue: any) => issue.priority?.toLowerCase() === 'high');
+    }
+    return pri === 'high' || issueMatch;
+  }).length;
+  const mediumCount = timeframeFilteredChats.filter((c) => {
+    const pri = c.priority?.toLowerCase() || 'low';
+    let issueMatch = false;
+    if (c.chat_issues && c.chat_issues.length > 0) {
+      issueMatch = c.chat_issues.some((issue: any) => issue.priority?.toLowerCase() === 'medium');
+    }
+    return pri === 'medium' || issueMatch;
+  }).length;
+  const lowCount = timeframeFilteredChats.filter((c) => {
+    const pri = c.priority?.toLowerCase() || 'low';
+    let issueMatch = false;
+    if (c.chat_issues && c.chat_issues.length > 0) {
+      issueMatch = c.chat_issues.some((issue: any) => issue.priority?.toLowerCase() === 'low');
+    }
+    return pri === 'low' || issueMatch;
+  }).length;
+  const imageOnlyCount = timeframeFilteredChats.filter(
+    (c) => (c.tags && c.tags.includes('#รูปภาพล้วน')) || (typeof c.summary === 'string' && c.summary.includes('รูปภาพล้วน'))
+  ).length;
+
+  // Update Tags
+  const handleUpdateTags = async (chatId: string, newTags: string[]) => {
+    setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, tags: newTags } : c)));
+    updateWindowTags(chatId, newTags);
+
+    try {
+      await fetch('/api/chats', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: chatId, tags: newTags }),
+      });
+    } catch (e) {
+      console.warn('Failed to update tags:', e);
+    }
   };
 
-  const handleSaveRenameSystemTag = (index: number) => {
-    if (!editingSystemTagValue.trim()) return;
-    let formattedNew = editingSystemTagValue.trim();
+  // Tag manager renames
+  const handleSaveRenameSystemTag = (index: number, newTagName: string) => {
+    let formattedNew = newTagName.trim();
     if (!formattedNew.startsWith('#')) formattedNew = '#' + formattedNew;
 
     const oldTagObj = allAvailableTags[index];
     const oldTagName = oldTagObj.name;
 
-    // 1. Update available tags array
-    const updatedAvailable = [...allAvailableTags];
-    updatedAvailable[index] = { ...oldTagObj, name: formattedNew };
-    setAllAvailableTags(updatedAvailable);
+    const updated = [...allAvailableTags];
+    updated[index] = { ...oldTagObj, name: formattedNew };
+    setAllAvailableTags(updated);
 
-    // 2. Update ALL customer chats carrying oldTagName
-    setChats(prev => prev.map(chat => {
-      if (!chat.tags || !chat.tags.includes(oldTagName)) return chat;
-      const updated = chat.tags.map((t: string) => t === oldTagName ? formattedNew : t);
-      return { ...chat, tags: updated };
-    }));
-
-    // 3. Update active windows
-    setActiveWindows(prev => prev.map(win => {
-      if (!win.chat?.tags || !win.chat.tags.includes(oldTagName)) return win;
-      const updated = win.chat.tags.map((t: string) => t === oldTagName ? formattedNew : t);
-      return { ...win, chat: { ...win.chat, tags: updated } };
-    }));
-
-    // 4. Update current filter if filtering by old tag
-    if (tagFilter === oldTagName) {
-      setTagFilter(formattedNew);
-    }
-
-    setEditingSystemTagIndex(null);
+    setChats((prev) =>
+      prev.map((chat) => {
+        if (!chat.tags || !chat.tags.includes(oldTagName)) return chat;
+        return { ...chat, tags: chat.tags.map((t: string) => (t === oldTagName ? formattedNew : t)) };
+      })
+    );
   };
 
-  // Global Tag Rename State
-  const [showTagRenameModal, setShowTagRenameModal] = useState(false);
-  const [tagToRename, setTagToRename] = useState('');
-  const [newGlobalTagName, setNewGlobalTagName] = useState('');
-
-  const handleOpenGlobalRenameModal = (targetTag: string) => {
-    setTagToRename(targetTag);
-    setNewGlobalTagName(targetTag);
-    setShowTagRenameModal(true);
-  };
-
-  const handleExecuteGlobalTagRename = () => {
-    if (!newGlobalTagName.trim() || !tagToRename) return;
-    let formattedNew = newGlobalTagName.trim();
-    if (!formattedNew.startsWith('#')) formattedNew = '#' + formattedNew;
-
-    // Update ALL customer chats in the system carrying this tag
-    setChats(prev => prev.map(chat => {
-      if (!chat.tags || !chat.tags.includes(tagToRename)) return chat;
-      const updated = chat.tags.map((t: string) => t === tagToRename ? formattedNew : t);
-      return { ...chat, tags: updated };
-    }));
-
-    // If active windows have this tag, update active windows as well!
-    setActiveWindows(prev => prev.map(win => {
-      if (!win.chat?.tags || !win.chat.tags.includes(tagToRename)) return win;
-      const updated = win.chat.tags.map((t: string) => t === tagToRename ? formattedNew : t);
-      return { ...win, chat: { ...win.chat, tags: updated } };
-    }));
-
-    // Update current active filter if filtering by old tag
-    if (tagFilter === tagToRename) {
-      setTagFilter(formattedNew);
-    }
-
-    setShowTagRenameModal(false);
-  };
-
-  const handleUpdateTags = async (chatId: string, newTags: string[]) => {
-    // 1. Instant local UI update
-    setChats(prev => prev.map(c => c.id === chatId ? { ...c, tags: newTags } : c));
-    setActiveWindows(prev => prev.map(w => w.chat?.id === chatId ? { ...w, chat: { ...w.chat, tags: newTags } } : w));
-
-    // 2. Persist to Supabase DB
-    try {
-      await fetch('/api/chats', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: chatId, tags: newTags })
-      });
-    } catch (e) {
-      console.warn('Failed to update tags in DB:', e);
-    }
-
-    // 3. Log to activity_logs table for Audit Trail
-    try {
-      const tagString = newTags && newTags.length > 0 ? newTags.join(', ') : 'ไม่มีแท็ก';
-      await fetch('/api/audit-logs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          admin_name: userProfile?.name || 'คุณอ้อ (Admin)',
-          admin_email: userProfile?.id || 'aor@system',
-          action: 'ติดแท็กป้ายกำกับเคส',
-          details: `อัปเดตแท็กป้ายกำกับสำหรับแชตไอดี ${chatId} เป็น: ${tagString}`
-        })
-      });
-    } catch (e) {
-      console.warn('Failed to log tag activity:', e);
-    }
-  };
-
-  const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<any>(null);
-
-  // Search input ref for keyboard shortcut focus
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Calculate Filter Badge Counts
-  const companyFilteredChats = chats.filter(c => !activeCompanyId || activeCompanyId === 'all' || c.company_id === activeCompanyId);
-  const pendingCount = companyFilteredChats.filter(c => (c.status || 'pending') === 'pending').length;
-  const completedCount = companyFilteredChats.filter(c => c.status === 'completed').length;
-
-  const urgentCount = companyFilteredChats.filter(c => (c.priority || '').toLowerCase() === 'urgent').length;
-  const highCount = companyFilteredChats.filter(c => (c.priority || '').toLowerCase() === 'high').length;
-  const mediumCount = companyFilteredChats.filter(c => (c.priority || '').toLowerCase() === 'medium').length;
-  const lowCount = companyFilteredChats.filter(c => (c.priority || '').toLowerCase() === 'low').length;
-
-  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all' || tagFilter !== 'all' || dateFilter !== 'today' || auditFilter !== 'all';
-
+  // Clear filters
   const handleClearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
@@ -1419,1508 +204,142 @@ export default function ChatsPage() {
     setEndDate('');
   };
 
-  // Keyboard Shortcuts: '/' to focus search input, 'Escape' to close top floating window
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable;
-
-      if (e.key === 'Escape') {
-        if (activeWindows.length > 0) {
-          e.preventDefault();
-          const sortedWindows = [...activeWindows].sort((a, b) => b.zIndex - a.zIndex);
-          const topWindow = sortedWindows[0];
-          if (topWindow) {
-            setActiveWindows(prev => prev.filter(w => w.id !== topWindow.id));
-          }
-        }
-      } else if (e.key === '/' && !isInput) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeWindows]);
-
-  // Desktop & In-App Popup Notification State
-  const [desktopNotifyEnabled, setDesktopNotifyEnabled] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('desktop_popup_enabled');
-      if (saved !== null) {
-        setDesktopNotifyEnabled(saved === 'true');
-      } else {
-        const hasPermission = 'Notification' in window && Notification.permission === 'granted';
-        setDesktopNotifyEnabled(hasPermission);
-      }
-    }
-  }, []);
-
-  const handleToggleDesktopNotification = async () => {
-    const nextState = !desktopNotifyEnabled;
-    setDesktopNotifyEnabled(nextState);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('desktop_popup_enabled', String(nextState));
-      window.dispatchEvent(new Event('desktop-popup-setting-changed'));
-
-      if (nextState) {
-        if ('Notification' in window && Notification.permission === 'default') {
-          try {
-            await Notification.requestPermission();
-          } catch (e) {}
-        }
-      }
-    }
-  };
-
-  // 1-Click Single Status Toggle Handler
-  const handleToggleSingleStatus = async (chat: any, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newStatus = chat.status === 'completed' ? 'pending' : 'completed';
-
-    // Optimistic UI update
-    setChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: newStatus } : c));
-    setFilteredChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: newStatus } : c));
-
-    // Persist to backend API
-    try {
-      await fetch('/api/chats', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: [chat.id],
-          status: newStatus
-        })
-      });
-
-      // 📜 Record to Audit & Activity Logs
-      const statusLabel = newStatus === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ';
-      const detailMsg = `อัปเดตสถานะแชต #${chat.id} เป็น [${statusLabel}] เรียบร้อยแล้ว`;
-      await logActivityTrail('TRIAGE_UPDATE', chat.id, chat.status || 'pending', detailMsg);
-    } catch (err) {
-      console.error('Failed to toggle status:', err);
-    }
-  };
-
-  // Export CSV Handler with complete fields and UTF-8 BOM
-  const handleExportCSV = () => {
-    if (filteredChats.length === 0) return;
-    const headers = [
-      'Chat ID',
-      'Customer ID',
-      'Customer Name (ชื่อลูกค้า)',
-      'Customer History (ประวัติลูกค้า)',
-      'Category (หมวดหมู่ภาษาไทย)',
-      'Priority (ระดับความด่วน)',
-      'Status (สถานะ)',
-      'Issue Count (จำนวนเรื่อง)',
-      'Audit Override (การแก้ไขโดยแอดมิน)',
-      'AI Summary (ข้อสรุปปัญหา)',
-      'Tags (ป้ายกำกับ)',
-      'Full Conversation (บทสนทนา)',
-      'Created At (วันเวลา)'
-    ];
-    const rows = filteredChats.map(c => {
-      const foundCat = categories.find((cat: any) => cat.id === c.category_id || getBaseCatId(cat.id) === getBaseCatId(c.category_id));
-      const catName = getCategoryLabel(foundCat || c.category_id, language);
-
-      const custName = c.customer_name || (
-        c.customer_id === 'cust-003' ? 'Anan (อนันต์)' :
-        c.customer_id === 'cust-001' ? 'Somchai (สมชาย)' :
-        c.customer_id === 'cust-002' ? 'Somsri (สมศรี)' :
-        `ลูกค้า #${c.customer_id || c.id?.substring(0, 8)}`
-      );
-
-      const repeatCount = chats.filter(item => 
-        (c.customer_id && item.customer_id === c.customer_id) ||
-        (c.customer_name && item.customer_name === c.customer_name) ||
-        item.id === c.id
-      ).length;
-      const historyStr = repeatCount > 1 ? `ทักซ้ำ ${repeatCount} เคส` : 'ทักครั้งแรก';
-
-      const tagsStr = (c.tags || []).join(' ');
-      const summaryText = (c.summary || c.problem_summary || '').replace(/\n/g, ' ');
-      const convText = (typeof c.conversation === 'string' ? c.conversation : (c.rawMessages ? c.rawMessages.join('\n') : summaryText)).replace(/\n/g, ' ');
-      const statusLabel = c.status === 'completed' || c.status === 'solved' ? 'แยกแยะแล้ว (Completed)' : 'รอดำเนินการ (Pending)';
-      const issueCount = c.chat_issues ? `${c.chat_issues.length} เรื่อง` : '1 เรื่อง';
-      
-      let auditLogStr = 'ยืนยันตาม AI';
-      try {
-        if (c.resolution && c.resolution !== 'Pending' && c.resolution !== 'Solved') {
-          const parsed = JSON.parse(c.resolution);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const last = parsed[parsed.length - 1];
-            auditLogStr = `แก้ไขโดย ${last.user || 'แอดมิน'} (${last.action || 'Manual Edit'})`;
-          }
-        }
-      } catch (e) {}
-
-      const formattedDate = c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '';
-
-      return [
-        `"${c.id || ''}"`,
-        `"${c.customer_id || ''}"`,
-        `"${(custName).replace(/"/g, '""')}"`,
-        `"${historyStr}"`,
-        `"${(catName).replace(/"/g, '""')}"`,
-        `"${(c.priority || '').toUpperCase()}"`,
-        `"${statusLabel}"`,
-        `"${issueCount}"`,
-        `"${auditLogStr}"`,
-        `"${summaryText.replace(/"/g, '""')}"`,
-        `"${tagsStr.replace(/"/g, '""')}"`,
-        `"${convText.replace(/"/g, '""')}"`,
-        `"${formattedDate}"`
-      ];
-    });
-
-    const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `sift-ai-${dateFilter}-${new Date().toISOString().substring(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-
-
-  // Bulk update API call
-  const handleBulkUpdate = async (categoryId: string | null | undefined, status: string | undefined) => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/chats', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: selectedIds,
-          category_id: categoryId,
-          status: status
-        })
-      });
-      if (!res.ok) throw new Error('Bulk update failed');
-
-      // 📜 Record to Audit & Activity Logs
-      for (const id of selectedIds) {
-        const detailMsg = status 
-          ? `อัปเดตสถานะแชตแบบกลุ่ม #${id} เป็น [${status === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ'}]`
-          : `ย้ายหมวดหมู่แชตแบบกลุ่ม #${id} เป็น [${categoryId}]`;
-        await logActivityTrail('BULK_UPDATE', id, 'multiple_chats', detailMsg);
-      }
-
-      await fetchInitialData();
-      setSelectedIds([]);
-    } catch (err) {
-      console.error(err);
-      alert(language === 'th' ? 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล' : 'Error updating data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Toggle selection handlers
-  const handleToggleSelect = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-  };
-
-  const handleToggleSelectAll = () => {
-    if (selectedIds.length === filteredChats.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredChats.map(c => c.id));
-    }
-  };
-
-  const toggleSound = () => {
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    localStorage.setItem('chats_sound_enabled', String(next));
-  };
-
-  // Initialize dates and sound state with synchronization
-  useEffect(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const formattedToday = year + '-' + month + '-' + day;
-    setStartDate(formattedToday);
-    setEndDate(formattedToday);
-
-    const savedSound = isSoundEnabled();
-    setSoundEnabled(savedSound);
-
-    // Sync sound setting changes from other tabs or pages (e.g. Dashboard)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'chats_sound_enabled') {
-        setSoundEnabled(e.newValue === 'true');
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  // 🔔 Task 1: Supabase Realtime Listener (Live Chat Updates)
-  useEffect(() => {
-    const channel = supabase
-      .channel('realtime-chats-chats-page')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
-        fetchInitialData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_issues' }, () => {
-        fetchInitialData();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // 📜 Task 4: Activity Log Trail helper for activity_logs table
-  const logActivityTrail = async (actionType: string, selectedChatId: string, oldValue: any, newValue: any) => {
-    try {
-      const user = userProfile || {
-        id: 'admin-01',
-        name: 'Admin',
-        company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2'
-      };
-
-      const logPayload = {
-        company_id: user.company_id || user.companyId || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
-        user_id: user.id || 'admin-01',
-        user_name: user.name || 'Admin',
-        action_type: actionType,
-        details: { chat_id: selectedChatId, old_value: oldValue, new_value: newValue }
-      };
-
-      // 1. Direct Supabase insert to activity_logs
-      try {
-        await supabase.from('activity_logs').insert([logPayload]);
-      } catch (err) {
-        console.warn('activity_logs insert warning:', err);
-      }
-
-      // 2. API proxy insert
-      try {
-        await fetch('/api/audit-logs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            admin_name: user.name || 'Admin',
-            admin_email: user.email || 'admin@siftai.com',
-            action: actionType,
-            ...logPayload
-          })
-        });
-      } catch (err) {
-        console.error('Audit log API error:', err);
-      }
-    } catch (e) {
-      console.error('Error logging activity trail:', e);
-    }
-  };
-
-  useEffect(() => {
-    fetchInitialData();
-    const savedSession = localStorage.getItem('user_session');
-    if (savedSession) {
-      try {
-        setUserProfile(JSON.parse(savedSession));
-      } catch (e) {}
-    }
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const catParam = params.get('category');
-      if (catParam) {
-        setCategoryFilter(getBaseCatId(catParam));
-      }
-    }
-  }, []);
-
-  const previousChatsRef = useRef<Map<string, string>>(new Map());
-
-  const fetchInitialData = async () => {
-    setLoading(true);
-    try {
-      const matchCookie = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )company_id=([^;]*)/) : null;
-      const compId = matchCookie ? decodeURIComponent(matchCookie[1]) : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2' : '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2');
-      setActiveCompanyId(compId);
-
-      const [catRes, chatsRes] = await Promise.all([
-        fetch(`/api/categories?company_id=${compId}`),
-        fetch(`/api/chats?summary_only=true&company_id=${compId}&nocache=${Date.now()}`)
-      ]);
-
-      if (catRes.ok) {
-        const catData = await catRes.json();
-        setCategories(catData);
-      }
-
-      if (chatsRes.ok) {
-        const chatsData = await chatsRes.json();
-        if (chatsData) {
-          const processed = chatsData.map((c: any) => ({
-            ...c,
-            status: c.status === 'completed' ? 'completed' : 'pending'
-          }));
-          const sorted = [...processed].sort((a, b) => 
-            new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-          );
-
-          // Automated Sound & Notification trigger for NEW Urgent/High cases
-          let hasNewUrgentOrHigh = false;
-          let latestUrgentChat: any = null;
-          const isFirstRun = previousChatsRef.current.size === 0;
-
-          sorted.forEach((c: any) => {
-            const pri = (c.priority || 'low').toLowerCase();
-            const prevPri = previousChatsRef.current.get(c.id);
-            if (!prevPri && (pri === 'urgent' || pri === 'high')) {
-              hasNewUrgentOrHigh = true;
-              latestUrgentChat = c;
-            } else if (prevPri && prevPri !== pri && (pri === 'urgent' || pri === 'high')) {
-              hasNewUrgentOrHigh = true;
-              latestUrgentChat = c;
-            }
-            previousChatsRef.current.set(c.id, pri);
-          });
-
-          // Trigger sound and toast if new Urgent/High cases detected (after initial load)
-          if (!isFirstRun && hasNewUrgentOrHigh) {
-            if (soundEnabled) {
-              playAlertTone(undefined, undefined, false);
-            }
-            if (desktopNotifyEnabled && latestUrgentChat) {
-              try {
-                new Notification('🚨 เคสด่วนที่สุดยิงเข้ามาใหม่!', {
-                  body: `ลูกค้า ${latestUrgentChat.customer_name || latestUrgentChat.id}: ${latestUrgentChat.summary || 'ต้องการการช่วยเหลือด่วน'}`,
-                  icon: '/favicon.ico'
-                });
-              } catch (e) {}
-            }
-
-            // Dispatch custom event to immediately show GlobalNotifier popup toast
-            if (latestUrgentChat && ((latestUrgentChat.priority || '').toLowerCase() === 'urgent' || (latestUrgentChat.priority || '').toLowerCase() === 'critical')) {
-              try {
-                window.dispatchEvent(new CustomEvent('urgent-chat-detected', {
-                  detail: {
-                    id: latestUrgentChat.id,
-                    customerName: latestUrgentChat.customer_name,
-                    summary: latestUrgentChat.summary,
-                    priority: latestUrgentChat.priority,
-                    companyId: latestUrgentChat.company_id
-                  }
-                }));
-              } catch (e) {}
-            }
-          }
-
-          setChats(sorted);
-          setFilteredChats(sorted);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching chats:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Parse URL query parameters from dashboard links
-  useEffect(() => {
-    if (chats.length > 0) {
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search);
-        const statusParam = params.get('status');
-        const priorityParam = params.get('priority');
-        const categoryParam = params.get('category');
-        const auditParam = params.get('audit');
-        const dateParam = params.get('dateRange') || params.get('timeframe') || params.get('dateFilter');
-
-        if (statusParam) setStatusFilter(statusParam);
-        if (priorityParam) setPriorityFilter(priorityParam);
-        if (categoryParam) setCategoryFilter(categoryParam);
-        if (auditParam) setAuditFilter(auditParam);
-        if (dateParam) setDateFilter(dateParam);
-      }
-    }
-  }, [chats]);
-
-  // Apply filters
-  useEffect(() => {
-    let result = chats;
-
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(c => {
-        const nameMatch = c.customer_name?.toLowerCase().includes(q);
-        const idMatch = c.id?.toLowerCase().includes(q) || c.customer_id?.toLowerCase().includes(q);
-        const summaryMatch = (c.summary || c.problem_summary)?.toLowerCase().includes(q);
-        const conversationMatch = typeof c.conversation === 'string' 
-          ? c.conversation.toLowerCase().includes(q) 
-          : JSON.stringify(c.conversation || '').toLowerCase().includes(q);
-        const tagsMatch = c.tags?.some((t: string) => t.toLowerCase().includes(q));
-
-        return nameMatch || idMatch || summaryMatch || conversationMatch || tagsMatch;
-      });
-    }
-
-    if (statusFilter !== 'all') {
-      result = result.filter(c => {
-        const status = c.status || 'pending';
-        return status === statusFilter;
-      });
-    }
-
-    if (priorityFilter !== 'all') {
-      result = result.filter(c => {
-        const pri = c.priority?.toLowerCase() || 'low';
-        const urg = (c.urgency || '').toLowerCase();
-        let issueMatch = false;
-        if (c.chat_issues && c.chat_issues.length > 0) {
-          issueMatch = c.chat_issues.some((issue: any) => {
-            const ipri = issue.priority?.toLowerCase();
-            return ipri === priorityFilter;
-          });
-        }
-
-        if (priorityFilter === 'urgent') {
-          return pri === 'urgent' || pri === 'critical' || urg === 'urgent' || issueMatch;
-        }
-        return pri === priorityFilter || issueMatch;
-      });
-    }
-
-    if (categoryFilter !== 'all') {
-      const targetBase = getBaseCatId(categoryFilter);
-      result = result.filter(c => {
-        if (c.chat_issues && c.chat_issues.length > 0) {
-          return c.chat_issues.some((issue: any) => issue.category_id === categoryFilter || getBaseCatId(issue.category_id) === targetBase);
-        }
-        return c.category_id === categoryFilter || getBaseCatId(c.category_id) === targetBase;
-      });
-    }
-
-    if (tagFilter !== 'all') {
-      result = result.filter(c => {
-        const tags = c.tags || [];
-        return tags.includes(tagFilter);
-      });
-    }
-
-    // Filter by Date Range (Bulletproof YYYY-MM-DD comparison - No timezone bugs!)
-    // Strict Date Filtering (Asia/Bangkok local date comparison)
-    const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-
-    if (dateFilter === 'today') {
-      result = result.filter(c => {
-        if (!c.created_at) return false;
-        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-        return itemDateStr === todayLocalStr;
-      });
-    } else if (dateFilter === '7days') {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 7);
-      const cutoffStr = cutoff.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-      result = result.filter(c => {
-        if (!c.created_at) return false;
-        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-        return itemDateStr >= cutoffStr;
-      });
-    } else if (dateFilter === '30days') {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 60);
-      const cutoffStr = cutoff.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-      result = result.filter(c => {
-        if (!c.created_at) return false;
-        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-        return itemDateStr >= cutoffStr;
-      });
-    } else if (dateFilter === 'custom') {
-      if (startDate) {
-        result = result.filter(c => {
-          if (!c.created_at) return false;
-          const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-          return itemDateStr >= startDate;
-        });
-      }
-      if (endDate) {
-        result = result.filter(c => {
-          if (!c.created_at) return false;
-          const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-          return itemDateStr <= endDate;
-        });
-      }
-    }
-
-    if (auditFilter !== 'all') {
-      result = result.filter(c => {
-        let hasOverride = false;
-        try {
-          if (c.resolution && c.resolution !== 'Pending' && c.resolution !== 'Solved') {
-            const history = JSON.parse(c.resolution);
-            if (Array.isArray(history)) {
-              hasOverride = history.some((log) => 
-                log.old_category !== log.new_category || 
-                log.old_priority !== log.new_priority
-              );
-            }
-          }
-        } catch (e) {}
-        
-        if (auditFilter === 'confirmed') {
-          return !hasOverride;
-        } else if (auditFilter === 'corrected') {
-          return hasOverride;
-        }
-        return true;
-      });
-    }
-
-    setFilteredChats(result);
-  }, [searchQuery, statusFilter, priorityFilter, categoryFilter, dateFilter, startDate, endDate, auditFilter, chats]);
-
-  // Open / bring to front a floating window
-  const handleSelectChat = (chat: any) => {
-    const existing = activeWindows.find(w => w.id === chat.id);
-    const newZ = maxZIndex + 1;
-    setMaxZIndex(newZ);
-
-    if (existing) {
-      // Just bring to front and focus
-      setActiveWindows(prev => prev.map(w => w.id === chat.id ? { ...w, zIndex: newZ } : w));
-      return;
-    }
-
-    // Stagger initial window position cleanly
-    const offset = (activeWindows.length % 5) * 25;
-    const initialX = typeof window !== 'undefined' ? Math.max(20, Math.min(window.innerWidth - 780, 120 + offset)) : 120;
-    const initialY = 90 + offset;
-
-    const newWin = {
-      id: chat.id,
-      chat,
-      x: initialX,
-      y: initialY,
-      zIndex: newZ
-    };
-
-    setActiveWindows(prev => [...prev, newWin]);
-
-    // Fetch full untruncated conversation history for this single chat on-demand
-    fetch(`/api/chats?id=${chat.id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          const fullChat = data.find((c: any) => c.id === chat.id) || data[0];
-          if (fullChat) {
-            setActiveWindows(prev => prev.map(w => {
-              if (w.id === chat.id) {
-                return { 
-                  ...w, 
-                  chat: { 
-                    ...w.chat, 
-                    ...fullChat
-                  } 
-                };
-              }
-              return w;
-            }));
-          }
-        }
-      })
-      .catch(err => console.error('Error fetching full chat details:', err));
-  };
-
-  // Open chat from custom event (GlobalNotifier) or URL search parameters
-  useEffect(() => {
-    const openChatById = async (targetChatId: string) => {
-      if (!targetChatId) return;
-
-      // 1. Check in currently loaded chats
-      let found = chats.find(c => c.id === targetChatId);
-      if (!found) {
-        try {
-          const res = await fetch(`/api/chats?id=${targetChatId}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-              found = data[0];
-            }
-          }
-        } catch (e) {
-          console.error('Failed to fetch chat by id:', e);
-        }
-      }
-
-      if (found) {
-        handleSelectChat(found);
-      }
-    };
-
-    // Check URL parameters for open_chat or chat_id
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const openId = urlParams.get('open_chat') || urlParams.get('chat_id');
-      if (openId) {
-        openChatById(openId);
-      }
-    }
-
-    // Event listener for opening chat from GlobalNotifier
-    const handleOpenEvent = (e: any) => {
-      const targetId = e.detail?.chatId;
-      if (targetId) {
-        openChatById(targetId);
-      }
-    };
-
-    window.addEventListener('open-chat-modal', handleOpenEvent);
-    return () => window.removeEventListener('open-chat-modal', handleOpenEvent);
-  }, [chats]);
-
-  const isAllSelected = filteredChats.length > 0 && selectedIds.length === filteredChats.length;
-  const isSomeSelected = selectedIds.length > 0 && selectedIds.length < filteredChats.length;
-
   return (
-    <div className="h-full flex flex-col gap-6 relative">
-      {/* Page Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-display">{t('chatsTitle')}</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('chatsSub')}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Desktop Web Notification Control */}
-          <button
-            onClick={handleToggleDesktopNotification}
-            className={`flex items-center gap-2 border px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
-              desktopNotifyEnabled
-                ? 'bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-955/20 dark:border-sky-900/50 dark:text-sky-400'
-                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-855'
-            }`}
-            title="เปิด/ปิดการแจ้งเตือนป๊อปอัพหน้าจอคอมพิวเตอร์"
-          >
-            {desktopNotifyEnabled ? '💻 ป๊อปอัพหน้าจอ: เปิด' : '💻 ป๊อปอัพหน้าจอ: ปิด'}
-          </button>
+    <div className="space-y-4">
+      {/* Top Header */}
+      <ChatHeader
+        soundEnabled={soundEnabled}
+        onToggleSound={() => {
+          const next = !soundEnabled;
+          setSoundEnabled(next);
+          localStorage.setItem('chats_sound_enabled', String(next));
+        }}
+        desktopNotifyEnabled={desktopNotifyEnabled}
+        onToggleDesktopNotify={() => {
+          const next = !desktopNotifyEnabled;
+          setDesktopNotifyEnabled(next);
+          localStorage.setItem('desktop_popup_enabled', String(next));
+          window.dispatchEvent(new Event('desktop-popup-setting-changed'));
+        }}
+        onOpenTagManager={() => setShowTagManagerModal(true)}
+        onExportCSV={() => exportChatsToCSV(filteredChats, dateFilter)}
+        language={language}
+      />
 
-          {/* Sound Alert Control Group */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => {
-                const next = !soundEnabled;
-                setSoundEnabled(next);
-                localStorage.setItem('chats_sound_enabled', String(next));
-                if (next) {
-                  playAlertTone(undefined, undefined, true);
-                }
-              }}
-              className={`flex items-center gap-2 border px-3.5 py-2.5 rounded-l-xl text-xs font-extrabold transition-all cursor-pointer shadow-sm ${
-                soundEnabled
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-emerald-600/20 dark:bg-emerald-600 dark:border-emerald-500'
-                  : 'bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-250 dark:border-slate-750'
-              }`}
-              title={soundEnabled ? 'ปิดเสียงแจ้งเตือนเคสด่วนที่สุด' : 'เปิดเสียงแจ้งเตือนเคสด่วนที่สุด'}
-            >
-              {soundEnabled ? (
-                <>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                  </span>
-                  <span>🔔 เสียงเคสด่วน: เปิด</span>
-                </>
-              ) : (
-                <span>🔕 เสียงเคสด่วน: ปิด</span>
-              )}
-            </button>
-            <button
-              onClick={() => setShowSoundModal(true)}
-              className={`border-y border-r px-2.5 py-2.5 rounded-r-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
-                soundEnabled
-                  ? 'bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-600 dark:bg-emerald-700 dark:border-emerald-600'
-                  : 'bg-slate-150 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 dark:text-slate-400 border-slate-250 dark:border-slate-750'
-              }`}
-              title="ตั้งค่ารูปแบบเสียงแจ้งเตือน ความดัง และทดสอบเปิดเสียง"
-            >
-              ⚙️
-            </button>
-          </div>
+      {/* 1. Quick Tabs Bar */}
+      <ChatQuickTabs
+        totalCount={totalCount}
+        urgentCount={urgentCount}
+        imageOnlyCount={imageOnlyCount}
+        statusFilter={statusFilter}
+        priorityFilter={priorityFilter}
+        tagFilter={tagFilter}
+        dateFilter={dateFilter}
+        onDateFilterChange={setDateFilter}
+        startDate={startDate}
+        onStartDateChange={setStartDate}
+        endDate={endDate}
+        onEndDateChange={setEndDate}
+        onSelectTab={(tab) => {
+          if (tab === 'all') {
+            setStatusFilter('all');
+            setPriorityFilter('all');
+            setTagFilter('all');
+          } else if (tab === 'urgent') {
+            setPriorityFilter('urgent');
+            setStatusFilter('all');
+            setTagFilter('all');
+          } else if (tab === 'image-only') {
+            setTagFilter('#รูปภาพล้วน');
+            setStatusFilter('all');
+            setPriorityFilter('all');
+          }
+        }}
+        language={language}
+      />
 
-          <SoundSettingsModal
-            isOpen={showSoundModal}
-            onClose={() => setShowSoundModal(false)}
-            onSettingsChanged={() => {
-              const savedSound = localStorage.getItem('chats_sound_enabled') === 'true';
-              setSoundEnabled(savedSound);
-            }}
-          />
-          
-          <LanguageToggle />
-        </div>
-      </div>
+      {/* 2. Filter Bar */}
+      <ChatFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        priorityFilter={priorityFilter}
+        onPriorityChange={setPriorityFilter}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        tagFilter={tagFilter}
+        onTagChange={setTagFilter}
+        auditFilter={auditFilter}
+        onAuditChange={setAuditFilter}
+        dateFilter={dateFilter}
+        onDateChange={setDateFilter}
+        startDate={startDate}
+        onStartDateChange={setStartDate}
+        endDate={endDate}
+        onEndDateChange={setEndDate}
+        categories={categories}
+        allAvailableTags={allAvailableTags}
+        pendingCount={pendingCount}
+        completedCount={completedCount}
+        urgentCount={urgentCount}
+        highCount={highCount}
+        mediumCount={mediumCount}
+        lowCount={lowCount}
+        onClearFilters={handleClearFilters}
+        language={language}
+      />
 
-      {/* ================= LIST VIEW ================= */}
-      <div className="space-y-6">
-        {/* Quick View Tabs Bar (Admin Shortcut Queues) */}
-        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100/90 dark:bg-slate-855 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
-          {[
-            {
-              id: 'all',
-              label: language === 'th' ? '📋 ทั้งหมด' : '📋 All',
-              count: companyFilteredChats.length,
-              isActive: statusFilter === 'all' && priorityFilter === 'all' && tagFilter === 'all',
-              onClick: () => { setStatusFilter('all'); setPriorityFilter('all'); setTagFilter('all'); }
-            },
-            {
-              id: 'urgent',
-              label: language === 'th' ? '🚨 เคสด่วนที่สุด' : '🚨 Urgent Cases',
-              count: urgentCount,
-              isActive: priorityFilter === 'urgent',
-              onClick: () => { setPriorityFilter('urgent'); setStatusFilter('all'); setTagFilter('all'); },
-              badgeColor: 'bg-rose-500 text-white'
-            },
-            {
-              id: 'image-only',
-              label: language === 'th' ? '📷 รูปภาพล้วน' : '📷 Image Only',
-              count: companyFilteredChats.filter(c => 
-                (c.tags && c.tags.includes('#รูปภาพล้วน')) || 
-                (typeof c.summary === 'string' && (c.summary.includes('รูปภาพล้วน') || c.summary.includes('ไม่ระบุข้อความพิมพ์')))
-              ).length,
-              isActive: tagFilter === '#รูปภาพล้วน',
-              onClick: () => { setTagFilter('#รูปภาพล้วน'); setStatusFilter('all'); setPriorityFilter('all'); },
-              badgeColor: 'bg-fuchsia-500 text-white'
-            },
-            {
-              id: 'pending',
-              label: language === 'th' ? '⏳ รอดำเนินการ' : '⏳ Pending',
-              count: pendingCount,
-              isActive: statusFilter === 'pending' && priorityFilter === 'all' && tagFilter === 'all',
-              onClick: () => { setStatusFilter('pending'); setPriorityFilter('all'); setTagFilter('all'); },
-              badgeColor: 'bg-amber-500 text-white'
-            },
-            {
-              id: 'completed',
-              label: language === 'th' ? '✅ แยกแยะแล้ว' : '✅ Completed',
-              count: completedCount,
-              isActive: statusFilter === 'completed' && priorityFilter === 'all' && tagFilter === 'all',
-              onClick: () => { setStatusFilter('completed'); setPriorityFilter('all'); setTagFilter('all'); },
-              badgeColor: 'bg-emerald-500 text-white'
-            }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={tab.onClick}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none ${
-                tab.isActive
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 font-extrabold scale-[1.02]'
-                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800 shadow-2xs'
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
-                  tab.isActive
-                    ? 'bg-white/20 text-white'
-                    : tab.badgeColor || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </div>
+      {/* 3. Chat Table */}
+      <ChatTable
+        chats={filteredChats}
+        loading={loading}
+        categories={categories}
+        activeWindows={activeWindows}
+        onSelectChat={openChatWindow}
+        onHoverImg={setTableHoveredImg}
+        dateFilter={dateFilter}
+        onDateChange={setDateFilter}
+        language={language}
+      />
 
-        {/* Filter Bar */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col gap-4 transition-all duration-250">
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-start">
-            {/* Search with keyboard shortcut hint */}
-            <div className="relative w-full text-slate-800 dark:text-slate-100">
-              <Search className="absolute left-3.5 top-3.5 text-slate-400" size={16} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder={t('filterSearch')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl pl-10 pr-12 py-2.5 text-sm focus:border-indigo-600 focus:outline-none transition font-semibold text-slate-800 dark:text-slate-100"
-              />
-              <span className="absolute right-3 top-3 text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-200/60 dark:bg-slate-750 px-1.5 py-0.5 rounded border border-slate-300/60 dark:border-slate-700 pointer-events-none">
-                /
-              </span>
-            </div>
+      {/* 5. Floating Windows */}
+      <FloatingWindowsContainer
+        activeWindows={activeWindows}
+        categories={categories}
+        userProfile={userProfile}
+        allChats={chats}
+        maxZIndex={maxZIndex}
+        onOpenChat={openChatWindow}
+        onCloseWindow={closeWindow}
+        onFocusWindow={focusWindow}
+        onSaved={fetchInitialData}
+        onPositionChange={updateWindowPosition}
+        onUpdateTags={handleUpdateTags}
+        language={language}
+      />
 
-            {/* Status with Badge Counters */}
-            <div className="w-full">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-              >
-                <option value="all">{t('filterStatus')}</option>
-                <option value="pending">{t('filterPending')} ({pendingCount})</option>
-                <option value="completed">{t('filterCompleted')} ({completedCount})</option>
-              </select>
-            </div>
+      {/* 6. Tag Management Modals */}
+      <TagRenameModal
+        isOpen={showTagRenameModal}
+        onClose={() => setShowTagRenameModal(false)}
+        tagToRename={tagToRename}
+        onConfirmRename={() => {}}
+      />
 
-            {/* Priority with Badge Counters */}
-            <div className="w-full">
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-855 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-              >
-                <option value="all">{t('filterPriority')}</option>
-                <option value="urgent">Urgent (ด่วนที่สุด) ({urgentCount})</option>
-                <option value="high">High (ด่วนสูง) ({highCount})</option>
-                <option value="medium">Medium (ด่วนปานกลาง) ({mediumCount})</option>
-                <option value="low">Low (ด่วนน้อย) ({lowCount})</option>
-              </select>
-            </div>
+      <TagManagerModal
+        isOpen={showTagManagerModal}
+        onClose={() => setShowTagManagerModal(false)}
+        allAvailableTags={allAvailableTags}
+        onSaveRenameTag={handleSaveRenameSystemTag}
+      />
 
-          {/* Category */}
-          <div className="w-full">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-            >
-              <option value="all">{t('filterCategory')}</option>
-              {categories.map((cat) => {
-                const label = language === 'en' 
-                  ? (cat.name_en || getCategoryLabel(cat, 'en')) 
-                  : (cat.name_th || cat.name || getCategoryLabel(cat, 'th'));
-                return (
-                  <option key={cat.id} value={getBaseCatId(cat.id)}>{label}</option>
-                );
-              })}
-            </select>
-          </div>
+      <SoundSettingsModal
+        isOpen={showSoundModal}
+        onClose={() => setShowSoundModal(false)}
+      />
 
-          {/* Tag Filter Dropdown */}
-          <div className="w-full">
-            <select
-              value={tagFilter}
-              onChange={(e) => setTagFilter(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-            >
-              <option value="all">🏷️ แท็ก: ทั้งหมด</option>
-              {allAvailableTags.map((tagObj) => (
-                <option key={tagObj.name} value={tagObj.name}>
-                  {tagObj.name} ({tagObj.desc})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Audit Filter */}
-          <div className="w-full">
-            <select
-              value={auditFilter}
-              onChange={(e) => setAuditFilter(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-            >
-              <option value="all">{t('filterAiAudit')}</option>
-              <option value="confirmed">{t('filterConfirmed')}</option>
-              <option value="corrected">{t('filterCorrected')}</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Row 2: Date Filter & Quick Filter Pills */}
-        <div className="flex flex-col gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Timeframe Filter Dropdown */}
-              <div className="w-[200px]">
-                <select
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-855 dark:text-slate-100"
-                >
-                  <option value="today">{language === 'th' ? 'ช่วงเวลา: วันนี้' : 'Timeframe: Today'}</option>
-                  <option value="7days">{language === 'th' ? 'ช่วงเวลา: 7 วันล่าสุด' : 'Timeframe: Last 7 Days'}</option>
-                  <option value="30days">{language === 'th' ? 'ช่วงเวลา: 30 วันล่าสุด' : 'Timeframe: Last 30 Days'}</option>
-                  <option value="custom">{language === 'th' ? 'ระบุช่วงวันที่เอง...' : 'Custom Range...'}</option>
-                </select>
-              </div>
-
-              {dateFilter === 'custom' && (
-                <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-555 bg-slate-50 dark:bg-slate-855/50 p-2 rounded-xl border border-slate-150 dark:border-slate-800">
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold">{language === 'th' ? 'จาก:' : 'From:'}</span>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-800 dark:text-slate-100 w-[130px]"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold">{language === 'th' ? 'ถึง:' : 'To:'}</span>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-semibold focus:border-indigo-600 focus:outline-none transition text-slate-800 dark:text-slate-100 w-[130px]"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Recommendation #3: Active Filter Chips Bar */}
-        {isAnyFilterActive && (
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-slate-500 dark:text-slate-400 font-semibold mr-1">
-                {language === 'th' ? `ฟิลเตอร์ที่เปิดใช้งานอยู่ (` : 'Active Filters ('}
-                <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{filteredChats.length}</span>
-                {language === 'th' ? ` รายการ):` : ` results):`}
-              </span>
-
-              {searchQuery && (
-                <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-lg border border-slate-250 dark:border-slate-700 font-bold text-[11px]">
-                  🔍 {searchQuery}
-                  <button type="button" onClick={() => setSearchQuery('')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
-                </span>
-              )}
-              {statusFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-900/50 font-bold text-[11px]">
-                  ⏳ {statusFilter === 'pending' ? 'รอดำเนินการ' : 'แยกแยะแล้ว'}
-                  <button type="button" onClick={() => setStatusFilter('all')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
-                </span>
-              )}
-              {priorityFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-rose-50 dark:bg-rose-955/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-lg border border-rose-200 dark:border-rose-900/50 font-bold text-[11px]">
-                  🔴 {priorityFilter.toUpperCase()}
-                  <button type="button" onClick={() => setPriorityFilter('all')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
-                </span>
-              )}
-              {categoryFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-sky-50 dark:bg-sky-955/40 text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-lg border border-sky-200 dark:border-sky-900/50 font-bold text-[11px]">
-                  📌 {categories.find((c: any) => c.id === categoryFilter)?.name || categoryFilter}
-                  <button type="button" onClick={() => setCategoryFilter('all')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
-                </span>
-              )}
-              {tagFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-955/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-900/50 font-bold text-[11px]">
-                  🏷️ {tagFilter}
-                  <button type="button" onClick={() => setTagFilter('all')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
-                </span>
-              )}
-              {dateFilter !== 'today' && (
-                <span className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-955/40 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-lg border border-purple-200 dark:border-purple-900/50 font-bold text-[11px]">
-                  📅 {dateFilter === '7days' ? '7 วันล่าสุด' : dateFilter === '30days' ? '30 วันล่าสุด' : dateFilter === 'all' ? 'ทั้งหมด' : 'กำหนดเอง'}
-                  <button type="button" onClick={() => setDateFilter('today')} className="hover:text-rose-500 font-extrabold ml-1 cursor-pointer">✕</button>
-                </span>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleClearFilters}
-              className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-bold bg-rose-50 dark:bg-rose-955/30 px-3 py-1.5 rounded-lg border border-rose-100 dark:border-rose-900/40 transition cursor-pointer shrink-0"
-            >
-              <RotateCcw size={12} />
-              <span>{language === 'th' ? 'ล้างตัวกรองทั้งหมด' : 'Clear All Filters'}</span>
-            </button>
-          </div>
-        )}
-        </div>
-
-        {/* Bulk Action Bar */}
-        {selectedIds.length > 0 && (
-          <div className="bg-indigo-50/80 dark:bg-indigo-950/45 border border-indigo-150 dark:border-indigo-900/50 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in shadow-sm select-none backdrop-blur-sm mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-indigo-650 dark:text-indigo-400 font-extrabold text-sm">
-                {language === 'th' ? `เลือกอยู่ ${selectedIds.length} เคส` : `Selected ${selectedIds.length} cases`}
-              </span>
-              <button 
-                onClick={() => setSelectedIds([])}
-                className="text-xs font-bold text-slate-500 dark:text-slate-450 hover:text-slate-700 dark:hover:text-slate-200 underline cursor-pointer"
-              >
-                {language === 'th' ? 'ยกเลิกทั้งหมด' : 'Deselect all'}
-              </button>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => handleBulkUpdate(undefined, 'completed')}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                <CheckCircle size={14} /> {language === 'th' ? 'ทำเครื่องหมายว่าแยกแยะแล้ว' : 'Mark as Completed'}
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleBulkUpdate(e.target.value, undefined);
-                      e.target.value = ''; // reset selection
-                    }
-                  }}
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 px-3 py-2.5 rounded-xl cursor-pointer focus:outline-none"
-                >
-                  <option value="">{language === 'th' ? '-- ย้ายหมวดหมู่แชต --' : '-- Batch Move Category --'}</option>
-                  {categories.map(cat => {
-                    const label = language === 'en' 
-                      ? (cat.name_en || getCategoryLabel(cat, 'en')) 
-                      : (cat.name_th || cat.name || getCategoryLabel(cat, 'th'));
-                    return (
-                      <option key={cat.id} value={cat.id}>{label}</option>
-                    );
-                  })}
-                  <option value="other">{language === 'th' ? 'เรื่องอื่นๆ' : 'Other Inquiries'}</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* List Table */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-250">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-400 dark:text-slate-555">
-              <RefreshCw size={32} className="animate-spin text-indigo-600 dark:text-indigo-400" />
-              <span className="text-sm font-semibold">{t('loadingChats')}</span>
-            </div>
-          ) : filteredChats.length === 0 ? (
-            <div className="p-20 text-center text-slate-400 dark:text-slate-555 text-sm flex flex-col items-center justify-center gap-3">
-              <MessageSquare size={36} className="text-slate-300 dark:text-slate-700" />
-              <span>{t('noChatsFound')}</span>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-855/50 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold">
-                    <th className="px-3 py-3.5 w-10 text-center select-none">
-                      <input 
-                        type="checkbox" 
-                        checked={isAllSelected}
-                        ref={el => {
-                          if (el) el.indeterminate = isSomeSelected;
-                        }}
-                        onChange={handleToggleSelectAll}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
-                      />
-                    </th>
-                    <th className="px-2 py-2.5 w-[115px] min-w-[105px] max-w-[125px] whitespace-nowrap">
-                      <div className="flex flex-col leading-tight">
-                        <span>{language === 'th' ? 'แชทไอดี' : 'Chat ID'}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Chat ID)</span>
-                      </div>
-                    </th>
-                    <th className="px-1.5 py-2.5 whitespace-nowrap">
-                      <div className="flex flex-col leading-tight">
-                        <span>{language === 'th' ? 'ลูกค้า' : 'Customer'}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Customer)</span>
-                      </div>
-                    </th>
-                    <th className="px-2 py-2.5 max-w-[200px]">
-                      <div className="flex flex-col leading-tight">
-                        <span>{language === 'th' ? 'ข้อสรุปปัญหา' : 'AI Summary'}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(AI Summary)</span>
-                      </div>
-                    </th>
-                    <th className="px-1.5 py-2.5 whitespace-nowrap">
-                      <div className="flex flex-col leading-tight">
-                        <span>{language === 'th' ? 'หมวดหมู่' : 'Category'}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Category)</span>
-                      </div>
-                    </th>
-                    <th className="px-1.5 py-2.5 whitespace-nowrap text-center">
-                      <div className="flex flex-col leading-tight items-center">
-                        <span>{language === 'th' ? 'ความด่วน' : 'Priority'}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Priority)</span>
-                      </div>
-                    </th>
-                    <th className="px-1.5 py-2.5 whitespace-nowrap text-center">
-                      <div className="flex flex-col leading-tight items-center">
-                        <span>{language === 'th' ? 'สถานะ' : 'Status'}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Status)</span>
-                      </div>
-                    </th>
-                    <th className="px-3 py-2.5 w-[115px] min-w-[110px] whitespace-nowrap text-right">
-                      <div className="flex flex-col leading-tight items-end">
-                        <span>{language === 'th' ? 'เวลา' : 'Time'}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">(Time)</span>
-                      </div>
-                    </th>
-                    <th className="px-1 py-2.5 w-5"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredChats.map((chat) => {
-                    const isSelected = activeWindows.some(w => w.id === chat.id);
-                    const isChecked = selectedIds.includes(chat.id);
-                    return (
-                      <tr 
-                        key={chat.id} 
-                        onClick={() => handleSelectChat(chat)}
-                        className={'hover:bg-slate-50 dark:hover:bg-slate-855/50 transition-colors cursor-pointer group ' + (isSelected ? 'bg-indigo-50/20 dark:bg-indigo-955/10 font-bold' : '') + (isChecked ? ' bg-indigo-50/10 dark:bg-indigo-955/5' : '')}
-                      >
-                        {/* Checkbox */}
-                        <td className="px-2 py-3 w-8 text-center" onClick={(e) => e.stopPropagation()}>
-                          <input 
-                            type="checkbox" 
-                            checked={isChecked}
-                            onChange={(e) => handleToggleSelect(chat.id, e as any)}
-                            className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-700 rounded focus:ring-indigo-500 cursor-pointer"
-                          />
-                        </td>
-
-                        {/* Chat ID */}
-                        <td className="px-2 py-3 w-[115px] max-w-[125px]">
-                          <span 
-                            className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-slate-750 block truncate cursor-help"
-                            title={`แชทไอดีเต็ม:\n${chat.id}`}
-                          >
-                            {chat.id && chat.id.length > 15 ? `${chat.id.slice(0, 7)}...${chat.id.slice(-4)}` : chat.id}
-                          </span>
-                        </td>
-
-                        {/* Customer */}
-                        <td className="px-2 py-3 font-bold text-slate-800 dark:text-slate-200 min-w-[130px] max-w-[180px]">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="truncate" title={chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}>
-                              {chat.customer_name || ('ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8)))}
-                            </span>
-                            {chat.tags && chat.tags.includes('#VIP') && (
-                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-955/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shrink-0 select-none">
-                                ⭐ VIP
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        
-                        {/* Summary */}
-                        <td className="px-2 py-3 max-w-[210px] text-slate-600 dark:text-slate-300 font-medium">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            {(() => {
-                              const isImgOnly = (chat.tags && chat.tags.includes('#รูปภาพล้วน')) || 
-                                (typeof chat.summary === 'string' && (chat.summary.includes('รูปภาพล้วน') || chat.summary.includes('ไม่ระบุข้อความพิมพ์')));
-                              const firstImg = getChatFirstImageUrl(chat);
-                              return (
-                                <div className="flex items-center gap-1 shrink-0">
-                                  {isImgOnly && (
-                                    <span className="inline-flex items-center gap-0.5 bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-955/60 dark:text-fuchsia-300 text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border border-fuchsia-200 dark:border-fuchsia-800">
-                                      📷 {language === 'th' ? 'รูปภาพล้วน' : 'Img only'}
-                                    </span>
-                                  )}
-                                  {firstImg && (
-                                    <span
-                                      onMouseEnter={() => setTableHoveredImg(firstImg)}
-                                      onMouseLeave={() => setTableHoveredImg(null)}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.open(firstImg, '_blank');
-                                      }}
-                                      className="inline-flex items-center gap-0.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-1.5 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800 cursor-zoom-in transition"
-                                      title="ชี้เมาส์เพื่อซูมดูรูปภาพทันที (Hover Zoom)"
-                                    >
-                                      🖼️ ดูรูป
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })()}
-                            <span className="truncate block flex-1">
-                              {chat.summary || <span className="text-slate-400 dark:text-slate-555 italic">{language === 'th' ? 'ไม่มีข้อมูลสรุป' : 'No summary'}</span>}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Category */}
-                        <td className="px-1.5 py-2.5 whitespace-nowrap">
-                          <div className="flex flex-col items-start gap-1">
-                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold px-2 py-0.5 rounded-lg truncate max-w-[170px]">
-                              {(() => {
-                                const found = categories.find(c => c.id === chat.category_id || getBaseCatId(c.id) === getBaseCatId(chat.category_id));
-                                return getCategoryLabel(found || chat.category_id, language);
-                              })()}
-                            </span>
-                            {chat.chat_issues && chat.chat_issues.length > 1 && (
-                              <span className="bg-indigo-50 dark:bg-indigo-955/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md border border-indigo-100/60 dark:border-indigo-900/40 shrink-0 leading-none">
-                                +{chat.chat_issues.length - 1} {language === 'th' ? 'เรื่อง' : 'issues'}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Priority */}
-                        <td className="px-2 py-3 text-center">
-                          {(() => {
-                            const pri = chat.priority?.toLowerCase() || 'low';
-                            if (pri === 'urgent') {
-                              return (
-                                <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-955/30 dark:text-rose-400 dark:border-rose-900/50 shadow-sm">
-                                  <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                                  </span>
-                                  urgent
-                                </span>
-                              );
-                            }
-
-                            let styles = 'bg-slate-55 text-slate-500 dark:bg-slate-800 dark:text-slate-400';
-                            if (pri === 'high') styles = 'bg-orange-50 text-orange-655 border border-orange-100 dark:bg-orange-955/30 dark:text-orange-400';
-                            else if (pri === 'medium') styles = 'bg-amber-50 text-amber-655 border-amber-200 dark:bg-amber-955/40 dark:text-amber-400';
-                            else if (pri === 'low') styles = 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-955/30 dark:text-blue-455';
-                            return (
-                              <span className={'text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide ' + styles}>
-                                {pri}
-                              </span>
-                            );
-                          })()}
-                        </td>
-
-                        {/* Status with 1-Click Quick Toggle */}
-                        <td className="px-2 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            onClick={(e) => handleToggleSingleStatus(chat, e)}
-                            className={'text-xs font-bold px-2.5 py-1 rounded-lg whitespace-nowrap border transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 flex items-center gap-1 ' + 
-                              (chat.status === 'completed' 
-                                ? 'bg-emerald-50 dark:bg-emerald-955/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' 
-                                : 'bg-amber-50 dark:bg-amber-955/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                              )
-                            }
-                            title="คลิกเพื่อสลับสถานะ (รอดำเนินการ ↔ แยกแยะแล้ว)"
-                          >
-                            {chat.status === 'completed' ? (language === 'th' ? '✅ แยกแยะแล้ว' : '✅ Completed') : (language === 'th' ? '⏳ รอดำเนินการ' : '⏳ Pending')}
-                          </button>
-                        </td>
-
-                        {/* Time */}
-                        <td className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 font-semibold whitespace-nowrap text-right w-[115px]">
-                          {chat.created_at ? (
-                            <div className="flex flex-col items-end leading-tight text-[11px]">
-                              <span className="font-bold text-slate-700 dark:text-slate-200">
-                                {new Date(chat.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'numeric', year: '2-digit' })}
-                              </span>
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
-                                {new Date(chat.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
-                              </span>
-                            </div>
-                          ) : '-'}
-                        </td>
-
-                        {/* Action */}
-                        <td className="px-2 py-3 text-center">
-                          <ChevronRight size={18} className="text-slate-300 dark:text-slate-650 group-hover:text-indigo-650 group-hover:translate-x-1 transition-all" />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ================= FLOATING CHAT WINDOWS RENDERER ================= */}
-      {activeWindows.map((win) => (
-        <FloatingChatWindow
-          key={win.id}
-          chat={win.chat}
-          initialX={win.x}
-          initialY={win.y}
-          initialZIndex={win.zIndex}
-          categories={categories}
-          userProfile={userProfile}
-          allChats={chats}
-          onOpenChat={handleSelectChat}
-          onClose={() => {
-            setActiveWindows(prev => prev.filter(w => w.id !== win.id));
-          }}
-          onFocus={() => {
-            const newZ = maxZIndex + 1;
-            setMaxZIndex(newZ);
-            setActiveWindows(prev => prev.map(w => w.id === win.id ? { ...w, zIndex: newZ } : w));
-          }}
-          onSaved={() => {
-            fetchInitialData();
-          }}
-          onPositionChange={(newX: number, newY: number) => {
-            setActiveWindows(prev => prev.map(w => w.id === win.id ? { ...w, x: newX, y: newY } : w));
-          }}
-          onUpdateTags={handleUpdateTags}
-          language={language}
-        />
-      ))}
-
-      {/* Global Tag Rename Modal */}
-      {showTagRenameModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
-                ✏️ แก้ไขชื่อแท็กกลางทั่วทั้งระบบ
-              </h3>
-              <button
-                onClick={() => setShowTagRenameModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-semibold">
-                ระบบจะทำการเปลี่ยนชื่อแท็ก <span className="font-bold text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">{tagToRename}</span> สำหรับ <span className="font-bold text-rose-600">ทุกเคสลูกค้า</span> ที่ติดแท็กนี้อยู่ ให้เปลี่ยนเป็นชื่อใหม่พร้อมกันทันที:
-              </p>
-
-              <div>
-                <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
-                  ชื่อแท็กใหม่
-                </label>
-                <input
-                  type="text"
-                  value={newGlobalTagName}
-                  onChange={(e) => setNewGlobalTagName(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-600 focus:outline-none text-slate-800 dark:text-slate-100"
-                  placeholder="เช่น #รอสลิปโอนเงิน..."
-                  autoFocus
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => setShowTagRenameModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={handleExecuteGlobalTagRename}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition cursor-pointer"
-              >
-                ✓ ยืนยันเปลี่ยนชื่อทุกเคส
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tag Manager Modal (Full system tags management) */}
-      {showTagManagerModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
-                ⚙️ จัดการและแก้ไขชื่อแท็กทั้งหมดในระบบ (Tag Manager)
-              </h3>
-              <button
-                onClick={() => setShowTagManagerModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              คลิกปุ่ม <span className="font-bold text-indigo-600 dark:text-indigo-400">✏️ แก้ไขชื่อ</span> ด้านหลังแท็กที่ต้องการเปลี่ยน การเปลี่ยนชื่อแท็กตรงนี้จะทำการอัปเดตชื่อใหม่ให้ทุกเคสในระบบทันที:
-            </p>
-
-            <div className="space-y-2 max-h-[350px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-              {allAvailableTags.map((tagObj, idx) => {
-                const isEditing = editingSystemTagIndex === idx;
-                return (
-                  <div key={idx} className="flex items-center justify-between py-2.5 gap-3">
-                    {isEditing ? (
-                      <div className="flex items-center gap-2 flex-1">
-                        <input
-                          type="text"
-                          value={editingSystemTagValue}
-                          onChange={(e) => setEditingSystemTagValue(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSaveRenameSystemTag(idx);
-                            if (e.key === 'Escape') setEditingSystemTagIndex(null);
-                          }}
-                          className="flex-1 bg-slate-50 dark:bg-slate-850 border border-indigo-500 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none"
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => handleSaveRenameSystemTag(idx)}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition cursor-pointer"
-                        >
-                          บันทึก
-                        </button>
-                        <button
-                          onClick={() => setEditingSystemTagIndex(null)}
-                          className="text-xs font-bold text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                        >
-                          ยกเลิก
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs font-bold px-3 py-1 rounded-lg border ${tagObj.style}`}>
-                            {tagObj.name}
-                          </span>
-                          <span className="text-[11px] text-slate-400 font-medium">({tagObj.desc})</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setEditingSystemTagIndex(idx);
-                            setEditingSystemTagValue(tagObj.name);
-                          }}
-                          className="flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 transition cursor-pointer shadow-sm"
-                        >
-                          ✏️ แก้ไขชื่อ
-                        </button>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => setShowTagManagerModal(false)}
-                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer"
-              >
-                ปิดหน้าต่าง
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Table Hover Zoom Modal Overlay */}
-      {tableHoveredImg && (
-        <div className="pointer-events-none fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950/95 p-3 rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-md max-w-[500px] max-h-[500px] flex flex-col items-center animate-fade-in">
-          <div className="w-full flex items-center justify-between pb-2 text-[11px] font-bold text-slate-300">
-            <span className="flex items-center gap-1.5">
-              <span>🔍</span>
-              <span>พรีวิวรูปภาพจากแชต (Hover Zoom)</span>
-            </span>
-            <span className="text-[10px] text-indigo-400 font-mono">เลื่อนเมาส์ออกเพื่อปิด</span>
-          </div>
-          <img 
-            src={tableHoveredImg} 
-            alt="Table hover zoom preview" 
-            className="max-w-[460px] max-h-[420px] object-contain rounded-xl shadow-lg border border-slate-800"
-          />
-        </div>
-      )}
+      <ImageHoverZoom imageUrl={tableHoveredImg} />
     </div>
   );
 }

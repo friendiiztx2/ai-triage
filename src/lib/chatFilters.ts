@@ -1,0 +1,148 @@
+import { getBaseCatId } from './categories';
+
+export interface ChatFilterCriteria {
+  searchQuery?: string;
+  statusFilter?: string;
+  priorityFilter?: string;
+  categoryFilter?: string;
+  tagFilter?: string;
+  dateFilter?: string;
+  startDate?: string;
+  endDate?: string;
+  auditFilter?: string;
+}
+
+export function filterChats(chats: any[], criteria: ChatFilterCriteria): any[] {
+  let result = chats;
+
+  // Search
+  if (criteria.searchQuery) {
+    const q = criteria.searchQuery.toLowerCase().trim();
+    result = result.filter((c) => {
+      const nameMatch = c.customer_name?.toLowerCase().includes(q);
+      const idMatch = c.id?.toLowerCase().includes(q) || c.customer_id?.toLowerCase().includes(q);
+      const summaryMatch = (c.summary || c.problem_summary)?.toLowerCase().includes(q);
+      const conversationMatch =
+        typeof c.conversation === 'string'
+          ? c.conversation.toLowerCase().includes(q)
+          : JSON.stringify(c.conversation || '').toLowerCase().includes(q);
+      const tagsMatch = c.tags?.some((t: string) => t.toLowerCase().includes(q));
+
+      return nameMatch || idMatch || summaryMatch || conversationMatch || tagsMatch;
+    });
+  }
+
+  // Status
+  if (criteria.statusFilter && criteria.statusFilter !== 'all') {
+    result = result.filter((c) => (c.status || 'pending') === criteria.statusFilter);
+  }
+
+  // Priority
+  if (criteria.priorityFilter && criteria.priorityFilter !== 'all') {
+    result = result.filter((c) => {
+      const pri = c.priority?.toLowerCase() || 'low';
+      const urg = (c.urgency || '').toLowerCase();
+      let issueMatch = false;
+      if (c.chat_issues && c.chat_issues.length > 0) {
+        issueMatch = c.chat_issues.some((issue: any) => {
+          const ipri = issue.priority?.toLowerCase();
+          return ipri === criteria.priorityFilter;
+        });
+      }
+
+      if (criteria.priorityFilter === 'urgent') {
+        return pri === 'urgent' || pri === 'critical' || urg === 'urgent' || issueMatch;
+      }
+      return pri === criteria.priorityFilter || issueMatch;
+    });
+  }
+
+  // Category
+  if (criteria.categoryFilter && criteria.categoryFilter !== 'all') {
+    const targetBase = getBaseCatId(criteria.categoryFilter);
+    result = result.filter((c) => {
+      if (c.chat_issues && c.chat_issues.length > 0) {
+        return c.chat_issues.some(
+          (issue: any) =>
+            issue.category_id === criteria.categoryFilter ||
+            getBaseCatId(issue.category_id) === targetBase
+        );
+      }
+      return c.category_id === criteria.categoryFilter || getBaseCatId(c.category_id) === targetBase;
+    });
+  }
+
+  // Tag
+  if (criteria.tagFilter && criteria.tagFilter !== 'all') {
+    result = result.filter((c) => {
+      const tags = c.tags || [];
+      return tags.includes(criteria.tagFilter);
+    });
+  }
+
+  // Date
+  const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+
+  if (criteria.dateFilter === 'today') {
+    result = result.filter((c) => {
+      if (!c.created_at) return false;
+      const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+      return itemDateStr === todayLocalStr;
+    });
+  } else if (criteria.dateFilter === '7days') {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 7);
+    const cutoffStr = cutoff.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+    result = result.filter((c) => {
+      if (!c.created_at) return false;
+      const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+      return itemDateStr >= cutoffStr;
+    });
+  } else if (criteria.dateFilter === '30days') {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    const cutoffStr = cutoff.toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+    result = result.filter((c) => {
+      if (!c.created_at) return false;
+      const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+      return itemDateStr >= cutoffStr;
+    });
+  } else if (criteria.dateFilter === 'custom') {
+    if (!criteria.startDate && !criteria.endDate) {
+      return [];
+    }
+    if (criteria.startDate) {
+      result = result.filter((c) => {
+        if (!c.created_at) return false;
+        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+        return itemDateStr >= criteria.startDate!;
+      });
+    }
+    if (criteria.endDate) {
+      result = result.filter((c) => {
+        if (!c.created_at) return false;
+        const itemDateStr = new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+        return itemDateStr <= criteria.endDate!;
+      });
+    }
+  }
+
+  // Audit
+  if (criteria.auditFilter && criteria.auditFilter !== 'all') {
+    result = result.filter((c) => {
+      let hasOverride = false;
+      try {
+        if (c.resolution && c.resolution !== 'Pending' && c.resolution !== 'Solved') {
+          const parsed = JSON.parse(c.resolution);
+          if (Array.isArray(parsed) && parsed.length > 0) hasOverride = true;
+        }
+      } catch (e) {}
+
+      if (criteria.auditFilter === 'confirmed') return !hasOverride;
+      if (criteria.auditFilter === 'corrected') return hasOverride;
+      return true;
+    });
+  }
+
+  return result;
+}

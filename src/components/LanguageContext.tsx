@@ -30,7 +30,7 @@ const translations = {
     cardPending: 'รอการดำเนินการคัดแยก',
     cardUrgent: 'ด่วนที่สุด (Urgent)',
     cardActiveCustomers: 'จำนวนลูกค้าลงทะเบียน',
-    casesByCategory: 'จำนวนเคสแยกตามประเภทปัญหา (Simulated Cases by Category)',
+    casesByCategory: 'จำนวนเคสแยกตามประเภทปัญหา',
     casesByCategorySub: 'สรุปจำนวนเคสปัญหาที่คัดแยกแล้วของแต่ละประเด็นย่อย (คลิกเพื่อดูรายการแชต)',
     showAllCategories: 'แสดงหมวดหมู่ทั้งหมด',
     aiAccuracyTitle: 'การประเมินความแม่นยำ Sift AI (Sift AI Accuracy Audit)',
@@ -82,7 +82,7 @@ const translations = {
     noChatsFound: 'ไม่พบข้อมูลแชตที่ตรงตามตัวเลือกฟิลเตอร์',
 
     // Audit Logs
-    auditLogsTitle: 'บันทึกประวัติการทำงาน (Sift AI Audit & Activity Logs)',
+    auditLogsTitle: 'บันทึกประวัติการทำงาน',
     auditLogsSub: 'ตรวจสอบบันทึกกิจกรรมย้อนหลัง การแก้ไขหมวดหมู่ การคัดแยกเคส และประวัติการเข้าใช้งานระบบ Sift AI',
     auditSearchPlaceholder: 'ค้นหาชื่อผู้ดำเนินการ หรือรายละเอียดกิจกรรม...',
     auditFilterAll: 'ประเภทกิจกรรม: ทั้งหมด',
@@ -114,7 +114,7 @@ const translations = {
     cardPending: 'Pending Sift AI',
     cardUrgent: 'Urgent / Critical',
     cardActiveCustomers: 'Registered Customers',
-    casesByCategory: 'Simulated Cases by Category',
+    casesByCategory: 'Cases by Category',
     casesByCategorySub: 'Summary of categorized cases for each sub-category (click to view chats)',
     showAllCategories: 'Show All Categories',
     aiAccuracyTitle: 'Sift AI Accuracy Audit',

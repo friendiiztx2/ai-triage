@@ -1,43 +1,39 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageContext';
 import { 
   LayoutDashboard, 
   MessageSquare, 
-  Users, 
   Settings, 
   Database,
   ShieldCheck,
-  BrainCircuit,
-  Sparkles,
-  Sun,
-  Moon,
-  LogOut,
   History,
   FileSpreadsheet,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 
+import SidebarWorkspaceSwitcher from '@/components/sidebar/SidebarWorkspaceSwitcher';
+import SidebarNavMenu from '@/components/sidebar/SidebarNavMenu';
+import SidebarFooter from '@/components/sidebar/SidebarFooter';
+
 export default function Sidebar() {
   const pathname = usePathname();
-  const { t, language } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [activeCompany, setActiveCompany] = useState('2c3f46cc-fae8-4ef8-99e1-874dec8b2af2');
+  const [activeCompany, setActiveCompany] = useState('');
   const defaultSession = {
     id: 'admin-01',
     name: 'System Admin',
     role: 'system_admin',
-    company_id: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2',
+    company_id: '',
     permissions: ['view_dashboard', 'view_chats', 'manage_categories', 'manage_users', 'manage_companies', 'export_csv']
   };
 
   const [userProfile, setUserProfile] = useState<any>(defaultSession);
   const [companies, setCompanies] = useState<any[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Initialize theme, active company, and session on client mount
@@ -75,38 +71,41 @@ export default function Sidebar() {
       const parsed = JSON.parse(savedSession);
       setUserProfile(parsed);
 
-      // Fetch all companies if system_admin or super_admin
-      if (parsed.role === 'system_admin' || parsed.role === 'super_admin') {
-        fetch('/api/companies')
-          .then(r => r.json())
-          .then(data => {
-            if (Array.isArray(data)) setCompanies(data);
-          })
-          .catch(err => console.error("Error loading companies:", err));
-      }
+      // Fetch companies
+      fetch('/api/companies')
+        .then((r) => r.json())
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setCompanies(data);
+            if (parsed.role === 'system_admin') {
+              setActiveCompany((prev) => {
+                if (!prev) {
+                  const firstId = data[0].id;
+                  document.cookie = `company_id=${firstId}; path=/; max-age=31536000`;
+                  localStorage.setItem('company_id', firstId);
+                  return firstId;
+                }
+                return prev;
+              });
+            }
+          }
+        })
+        .catch((err) => console.error('Error loading companies:', err));
 
-      // Security check for allowed companies for this specific user
-      const isSuper = parsed.role === 'super_admin' || parsed.role === 'system_admin';
-
-      // Check current active company cookie
+      const isSystemAdmin = parsed.role === 'system_admin';
       const matchCookie = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
       const currentActive = matchCookie ? decodeURIComponent(matchCookie[1]) : localStorage.getItem('company_id');
 
-      if (isSuper) {
+      if (isSystemAdmin) {
         if (currentActive) {
           setActiveCompany(currentActive);
-        } else {
-          const firstAllowed = '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
-          document.cookie = `company_id=${firstAllowed}; path=/; max-age=31536000`;
-          localStorage.setItem('company_id', firstAllowed);
-          setActiveCompany(firstAllowed);
         }
       } else {
         const allowedIds = (parsed.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
         if (currentActive && allowedIds.includes(currentActive)) {
           setActiveCompany(currentActive);
-        } else {
-          const firstAllowed = allowedIds[0] || '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2';
+        } else if (allowedIds.length > 0) {
+          const firstAllowed = allowedIds[0];
           document.cookie = `company_id=${firstAllowed}; path=/; max-age=31536000`;
           localStorage.setItem('company_id', firstAllowed);
           setActiveCompany(firstAllowed);
@@ -135,7 +134,6 @@ export default function Sidebar() {
     window.location.href = '/login';
   };
 
-  // Toggle theme handler
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
@@ -143,7 +141,10 @@ export default function Sidebar() {
     document.documentElement.classList.toggle('dark', nextTheme === 'dark');
   };
 
-  // Toggle collapse handler
+  const toggleLanguage = () => {
+    setLanguage(language === 'th' ? 'en' : 'th');
+  };
+
   const toggleCollapse = () => {
     const nextState = !isCollapsed;
     setIsCollapsed(nextState);
@@ -191,197 +192,45 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={`bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-screen flex flex-col justify-between shadow-sm transition-all duration-250 relative ${isCollapsed ? 'w-20' : 'w-64'}`}>
-      
+    <aside className={`bg-white/80 dark:bg-neutral-900/70 backdrop-blur-md border-r border-neutral-200/80 dark:border-neutral-800/80 h-screen flex flex-col justify-between transition-all duration-200 relative z-30 select-none shadow-xs ${isCollapsed ? 'w-16' : 'w-60'}`}>
       {/* Collapse/Expand Toggle Button */}
       <button 
         onClick={toggleCollapse}
-        className="absolute -right-3.5 top-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 p-1 rounded-full shadow-md hover:bg-slate-50 dark:hover:bg-slate-800 transition z-50 cursor-pointer"
+        className="absolute -right-3 top-5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white p-1 rounded-full shadow-xs transition-all z-50 cursor-pointer"
         title={isCollapsed ? 'ขยายเมนู' : 'พับเมนู'}
       >
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
 
-      <div className={isCollapsed ? 'p-3' : 'p-6'}>
-        {/* Luxury Logo Badge */}
-        <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center gap-0' : 'gap-3.5'}`}>
-          <div className="relative group cursor-pointer">
-            <div className="relative overflow-hidden bg-gradient-to-br from-rose-600 via-red-500 to-rose-700 text-white p-3 rounded-2xl shadow-xl shadow-rose-600/40 ring-4 ring-rose-500/25 border border-rose-300/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-rose-600/60 shrink-0 flex items-center justify-center">
-              {/* Subtle glass shimmer layer */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-              <BrainCircuit size={24} className="text-white drop-shadow-md relative z-10" />
-              <Sparkles size={13} className="text-amber-300 absolute top-1 right-1 animate-pulse z-10" />
-            </div>
-            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 z-20">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></span>
-            </span>
-          </div>
-
-          {!isCollapsed && (
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-rose-950 to-slate-800 dark:from-white dark:via-rose-100 dark:to-slate-200 text-lg leading-none tracking-tight font-display">
-                  Sift AI
-                </h1>
-                <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/20 uppercase tracking-widest border border-amber-300/40">
-                  ENTERPRISE
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[9.5px] font-extrabold text-rose-600 dark:text-rose-400 tracking-widest uppercase flex items-center gap-1">
-                  COMMAND CENTER
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Tenant Switching Context Selector */}
-        {!isCollapsed && (
-          <div className="mb-6 px-1">
-            <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
-              {t('tenantLabel')}
-            </label>
-            {(() => {
-              const isSuper = userProfile?.role === 'super_admin' || userProfile?.role === 'system_admin';
-              const allowedIds = isSuper 
-                ? (companies.length > 0 ? companies.map(c => c.id) : ['2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', '2e65829a-6a60-4022-8289-0fe64ec98fae', 'e8070735-9651-4dd5-8055-bd65afbc9da8'])
-                : (userProfile?.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
-
-              const showDropdown = isSuper || allowedIds.length > 1;
-
-              if (showDropdown) {
-                // If companies list loaded, render dynamically
-                if (companies.length > 0) {
-                  const filteredCompanies = isSuper ? companies : companies.filter(c => allowedIds.includes(c.id));
-                  return (
-                    <select
-                      value={activeCompany}
-                      onChange={handleCompanyChange}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition cursor-pointer"
-                    >
-                      {filteredCompanies.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  );
-                }
-
-                // Fallback while loading
-                return (
-                  <select
-                    value={activeCompany}
-                    onChange={handleCompanyChange}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition cursor-pointer"
-                  >
-                    <option value="2c3f46cc-fae8-4ef8-99e1-874dec8b2af2">{language === 'th' ? 'Mika Co. (บริษัทเริ่มต้น)' : 'Mika Co. (Default)'}</option>
-                    <option value="2e65829a-6a60-4022-8289-0fe64ec98fae">Alpha Support Co., Ltd.</option>
-                    <option value="e8070735-9651-4dd5-8055-bd65afbc9da8">DEVD เทส</option>
-                  </select>
-                );
-              } else {
-                const currentName = companies.find(c => c.id === activeCompany)?.name || (activeCompany === '2e65829a-6a60-4022-8289-0fe64ec98fae' ? 'Alpha Support Co., Ltd.' : (language === 'th' ? 'Mika Co. (บริษัทเริ่มต้น)' : 'Mika Co. (Default)'));
-                return (
-                  <div className="bg-slate-50 dark:bg-slate-855/50 border border-slate-100 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
-                    {currentName}
-                  </div>
-                );
-              }
-            })()}
-          </div>
-        )}
+      <div className={`flex-1 overflow-y-auto ${isCollapsed ? 'p-2' : 'p-3'}`}>
+        {/* Unified Workspace Switcher (Logo + Company context) */}
+        <SidebarWorkspaceSwitcher
+          companies={companies}
+          activeCompany={activeCompany}
+          onCompanyChange={handleCompanyChange}
+          userProfile={userProfile}
+          isCollapsed={isCollapsed}
+        />
 
         {/* Navigation Menu */}
-        <nav className="space-y-1">
-          {visibleMenuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center rounded-xl text-sm font-semibold transition-all duration-250 ${
-                  isActive
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 dark:shadow-none'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-855'
-                } ${isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-4 py-3'}`}
-                title={isCollapsed ? item.label : ''}
-              >
-                <Icon size={18} className={isActive ? 'text-white' : 'text-slate-400 dark:text-slate-550'} />
-                {!isCollapsed && <span className="truncate">{item.label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
+        <SidebarNavMenu
+          items={visibleMenuItems}
+          pathname={pathname}
+          isCollapsed={isCollapsed}
+        />
       </div>
 
-      {/* Footer Info */}
-      <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-t border-slate-100 dark:border-slate-800 space-y-4`}>
-        
-        {/* Theme Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          className={`flex items-center justify-between bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 border border-slate-100 dark:border-slate-750 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer ${isCollapsed ? 'w-full justify-center p-2.5' : 'w-full px-4 py-2.5'}`}
-          title={isCollapsed ? (theme === 'light' ? t('themeLight') : t('themeDark')) : ''}
-        >
-          <span className={`flex items-center ${isCollapsed ? '' : 'gap-2'}`}>
-            {theme === 'light' ? (
-              <Sun size={14} className="text-amber-500 shrink-0" />
-            ) : (
-              <Moon size={14} className="text-indigo-400 shrink-0" />
-            )}
-            {!isCollapsed && t('themeLight')}
-          </span>
-          {!isCollapsed && <span className="text-[10px] text-slate-400 dark:text-slate-550">{t('switchTheme')}</span>}
-        </button>
-
-        {/* Supabase status block */}
-        {!isCollapsed && (
-          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 p-3 rounded-xl">
-            <ShieldCheck size={16} className="text-emerald-500 shrink-0" />
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-              {t('connectionLabel')} <span className="font-bold text-slate-700 dark:text-slate-200">Supabase</span>
-            </div>
-          </div>
-        )}
-
-        {/* User profile and logout */}
-        <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-2 space-y-3">
-          {userProfile && (
-            <div className={`flex items-center px-1 ${isCollapsed ? 'justify-center gap-0 px-0' : 'gap-3'}`}>
-              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-955/40 border border-indigo-200/50 dark:border-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-extrabold text-xs shrink-0">
-                {userProfile.name?.charAt(0).toUpperCase() || 'U'}
-              </div>
-              {!isCollapsed && (
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate leading-none mb-1">
-                    {userProfile.name}
-                  </p>
-                  <p className="text-[10px] text-slate-450 dark:text-slate-555 truncate leading-none">
-                    {language === 'th' ? 'สิทธิ์:' : 'Role:'} <span className="font-bold text-indigo-600 dark:text-indigo-400 uppercase">{userProfile.role?.replace('_', ' ') || ''}</span>
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <button
-            onClick={handleLogout}
-            className={`flex items-center justify-center bg-rose-50 dark:bg-rose-955/20 hover:bg-rose-100 dark:hover:bg-rose-900/20 border border-rose-100 dark:border-rose-900/20 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-455 transition-all cursor-pointer ${isCollapsed ? 'w-full p-2.5' : 'gap-2 w-full px-4 py-2.5'}`}
-            title={isCollapsed ? t('logout') : ''}
-          >
-            <LogOut size={14} className="shrink-0" />
-            {!isCollapsed && t('logout')}
-          </button>
-        </div>
-        
-        {!isCollapsed && (
-          <p className="text-[10px] text-slate-400 dark:text-slate-505 text-center">
-            {t('systemDeveloper')}
-          </p>
-        )}
-      </div>
+      {/* Footer User Info & Micro Actions */}
+      <SidebarFooter
+        isCollapsed={isCollapsed}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        userProfile={userProfile}
+        language={language}
+        onToggleLanguage={toggleLanguage}
+        onLogout={handleLogout}
+        t={t}
+      />
     </aside>
   );
 }

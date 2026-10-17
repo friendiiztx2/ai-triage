@@ -31,7 +31,24 @@ export async function POST(request: NextRequest) {
       if (dbUser.is_active === false) {
         return NextResponse.json({ error: 'บัญชีผู้ใช้นี้ถูกระงับการใช้งาน' }, { status: 403 });
       }
-      return NextResponse.json({ user: dbUser });
+
+      // Record successful login directly in activity_logs
+      try {
+        const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dbUser.id);
+        await db.from('activity_logs').insert([{
+          company_id: dbUser.company_id || null,
+          user_id: isValidUUID ? dbUser.id : null,
+          user_name: dbUser.name || dbUser.email || 'Admin',
+          action_type: 'LOGIN',
+          details: { info: `เข้าสู่ระบบสำเร็จ (สิทธิ์: ${dbUser.role || 'user'})` },
+          created_at: new Date().toISOString()
+        }]);
+      } catch (logErr) {
+        console.warn('Failed to record login activity log:', logErr);
+      }
+
+      const { password: _pass, ...userWithoutPassword } = dbUser;
+      return NextResponse.json({ user: userWithoutPassword });
     }
 
     return NextResponse.json({ error: 'ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง' }, { status: 401 });

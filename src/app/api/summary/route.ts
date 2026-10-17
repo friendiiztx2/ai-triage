@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { getCategoryLabel } from '@/lib/categories';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -44,10 +45,22 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. If RPC is unavailable, query live chats table directly for 100% accurate real-time metrics
-    const { data: chatsData } = await db
-      .from('chats')
-      .select('id, status, priority, category_id')
-      .abortSignal(controller.signal);
+    let chatsQuery = db.from('chats').select('id, status, priority, category_id, company_id');
+    if (companyId && companyId !== 'all') {
+      chatsQuery = chatsQuery.eq('company_id', companyId);
+    }
+
+    const [chatsRes, catsRes] = await Promise.all([
+      chatsQuery.abortSignal(controller.signal),
+      db.from('categories').select('id, name, name_th, name_en').abortSignal(controller.signal)
+    ]);
+
+    const chatsData = chatsRes.data;
+    const dbCategories = catsRes.data || [];
+    const catNameLookup = new Map<string, string>();
+    dbCategories.forEach((c: any) => {
+      catNameLookup.set(c.id, c.name_th || c.name);
+    });
 
     clearTimeout(timeoutId);
 
@@ -77,14 +90,7 @@ export async function GET(request: NextRequest) {
       });
 
       const categories_breakdown = Object.keys(catBreakdownMap).map(catKey => {
-        let name = catKey;
-        if (catKey === 'deposit_withdrawal') name = 'ฝากถอนเงิน / โอนเงิน';
-        else if (catKey === 'page_load_freeze' || catKey === 'ui_rendering_issue') name = 'หน้าเว็บค้าง / โหลดหมุน';
-        else if (catKey === 'login_issue') name = 'เข้าใช้งาน / เข้าสู่ระบบ';
-        else if (catKey === 'game_issue') name = 'ปัญหาเกม / ระบบเดิมพัน';
-        else if (catKey === 'promo_bonus') name = 'โปรโมชั่น / โบนัส';
-        else if (catKey === 'account_security') name = 'ความปลอดภัยของบัญชี';
-        else if (catKey === 'access_blocked') name = 'การเข้าถึงถูกระงับ (502 Error)';
+        const name = catNameLookup.get(catKey) || getCategoryLabel(catKey, 'th');
         return {
           category_id: catKey,
           name,
@@ -104,35 +110,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(liveSummary);
     }
 
-    // Fallback if DB is empty
-    const fallbackSummary = {
-      total_chats: 287,
-      pending_chats: 47,
-      urgent_chats: 12,
-      completed_chats: 240,
-      categories_breakdown: [
-        { category_id: 'deposit_withdrawal', name: 'ฝากถอนเงิน / โอนเงิน', count: 120 },
-        { category_id: 'page_load_freeze', name: 'หน้าเว็บค้าง / โหลดหมุน', count: 85 },
-        { category_id: 'login_issue', name: 'เข้าใช้งาน / เข้าสู่ระบบ', count: 42 },
-        { category_id: 'promo_bonus', name: 'โปรโมชั่น / โบนัส', count: 35 }
-      ]
+    // Return empty summary if DB has no chats
+    const emptySummary = {
+      total_chats: 0,
+      pending_chats: 0,
+      urgent_chats: 0,
+      completed_chats: 0,
+      categories_breakdown: []
     };
 
-    serverCache.set(cacheKey, { timestamp: now, data: fallbackSummary });
-    return NextResponse.json(fallbackSummary);
+    serverCache.set(cacheKey, { timestamp: now, data: emptySummary });
+    return NextResponse.json(emptySummary);
   } catch (err: any) {
     clearTimeout(timeoutId);
+    console.error('Summary API error:', err);
     return NextResponse.json({
-      total_chats: 287,
-      pending_chats: 47,
-      urgent_chats: 12,
-      completed_chats: 240,
-      categories_breakdown: [
-        { category_id: 'deposit_withdrawal', name: 'ฝากถอนเงิน / โอนเงิน', count: 120 },
-        { category_id: 'page_load_freeze', name: 'หน้าเว็บค้าง / โหลดหมุน', count: 85 },
-        { category_id: 'login_issue', name: 'เข้าใช้งาน / เข้าสู่ระบบ', count: 42 },
-        { category_id: 'promo_bonus', name: 'โปรโมชั่น / โบนัส', count: 35 }
-      ]
+      total_chats: 0,
+      pending_chats: 0,
+      urgent_chats: 0,
+      completed_chats: 0,
+      categories_breakdown: []
     });
   }
 }

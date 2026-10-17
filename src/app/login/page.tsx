@@ -2,32 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BrainCircuit, Lock, Mail, ArrowRight, UserCheck, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { Lock, Mail, ArrowRight, Eye, EyeOff, Sparkles, ShieldCheck } from 'lucide-react';
 import { saveAuditLog } from '@/lib/audit';
-
-const QUICK_ACCOUNTS = [
-  {
-    email: 'friendiiztx2@gmail.com',
-    name: 'System Admin (แอดมินกลางดูแลทุกบริษัท)',
-    role: 'system_admin',
-    roleLabel: 'System Admin',
-    companyId: '2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', // Default tenant
-    companyName: 'ดูแลระบบทั้งหมด (All Companies)',
-    color: 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-955/20 dark:border-indigo-900/30 dark:text-indigo-400',
-    password: 'Aa234234*'
-  },
-  {
-    email: 'aor',
-    name: 'aor (Super Admin ของ Alpha Support)',
-    role: 'super_admin',
-    roleLabel: 'Super Admin',
-    companyId: '2e65829a-6a60-4022-8289-0fe64ec98fae', // Alpha Support Co., Ltd.
-    companyName: 'Alpha Support Co., Ltd.',
-    color: 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-955/20 dark:border-emerald-900/30 dark:text-emerald-400',
-    password: 'Aor278444'
-  }
-];
+import AntigravityBackground from '@/components/ui/AntigravityBackground';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -63,61 +40,51 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('กรุณากรอกอีเมลและรหัสผ่าน');
+      setError('กรุณากรอกชื่อผู้ใช้หรืออีเมล และรหัสผ่าน');
       return;
     }
-    
+
     setLoading(true);
     setError(null);
 
     try {
-      // 1. Attempt login via Server API Proxy (bypasses RLS)
       const res = await fetch('/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password: password.trim() })
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });
 
       const resData = await res.json();
 
       if (res.ok && resData.user) {
         const dbUser = resData.user;
-        let compName = 'Mika Co. (บริษัทเริ่มต้น)';
-        if (dbUser.company_id === '2e65829a-6a60-4022-8289-0fe64ec98fae') {
-          compName = 'Alpha Support Co., Ltd.';
+        let compName = dbUser.company_name || (dbUser.role === 'system_admin' ? 'ทุกบริษัท (All Companies)' : 'บริษัทของฉัน');
+        if (dbUser.company_id) {
+          try {
+            const compRes = await fetch('/api/companies');
+            if (compRes.ok) {
+              const comps = await compRes.json();
+              const found = Array.isArray(comps) && comps.find((c: any) => c.id === dbUser.company_id);
+              if (found) compName = found.name;
+            }
+          } catch (e) {}
         }
-        
+
         completeLogin({
+          id: dbUser.id,
           email: dbUser.email,
           name: dbUser.name,
           role: dbUser.role,
           companyId: dbUser.company_id,
           companyName: compName,
-          permissions: dbUser.permissions
+          permissions: dbUser.permissions,
         });
         return;
       }
 
-      // 2. Fallback to mock account list if email + password matches mock defaults
-      const mockMatch = QUICK_ACCOUNTS.find(
-        acc => acc.email.toLowerCase() === email.toLowerCase().trim() && password.trim() === acc.password
-      );
-
-      if (mockMatch) {
-        completeLogin(mockMatch);
-      } else {
-        setError(resData.error || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
-      }
+      setError(resData.error || 'ชื่อผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง');
     } catch (err: any) {
-      const mockMatch = QUICK_ACCOUNTS.find(
-        acc => acc.email.toLowerCase() === email.toLowerCase().trim() && password.trim() === acc.password
-      );
-
-      if (mockMatch) {
-        completeLogin(mockMatch);
-      } else {
-        setError(`เกิดข้อผิดพลาดในการเชื่อมต่อระบบ: ${err.message || err}`);
-      }
+      setError(`เกิดข้อผิดพลาดในการเชื่อมต่อระบบ: ${err.message || err}`);
     } finally {
       setLoading(false);
     }
@@ -126,6 +93,7 @@ export default function LoginPage() {
   const completeLogin = (account: any) => {
     sessionStorage.removeItem('session_logout');
     const sessionObj = {
+      id: account.id || account.user_id,
       email: account.email,
       name: account.name,
       role: account.role,
@@ -135,119 +103,105 @@ export default function LoginPage() {
         account.role === 'system_admin'
           ? ['view_dashboard', 'view_chats', 'manage_categories', 'manage_users', 'manage_companies', 'export_csv']
           : ['view_dashboard', 'view_chats', 'manage_categories', 'manage_users', 'export_csv']
-      )
+      ),
     };
 
-    // Save user session in Cookie and LocalStorage
     document.cookie = `user_session=${encodeURIComponent(JSON.stringify(sessionObj))}; path=/; max-age=31536000`;
     document.cookie = `company_id=${sessionObj.company_id}; path=/; max-age=31536000`;
     localStorage.setItem('user_session', JSON.stringify(sessionObj));
     localStorage.setItem('company_id', sessionObj.company_id);
 
-    // Save audit log asynchronously
-    saveAuditLog('LOGIN', `เข้าสู่ระบบสำเร็จ (สิทธิ์: ${account.role || 'unknown'})`);
-
-    // Immediate hard redirect to main page to prevent router delay & reload race conditions
     window.location.href = '/';
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-955 p-4 relative overflow-hidden">
-      {/* Decorative background glows */}
-      <div className="absolute top-0 -left-4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 -right-4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+    <div className="h-full w-full flex flex-col items-center justify-center bg-white dark:bg-[#07090e] p-4 relative overflow-hidden select-none">
+      {/* Google Antigravity Style Orbital Vortex Particle Canvas */}
+      <AntigravityBackground />
 
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl p-8 relative z-10">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="bg-gradient-to-br from-red-500 to-rose-600 text-white p-3 rounded-2xl shadow-lg shadow-rose-500/25 dark:shadow-none mb-3">
-            <BrainCircuit size={28} />
-          </div>
-          <h1 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl leading-none">Sift AI</h1>
-          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold tracking-wider uppercase mt-1">Back Office Dashboard</span>
+      {/* Main Centered Container */}
+      <div className="w-full max-w-[310px] sm:max-w-[325px] relative z-10 flex flex-col items-center">
+        {/* Floating 3D Logo above Card */}
+        <div className="mb-4 flex flex-col items-center justify-center">
+          <img
+            src="/sift-ai-logo.png"
+            alt="Sift AI Logo"
+            className="w-36 sm:w-44 h-auto object-contain drop-shadow-2xl select-none transition-transform duration-300 hover:scale-105"
+          />
         </div>
 
-        {error && (
-          <div className="bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-455 text-xs font-semibold p-3.5 rounded-xl border border-rose-200/50 dark:border-rose-900/30 mb-5 leading-normal">
-            ⚠️ {error}
-          </div>
-        )}
-
-        {/* Credentials Login Form */}
-        <form onSubmit={handleLogin} className="space-y-4 text-xs">
-          <div className="space-y-1">
-            <label className="block text-xs font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider">ชื่อบัญชี หรือ อีเมล (Login ID / Email)</label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-3.5 text-slate-455 dark:text-slate-500" size={16} />
-              <input
-                type="text"
-                placeholder="ป้อนชื่อบัญชี หรือ อีเมล เช่น superadmin"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-855/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-3 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition"
-              />
+        {/* Clean Glassmorphic Card */}
+        <div className="w-full bg-white/85 dark:bg-neutral-900/85 backdrop-blur-2xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-[28px] shadow-[0_20px_70px_-15px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.02)] dark:shadow-[0_25px_80px_-20px_rgba(0,0,0,0.6)] p-5 sm:p-6 transition-all">
+          {error && (
+            <div className="bg-rose-50/90 dark:bg-rose-955/30 text-rose-600 dark:text-rose-400 text-xs font-medium p-3.5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 mb-5 leading-normal flex items-start gap-2 animate-in fade-in duration-300">
+              <span className="shrink-0 mt-0.5">⚠️</span>
+              <span>{error}</span>
             </div>
-          </div>
+          )}
 
-          <div className="space-y-1">
-            <label className="block text-xs font-bold text-slate-400 dark:text-slate-555 uppercase tracking-wider">รหัสผ่าน (Password)</label>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-3.5 text-slate-455 dark:text-slate-500" size={16} />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-855/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-11 py-3 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition p-0.5 rounded-lg cursor-pointer"
-                title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+          {/* Login Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" size={16} />
+                <input
+                  type="text"
+                  placeholder="ชื่อผู้ใช้ หรือ อีเมล"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-4 focus:ring-sky-500/15 dark:focus:ring-sky-400/20 focus:border-sky-400 dark:focus:border-sky-400 focus:bg-white dark:focus:bg-neutral-900 transition-all"
+                  autoComplete="username"
+                  aria-label="ชื่อผู้ใช้ หรือ อีเมล"
+                />
+              </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 text-xs font-bold shadow-lg shadow-indigo-100 dark:shadow-none hover:shadow-none transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
-            {!loading && <ArrowRight size={14} />}
-          </button>
-        </form>
+            <div>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" size={16} />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="รหัสผ่าน"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 rounded-2xl pl-10 pr-11 py-3 text-xs sm:text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-4 focus:ring-sky-500/15 dark:focus:ring-sky-400/20 focus:border-sky-400 dark:focus:border-sky-400 focus:bg-white dark:focus:bg-neutral-900 transition-all"
+                  autoComplete="current-password"
+                  aria-label="รหัสผ่าน"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition p-1 cursor-pointer"
+                  title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
 
-        {/* Quick Login Accounts Panel */}
-        <div className="mt-7 border-t border-slate-100 dark:border-slate-800 pt-6">
-          <span className="block text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase tracking-wider mb-3 flex items-center gap-1.5 justify-center select-none">
-            <UserCheck size={12} /> หรือเลือกบัญชีเพื่อทดสอบระบบ (Quick Login)
-          </span>
-          
-          <div className="space-y-2">
-            {QUICK_ACCOUNTS.map((acc, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setEmail(acc.email);
-                  setPassword(acc.password);
-                  completeLogin(acc);
-                }}
-                className={`w-full flex items-center justify-between border p-3 rounded-2xl text-left transition cursor-pointer hover:scale-[1.01] ${acc.color}`}
-              >
-                <div>
-                  <div className="text-xs font-bold leading-tight">{acc.name}</div>
-                  <div className="text-[10px] opacity-75 font-semibold mt-0.5">{acc.companyName}</div>
-                </div>
-                <span className="text-[9px] font-bold tracking-wider uppercase border border-current px-2.5 py-0.5 rounded-full select-none shrink-0 ml-3">
-                  {acc.roleLabel}
-                </span>
-              </button>
-            ))}
-          </div>
+            {/* Concept 3: Frosted Glass with Subtle Iridescent Border */}
+            <div className="flex justify-center pt-2">
+              <div className="rounded-full p-[1px] bg-gradient-to-r from-sky-400/50 via-indigo-400/40 to-pink-400/50 hover:from-sky-500 hover:via-indigo-500 hover:to-pink-500 transition-all duration-300 shadow-xs hover:shadow-md hover:shadow-indigo-500/10">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-auto min-w-[155px] bg-white/80 hover:bg-white dark:bg-neutral-900/80 dark:hover:bg-neutral-900 backdrop-blur-md text-neutral-800 hover:text-black dark:text-neutral-100 dark:hover:text-white rounded-full px-6 py-2.5 sm:py-3 text-sm sm:text-[15px] font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-[0.98] group"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-neutral-400/30 border-t-neutral-700 dark:border-white/30 dark:border-t-white rounded-full animate-spin" />
+                      <span>กำลังเข้าสู่ระบบ...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="tracking-wide text-sm sm:text-[15px]">เข้าสู่ระบบ</span>
+                      <ArrowRight size={17} className="text-neutral-400 group-hover:text-neutral-700 dark:text-neutral-400 dark:group-hover:text-white transition-all duration-300 group-hover:translate-x-0.5" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
