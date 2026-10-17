@@ -252,10 +252,15 @@ export default function ChatsPage() {
               setTagFilter('all');
             }
           } else if (tab === 'image-only' || tab === 'image') {
-            if (tagFilter === '#รูปภาพ' || tagFilter === '#รูปภาพล้วน') {
+            if (
+              tagFilter === '#รูปภาพ' ||
+              tagFilter === '#รูปภาพทั้งหมด' ||
+              tagFilter === '#รูปภาพแนบ' ||
+              tagFilter === '#รูปภาพล้วน'
+            ) {
               setTagFilter('all');
             } else {
-              setTagFilter('#รูปภาพ');
+              setTagFilter('#รูปภาพทั้งหมด');
               setStatusFilter('all');
               setPriorityFilter('all');
             }

@@ -26,7 +26,10 @@ export default function ChatTableRow({
     if (c?.media_urls && Array.isArray(c.media_urls) && c.media_urls.length > 0) {
       return c.media_urls[0];
     }
-    const text = typeof c?.conversation === 'string' ? c.conversation : '';
+    const text =
+      (typeof c?.conversation === 'string' ? c.conversation : '') +
+      ' ' +
+      (typeof c?.summary === 'string' ? c.summary : '');
     const match =
       text.match(/(https?:\/\/[^\s\n"']+\.(jpg|jpeg|png|webp|gif|svg)(\?[^\s\n"']*)?)/i) ||
       text.match(/(https?:\/\/[^\s\n"']*(images|photos|slip|storage)[^\s\n"']*)/i);
@@ -74,23 +77,23 @@ export default function ChatTableRow({
       {/* Intent & Summary */}
       <td className="px-3 py-3 max-w-[280px]">
         <div className="flex items-center gap-1.5 min-w-0">
-          {isImgOnly && (
+          {/* 1. รูปภาพล้วน (Image Only) */}
+          {isImgOnly && firstImg && (
             <span
-              onMouseEnter={() => firstImg && onHoverImg(firstImg)}
+              onMouseEnter={() => onHoverImg(firstImg)}
               onMouseLeave={() => onHoverImg(null)}
               onClick={(e) => {
-                if (firstImg) {
-                  e.stopPropagation();
-                  window.open(firstImg, '_blank');
-                }
+                e.stopPropagation();
+                window.open(firstImg, '_blank');
               }}
-              className="inline-flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-[10px] font-mono px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 shrink-0 cursor-zoom-in"
-              title={language === 'th' ? 'รูปภาพล้วน (ชี้เพื่อดูรูป)' : 'Image only (Hover to preview)'}
+              className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 cursor-zoom-in transition-all shadow-2xs hover:scale-105 active:scale-95"
+              title={language === 'th' ? 'รูปภาพล้วน (ชี้เมาส์เพื่อซูมดูรูป / คลิกเปิดรูปใหญ่)' : 'Image only (Hover to preview / Click to open)'}
             >
-              <ImageIcon size={10} />
-              <span>{language === 'th' ? 'รูปภาพ' : 'Image'}</span>
+              <ImageIcon size={10} className="text-purple-600 dark:text-purple-400" />
+              <span>{language === 'th' ? 'รูปภาพล้วน' : 'Img only'}</span>
             </span>
           )}
+          {/* 2. มีรูปแนบมากับข้อความ (Attached Image with Text) */}
           {firstImg && !isImgOnly && (
             <span
               onMouseEnter={() => onHoverImg(firstImg)}
@@ -99,11 +102,11 @@ export default function ChatTableRow({
                 e.stopPropagation();
                 window.open(firstImg, '_blank');
               }}
-              className="inline-flex items-center gap-1 text-[10px] font-mono text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 px-1 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 cursor-zoom-in shrink-0"
-              title="ดูรูปภาพแนบ"
+              className="inline-flex items-center gap-1 text-[10px] font-mono text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100 px-1.5 py-0.5 rounded bg-neutral-100 hover:bg-neutral-200/80 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700 cursor-zoom-in shrink-0 transition-all shadow-2xs hover:scale-105 active:scale-95"
+              title={language === 'th' ? 'มีรูปภาพแนบมากับข้อความ (ชี้เมาส์เพื่อซูมดูรูป / คลิกเปิดรูปใหญ่)' : 'Attached image (Hover to preview / Click to open)'}
             >
-              <ImageIcon size={10} />
-              <span>รูป</span>
+              <ImageIcon size={10} className="text-neutral-500 dark:text-neutral-400" />
+              <span>{language === 'th' ? 'ดูรูป' : 'Image'}</span>
             </span>
           )}
           <span className="text-neutral-600 dark:text-neutral-400 truncate block">

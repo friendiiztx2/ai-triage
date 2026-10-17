@@ -15,8 +15,16 @@ export interface ChatFilterCriteria {
 export function chatHasImage(c: any): boolean {
   if (!c) return false;
   if (Array.isArray(c.media_urls) && c.media_urls.length > 0) return true;
-  if (Array.isArray(c.tags) && (c.tags.includes('#รูปภาพ') || c.tags.includes('#รูปภาพล้วน'))) return true;
-  const text = typeof c.conversation === 'string' ? c.conversation : '';
+  if (
+    Array.isArray(c.tags) &&
+    (c.tags.includes('#รูปภาพ') ||
+      c.tags.includes('#รูปภาพล้วน') ||
+      c.tags.includes('#รูปภาพทั้งหมด') ||
+      c.tags.includes('#รูปภาพแนบ'))
+  ) {
+    return true;
+  }
+  const text = (typeof c.conversation === 'string' ? c.conversation : '') + ' ' + (typeof c.summary === 'string' ? c.summary : '');
   if (
     /(https?:\/\/[^\s\n"']+\.(jpg|jpeg|png|webp|gif|svg)(\?[^\s\n"']*)?)/i.test(text) ||
     /(https?:\/\/[^\s\n"']*(images|photos|slip|storage)[^\s\n"']*)/i.test(text) ||
@@ -32,6 +40,31 @@ export function chatHasImage(c: any): boolean {
     return true;
   }
   return false;
+}
+
+export function isImageOnlyChat(c: any): boolean {
+  if (!c) return false;
+  if (Array.isArray(c.tags) && c.tags.includes('#รูปภาพล้วน')) return true;
+  if (
+    typeof c.summary === 'string' &&
+    (c.summary.includes('รูปภาพล้วน') || c.summary.includes('ไม่ระบุข้อความพิมพ์'))
+  ) {
+    return true;
+  }
+  const text = typeof c.conversation === 'string' ? c.conversation : '';
+  const stripped = text
+    .replace(/(https?:\/\/[^\s\n"']+)/gi, '')
+    .replace(/\(📷[^\)]*\)/g, '')
+    .replace(/📷[^\n]*/g, '')
+    .replace(/ลูกค้า:/g, '')
+    .replace(/แอดมิน:/g, '')
+    .trim();
+  if (!stripped && chatHasImage(c)) return true;
+  return false;
+}
+
+export function isImageWithTextChat(c: any): boolean {
+  return chatHasImage(c) && !isImageOnlyChat(c);
 }
 
 export function filterChats(chats: any[], criteria: ChatFilterCriteria): any[] {
@@ -96,16 +129,24 @@ export function filterChats(chats: any[], criteria: ChatFilterCriteria): any[] {
 
   // Tag
   if (criteria.tagFilter && criteria.tagFilter !== 'all') {
-    if (criteria.tagFilter === '#รูปภาพ' || criteria.tagFilter === 'has-image' || criteria.tagFilter === 'image') {
+    if (
+      criteria.tagFilter === '#รูปภาพ' ||
+      criteria.tagFilter === '#รูปภาพทั้งหมด' ||
+      criteria.tagFilter === 'has-image' ||
+      criteria.tagFilter === 'image'
+    ) {
       result = result.filter(chatHasImage);
-    } else if (criteria.tagFilter === '#รูปภาพล้วน') {
-      result = result.filter((c) => {
-        const isImgOnly =
-          (c.tags && c.tags.includes('#รูปภาพล้วน')) ||
-          (typeof c.summary === 'string' &&
-            (c.summary.includes('รูปภาพล้วน') || c.summary.includes('ไม่ระบุข้อความพิมพ์')));
-        return isImgOnly;
-      });
+    } else if (
+      criteria.tagFilter === '#รูปภาพแนบ' ||
+      criteria.tagFilter === '#รูปภาพพร้อมข้อความ' ||
+      criteria.tagFilter === 'image-with-text'
+    ) {
+      result = result.filter(isImageWithTextChat);
+    } else if (
+      criteria.tagFilter === '#รูปภาพล้วน' ||
+      criteria.tagFilter === 'image-only'
+    ) {
+      result = result.filter(isImageOnlyChat);
     } else {
       result = result.filter((c) => {
         const tags = c.tags || [];

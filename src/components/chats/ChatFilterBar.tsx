@@ -152,10 +152,30 @@ export default function ChatFilterBar({
             onChange={onTagChange}
             options={[
               { value: 'all', label: language === 'th' ? 'แท็ก: ทั้งหมด' : 'Tags: All' },
-              ...allAvailableTags.map((tagObj) => ({
-                value: tagObj.name,
-                label: `${tagObj.name} (${tagObj.desc})`,
-              })),
+              {
+                value: '#รูปภาพทั้งหมด',
+                label: language === 'th' ? '🖼️ มีรูปภาพทั้งหมด' : '🖼️ All Images',
+              },
+              {
+                value: '#รูปภาพแนบ',
+                label: language === 'th' ? '📎 รูปภาพแนบมากับข้อความ' : '📎 Images with Text',
+              },
+              {
+                value: '#รูปภาพล้วน',
+                label: language === 'th' ? '📷 รูปภาพล้วน (ไม่มีข้อความ)' : '📷 Image Only',
+              },
+              ...allAvailableTags
+                .filter(
+                  (tagObj) =>
+                    tagObj.name !== '#รูปภาพ' &&
+                    tagObj.name !== '#รูปภาพล้วน' &&
+                    tagObj.name !== '#รูปภาพทั้งหมด' &&
+                    tagObj.name !== '#รูปภาพแนบ'
+                )
+                .map((tagObj) => ({
+                  value: tagObj.name,
+                  label: `${tagObj.name} (${tagObj.desc})`,
+                })),
             ]}
           />
         </div>

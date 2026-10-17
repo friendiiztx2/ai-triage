@@ -40,7 +40,12 @@ export default function ChatQuickTabs({
   language = 'th',
 }: ChatQuickTabsProps) {
   const resolvedImageCount = imageCount !== undefined ? imageCount : (imageOnlyCount ?? 0);
-  const isImageActive = tagFilter === '#รูปภาพ' || tagFilter === '#รูปภาพล้วน' || tagFilter === 'has-image';
+  const isImageActive =
+    tagFilter === '#รูปภาพ' ||
+    tagFilter === '#รูปภาพทั้งหมด' ||
+    tagFilter === '#รูปภาพแนบ' ||
+    tagFilter === '#รูปภาพล้วน' ||
+    tagFilter === 'has-image';
 
   const tabs = [
     {

@@ -6,9 +6,14 @@ export interface SystemTagItem {
 
 export const DEFAULT_SYSTEM_TAGS: SystemTagItem[] = [
   {
-    name: '#รูปภาพ',
-    desc: 'มีภาพแนบ',
+    name: '#รูปภาพทั้งหมด',
+    desc: 'ทุกเคสที่มีภาพแนบ/ภาพล้วน',
     style: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-955/30 dark:text-indigo-300 dark:border-indigo-900/50',
+  },
+  {
+    name: '#รูปภาพแนบ',
+    desc: 'มีภาพแนบมากับข้อความ',
+    style: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-955/30 dark:text-blue-300 dark:border-blue-900/50',
   },
   {
     name: '#รูปภาพล้วน',
