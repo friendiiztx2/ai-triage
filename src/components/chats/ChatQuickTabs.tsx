@@ -5,14 +5,15 @@ import DatePicker from '@/components/ui/DatePicker';
 export interface ChatQuickTabsProps {
   totalCount: number;
   urgentCount: number;
-  imageOnlyCount?: number;
   imageCount?: number;
+  imageWithTextCount?: number;
+  imageOnlyCount?: number;
   pendingCount?: number;
   completedCount?: number;
   statusFilter: string;
   priorityFilter: string;
   tagFilter: string;
-  onSelectTab: (type: 'all' | 'urgent' | 'image-only' | 'image' | 'pending' | 'completed') => void;
+  onSelectTab: (type: 'all' | 'urgent' | 'has-image' | 'image-with-text' | 'image-only' | 'image' | string) => void;
   dateFilter?: string;
   onDateFilterChange?: (val: string) => void;
   startDate?: string;
@@ -25,8 +26,9 @@ export interface ChatQuickTabsProps {
 export default function ChatQuickTabs({
   totalCount,
   urgentCount,
-  imageOnlyCount,
   imageCount,
+  imageWithTextCount,
+  imageOnlyCount,
   statusFilter,
   priorityFilter,
   tagFilter,
@@ -39,13 +41,21 @@ export default function ChatQuickTabs({
   onEndDateChange,
   language = 'th',
 }: ChatQuickTabsProps) {
-  const resolvedImageCount = imageCount !== undefined ? imageCount : (imageOnlyCount ?? 0);
-  const isImageActive =
+  const resolvedImageWithTextCount = imageWithTextCount ?? 0;
+  const resolvedImageOnlyCount = imageOnlyCount ?? 0;
+  const resolvedImageCount =
+    imageCount !== undefined ? imageCount : resolvedImageWithTextCount + resolvedImageOnlyCount;
+
+  const isAllImagesActive =
     tagFilter === '#รูปภาพ' ||
     tagFilter === '#รูปภาพทั้งหมด' ||
+    tagFilter === 'has-image' ||
+    tagFilter === 'image';
+  const isImageWithTextActive =
     tagFilter === '#รูปภาพแนบ' ||
-    tagFilter === '#รูปภาพล้วน' ||
-    tagFilter === 'has-image';
+    tagFilter === '#รูปภาพพร้อมข้อความ' ||
+    tagFilter === 'image-with-text';
+  const isImageOnlyActive = tagFilter === '#รูปภาพล้วน' || tagFilter === 'image-only';
 
   const tabs = [
     {
@@ -53,7 +63,10 @@ export default function ChatQuickTabs({
       label: language === 'th' ? 'ทั้งหมด' : 'All Sessions',
       icon: Inbox,
       count: totalCount,
-      isActive: statusFilter === 'all' && priorityFilter === 'all' && tagFilter === 'all',
+      isActive: statusFilter === 'all' && priorityFilter === 'all' && (tagFilter === 'all' || !tagFilter),
+      activeClass: 'bg-[#1a73e8] text-white shadow-xs font-medium',
+      inactiveIconColor: 'text-neutral-400 dark:text-neutral-500',
+      countClass: 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400',
     },
     {
       id: 'urgent' as const,
@@ -62,13 +75,51 @@ export default function ChatQuickTabs({
       count: urgentCount,
       isActive: priorityFilter === 'urgent',
       isUrgent: urgentCount > 0,
+      activeClass: 'bg-[#d93025] text-white shadow-xs font-medium',
+      inactiveIconColor: urgentCount > 0 ? 'text-[#d93025]' : 'text-neutral-400',
+      countClass:
+        urgentCount > 0
+          ? 'bg-[#fce8e6] text-[#c5221f] dark:bg-rose-950/60 dark:text-rose-300 font-semibold'
+          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
+    },
+    {
+      id: 'has-image' as const,
+      label: language === 'th' ? 'มีรูปภาพ' : 'All Images',
+      icon: ImageIcon,
+      count: resolvedImageCount,
+      isActive: isAllImagesActive,
+      activeClass: 'bg-[#8430ce] text-white shadow-xs font-medium',
+      inactiveIconColor: resolvedImageCount > 0 ? 'text-[#8430ce]' : 'text-neutral-400',
+      countClass:
+        resolvedImageCount > 0
+          ? 'bg-[#f3e8fd] text-[#8430ce] dark:bg-purple-950/60 dark:text-purple-300 font-semibold'
+          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
+    },
+    {
+      id: 'image-with-text' as const,
+      label: language === 'th' ? 'ดูรูป' : 'Attached Img',
+      icon: ImageIcon,
+      count: resolvedImageWithTextCount,
+      isActive: isImageWithTextActive,
+      activeClass: 'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900 shadow-xs font-medium',
+      inactiveIconColor: resolvedImageWithTextCount > 0 ? 'text-neutral-600 dark:text-neutral-300' : 'text-neutral-400',
+      countClass:
+        resolvedImageWithTextCount > 0
+          ? 'bg-neutral-200/90 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200 font-semibold'
+          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
     },
     {
       id: 'image-only' as const,
-      label: language === 'th' ? 'มีรูปภาพ' : 'With Images',
+      label: language === 'th' ? 'รูปภาพล้วน' : 'Img Only',
       icon: ImageIcon,
-      count: resolvedImageCount,
-      isActive: isImageActive,
+      count: resolvedImageOnlyCount,
+      isActive: isImageOnlyActive,
+      activeClass: 'bg-[#9333ea] text-white shadow-xs font-medium',
+      inactiveIconColor: resolvedImageOnlyCount > 0 ? 'text-[#9333ea]' : 'text-neutral-400',
+      countClass:
+        resolvedImageOnlyCount > 0
+          ? 'bg-[#f3e8fd] text-[#9333ea] dark:bg-purple-950/60 dark:text-purple-300 font-semibold'
+          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
     },
   ];
 
@@ -86,26 +137,6 @@ export default function ChatQuickTabs({
         {tabs.map((tab) => {
           const Icon = tab.icon;
 
-          let activeClass = 'bg-[#1a73e8] text-white shadow-xs font-medium';
-          let inactiveIconColor = 'text-neutral-400 dark:text-neutral-500';
-          let countClass = 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400';
-
-          if (tab.id === 'urgent') {
-            activeClass = 'bg-[#d93025] text-white shadow-xs font-medium';
-            inactiveIconColor = tab.count > 0 ? 'text-[#d93025]' : 'text-neutral-400';
-            countClass =
-              tab.count > 0
-                ? 'bg-[#fce8e6] text-[#c5221f] dark:bg-rose-950/60 dark:text-rose-300 font-semibold'
-                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500';
-          } else if (tab.id === 'image-only') {
-            activeClass = 'bg-[#8430ce] text-white shadow-xs font-medium';
-            inactiveIconColor = tab.count > 0 ? 'text-[#8430ce]' : 'text-neutral-400';
-            countClass =
-              tab.count > 0
-                ? 'bg-[#f3e8fd] text-[#8430ce] dark:bg-purple-950/60 dark:text-purple-300 font-semibold'
-                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500';
-          }
-
           return (
             <button
               key={tab.id}
@@ -113,15 +144,15 @@ export default function ChatQuickTabs({
               onClick={() => onSelectTab(tab.id)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer select-none ${
                 tab.isActive
-                  ? activeClass
+                  ? tab.activeClass
                   : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
               }`}
             >
-              <Icon size={13} className={tab.isActive ? 'text-white' : inactiveIconColor} />
+              <Icon size={13} className={tab.isActive ? 'text-white' : tab.inactiveIconColor} />
               <span>{tab.label}</span>
               <span
                 className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono tabular-nums ${
-                  tab.isActive ? 'bg-white/20 text-white font-medium' : countClass
+                  tab.isActive ? 'bg-white/20 text-white font-medium' : tab.countClass
                 }`}
               >
                 {tab.count}

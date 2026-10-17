@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/components/LanguageContext';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
 import { isSoundEnabled } from '@/lib/audio';
-import { filterChats, chatHasImage } from '@/lib/chatFilters';
+import { filterChats, chatHasImage, isImageWithTextChat, isImageOnlyChat } from '@/lib/chatFilters';
 import { exportChatsToCSV } from '@/lib/chatExport';
 import { DEFAULT_SYSTEM_TAGS } from '@/lib/tags';
 import { useFloatingWindows } from '@/hooks/useFloatingWindows';
@@ -152,6 +152,8 @@ export default function ChatsPage() {
     return pri === 'low' || issueMatch;
   }).length;
   const imageCount = timeframeFilteredChats.filter(chatHasImage).length;
+  const imageWithTextCount = timeframeFilteredChats.filter(isImageWithTextChat).length;
+  const imageOnlyCount = timeframeFilteredChats.filter(isImageOnlyChat).length;
 
   // Update Tags
   const handleUpdateTags = async (chatId: string, newTags: string[]) => {
@@ -229,6 +231,8 @@ export default function ChatsPage() {
         totalCount={totalCount}
         urgentCount={urgentCount}
         imageCount={imageCount}
+        imageWithTextCount={imageWithTextCount}
+        imageOnlyCount={imageOnlyCount}
         statusFilter={statusFilter}
         priorityFilter={priorityFilter}
         tagFilter={tagFilter}
@@ -251,16 +255,36 @@ export default function ChatsPage() {
               setStatusFilter('all');
               setTagFilter('all');
             }
-          } else if (tab === 'image-only' || tab === 'image') {
+          } else if (tab === 'has-image' || tab === 'image') {
             if (
               tagFilter === '#รูปภาพ' ||
               tagFilter === '#รูปภาพทั้งหมด' ||
-              tagFilter === '#รูปภาพแนบ' ||
-              tagFilter === '#รูปภาพล้วน'
+              tagFilter === 'has-image' ||
+              tagFilter === 'image'
             ) {
               setTagFilter('all');
             } else {
               setTagFilter('#รูปภาพทั้งหมด');
+              setStatusFilter('all');
+              setPriorityFilter('all');
+            }
+          } else if (tab === 'image-with-text') {
+            if (
+              tagFilter === '#รูปภาพแนบ' ||
+              tagFilter === '#รูปภาพพร้อมข้อความ' ||
+              tagFilter === 'image-with-text'
+            ) {
+              setTagFilter('all');
+            } else {
+              setTagFilter('#รูปภาพแนบ');
+              setStatusFilter('all');
+              setPriorityFilter('all');
+            }
+          } else if (tab === 'image-only') {
+            if (tagFilter === '#รูปภาพล้วน' || tagFilter === 'image-only') {
+              setTagFilter('all');
+            } else {
+              setTagFilter('#รูปภาพล้วน');
               setStatusFilter('all');
               setPriorityFilter('all');
             }
