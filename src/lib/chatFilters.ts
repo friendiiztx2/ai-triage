@@ -12,6 +12,28 @@ export interface ChatFilterCriteria {
   auditFilter?: string;
 }
 
+export function chatHasImage(c: any): boolean {
+  if (!c) return false;
+  if (Array.isArray(c.media_urls) && c.media_urls.length > 0) return true;
+  if (Array.isArray(c.tags) && (c.tags.includes('#รูปภาพ') || c.tags.includes('#รูปภาพล้วน'))) return true;
+  const text = typeof c.conversation === 'string' ? c.conversation : '';
+  if (
+    /(https?:\/\/[^\s\n"']+\.(jpg|jpeg|png|webp|gif|svg)(\?[^\s\n"']*)?)/i.test(text) ||
+    /(https?:\/\/[^\s\n"']*(images|photos|slip|storage)[^\s\n"']*)/i.test(text) ||
+    text.includes('[รูปภาพ]') ||
+    text.includes('📷')
+  ) {
+    return true;
+  }
+  if (
+    typeof c.summary === 'string' &&
+    (c.summary.includes('รูปภาพล้วน') || c.summary.includes('ไม่ระบุข้อความพิมพ์'))
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function filterChats(chats: any[], criteria: ChatFilterCriteria): any[] {
   let result = chats;
 
@@ -74,10 +96,22 @@ export function filterChats(chats: any[], criteria: ChatFilterCriteria): any[] {
 
   // Tag
   if (criteria.tagFilter && criteria.tagFilter !== 'all') {
-    result = result.filter((c) => {
-      const tags = c.tags || [];
-      return tags.includes(criteria.tagFilter);
-    });
+    if (criteria.tagFilter === '#รูปภาพ' || criteria.tagFilter === 'has-image' || criteria.tagFilter === 'image') {
+      result = result.filter(chatHasImage);
+    } else if (criteria.tagFilter === '#รูปภาพล้วน') {
+      result = result.filter((c) => {
+        const isImgOnly =
+          (c.tags && c.tags.includes('#รูปภาพล้วน')) ||
+          (typeof c.summary === 'string' &&
+            (c.summary.includes('รูปภาพล้วน') || c.summary.includes('ไม่ระบุข้อความพิมพ์')));
+        return isImgOnly;
+      });
+    } else {
+      result = result.filter((c) => {
+        const tags = c.tags || [];
+        return tags.includes(criteria.tagFilter);
+      });
+    }
   }
 
   // Date

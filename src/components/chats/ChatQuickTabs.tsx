@@ -5,13 +5,14 @@ import DatePicker from '@/components/ui/DatePicker';
 export interface ChatQuickTabsProps {
   totalCount: number;
   urgentCount: number;
-  imageOnlyCount: number;
+  imageOnlyCount?: number;
+  imageCount?: number;
   pendingCount?: number;
   completedCount?: number;
   statusFilter: string;
   priorityFilter: string;
   tagFilter: string;
-  onSelectTab: (type: 'all' | 'urgent' | 'image-only' | 'pending' | 'completed') => void;
+  onSelectTab: (type: 'all' | 'urgent' | 'image-only' | 'image' | 'pending' | 'completed') => void;
   dateFilter?: string;
   onDateFilterChange?: (val: string) => void;
   startDate?: string;
@@ -25,6 +26,7 @@ export default function ChatQuickTabs({
   totalCount,
   urgentCount,
   imageOnlyCount,
+  imageCount,
   statusFilter,
   priorityFilter,
   tagFilter,
@@ -37,6 +39,9 @@ export default function ChatQuickTabs({
   onEndDateChange,
   language = 'th',
 }: ChatQuickTabsProps) {
+  const resolvedImageCount = imageCount !== undefined ? imageCount : (imageOnlyCount ?? 0);
+  const isImageActive = tagFilter === '#รูปภาพ' || tagFilter === '#รูปภาพล้วน' || tagFilter === 'has-image';
+
   const tabs = [
     {
       id: 'all' as const,
@@ -55,10 +60,10 @@ export default function ChatQuickTabs({
     },
     {
       id: 'image-only' as const,
-      label: language === 'th' ? 'มีรูปภาพ' : 'Image Files',
+      label: language === 'th' ? 'มีรูปภาพ' : 'With Images',
       icon: ImageIcon,
-      count: imageOnlyCount,
-      isActive: tagFilter === '#รูปภาพล้วน',
+      count: resolvedImageCount,
+      isActive: isImageActive,
     },
   ];
 

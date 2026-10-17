@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/components/LanguageContext';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
 import { isSoundEnabled } from '@/lib/audio';
-import { filterChats } from '@/lib/chatFilters';
+import { filterChats, chatHasImage } from '@/lib/chatFilters';
 import { exportChatsToCSV } from '@/lib/chatExport';
 import { DEFAULT_SYSTEM_TAGS } from '@/lib/tags';
 import { useFloatingWindows } from '@/hooks/useFloatingWindows';
@@ -151,9 +151,7 @@ export default function ChatsPage() {
     }
     return pri === 'low' || issueMatch;
   }).length;
-  const imageOnlyCount = timeframeFilteredChats.filter(
-    (c) => (c.tags && c.tags.includes('#รูปภาพล้วน')) || (typeof c.summary === 'string' && c.summary.includes('รูปภาพล้วน'))
-  ).length;
+  const imageCount = timeframeFilteredChats.filter(chatHasImage).length;
 
   // Update Tags
   const handleUpdateTags = async (chatId: string, newTags: string[]) => {
@@ -230,7 +228,7 @@ export default function ChatsPage() {
       <ChatQuickTabs
         totalCount={totalCount}
         urgentCount={urgentCount}
-        imageOnlyCount={imageOnlyCount}
+        imageCount={imageCount}
         statusFilter={statusFilter}
         priorityFilter={priorityFilter}
         tagFilter={tagFilter}
@@ -246,13 +244,21 @@ export default function ChatsPage() {
             setPriorityFilter('all');
             setTagFilter('all');
           } else if (tab === 'urgent') {
-            setPriorityFilter('urgent');
-            setStatusFilter('all');
-            setTagFilter('all');
-          } else if (tab === 'image-only') {
-            setTagFilter('#รูปภาพล้วน');
-            setStatusFilter('all');
-            setPriorityFilter('all');
+            if (priorityFilter === 'urgent') {
+              setPriorityFilter('all');
+            } else {
+              setPriorityFilter('urgent');
+              setStatusFilter('all');
+              setTagFilter('all');
+            }
+          } else if (tab === 'image-only' || tab === 'image') {
+            if (tagFilter === '#รูปภาพ' || tagFilter === '#รูปภาพล้วน') {
+              setTagFilter('all');
+            } else {
+              setTagFilter('#รูปภาพ');
+              setStatusFilter('all');
+              setPriorityFilter('all');
+            }
           }
         }}
         language={language}

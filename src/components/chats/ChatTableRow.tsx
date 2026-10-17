@@ -75,7 +75,18 @@ export default function ChatTableRow({
       <td className="px-3 py-3 max-w-[280px]">
         <div className="flex items-center gap-1.5 min-w-0">
           {isImgOnly && (
-            <span className="inline-flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-[10px] font-mono px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 shrink-0">
+            <span
+              onMouseEnter={() => firstImg && onHoverImg(firstImg)}
+              onMouseLeave={() => onHoverImg(null)}
+              onClick={(e) => {
+                if (firstImg) {
+                  e.stopPropagation();
+                  window.open(firstImg, '_blank');
+                }
+              }}
+              className="inline-flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-[10px] font-mono px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 shrink-0 cursor-zoom-in"
+              title={language === 'th' ? 'รูปภาพล้วน (ชี้เพื่อดูรูป)' : 'Image only (Hover to preview)'}
+            >
               <ImageIcon size={10} />
               <span>{language === 'th' ? 'รูปภาพ' : 'Image'}</span>
             </span>
