@@ -83,19 +83,6 @@ export default function ChatQuickTabs({
           : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
     },
     {
-      id: 'has-image' as const,
-      label: language === 'th' ? 'มีรูปภาพ' : 'All Images',
-      icon: ImageIcon,
-      count: resolvedImageCount,
-      isActive: isAllImagesActive,
-      activeClass: 'bg-[#8430ce] text-white shadow-xs font-medium',
-      inactiveIconColor: resolvedImageCount > 0 ? 'text-[#8430ce]' : 'text-neutral-400',
-      countClass:
-        resolvedImageCount > 0
-          ? 'bg-[#f3e8fd] text-[#8430ce] dark:bg-purple-950/60 dark:text-purple-300 font-semibold'
-          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
-    },
-    {
       id: 'image-with-text' as const,
       label: language === 'th' ? 'ดูรูป' : 'Attached Img',
       icon: ImageIcon,
@@ -114,11 +101,11 @@ export default function ChatQuickTabs({
       icon: ImageIcon,
       count: resolvedImageOnlyCount,
       isActive: isImageOnlyActive,
-      activeClass: 'bg-[#9333ea] text-white shadow-xs font-medium',
-      inactiveIconColor: resolvedImageOnlyCount > 0 ? 'text-[#9333ea]' : 'text-neutral-400',
+      activeClass: 'bg-[#8430ce] text-white shadow-xs font-medium',
+      inactiveIconColor: resolvedImageOnlyCount > 0 ? 'text-[#8430ce]' : 'text-neutral-400',
       countClass:
         resolvedImageOnlyCount > 0
-          ? 'bg-[#f3e8fd] text-[#9333ea] dark:bg-purple-950/60 dark:text-purple-300 font-semibold'
+          ? 'bg-[#f3e8fd] text-[#8430ce] dark:bg-purple-950/60 dark:text-purple-300 font-semibold'
           : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
     },
   ];

@@ -153,12 +153,8 @@ export default function ChatFilterBar({
             options={[
               { value: 'all', label: language === 'th' ? 'แท็ก: ทั้งหมด' : 'Tags: All' },
               {
-                value: '#รูปภาพทั้งหมด',
-                label: language === 'th' ? '🖼️ มีรูปภาพทั้งหมด' : '🖼️ All Images',
-              },
-              {
                 value: '#รูปภาพแนบ',
-                label: language === 'th' ? '📎 รูปภาพแนบมากับข้อความ' : '📎 Images with Text',
+                label: language === 'th' ? '📎 รูปภาพแนบมากับข้อความ (ดูรูป)' : '📎 Images with Text',
               },
               {
                 value: '#รูปภาพล้วน',
