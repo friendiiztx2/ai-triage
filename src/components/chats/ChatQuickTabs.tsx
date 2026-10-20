@@ -21,6 +21,7 @@ export interface ChatQuickTabsProps {
   endDate?: string;
   onEndDateChange?: (val: string) => void;
   language?: 'th' | 'en';
+  className?: string;
 }
 
 export default function ChatQuickTabs({
@@ -40,6 +41,7 @@ export default function ChatQuickTabs({
   endDate = '',
   onEndDateChange,
   language = 'th',
+  className = '',
 }: ChatQuickTabsProps) {
   const resolvedImageWithTextCount = imageWithTextCount ?? 0;
   const resolvedImageOnlyCount = imageOnlyCount ?? 0;
@@ -118,7 +120,11 @@ export default function ChatQuickTabs({
   ];
 
   return (
-    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2 p-1.5 bg-white/70 dark:bg-neutral-900/70 rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs backdrop-blur-md">
+    <div
+      className={`flex flex-col xl:flex-row xl:items-center justify-between gap-2 p-1.5 ${
+        className || 'bg-white/70 dark:bg-neutral-900/70 rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs backdrop-blur-md'
+      }`}
+    >
       {/* 1. Status & Priority Tabs (Left) */}
       <div className="flex flex-wrap items-center gap-1">
         {tabs.map((tab) => {

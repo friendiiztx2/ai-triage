@@ -226,104 +226,102 @@ export default function ChatsPage() {
         language={language}
       />
 
-      {/* 1. Quick Tabs Bar */}
-      <ChatQuickTabs
-        totalCount={totalCount}
-        urgentCount={urgentCount}
-        imageCount={imageCount}
-        imageWithTextCount={imageWithTextCount}
-        imageOnlyCount={imageOnlyCount}
-        statusFilter={statusFilter}
-        priorityFilter={priorityFilter}
-        tagFilter={tagFilter}
-        dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
-        startDate={startDate}
-        onStartDateChange={setStartDate}
-        endDate={endDate}
-        onEndDateChange={setEndDate}
-        onSelectTab={(tab) => {
-          if (tab === 'all') {
-            setStatusFilter('all');
-            setPriorityFilter('all');
-            setTagFilter('all');
-          } else if (tab === 'urgent') {
-            if (priorityFilter === 'urgent') {
-              setPriorityFilter('all');
-            } else {
-              setPriorityFilter('urgent');
-              setStatusFilter('all');
-              setTagFilter('all');
-            }
-          } else if (tab === 'has-image' || tab === 'image') {
-            if (
-              tagFilter === '#รูปภาพ' ||
-              tagFilter === '#รูปภาพทั้งหมด' ||
-              tagFilter === 'has-image' ||
-              tagFilter === 'image'
-            ) {
-              setTagFilter('all');
-            } else {
-              setTagFilter('#รูปภาพทั้งหมด');
+      {/* 1. Unified Triage Control Panel (Quick Tabs + Search & Filters) */}
+      <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 shadow-xs backdrop-blur-md overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800/60">
+        <ChatQuickTabs
+          totalCount={totalCount}
+          urgentCount={urgentCount}
+          imageCount={imageCount}
+          imageWithTextCount={imageWithTextCount}
+          imageOnlyCount={imageOnlyCount}
+          statusFilter={statusFilter}
+          priorityFilter={priorityFilter}
+          tagFilter={tagFilter}
+          dateFilter={dateFilter}
+          onDateFilterChange={setDateFilter}
+          startDate={startDate}
+          onStartDateChange={setStartDate}
+          endDate={endDate}
+          onEndDateChange={setEndDate}
+          onSelectTab={(tab) => {
+            if (tab === 'all') {
               setStatusFilter('all');
               setPriorityFilter('all');
-            }
-          } else if (tab === 'image-with-text') {
-            if (
-              tagFilter === '#รูปภาพแนบ' ||
-              tagFilter === '#รูปภาพพร้อมข้อความ' ||
-              tagFilter === 'image-with-text'
-            ) {
               setTagFilter('all');
-            } else {
-              setTagFilter('#รูปภาพแนบ');
-              setStatusFilter('all');
-              setPriorityFilter('all');
+            } else if (tab === 'urgent') {
+              if (priorityFilter === 'urgent') {
+                setPriorityFilter('all');
+              } else {
+                setPriorityFilter('urgent');
+                setStatusFilter('all');
+                setTagFilter('all');
+              }
+            } else if (tab === 'has-image' || tab === 'image') {
+              if (
+                tagFilter === '#รูปภาพ' ||
+                tagFilter === '#รูปภาพทั้งหมด' ||
+                tagFilter === 'has-image' ||
+                tagFilter === 'image'
+              ) {
+                setTagFilter('all');
+              } else {
+                setTagFilter('#รูปภาพทั้งหมด');
+                setStatusFilter('all');
+                setPriorityFilter('all');
+              }
+            } else if (tab === 'image-with-text') {
+              if (
+                tagFilter === '#รูปภาพแนบ' ||
+                tagFilter === '#รูปภาพพร้อมข้อความ' ||
+                tagFilter === 'image-with-text'
+              ) {
+                setTagFilter('all');
+              } else {
+                setTagFilter('#รูปภาพแนบ');
+                setStatusFilter('all');
+                setPriorityFilter('all');
+              }
+            } else if (tab === 'image-only') {
+              if (tagFilter === '#รูปภาพล้วน' || tagFilter === 'image-only') {
+                setTagFilter('all');
+              } else {
+                setTagFilter('#รูปภาพล้วน');
+                setStatusFilter('all');
+                setPriorityFilter('all');
+              }
             }
-          } else if (tab === 'image-only') {
-            if (tagFilter === '#รูปภาพล้วน' || tagFilter === 'image-only') {
-              setTagFilter('all');
-            } else {
-              setTagFilter('#รูปภาพล้วน');
-              setStatusFilter('all');
-              setPriorityFilter('all');
-            }
-          }
-        }}
-        language={language}
-      />
+          }}
+          language={language}
+          className="bg-transparent border-0 rounded-none shadow-none"
+        />
 
-      {/* 2. Filter Bar */}
-      <ChatFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        priorityFilter={priorityFilter}
-        onPriorityChange={setPriorityFilter}
-        categoryFilter={categoryFilter}
-        onCategoryChange={setCategoryFilter}
-        tagFilter={tagFilter}
-        onTagChange={setTagFilter}
-        auditFilter={auditFilter}
-        onAuditChange={setAuditFilter}
-        dateFilter={dateFilter}
-        onDateChange={setDateFilter}
-        startDate={startDate}
-        onStartDateChange={setStartDate}
-        endDate={endDate}
-        onEndDateChange={setEndDate}
-        categories={categories}
-        allAvailableTags={allAvailableTags}
-        pendingCount={pendingCount}
-        completedCount={completedCount}
-        urgentCount={urgentCount}
-        highCount={highCount}
-        mediumCount={mediumCount}
-        lowCount={lowCount}
-        onClearFilters={handleClearFilters}
-        language={language}
-      />
+        <ChatFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          priorityFilter={priorityFilter}
+          onPriorityChange={setPriorityFilter}
+          categoryFilter={categoryFilter}
+          onCategoryChange={setCategoryFilter}
+          tagFilter={tagFilter}
+          onTagChange={setTagFilter}
+          auditFilter={auditFilter}
+          onAuditChange={setAuditFilter}
+          dateFilter={dateFilter}
+          categories={categories}
+          allAvailableTags={allAvailableTags}
+          pendingCount={pendingCount}
+          completedCount={completedCount}
+          urgentCount={urgentCount}
+          highCount={highCount}
+          mediumCount={mediumCount}
+          lowCount={lowCount}
+          onClearFilters={handleClearFilters}
+          language={language}
+          className="bg-transparent border-0 rounded-none shadow-none"
+        />
+      </div>
 
       {/* 3. Chat Table */}
       <ChatTable

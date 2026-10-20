@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import ChatTableRow from './ChatTableRow';
 import { getCategoryLabel, getBaseCatId } from '@/lib/categories';
 import SortHeader from '@/components/ui/SortHeader';
@@ -93,21 +93,43 @@ export default function ChatTable({
     });
   }, [chats, sortColumn, sortDirection, categories, language]);
 
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Reset to page 1 whenever chats/filters change
+  // Restore saved page size preference from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('chats_page_size');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && (parsed > 0 || parsed === -1)) {
+          setPageSize(parsed);
+        }
+      }
+    }
+  }, []);
+
+  // Reset to page 1 whenever chats or pageSize change
   useEffect(() => {
     setCurrentPage(1);
-  }, [chats]);
+  }, [chats, pageSize]);
 
-  const totalPages = Math.ceil(sortedChats.length / pageSize) || 1;
+  const isAll = pageSize === -1;
+  const totalPages = isAll ? 1 : Math.ceil(sortedChats.length / pageSize) || 1;
   const safeCurrentPage = Math.min(currentPage, totalPages);
-  const startIndex = (safeCurrentPage - 1) * pageSize;
-  const paginatedChats = sortedChats.slice(startIndex, startIndex + pageSize);
+  const startIndex = isAll ? 0 : (safeCurrentPage - 1) * pageSize;
+  const paginatedChats = isAll ? sortedChats : sortedChats.slice(startIndex, startIndex + pageSize);
 
-  const fromRecord = sortedChats.length > 0 ? startIndex + 1 : 0;
-  const toRecord = Math.min(startIndex + pageSize, sortedChats.length);
+  const fromRecord = sortedChats.length > 0 ? (isAll ? 1 : startIndex + 1) : 0;
+  const toRecord = isAll ? sortedChats.length : Math.min(startIndex + pageSize, sortedChats.length);
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('chats_page_size', String(newSize));
+    }
+  };
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -183,7 +205,7 @@ export default function ChatTable({
                   onSort={() => handleSort('customer')}
                 />
               </th>
-              <th className="px-3 py-3 max-w-[280px]">
+              <th className="px-3 py-3 max-w-[420px]">
                 <SortHeader
                   label={language === 'th' ? 'สรุปประเด็น AI' : 'Intent & Summary'}
                   active={sortColumn === 'summary'}
@@ -248,10 +270,45 @@ export default function ChatTable({
       {/* Pagination Footer */}
       {sortedChats.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/50 select-none">
-          <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium font-mono">
-            {language === 'th'
-              ? `แสดง ${fromRecord.toLocaleString()} - ${toRecord.toLocaleString()} จากทั้งหมด ${sortedChats.length.toLocaleString()} รายการ (หน้าละ 20)`
-              : `Showing ${fromRecord.toLocaleString()} - ${toRecord.toLocaleString()} of ${sortedChats.length.toLocaleString()} items (20/page)`}
+          {/* Record Count & Page Size Selector */}
+          <div className="flex flex-wrap items-center gap-2.5 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+            <span className="font-mono">
+              {isAll
+                ? (language === 'th'
+                    ? `แสดงทั้งหมด ${sortedChats.length.toLocaleString()} รายการ`
+                    : `Showing all ${sortedChats.length.toLocaleString()} items`)
+                : (language === 'th'
+                    ? `แสดง ${fromRecord.toLocaleString()} - ${toRecord.toLocaleString()} จากทั้งหมด ${sortedChats.length.toLocaleString()} รายการ`
+                    : `Showing ${fromRecord.toLocaleString()} - ${toRecord.toLocaleString()} of ${sortedChats.length.toLocaleString()} items`)}
+            </span>
+
+            <span className="text-neutral-300 dark:text-neutral-700 hidden sm:inline">•</span>
+
+            <div className="flex items-center gap-1.5 font-sans">
+              <span className="text-neutral-500 dark:text-neutral-400 text-xs">
+                {language === 'th' ? 'แสดงหน้าละ:' : 'Per page:'}
+              </span>
+              <div className="relative inline-flex items-center">
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className="appearance-none bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200/90 dark:border-neutral-700 rounded-lg pl-2.5 pr-6 py-1 text-xs font-mono font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-[#1a73e8] focus:border-[#1a73e8] dark:focus:border-blue-500 cursor-pointer shadow-2xs transition-colors"
+                >
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={60}>60</option>
+                  <option value={100}>100</option>
+                  <option value={-1}>{language === 'th' ? 'ทั้งหมด (All)' : 'All'}</option>
+                </select>
+                <ChevronDown
+                  size={12}
+                  className="pointer-events-none absolute right-2 text-neutral-400 dark:text-neutral-500"
+                />
+              </div>
+              <span className="text-neutral-500 dark:text-neutral-400 text-xs">
+                {language === 'th' ? 'รายการ' : 'rows'}
+              </span>
+            </div>
           </div>
 
           {totalPages > 1 && (

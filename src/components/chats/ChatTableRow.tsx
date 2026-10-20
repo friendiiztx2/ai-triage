@@ -75,7 +75,7 @@ export default function ChatTableRow({
       </td>
 
       {/* Intent & Summary */}
-      <td className="px-3 py-3 max-w-[280px]">
+      <td className="px-3 py-3 max-w-[420px]">
         <div className="flex items-center gap-1.5 min-w-0">
           {/* 1. รูปภาพล้วน (Image Only) */}
           {isImgOnly && firstImg && (
