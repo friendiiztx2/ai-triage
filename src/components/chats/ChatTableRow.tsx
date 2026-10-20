@@ -84,7 +84,7 @@ export default function ChatTableRow({
               onMouseLeave={() => onHoverImg(null)}
               onClick={(e) => {
                 e.stopPropagation();
-                window.open(firstImg, '_blank');
+                window.open(firstImg, '_blank', 'noopener,noreferrer');
               }}
               className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 cursor-zoom-in transition-all shadow-2xs hover:scale-105 active:scale-95"
               title={language === 'th' ? 'รูปภาพล้วน (ชี้เมาส์เพื่อซูมดูรูป / คลิกเปิดรูปใหญ่)' : 'Image only (Hover to preview / Click to open)'}
@@ -100,7 +100,7 @@ export default function ChatTableRow({
               onMouseLeave={() => onHoverImg(null)}
               onClick={(e) => {
                 e.stopPropagation();
-                window.open(firstImg, '_blank');
+                window.open(firstImg, '_blank', 'noopener,noreferrer');
               }}
               className="inline-flex items-center gap-1 text-[10px] font-mono text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100 px-1.5 py-0.5 rounded bg-neutral-100 hover:bg-neutral-200/80 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700 cursor-zoom-in shrink-0 transition-all shadow-2xs hover:scale-105 active:scale-95"
               title={language === 'th' ? 'มีรูปภาพแนบมากับข้อความ (ชี้เมาส์เพื่อซูมดูรูป / คลิกเปิดรูปใหญ่)' : 'Attached image (Hover to preview / Click to open)'}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, supabase } from '@/lib/supabase';
 import { KNOWN_CATEGORY_NAMES, getBaseCatId, getCategoryLabel } from '@/lib/categories';
+import { verifyApiAuth, getCompanyContext } from '@/lib/auth';
+import { clearChatsCache } from '@/lib/serverCache';
 
 const defaultCategories = [
   { id: 'login_issue', name: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน', name_th: 'ปัญหาระบบเข้าใช้งาน/ล็อกอิน', name_en: 'Login Issue', description: 'ลืมรหัสผ่าน, ไม่ได้รับ OTP, บัญชีถูกล็อก', company_id: null },
@@ -23,7 +25,11 @@ const serverCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 60000; // 60 Seconds TTL for categories
 
 export async function GET(request: NextRequest) {
-  const cacheKey = request.url;
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
+  const companyId = getCompanyContext(request, session);
+  const cacheKey = request.url + (companyId ? `_comp_${companyId}` : `_user_${session.id}`);
   const now = Date.now();
   const cached = serverCache.get(cacheKey);
 
@@ -41,12 +47,9 @@ export async function GET(request: NextRequest) {
   const db = supabaseAdmin || supabase;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const filterCompanyId = searchParams.get('company_id');
-
     let query = db.from('categories').select('id, name, description, company_id, name_en');
-    if (filterCompanyId && filterCompanyId !== 'all') {
-      query = query.eq('company_id', filterCompanyId);
+    if (companyId && companyId !== 'all') {
+      query = query.or(`company_id.eq.${companyId},company_id.is.null`);
     }
 
     const { data, error } = await query.abortSignal(controller.signal);
@@ -91,16 +94,25 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  clearChatsCache();
   serverCache.clear();
+  const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin', 'admin']);
+  if (errorResponse || !session) return errorResponse!;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  const companyId = request.headers.get('x-company-id') || request.cookies.get('company_id')?.value;
+  // Non-system admins can only create categories for their own company
+  const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+  const companyId = isSysAdmin
+    ? request.headers.get('x-company-id') || request.cookies.get('company_id')?.value || session.company_id
+    : session.company_id;
 
   try {
     const { id, name, description, name_en, name_th } = await request.json();
 
     if (!id || (!name && !name_th)) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'โปรดระบุไอดีและชื่อหมวดหมู่' }, { status: 400 });
     }
 
@@ -114,7 +126,7 @@ export async function POST(request: NextRequest) {
       name_en: finalEn,
       description
     };
-    if (companyId) {
+    if (companyId && companyId !== 'all') {
       insertData.company_id = companyId;
     }
 
@@ -135,8 +147,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
+  clearChatsCache();
   serverCache.clear();
+  const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin', 'admin']);
+  if (errorResponse || !session) return errorResponse!;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -144,6 +160,7 @@ export async function PATCH(request: Request) {
     const { id, name, description, name_en, name_th } = await request.json();
 
     if (!id) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'โปรดระบุไอดีหมวดหมู่ที่ต้องการแก้ไข' }, { status: 400 });
     }
 
@@ -158,12 +175,14 @@ export async function PATCH(request: Request) {
       updateData.description = description;
     }
 
-    const { data, error } = await supabase
-      .from('categories')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .abortSignal(controller.signal);
+    let query = supabase.from('categories').update(updateData).eq('id', id);
+
+    // Multi-tenant protection: non-system admins can only edit their own company categories
+    if (session.role !== 'system_admin' && session.role !== 'super_admin' && session.company_id) {
+      query = query.eq('company_id', session.company_id);
+    }
+
+    const { data, error } = await query.select().abortSignal(controller.signal);
 
     clearTimeout(timeoutId);
     if (error) throw error;
@@ -176,8 +195,12 @@ export async function PATCH(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
+  clearChatsCache();
   serverCache.clear();
+  const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin', 'admin']);
+  if (errorResponse || !session) return errorResponse!;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -186,14 +209,18 @@ export async function DELETE(request: Request) {
     const id = searchParams.get('id');
 
     if (!id) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'โปรดระบุไอดีหมวดหมู่ที่ต้องการลบ' }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id)
-      .abortSignal(controller.signal);
+    let query = supabase.from('categories').delete().eq('id', id);
+
+    // Multi-tenant protection: non-system admins can only delete their own company categories
+    if (session.role !== 'system_admin' && session.role !== 'super_admin' && session.company_id) {
+      query = query.eq('company_id', session.company_id);
+    }
+
+    const { error } = await query.abortSignal(controller.signal);
 
     clearTimeout(timeoutId);
     if (error) {

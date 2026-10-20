@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { sanitizeText } from '@/lib/sanitize';
+import { verifyApiAuth } from '@/lib/auth';
 import crypto from 'crypto';
 
 const INITIAL_CATEGORY = {
@@ -10,49 +11,20 @@ const INITIAL_CATEGORY = {
   description: 'ใช้งานบนมือถือไม่ได้, Safari มีปัญหา, Chrome แสดงผลผิด, Firefox ใช้งานไม่ได้, Tablet แสดงผลผิด, ระบบไม่รองรับอุปกรณ์'
 };
 
-
-async function verifySystemAdmin(request: NextRequest): Promise<boolean> {
-  const email = request.headers.get('x-user-email') || request.cookies.get('user_email')?.value;
-  const password = request.headers.get('x-user-password') || request.cookies.get('user_password')?.value;
-
-  if (!email || !password) {
-    const sessionCookie = request.cookies.get('user_session')?.value;
-    if (sessionCookie) {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(sessionCookie));
-        return parsed.role === 'system_admin';
-      } catch (e) {
-        return false;
-      }
-    }
-    return false;
-  }
-
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('role')
-    .eq('email', email.trim().toLowerCase())
-    .eq('password', password.trim())
-    .maybeSingle();
-
-  if (error || !user) return false;
-  return user.role === 'system_admin';
-}
-
 export async function POST(request: NextRequest) {
+  const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin']);
+  if (errorResponse || !session) return errorResponse!;
+
+  const db = supabaseAdmin || supabase;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for sequential queries
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const isAuthorized = await verifySystemAdmin(request);
-    if (!isAuthorized) {
-      return NextResponse.json({ error: 'ปฏิเสธการเข้าถึง (สิทธิ์เฉพาะ System Admin)' }, { status: 403 });
-    }
-
     const { name, domain } = await request.json();
 
     if (!name || !domain) {
-      return NextResponse.json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อบริษัท, โดเมน)' }, { status: 450 });
+      clearTimeout(timeoutId);
+      return NextResponse.json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อบริษัท, โดเมน)' }, { status: 400 });
     }
 
     const newCompanyId = crypto.randomUUID();
@@ -69,7 +41,7 @@ export async function POST(request: NextRequest) {
     };
 
     // 1. Insert the new company
-    const { data: companyData, error: companyError } = await supabase
+    const { data: companyData, error: companyError } = await db
       .from('companies')
       .insert([newCompany])
       .select()
@@ -77,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     if (companyError) throw companyError;
 
-    // 2. Initialize the single default category for this company
+    // 2. Initialize the default category for this company
     const initialCategoryRecord = {
       id: `${newCompanyId}:${INITIAL_CATEGORY.key}`,
       name: INITIAL_CATEGORY.name,
@@ -86,7 +58,7 @@ export async function POST(request: NextRequest) {
       company_id: newCompanyId
     };
 
-    const { error: catInsertError } = await supabase
+    const { error: catInsertError } = await db
       .from('categories')
       .insert([initialCategoryRecord])
       .abortSignal(controller.signal);

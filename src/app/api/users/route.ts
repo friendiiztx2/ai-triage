@@ -1,59 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { verifyApiAuth } from '@/lib/auth';
+import { hashPassword } from '@/lib/password';
 import crypto from 'crypto';
 
-async function getRequesterProfile(request: NextRequest) {
-  const db = supabaseAdmin || supabase;
-  const email = request.headers.get('x-user-email') || request.cookies.get('user_email')?.value;
-
-  const sessionCookie = request.cookies.get('user_session')?.value;
-  if (sessionCookie) {
-    try {
-      const parsed = JSON.parse(decodeURIComponent(sessionCookie));
-      if (parsed && parsed.email) {
-        const { data: user } = await db
-          .from('users')
-          .select('*')
-          .eq('email', parsed.email.trim().toLowerCase())
-          .maybeSingle();
-        if (user) return user;
-        return parsed;
-      }
-    } catch (e) {}
-  }
-
-  if (email) {
-    const { data: user } = await db
-      .from('users')
-      .select('*')
-      .eq('email', email.trim().toLowerCase())
-      .maybeSingle();
-    if (user) return user;
-  }
-
-  return null;
-}
-
 export async function GET(request: NextRequest) {
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
   const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const requester = await getRequesterProfile(request);
-    if (!requester) {
-      clearTimeout(timeoutId);
-      return NextResponse.json({ error: 'Unauthorized: กรุณาเข้าสู่ระบบก่อนทำรายการ' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const filterCompanyId = searchParams.get('company_id');
 
     let query = db.from('users').select('*');
 
     // Multi-tenant isolation: non-system_admin can ONLY see users in their own company
-    if (requester.role !== 'system_admin') {
-      const allowedIds = (requester.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
+    if (session.role !== 'system_admin' && session.role !== 'super_admin') {
+      const allowedIds = (session.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
       if (allowedIds.length === 0) {
         clearTimeout(timeoutId);
         return NextResponse.json([]);
@@ -72,7 +39,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    return NextResponse.json(users);
+    // Never expose password hashes or plaintext passwords to the frontend
+    const sanitizedUsers = users.map(({ password: _pass, ...rest }: any) => rest);
+    return NextResponse.json(sanitizedUsers);
   } catch (err: any) {
     clearTimeout(timeoutId);
     return NextResponse.json([]);
@@ -80,37 +49,33 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin', 'admin']);
+  if (errorResponse || !session) return errorResponse!;
+
+  const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const requester = await getRequesterProfile(request);
-    if (!requester) {
-      clearTimeout(timeoutId);
-      return NextResponse.json({ error: 'Unauthorized: กรุณาเข้าสู่ระบบก่อนทำรายการ' }, { status: 401 });
-    }
-    if (requester.role !== 'system_admin' && requester.role !== 'super_admin') {
-      clearTimeout(timeoutId);
-      return NextResponse.json({ error: 'ปฏิเสธการเข้าถึง (สิทธิ์ไม่เพียงพอ)' }, { status: 403 });
-    }
-
     const { email, name, role, company_id, password, permissions } = await request.json();
 
     const isSysAdmin = role === 'system_admin';
-    if (isSysAdmin && requester.role !== 'system_admin') {
+    if (isSysAdmin && session.role !== 'system_admin' && session.role !== 'super_admin') {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'ปฏิเสธการเข้าถึง (เฉพาะ System Admin เท่านั้นที่สามารถสร้าง System Admin ได้)' }, { status: 403 });
     }
 
-    const assignedCompanyId = requester.role === 'system_admin' 
+    const assignedCompanyId = (session.role === 'system_admin' || session.role === 'super_admin')
       ? (isSysAdmin ? null : company_id) 
-      : requester.company_id;
+      : session.company_id;
 
     if (!email || !name || !role || !password || (!isSysAdmin && !assignedCompanyId)) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน' }, { status: 400 });
     }
 
     // Check if user already exists
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing, error: checkError } = await db
       .from('users')
       .select('id')
       .eq('email', email.trim().toLowerCase())
@@ -119,8 +84,12 @@ export async function POST(request: NextRequest) {
 
     if (checkError) throw checkError;
     if (existing) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'ชื่อบัญชี/อีเมลนี้ถูกใช้งานในระบบแล้ว' }, { status: 400 });
     }
+
+    // Securely hash password with bcrypt before database insertion
+    const hashedPassword = await hashPassword(password.trim());
 
     const newUser = {
       id: crypto.randomUUID(),
@@ -128,12 +97,12 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       role,
       company_id: assignedCompanyId,
-      password: password.trim(),
+      password: hashedPassword,
       permissions: permissions || [],
       created_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('users')
       .insert([newUser])
       .select()
@@ -142,7 +111,9 @@ export async function POST(request: NextRequest) {
     clearTimeout(timeoutId);
     if (error) throw error;
 
-    return NextResponse.json(data?.[0] || { success: true });
+    const created = data?.[0] || newUser;
+    const { password: _pass, ...userWithoutPassword } = created;
+    return NextResponse.json(userWithoutPassword);
   } catch (err: any) {
     clearTimeout(timeoutId);
     const errMsg = err.name === 'AbortError' ? 'Supabase connection timed out (30s)' : err.message;
@@ -151,40 +122,40 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin', 'admin']);
+  if (errorResponse || !session) return errorResponse!;
+
+  const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const requester = await getRequesterProfile(request);
-    if (!requester) {
-      clearTimeout(timeoutId);
-      return NextResponse.json({ error: 'Unauthorized: กรุณาเข้าสู่ระบบก่อนทำรายการ' }, { status: 401 });
-    }
-    if (requester.role !== 'system_admin' && requester.role !== 'super_admin') {
-      clearTimeout(timeoutId);
-      return NextResponse.json({ error: 'ปฏิเสธการเข้าถึง (สิทธิ์ไม่เพียงพอ)' }, { status: 403 });
-    }
-
     const { id, email, name, role, company_id, password, permissions } = await request.json();
 
     if (!id) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'ไม่พบรหัสผู้ใช้ที่ต้องการแก้ไข' }, { status: 400 });
     }
 
     // Verify company accessibility for non-system_admin
-    if (requester.role !== 'system_admin') {
-      const { data: targetUser } = await supabase.from('users').select('company_id, role').eq('id', id).maybeSingle();
+    const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+    if (!isSysAdmin) {
+      const { data: targetUser } = await db.from('users').select('company_id, role').eq('id', id).maybeSingle();
       if (!targetUser) {
+        clearTimeout(timeoutId);
         return NextResponse.json({ error: 'ไม่พบผู้ใช้ที่ต้องการแก้ไข' }, { status: 404 });
       }
-      if (targetUser.role === 'system_admin') {
+      if (targetUser.role === 'system_admin' || targetUser.role === 'super_admin') {
+        clearTimeout(timeoutId);
         return NextResponse.json({ error: 'คุณไม่มีสิทธิ์แก้ไข System Admin' }, { status: 403 });
       }
-      const allowedIds = (requester.company_id || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+      const allowedIds = (session.company_id || '').split(',').map((s: string) => s.trim()).filter(Boolean);
       if (targetUser.company_id && !allowedIds.includes(targetUser.company_id)) {
+        clearTimeout(timeoutId);
         return NextResponse.json({ error: 'คุณไม่มีสิทธิ์แก้ไขผู้ใช้งานนอกเหนือจากบริษัทตนเอง' }, { status: 403 });
       }
-      if (role === 'system_admin') {
+      if (role === 'system_admin' || role === 'super_admin') {
+        clearTimeout(timeoutId);
         return NextResponse.json({ error: 'คุณไม่มีสิทธิ์กำหนดบทบาทเป็น System Admin' }, { status: 403 });
       }
     }
@@ -194,17 +165,19 @@ export async function PATCH(request: NextRequest) {
     if (name) updateData.name = name.trim();
     if (role) {
       updateData.role = role;
-      if (role === 'system_admin') {
+      if (role === 'system_admin' || role === 'super_admin') {
         updateData.company_id = null;
       }
     }
-    if (company_id !== undefined && requester.role === 'system_admin') {
-      updateData.company_id = role === 'system_admin' ? null : company_id;
+    if (company_id !== undefined && isSysAdmin) {
+      updateData.company_id = (role === 'system_admin' || role === 'super_admin') ? null : company_id;
     }
-    if (password && password.trim()) updateData.password = password.trim();
+    if (password && password.trim()) {
+      updateData.password = await hashPassword(password.trim());
+    }
     if (Array.isArray(permissions)) updateData.permissions = permissions;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('users')
       .update(updateData)
       .eq('id', id)
@@ -214,7 +187,9 @@ export async function PATCH(request: NextRequest) {
     clearTimeout(timeoutId);
     if (error) throw error;
 
-    return NextResponse.json(data?.[0] || { success: true });
+    const updated = data?.[0] || { success: true };
+    const { password: _pass, ...userWithoutPassword } = updated;
+    return NextResponse.json(userWithoutPassword);
   } catch (err: any) {
     clearTimeout(timeoutId);
     const errMsg = err.name === 'AbortError' ? 'Supabase connection timed out (30s)' : err.message;
@@ -223,43 +198,42 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin', 'admin']);
+  if (errorResponse || !session) return errorResponse!;
+
+  const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const requester = await getRequesterProfile(request);
-    if (!requester) {
-      clearTimeout(timeoutId);
-      return NextResponse.json({ error: 'Unauthorized: กรุณาเข้าสู่ระบบก่อนทำรายการ' }, { status: 401 });
-    }
-    if (requester.role !== 'system_admin' && requester.role !== 'super_admin') {
-      clearTimeout(timeoutId);
-      return NextResponse.json({ error: 'ปฏิเสธการเข้าถึง (สิทธิ์ไม่เพียงพอ)' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'ไม่พบรหัสผู้ใช้ที่ต้องการลบ' }, { status: 400 });
     }
 
     // Verify company accessibility for non-system_admin
-    if (requester.role !== 'system_admin') {
-      const { data: targetUser } = await supabase.from('users').select('company_id, role').eq('id', id).maybeSingle();
+    const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+    if (!isSysAdmin) {
+      const { data: targetUser } = await db.from('users').select('company_id, role').eq('id', id).maybeSingle();
       if (!targetUser) {
+        clearTimeout(timeoutId);
         return NextResponse.json({ error: 'ไม่พบผู้ใช้ที่ต้องการลบ' }, { status: 404 });
       }
-      if (targetUser.role === 'system_admin') {
+      if (targetUser.role === 'system_admin' || targetUser.role === 'super_admin') {
+        clearTimeout(timeoutId);
         return NextResponse.json({ error: 'คุณไม่มีสิทธิ์ลบ System Admin' }, { status: 403 });
       }
-      const allowedIds = (requester.company_id || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+      const allowedIds = (session.company_id || '').split(',').map((s: string) => s.trim()).filter(Boolean);
       if (targetUser.company_id && !allowedIds.includes(targetUser.company_id)) {
+        clearTimeout(timeoutId);
         return NextResponse.json({ error: 'คุณไม่มีสิทธิ์ลบผู้ใช้งานนอกเหนือจากบริษัทตนเอง' }, { status: 403 });
       }
     }
 
-    const { error } = await supabase
+    const { error } = await db
       .from('users')
       .delete()
       .eq('id', id)

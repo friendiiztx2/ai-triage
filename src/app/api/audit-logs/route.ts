@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { verifyApiAuth } from '@/lib/auth';
 
 interface CacheEntry {
   timestamp: number;
@@ -12,8 +13,14 @@ export function clearAuditCache() {
   serverCache.clear();
 }
 
-export async function GET(request: Request) {
-  const cacheKey = request.url;
+export async function GET(request: NextRequest) {
+  const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin', 'admin']);
+  if (errorResponse || !session) return errorResponse!;
+
+  const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+  const companyId = isSysAdmin ? request.nextUrl.searchParams.get('company_id') : session.company_id;
+
+  const cacheKey = request.url + `_comp_${companyId || 'all'}`;
   const now = Date.now();
   const cached = serverCache.get(cacheKey);
 
@@ -28,12 +35,18 @@ export async function GET(request: Request) {
 
   const db = supabaseAdmin || supabase;
   try {
-    // 1. Attempt to fetch from 'activity_logs' table (Admin bypass RLS)
-    const { data: actData } = await db
+    // 1. Attempt to fetch from 'activity_logs' table
+    let actQuery = db
       .from('activity_logs')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(1000);
+
+    if (companyId && companyId !== 'all') {
+      actQuery = actQuery.eq('company_id', companyId);
+    }
+
+    const { data: actData } = await actQuery;
 
     if (actData && actData.length > 0) {
       const mappedLogs = actData.map((item: any) => ({
@@ -49,10 +62,16 @@ export async function GET(request: Request) {
     }
 
     // 2. Attempt to fetch from 'audit_logs' table
-    const { data: auditData } = await db
+    let auditQuery = db
       .from('audit_logs')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (companyId && companyId !== 'all') {
+      auditQuery = auditQuery.eq('company_id', companyId);
+    }
+
+    const { data: auditData } = await auditQuery;
 
     if (auditData && auditData.length > 0) {
       serverCache.set(cacheKey, { timestamp: now, data: auditData });
@@ -66,25 +85,27 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   serverCache.clear();
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
   const db = supabaseAdmin || supabase;
   try {
     const body = await request.json();
-    const { admin_name, admin_email, action, details } = body;
+    const { action, details } = body;
 
-    if (!admin_name || !action || !details) {
+    if (!action || !details) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
-    const rawUserId = body.user_id || body.user_email || admin_email || '';
-    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawUserId);
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session.id);
 
     const activityEntry: any = {
-      company_id: body.company_id || null,
-      user_id: isValidUUID ? rawUserId : null,
-      user_name: admin_name || body.user_name || 'Admin',
-      action_type: action || body.action_type || 'UPDATE',
+      company_id: session.company_id || body.company_id || null,
+      user_id: isValidUUID ? session.id : null,
+      user_name: session.name || session.email || 'User',
+      action_type: action || 'UPDATE',
       details: typeof details === 'object' ? details : { info: details },
       created_at: new Date().toISOString()
     };

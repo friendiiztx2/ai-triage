@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { verifyApiAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
   const { searchParams } = new URL(request.url);
   const chatId = searchParams.get('chat_id');
 

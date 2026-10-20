@@ -124,8 +124,11 @@ export default function Sidebar() {
     window.location.reload();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     sessionStorage.setItem('session_logout', 'true');
+    try {
+      await fetch('/api/users/logout', { method: 'POST' });
+    } catch (e) {}
     document.cookie = 'user_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0;';
     document.cookie = 'company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; max-age=0;';
     localStorage.removeItem('user_session');

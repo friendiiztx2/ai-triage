@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { verifyApiAuth } from '@/lib/auth';
 
 interface CacheEntry {
   timestamp: number;
@@ -9,7 +10,10 @@ const serverCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 30000; // 30 Seconds TTL for customers
 
 export async function GET(request: NextRequest) {
-  const cacheKey = request.url;
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
+  const cacheKey = request.url + `_user_${session.id}`;
   const now = Date.now();
   const cached = serverCache.get(cacheKey);
 

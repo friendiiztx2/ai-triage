@@ -1,68 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuthToken, AuthTokenPayload } from '@/lib/jwt';
 
-export interface UserSession {
-  id: string;
-  name: string;
-  email?: string;
-  role: 'system_admin' | 'super_admin' | 'admin' | 'staff';
-  company_id: string;
-  permissions?: string[];
-}
+export type UserSession = AuthTokenPayload;
 
 /**
- * Verifies session token or cookie for API routes and checks role permissions (RBAC)
+ * Extracts and verifies the cryptographic auth token from request cookies or Authorization header.
+ * Enforces Role-Based Access Control (RBAC).
  */
-export function verifyApiAuth(request: NextRequest, allowedRoles?: string[]): { session: UserSession | null; errorResponse: NextResponse | null } {
+export async function verifyApiAuth(
+  request: NextRequest,
+  allowedRoles?: string[]
+): Promise<{ session: AuthTokenPayload | null; errorResponse: NextResponse | null }> {
   try {
-    // 1. Extract session from cookie or Authorization header
-    let sessionStr: string | undefined = request.cookies.get('user_session')?.value;
-    
-    if (!sessionStr) {
+    // 1. Extract token strictly from HttpOnly auth_token cookie or Bearer authorization header
+    let token: string | undefined = request.cookies.get('auth_token')?.value;
+
+    if (!token) {
       const authHeader = request.headers.get('authorization');
       if (authHeader && authHeader.startsWith('Bearer ')) {
-        sessionStr = authHeader.substring(7);
+        token = authHeader.substring(7).trim();
       }
     }
 
-    if (!sessionStr) {
-      // Fallback: Check if request has custom user session header
-      sessionStr = request.headers.get('x-user-session') || undefined;
-    }
-
-    if (!sessionStr) {
-      return {
-        session: null,
-        errorResponse: NextResponse.json(
-          { error: 'Unauthorized: Session missing or expired' },
-          { status: 401 }
-        )
-      };
-    }
-
-    const session: UserSession = JSON.parse(decodeURIComponent(sessionStr));
+    // 2. Cryptographic signature and expiration check
+    const session = await verifyAuthToken(token);
 
     if (!session || !session.id || !session.role) {
       return {
         session: null,
         errorResponse: NextResponse.json(
-          { error: 'Unauthorized: Invalid session format' },
+          { error: 'Unauthorized: กรุณาเข้าสู่ระบบก่อนทำรายการ' },
           { status: 401 }
-        )
+        ),
       };
     }
 
-    // 2. Role-Based Access Control (RBAC) Check
+    // 3. Role-Based Access Control (RBAC) Check
     if (allowedRoles && allowedRoles.length > 0) {
       const isSystemAdmin = session.role === 'system_admin';
       const isSuperAdmin = session.role === 'super_admin';
 
-      if (!isSystemAdmin && !allowedRoles.includes(session.role)) {
+      if (!isSystemAdmin && !isSuperAdmin && !allowedRoles.includes(session.role)) {
         return {
           session,
           errorResponse: NextResponse.json(
-            { error: 'Forbidden: Insufficient permissions for this action' },
+            { error: 'Forbidden: คุณไม่มีสิทธิ์ในการเข้าถึงข้อมูลส่วนนี้' },
             { status: 403 }
-          )
+          ),
         };
       }
     }
@@ -72,21 +56,44 @@ export function verifyApiAuth(request: NextRequest, allowedRoles?: string[]): { 
     return {
       session: null,
       errorResponse: NextResponse.json(
-        { error: 'Unauthorized: Invalid session signature' },
+        { error: 'Unauthorized: Session signature verification failed' },
         { status: 401 }
-      )
+      ),
     };
   }
 }
 
 /**
- * Resolves active company context for Multi-Tenant Isolation
+ * Resolves active company context with strict Multi-Tenant Isolation.
+ * Non-system-admin users are strictly locked to their assigned company_id.
  */
-export function getCompanyContext(request: NextRequest, session?: UserSession | null): string | null {
-  const cookieCompany = request.cookies.get('company_id')?.value;
-  if (cookieCompany) return cookieCompany;
+export function getCompanyContext(request: NextRequest, session: AuthTokenPayload): string | null {
+  const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
 
-  if (session && session.company_id) return session.company_id;
+  // System admins can switch companies freely or view 'all'
+  if (isSysAdmin) {
+    const paramCompany = request.nextUrl.searchParams.get('company_id');
+    const cookieCompany = request.cookies.get('company_id')?.value;
+    const target = paramCompany || cookieCompany;
 
-  return null;
+    if (!target || target === 'all' || target === 'undefined' || target === 'null') {
+      return null; // All companies
+    }
+    return target;
+  }
+
+  // Non-system admins are strictly locked to their authenticated company_id
+  return session.company_id || null;
+}
+
+/**
+ * Sanitizes input text to prevent PostgREST delimiter and operator injection
+ */
+export function sanitizePostgrestFilter(input: string): string {
+  if (!input || typeof input !== 'string') return '';
+  // Strip PostgREST control characters: comma, parentheses, colons, dots, quotes
+  return input
+    .replace(/[(),:."'\\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

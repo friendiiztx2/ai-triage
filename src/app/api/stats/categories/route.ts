@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, supabase } from '@/lib/supabase';
 import { KNOWN_CATEGORY_NAMES, getBaseCatId } from '@/lib/categories';
+import { verifyApiAuth, getCompanyContext } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
   const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const { searchParams } = new URL(request.url);
-    const filterCompanyId = searchParams.get('company_id');
+    const filterCompanyId = getCompanyContext(request, session);
 
     // 1. Fetch categories
     let catQuery = db.from('categories').select('id, name, description, company_id, name_en');

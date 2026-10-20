@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { getCategoryLabel } from '@/lib/categories';
+import { verifyApiAuth, getCompanyContext } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,7 +14,11 @@ const serverCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 15000;
 
 export async function GET(request: NextRequest) {
-  const cacheKey = request.url;
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
+  const companyId = getCompanyContext(request, session);
+  const cacheKey = request.url + (companyId ? `_comp_${companyId}` : `_user_${session.id}`);
   const now = Date.now();
   const cached = serverCache.get(cacheKey);
 
@@ -29,8 +34,6 @@ export async function GET(request: NextRequest) {
   const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  const companyId = request.headers.get('x-company-id') || request.cookies.get('company_id')?.value || null;
 
   try {
     // 1. Try RPC query first

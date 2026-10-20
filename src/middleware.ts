@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { verifyAuthToken } from '@/lib/jwt';
 
-export function middleware(request: NextRequest) {
-  const session = request.cookies.get('user_session');
+// Public endpoints and assets that do not require authentication
+const PUBLIC_API_ROUTES = new Set([
+  '/api/users/login',
+  '/api/users/logout',
+  '/api/schema',
+]);
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
   const response = NextResponse.next();
 
   // Enforce HTTP Security Headers on every response
@@ -13,18 +19,53 @@ export function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-XSS-Protection', '1; mode=block');
 
-  // Allow next assets, API routes, favicon, and login page
+  // Allow Next.js static assets, images, favicon, and files with extensions
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname === '/login' ||
-    pathname.includes('.')
+    pathname === '/favicon.ico' ||
+    (pathname.includes('.') && !pathname.startsWith('/api'))
   ) {
     return response;
   }
 
-  // Redirect to login if no active user session
-  if (!session) {
+  // Extract auth_token from HttpOnly cookie or Authorization header
+  let token = request.cookies.get('auth_token')?.value;
+  if (!token) {
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7).trim();
+    }
+  }
+
+  // Cryptographically verify session token
+  const validSession = await verifyAuthToken(token);
+
+  // If already logged in and visiting login page, redirect to home
+  if (pathname === '/login') {
+    if (validSession) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return response;
+  }
+
+  // Allow explicit public API endpoints
+  if (PUBLIC_API_ROUTES.has(pathname)) {
+    return response;
+  }
+
+  // Protect backend API routes: reject unauthenticated requests with 401 JSON
+  if (pathname.startsWith('/api')) {
+    if (!validSession) {
+      return NextResponse.json(
+        { error: 'Unauthorized: กรุณาเข้าสู่ระบบก่อนทำรายการ' },
+        { status: 401 }
+      );
+    }
+    return response;
+  }
+
+  // Protect UI pages: redirect unauthenticated requests to /login
+  if (!validSession) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
@@ -32,5 +73,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

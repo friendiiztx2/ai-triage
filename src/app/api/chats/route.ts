@@ -3,14 +3,17 @@ import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { sanitizeText } from '@/lib/sanitize';
 import { transformChatRow } from '@/lib/chatTransformers';
 import { getCachedChats, setCachedChats, clearChatsCache } from '@/lib/serverCache';
+import { verifyApiAuth, getCompanyContext, sanitizePostgrestFilter } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
-  const rawCompanyId = request.nextUrl.searchParams.get('company_id') || request.cookies.get('company_id')?.value;
-  const companyId = rawCompanyId && rawCompanyId !== 'undefined' && rawCompanyId !== 'null' && rawCompanyId !== 'all' ? rawCompanyId : null;
-  const cacheKey = request.url + (companyId ? `_comp_${companyId}` : '');
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
+  const companyId = getCompanyContext(request, session);
+  const cacheKey = request.url + (companyId ? `_comp_${companyId}` : `_user_${session.id}`);
   const cached = getCachedChats(cacheKey);
 
   if (cached) {
@@ -53,10 +56,12 @@ export async function GET(request: NextRequest) {
       }
 
       if (search && search.trim()) {
-        const q = search.trim();
-        lightQuery = lightQuery.or(
-          `summary.ilike.%${q}%,conversation.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`
-        );
+        const q = sanitizePostgrestFilter(search.trim());
+        if (q) {
+          lightQuery = lightQuery.or(
+            `summary.ilike.%${q}%,conversation.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`
+          );
+        }
       }
 
       const { data: lightData, error: lightErr } = await lightQuery.abortSignal(controller.signal);
@@ -250,6 +255,9 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   clearChatsCache();
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
   const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -259,6 +267,7 @@ export async function PATCH(request: NextRequest) {
     const { id, ids, category_id, priority, status, tags } = body;
 
     if (!id && (!ids || ids.length === 0)) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'Chat ID or IDs are required' }, { status: 400 });
     }
 
@@ -273,6 +282,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     let query = db.from('chats').update(updateData);
+
+    // Multi-tenant check: Non-system admins can only update chats within their company
+    if (session.role !== 'system_admin' && session.role !== 'super_admin' && session.company_id) {
+      query = query.eq('company_id', session.company_id);
+    }
 
     if (ids && Array.isArray(ids)) {
       query = query.in('id', ids);

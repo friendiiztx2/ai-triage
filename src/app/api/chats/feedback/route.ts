@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { clearChatsCache } from '@/lib/serverCache';
+import { verifyApiAuth } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   clearChatsCache();
+  const { session, errorResponse } = await verifyApiAuth(request);
+  if (errorResponse || !session) return errorResponse!;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
 
@@ -12,6 +16,7 @@ export async function POST(request: NextRequest) {
     const { chat_id, is_correct, liked_by, issues, category_id, priority, resolution, status } = body;
 
     if (!chat_id) {
+      clearTimeout(timeoutId);
       return NextResponse.json({ error: 'chat_id is required' }, { status: 400 });
     }
 
