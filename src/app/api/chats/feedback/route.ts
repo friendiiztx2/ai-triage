@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { clearChatsCache } from '@/lib/serverCache';
 
 export async function POST(request: NextRequest) {
+  clearChatsCache();
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
 

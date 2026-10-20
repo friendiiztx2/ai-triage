@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Minus, Square, X, User } from 'lucide-react';
+import { Minus, Square, X, User, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface FloatingChatHeaderProps {
   chat: any;
@@ -12,6 +12,10 @@ interface FloatingChatHeaderProps {
   setIsMaximized: (val: boolean) => void;
   onMouseDown: (e: React.MouseEvent) => void;
   onClose: () => void;
+  currentIndex?: number;
+  totalChatsCount?: number;
+  onNavigatePrev?: () => void;
+  onNavigateNext?: () => void;
 }
 
 export default function FloatingChatHeader({
@@ -23,6 +27,10 @@ export default function FloatingChatHeader({
   setIsMaximized,
   onMouseDown,
   onClose,
+  currentIndex,
+  totalChatsCount,
+  onNavigatePrev,
+  onNavigateNext,
 }: FloatingChatHeaderProps) {
   const customerDisplayName =
     customerInfo?.name ||
@@ -48,7 +56,41 @@ export default function FloatingChatHeader({
         </span>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
+        {/* Next / Prev Chat Navigation */}
+        {totalChatsCount !== undefined && totalChatsCount > 1 && (
+          <div className="flex items-center gap-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5 border border-neutral-200/80 dark:border-neutral-700/80 font-mono text-[10px]">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigatePrev?.();
+              }}
+              disabled={!onNavigatePrev}
+              className="w-5 h-5 rounded hover:bg-white dark:hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
+              title="แชตก่อนหน้า"
+            >
+              <ChevronLeft size={12} />
+            </button>
+            {currentIndex !== undefined && currentIndex >= 0 && (
+              <span className="text-neutral-500 dark:text-neutral-400 px-1 font-medium select-none">
+                {currentIndex + 1} / {totalChatsCount}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigateNext?.();
+              }}
+              disabled={!onNavigateNext}
+              className="w-5 h-5 rounded hover:bg-white dark:hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
+              title="แชตถัดไป"
+            >
+              <ChevronRight size={12} />
+            </button>
+          </div>
+        )}
         {/* Minimize button */}
         <button 
           type="button"

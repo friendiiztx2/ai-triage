@@ -2,27 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { sanitizeText } from '@/lib/sanitize';
 import { transformChatRow } from '@/lib/chatTransformers';
+import { getCachedChats, setCachedChats, clearChatsCache } from '@/lib/serverCache';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-// Simple In-Memory Response Cache to eliminate PostgREST Egress for repeated requests
-interface CacheEntry {
-  timestamp: number;
-  data: any;
-}
-const serverCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 15000; // 15 Seconds TTL
 
 export async function GET(request: NextRequest) {
   const rawCompanyId = request.nextUrl.searchParams.get('company_id') || request.cookies.get('company_id')?.value;
   const companyId = rawCompanyId && rawCompanyId !== 'undefined' && rawCompanyId !== 'null' && rawCompanyId !== 'all' ? rawCompanyId : null;
   const cacheKey = request.url + (companyId ? `_comp_${companyId}` : '');
-  const now = Date.now();
-  const cached = serverCache.get(cacheKey);
+  const cached = getCachedChats(cacheKey);
 
-  if (cached && now - cached.timestamp < CACHE_TTL_MS) {
-    return NextResponse.json(cached.data, {
+  if (cached) {
+    return NextResponse.json(cached, {
       headers: {
         'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
         'X-Cache': 'HIT',
@@ -76,7 +68,7 @@ export async function GET(request: NextRequest) {
 
       const items = (lightData || []).map((row: any) => transformChatRow(row));
 
-      serverCache.set(cacheKey, { timestamp: now, data: items });
+      setCachedChats(cacheKey, items);
       return NextResponse.json(items, {
         headers: {
           'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
@@ -242,7 +234,7 @@ export async function GET(request: NextRequest) {
     resultList.sort(
       (a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
     );
-    serverCache.set(cacheKey, { timestamp: Date.now(), data: resultList });
+    setCachedChats(cacheKey, resultList);
     return NextResponse.json(resultList, {
       headers: {
         'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
@@ -257,7 +249,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  serverCache.clear();
+  clearChatsCache();
   const db = supabaseAdmin || supabase;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -274,7 +266,11 @@ export async function PATCH(request: NextRequest) {
     if (category_id !== undefined) updateData.category_id = sanitizeText(category_id) || null;
     if (priority !== undefined) updateData.priority = sanitizeText(priority) || null;
     if (status !== undefined) updateData.status = sanitizeText(status) || 'completed';
-    if (tags !== undefined) updateData.keywords = Array.isArray(tags) ? tags : [tags];
+    if (tags !== undefined) {
+      const arr = Array.isArray(tags) ? tags : [tags];
+      updateData.keywords = arr;
+      updateData.tags = arr;
+    }
 
     let query = db.from('chats').update(updateData);
 

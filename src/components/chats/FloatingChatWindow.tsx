@@ -35,6 +35,8 @@ export default function FloatingChatWindow({
   initialZIndex,
   categories,
   userProfile,
+  allChats = [],
+  onOpenChat,
   onClose,
   onFocus,
   onSaved,
@@ -42,6 +44,23 @@ export default function FloatingChatWindow({
   onUpdateTags,
 }: FloatingChatWindowProps) {
   const { language } = useLanguage();
+
+  const currentIndex = allChats && Array.isArray(allChats) ? allChats.findIndex((c) => c.id === chat.id) : -1;
+  const totalChatsCount = allChats && Array.isArray(allChats) ? allChats.length : 0;
+
+  const handleNavigatePrev = () => {
+    if (currentIndex > 0 && onOpenChat) {
+      onOpenChat(allChats[currentIndex - 1]);
+      onClose();
+    }
+  };
+
+  const handleNavigateNext = () => {
+    if (currentIndex !== -1 && currentIndex < totalChatsCount - 1 && onOpenChat) {
+      onOpenChat(allChats[currentIndex + 1]);
+      onClose();
+    }
+  };
 
   // Hover Zoom State for Images
   const [hoveredImg, setHoveredImg] = useState<string | null>(null);
@@ -147,6 +166,10 @@ export default function FloatingChatWindow({
         isMaximized={isMaximized}
         setIsMaximized={setIsMaximized}
         onClose={onClose}
+        currentIndex={currentIndex}
+        totalChatsCount={totalChatsCount}
+        onNavigatePrev={currentIndex > 0 ? handleNavigatePrev : undefined}
+        onNavigateNext={currentIndex !== -1 && currentIndex < totalChatsCount - 1 ? handleNavigateNext : undefined}
       />
 
       {/* 2. Main Window Body (Hidden if Minimized) */}

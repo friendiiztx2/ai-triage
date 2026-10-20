@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageContext';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
 import { isSoundEnabled } from '@/lib/audio';
@@ -19,8 +20,9 @@ import ChatQuickTabs from '@/components/chats/ChatQuickTabs';
 import ChatFilterBar from '@/components/chats/ChatFilterBar';
 import ChatTable from '@/components/chats/ChatTable';
 
-export default function ChatsPage() {
+function ChatsPageContent() {
   const { language } = useLanguage();
+  const searchParams = useSearchParams();
 
   // Sound & Desktop Notification
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -46,6 +48,24 @@ export default function ChatsPage() {
   const [auditFilter, setAuditFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // Sync filters from URL query parameters (Deep-linking from Dashboard / Reports)
+  useEffect(() => {
+    if (!searchParams) return;
+    const statusParam = searchParams.get('status');
+    const priorityParam = searchParams.get('priority');
+    const timeframeParam = searchParams.get('timeframe') || searchParams.get('date');
+    const qParam = searchParams.get('q') || searchParams.get('search');
+    const catParam = searchParams.get('category');
+    const tagParam = searchParams.get('tag');
+
+    if (statusParam) setStatusFilter(statusParam);
+    if (priorityParam) setPriorityFilter(priorityParam);
+    if (timeframeParam) setDateFilter(timeframeParam);
+    if (qParam) setSearchQuery(qParam);
+    if (catParam) setCategoryFilter(catParam);
+    if (tagParam) setTagFilter(tagParam);
+  }, [searchParams]);
 
   // Init local notification preferences
   useEffect(() => {
@@ -317,6 +337,8 @@ export default function ChatsPage() {
           highCount={highCount}
           mediumCount={mediumCount}
           lowCount={lowCount}
+          filteredCount={filteredChats.length}
+          totalCount={totalCount}
           onClearFilters={handleClearFilters}
           language={language}
           className="bg-transparent border-0 rounded-none shadow-none"
@@ -341,7 +363,7 @@ export default function ChatsPage() {
         activeWindows={activeWindows}
         categories={categories}
         userProfile={userProfile}
-        allChats={chats}
+        allChats={filteredChats}
         maxZIndex={maxZIndex}
         onOpenChat={openChatWindow}
         onCloseWindow={closeWindow}
@@ -374,5 +396,13 @@ export default function ChatsPage() {
 
       <ImageHoverZoom imageUrl={tableHoveredImg} />
     </div>
+  );
+}
+
+export default function ChatsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ChatsPageContent />
+    </Suspense>
   );
 }

@@ -30,6 +30,8 @@ export interface ChatFilterBarProps {
   highCount: number;
   mediumCount: number;
   lowCount: number;
+  filteredCount?: number;
+  totalCount?: number;
   onClearFilters: () => void;
   language?: 'th' | 'en';
   className?: string;
@@ -57,6 +59,8 @@ export default function ChatFilterBar({
   highCount,
   mediumCount,
   lowCount,
+  filteredCount,
+  totalCount,
   onClearFilters,
   language = 'th',
   className = '',
@@ -163,14 +167,6 @@ export default function ChatFilterBar({
           onChange={onTagChange}
           options={[
             { value: 'all', label: language === 'th' ? 'แท็ก: ทั้งหมด' : 'Tags: All' },
-            {
-              value: '#รูปภาพแนบ',
-              label: language === 'th' ? '📎 รูปภาพแนบ (ดูรูป)' : '📎 Images with Text',
-            },
-            {
-              value: '#รูปภาพล้วน',
-              label: language === 'th' ? '📷 รูปภาพล้วน' : '📷 Image Only',
-            },
             ...allAvailableTags
               .filter(
                 (tagObj) =>
@@ -200,17 +196,26 @@ export default function ChatFilterBar({
         />
       </div>
 
-      {/* 7. Reset Filters Button (appears smoothly when any filter is active) */}
+      {/* 7. Active Result Count Badge & Reset Filters Button */}
       {hasActiveFilters && (
-        <button
-          type="button"
-          onClick={onClearFilters}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-[#d93025] hover:text-[#b31412] bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 transition-all cursor-pointer shadow-2xs shrink-0 animate-in fade-in duration-150 select-none"
-          title={language === 'th' ? 'ล้างตัวกรองทั้งหมดกลับเป็นค่าเริ่มต้น' : 'Reset all active filters'}
-        >
-          <RotateCcw size={11} />
-          <span>{language === 'th' ? 'ล้างตัวกรอง' : 'Reset'}</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0 animate-in fade-in duration-150">
+          {filteredCount !== undefined && totalCount !== undefined && (
+            <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700/80 shadow-2xs">
+              {language === 'th'
+                ? `พบ ${filteredCount.toLocaleString()} จาก ${totalCount.toLocaleString()} รายการ`
+                : `Found ${filteredCount.toLocaleString()} of ${totalCount.toLocaleString()}`}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-[#d93025] hover:text-[#b31412] bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 transition-all cursor-pointer shadow-2xs select-none"
+            title={language === 'th' ? 'ล้างตัวกรองทั้งหมดกลับเป็นค่าเริ่มต้น' : 'Reset all active filters'}
+          >
+            <RotateCcw size={11} />
+            <span>{language === 'th' ? 'ล้างตัวกรอง' : 'Reset'}</span>
+          </button>
+        </div>
       )}
     </div>
   );
