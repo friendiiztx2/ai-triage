@@ -103,7 +103,7 @@ export default function ChatTable({
       if (saved) {
         const parsed = parseInt(saved, 10);
         if (!isNaN(parsed) && (parsed > 0 || parsed === -1)) {
-          setPageSize(parsed);
+          setPageSize(parsed === 60 ? 50 : parsed);
         }
       }
     }
@@ -296,7 +296,6 @@ export default function ChatTable({
                 >
                   <option value={20}>20</option>
                   <option value={50}>50</option>
-                  <option value={60}>60</option>
                   <option value={100}>100</option>
                   <option value={-1}>{language === 'th' ? 'ทั้งหมด (All)' : 'All'}</option>
                 </select>
