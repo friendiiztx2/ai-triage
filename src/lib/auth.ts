@@ -91,9 +91,10 @@ export function getCompanyContext(request: NextRequest, session: AuthTokenPayloa
  */
 export function sanitizePostgrestFilter(input: string): string {
   if (!input || typeof input !== 'string') return '';
-  // Strip PostgREST control characters: comma, parentheses, colons, dots, quotes
+  // Strip PostgREST control characters: comma, parentheses, colons, quotes
+  // Preserves dots (.), @, -, and alphanumeric characters so emails and domain names remain intact
   return input
-    .replace(/[(),:."'\\]/g, ' ')
+    .replace(/[(),:"'\\]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }

@@ -20,12 +20,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง' }, { status: 401 });
     }
 
-    // Query matching user by email or name using safe sanitized filter
+    const orClauses = [
+      `email.ilike.${safeSearch}`,
+      `name.ilike.%${safeSearch}%`
+    ];
+    const lower = safeSearch.toLowerCase();
+    if (lower === 'system' || lower === 'admin' || lower === 'sysadmin' || lower.includes('system admin')) {
+      orClauses.push('role.eq.system_admin');
+    }
+
+    // Query matching user by email, name, or role using safe sanitized filter
     const { data: dbUsers, error } = await db
       .from('users')
       .select('*')
-      .or(`email.ilike.${safeSearch},name.ilike.${safeSearch}`)
-      .limit(5);
+      .or(orClauses.join(','))
+      .limit(10);
 
     if (error) {
       console.error('Login DB query error:', error);
