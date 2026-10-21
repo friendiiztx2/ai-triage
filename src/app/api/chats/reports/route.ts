@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
     const mappedReports = (fallbackLogs || []).map((l: any) => ({
       id: l.id,
       chat_id: l.details?.chat_id || 'N/A',
+      company_id: l.company_id || l.details?.company_id || null,
       reported_by: l.user_name || 'เจ้าหน้าที่',
       reasons: l.details?.reasons || [],
       comment: l.details?.comment || '',

@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     const reporterName = reported_by || session.name || 'เจ้าหน้าที่';
-    const companyId = session.company_id || null;
+    const companyId = body.company_id || session.company_id || null;
 
     // 1. Insert report record into Supabase table `ai_feedback_reports`
     let dbSuccess = false;
@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
     // 3. Send Real-time notification to Telegram Bot
     const telegramResult = await sendTelegramReportNotification({
       chatId: chat_id,
+      companyId: companyId || undefined,
       customerName: customer_name,
       reportedBy: reporterName,
       reasons,

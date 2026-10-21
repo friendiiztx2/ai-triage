@@ -81,6 +81,7 @@ export default function ChatReportModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chat.id,
+          company_id: chat.company_id || userProfile?.company_id || undefined,
           customer_name: chat.customer_name || chat.customer_id || 'ลูกค้า',
           reported_by: userProfile?.name || 'เจ้าหน้าที่',
           reasons: selectedReasons,

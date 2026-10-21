@@ -12,9 +12,10 @@ export async function GET(request: NextRequest) {
   const { session, errorResponse } = await verifyApiAuth(request);
   if (errorResponse || !session) return errorResponse!;
 
+  const targetId = request.nextUrl.searchParams.get('id');
   const companyId = getCompanyContext(request, session);
   const cacheKey = request.url + (companyId ? `_comp_${companyId}` : `_user_${session.id}`);
-  const cached = getCachedChats(cacheKey);
+  const cached = !targetId ? getCachedChats(cacheKey) : null;
 
   if (cached) {
     return NextResponse.json(cached, {
@@ -33,9 +34,85 @@ export async function GET(request: NextRequest) {
   const summaryOnly =
     request.nextUrl.searchParams.get('summary_only') === 'true' ||
     request.nextUrl.searchParams.get('light') === 'true';
-  const targetId = request.nextUrl.searchParams.get('id');
 
   try {
+    const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+
+    // Direct Single Chat Fetch: Immediate resolution for deep-linked chat IDs (Modals / Reports / Notifications)
+    if (targetId) {
+      let singleQuery = db.from('chats').select('*').eq('id', targetId);
+      if (!isSysAdmin && companyId && companyId !== 'all') {
+        singleQuery = singleQuery.eq('company_id', companyId);
+      }
+
+      const { data: singleData } = await singleQuery.abortSignal(controller.signal);
+      clearTimeout(timeoutId);
+
+      if (singleData && singleData.length > 0) {
+        const row = singleData[0];
+        const transformed: any = transformChatRow(row);
+
+        try {
+          const { data: issues } = await db
+            .from('chat_issues')
+            .select('*')
+            .eq('chat_id', targetId);
+          transformed.chat_issues = issues || [];
+        } catch {
+          transformed.chat_issues = [];
+        }
+
+        return NextResponse.json([transformed], {
+          headers: {
+            'Cache-Control': 'no-store, max-age=0',
+          },
+        });
+      }
+
+      // Fallback: check vw_triage_export if not directly in chats table
+      let fallbackQuery = db
+        .from('vw_triage_export')
+        .select('*')
+        .or(`chat_id.eq.${targetId},id.eq.${targetId}`);
+      if (!isSysAdmin && companyId && companyId !== 'all') {
+        fallbackQuery = fallbackQuery.eq('company_id', companyId);
+      }
+
+      const { data: fallbackData } = await fallbackQuery;
+      if (fallbackData && fallbackData.length > 0) {
+        const row = fallbackData[0];
+        const isPending =
+          row.status === 'pending' || (!row.category_id && !row.chat_summary && !row.issue_summary);
+        const item = {
+          id: row.chat_id || row.id,
+          customer_id: row.customer_id || null,
+          customer_name:
+            row.customer_name ||
+            (row.customer_id ? `ลูกค้า #${row.customer_id}` : `ลูกค้า #${targetId.substring(0, 8)}`),
+          summary: row.chat_summary || row.issue_summary || 'ไม่มีข้อมูลสรุป',
+          category_id: row.category_id || null,
+          priority: row.priority || null,
+          status: isPending ? 'pending' : 'completed',
+          confidence: 95,
+          company_id: row.company_id || null,
+          created_at: row.created_at || new Date().toISOString(),
+          conversation: row.conversation || '',
+          keywords: row.keywords || [],
+          tags: row.tags || [],
+          urgency: row.urgency || null,
+          resolution: row.resolution || null,
+          chat_issues: [],
+        };
+        return NextResponse.json([item], {
+          headers: {
+            'Cache-Control': 'no-store, max-age=0',
+          },
+        });
+      }
+
+      return NextResponse.json([]);
+    }
+
     const chatMap = new Map();
 
     // Query all necessary fields including conversation text so modals open instantly without flickering
@@ -106,7 +183,7 @@ export async function GET(request: NextRequest) {
       chatsData.forEach((row: any) => {
         const id = row.id;
         if (!id) return;
-        const transformed = transformChatRow(row);
+        const transformed: any = transformChatRow(row);
         chatMap.set(id, {
           ...transformed,
           chat_issues: [],

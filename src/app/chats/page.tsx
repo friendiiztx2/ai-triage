@@ -59,7 +59,7 @@ function ChatsPageContent() {
     const qParam = searchParams.get('q') || searchParams.get('search');
     const catParam = searchParams.get('category');
     const tagParam = searchParams.get('tag');
-    const openParam = searchParams.get('open') || searchParams.get('chat_id');
+    const openParam = searchParams.get('open') || searchParams.get('open_chat') || searchParams.get('chat_id');
 
     if (statusParam) setStatusFilter(statusParam);
     if (priorityParam) setPriorityFilter(priorityParam);
@@ -110,11 +110,12 @@ function ChatsPageContent() {
     setActiveWindows,
   } = useFloatingWindows();
 
-  // Auto-open floating chat window when 'open' or 'chat_id' is present in URL
+  // Auto-open floating chat window when 'open', 'open_chat', or 'chat_id' is present in URL
   useEffect(() => {
     if (!searchParams) return;
-    const openId = searchParams.get('open') || searchParams.get('chat_id');
+    const openId = searchParams.get('open') || searchParams.get('open_chat') || searchParams.get('chat_id');
     if (!openId) return;
+    if (activeWindows.some((w) => w.id === openId)) return;
     if (autoOpenedRef.current === openId) return;
 
     const found = chats.find(
@@ -130,27 +131,62 @@ function ChatsPageContent() {
       return;
     }
 
-    if (!loading) {
-      fetch(`/api/chats?id=${encodeURIComponent(openId)}&summary_only=true`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            const directChat = data[0];
-            setChats((prev) => (prev.some((c) => c.id === directChat.id) ? prev : [directChat, ...prev]));
-            openChatWindow(directChat);
-            autoOpenedRef.current = openId;
-          }
-        })
-        .catch((e) => console.warn('Could not auto-open deep-linked chat:', e));
-    }
-  }, [searchParams, chats, loading, openChatWindow, setChats]);
+    // Direct eager fetch immediately without waiting for bulk chats list
+    let isCancelled = false;
+    fetch(`/api/chats?id=${encodeURIComponent(openId)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isCancelled) return;
+        if (Array.isArray(data) && data.length > 0) {
+          const directChat = data[0];
+          setChats((prev) => (prev.some((c) => c.id === directChat.id) ? prev : [directChat, ...prev]));
+          openChatWindow(directChat);
+          autoOpenedRef.current = openId;
+        }
+      })
+      .catch((e) => console.warn('Could not auto-open deep-linked chat:', e));
 
-  // 1. Filter by Active Company first
+    return () => {
+      isCancelled = true;
+    };
+  }, [searchParams, chats, activeWindows, openChatWindow, setChats]);
+
+  // Event listener for in-app urgent desktop toast clicks
+  useEffect(() => {
+    const handleOpenChatEvent = (e: any) => {
+      const chatId = e.detail?.chatId;
+      if (!chatId) return;
+      const found = chats.find((c) => c.id === chatId);
+      if (found) {
+        openChatWindow(found);
+      } else {
+        fetch(`/api/chats?id=${encodeURIComponent(chatId)}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (Array.isArray(data) && data.length > 0) {
+              const directChat = data[0];
+              setChats((prev) => (prev.some((c) => c.id === directChat.id) ? prev : [directChat, ...prev]));
+              openChatWindow(directChat);
+            }
+          })
+          .catch((err) => console.warn('Failed to load chat from event:', err));
+      }
+    };
+    window.addEventListener('open-chat-modal' as any, handleOpenChatEvent);
+    return () => window.removeEventListener('open-chat-modal' as any, handleOpenChatEvent);
+  }, [chats, openChatWindow, setChats]);
+
+  // 1. Filter by Active Company first (exempting explicitly deep-linked chat so it's always visible)
+  const currentOpenId = searchParams?.get('open') || searchParams?.get('open_chat') || searchParams?.get('chat_id');
   const companyFilteredChats = useMemo(() => {
     return chats.filter(
-      (c) => !activeCompanyId || activeCompanyId === 'all' || c.company_id === activeCompanyId
+      (c) =>
+        !activeCompanyId ||
+        activeCompanyId === 'all' ||
+        c.company_id === activeCompanyId ||
+        (currentOpenId && (c.id === currentOpenId || c.id?.toLowerCase() === currentOpenId.toLowerCase()))
     );
-  }, [chats, activeCompanyId]);
+  }, [chats, activeCompanyId, currentOpenId]);
 
   // 2. Filter by Active Timeframe (for badge counts & filter dropdowns)
   const timeframeFilteredChats = useMemo(() => {

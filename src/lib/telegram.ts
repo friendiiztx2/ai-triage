@@ -5,6 +5,7 @@
 
 interface SendReportNotificationParams {
   chatId: string;
+  companyId?: string;
   customerName?: string;
   reportedBy: string;
   reasons: string[];
@@ -29,6 +30,7 @@ const REASON_LABELS: Record<string, string> = {
 
 export async function sendTelegramReportNotification({
   chatId,
+  companyId,
   customerName,
   reportedBy,
   reasons,
@@ -52,7 +54,8 @@ export async function sendTelegramReportNotification({
       .join(', ');
 
     const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://sift-ai-demo.vercel.app';
-    const chatLink = `${baseUrl}/chats?open=${encodeURIComponent(chatId)}&date=all`;
+    const companyParam = companyId ? `&company_id=${encodeURIComponent(companyId)}` : '';
+    const chatLink = `${baseUrl}/chats?open=${encodeURIComponent(chatId)}${companyParam}&date=all`;
 
     const lines: string[] = [
       `🚨 <b>แจ้งเตือน: AI วิเคราะห์ไม่ถูกต้อง</b>`,

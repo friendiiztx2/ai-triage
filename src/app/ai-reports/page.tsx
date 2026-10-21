@@ -540,7 +540,7 @@ export default function UserIssuesPage() {
 
                           {/* Open Chat Link */}
                           <Link
-                            href={`/chats?open=${encodeURIComponent(report.chat_id)}&date=all`}
+                            href={`/chats?open=${encodeURIComponent(report.chat_id)}${report.company_id ? `&company_id=${encodeURIComponent(report.company_id)}` : ''}&date=all`}
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white text-[11px] font-medium transition shadow-2xs"
                             title="เปิดดูบทสนทนานี้ในหน้าแชต"
                           >

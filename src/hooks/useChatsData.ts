@@ -21,11 +21,20 @@ export function useChatsData({ soundEnabled, desktopNotifyEnabled }: UseChatsDat
   const fetchInitialData = useCallback(async () => {
     setLoading(true);
     try {
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const urlCompId = urlParams ? urlParams.get('company_id') : null;
       const matchCookie = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )company_id=([^;]*)/) : null;
-      const compId = matchCookie
-        ? decodeURIComponent(matchCookie[1])
-        : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '' : '');
+      const compId = (urlCompId && urlCompId !== 'all')
+        ? urlCompId
+        : (matchCookie
+            ? decodeURIComponent(matchCookie[1])
+            : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '' : ''));
       setActiveCompanyId(compId);
+
+      if (urlCompId && typeof document !== 'undefined') {
+        document.cookie = `company_id=${urlCompId}; path=/; max-age=31536000`;
+        localStorage.setItem('company_id', urlCompId);
+      }
 
       const [catRes, chatsRes] = await Promise.all([
         fetch(`/api/categories?company_id=${compId}`),
@@ -80,7 +89,10 @@ export function useChatsData({ soundEnabled, desktopNotifyEnabled }: UseChatsDat
             }
           }
 
-          setChats(sorted);
+          setChats((prev) => {
+            const missing = prev.filter((p) => !sorted.some((c: any) => c.id === p.id));
+            return missing.length > 0 ? [...missing, ...sorted] : sorted;
+          });
         }
       }
     } catch (err) {
