@@ -19,12 +19,12 @@ interface SendReportNotificationParams {
 }
 
 const REASON_LABELS: Record<string, string> = {
-  wrong_category: '🏷️ จัดหมวดหมู่ผิดพลาด (Wrong Category)',
-  inaccurate_summary: '📝 สรุปประเด็นไม่ตรงกับแชต (Inaccurate Summary)',
-  bad_reply: '💬 ข้อความแนะนำตอบกลับไม่เหมาะสม (Inappropriate Reply)',
-  wrong_priority: '⚡ ประเมินระดับความสำคัญผิด (Wrong Priority)',
-  hallucination: '🧠 AI เข้าใจเจตนาผิด / มีข้อมูลเท็จ (Misunderstood Intent)',
-  other: '📌 อื่นๆ (Other)',
+  wrong_category: '🏷️ จัดหมวดหมู่ผิด',
+  inaccurate_summary: '📝 สรุปประเด็นผิด',
+  bad_reply: '💬 คำแนะนำตอบกลับไม่เหมาะ',
+  wrong_priority: '⚡ ประเมินความสำคัญผิด',
+  hallucination: '🧠 AI เข้าใจเจตนาผิด',
+  other: '📌 อื่นๆ',
 };
 
 export async function sendTelegramReportNotification({
@@ -48,35 +48,28 @@ export async function sendTelegramReportNotification({
 
   try {
     const formattedReasons = reasons
-      .map((r) => `  • ${REASON_LABELS[r] || r}`)
-      .join('\n');
-
-    const formattedComment = comment ? `<blockquote>${escapeHtml(comment)}</blockquote>` : '<i>(ไม่ได้ระบุข้อความเพิ่มเติม)</i>';
+      .map((r) => REASON_LABELS[r] || r)
+      .join(', ');
 
     const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://sift-ai-demo.vercel.app';
     const chatLink = `${baseUrl}/chats?q=${encodeURIComponent(chatId)}`;
 
-    const messageHtml = [
-      `🚨 <b>[Sift AI] รายงานปัญหาการวิเคราะห์ AI ไม่ถูกต้อง</b>`,
+    const lines: string[] = [
+      `🚨 <b>แจ้งเตือน: AI วิเคราะห์ไม่ถูกต้อง</b>`,
       `━━━━━━━━━━━━━━━━━━━━`,
-      `💬 <b>รหัสแชต:</b> <code>${escapeHtml(chatId)}</code>`,
-      `👤 <b>ลูกค้า:</b> ${escapeHtml(customerName || 'ไม่ระบุ')}`,
-      `🧑‍💻 <b>ผู้รายงาน:</b> <b>${escapeHtml(reportedBy || 'เจ้าหน้าที่')}</b>`,
-      `⏰ <b>เวลา:</b> ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`,
-      ``,
-      `⚠️ <b>ปัญหาที่พบ:</b>\n${formattedReasons || '  • ไม่ได้ระบุ'}`,
-      ``,
-      `📝 <b>ข้อความถึงผู้พัฒนา:</b>\n${formattedComment}`,
-      ``,
-      `🤖 <b>สิ่งที่ AI วิเคราะห์ไว้เดิม:</b>`,
-      `  • <b>หมวดหมู่:</b> ${escapeHtml(aiSnapshot?.category_name || 'ไม่ระบุ')}`,
-      `  • <b>ความสำคัญ:</b> <code>${escapeHtml(aiSnapshot?.priority || 'medium')}</code>`,
-      aiSnapshot?.summary ? `  • <b>สรุป:</b> ${escapeHtml(aiSnapshot.summary)}` : '',
-      `━━━━━━━━━━━━━━━━━━━━`,
-      `👉 <a href="${chatLink}">คลิกเพื่อตรวจสอบแชตบนระบบ</a>`,
-    ]
-      .filter(Boolean)
-      .join('\n');
+      `👤 <b>ลูกค้า:</b> ${escapeHtml(customerName || 'ไม่ระบุ')} <i>(ผู้แจ้ง: ${escapeHtml(reportedBy || 'เจ้าหน้าที่')})</i>`,
+      `⚠️ <b>ปัญหา:</b> ${escapeHtml(formattedReasons || 'ไม่ได้ระบุ')}`,
+      `🤖 <b>AI เดิม:</b> ${escapeHtml(aiSnapshot?.category_name || 'ไม่ระบุ')} • ความสำคัญ: <code>${escapeHtml(aiSnapshot?.priority || 'medium')}</code>`,
+    ];
+
+    if (comment && comment.trim()) {
+      lines.push(`💬 <b>ข้อความ:</b> <blockquote>${escapeHtml(comment.trim())}</blockquote>`);
+    }
+
+    lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+    lines.push(`👉 <a href="${chatLink}">คลิกเพื่อเปิดดูแชตนี้บนระบบ</a>`);
+
+    const messageHtml = lines.join('\n');
 
     const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
