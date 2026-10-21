@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageContext';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
@@ -21,6 +21,7 @@ import ChatFilterBar from '@/components/chats/ChatFilterBar';
 import ChatTable from '@/components/chats/ChatTable';
 
 function ChatsPageContent() {
+  const autoOpenedRef = useRef<string | null>(null);
   const { language } = useLanguage();
   const searchParams = useSearchParams();
 
@@ -58,6 +59,7 @@ function ChatsPageContent() {
     const qParam = searchParams.get('q') || searchParams.get('search');
     const catParam = searchParams.get('category');
     const tagParam = searchParams.get('tag');
+    const openParam = searchParams.get('open') || searchParams.get('chat_id');
 
     if (statusParam) setStatusFilter(statusParam);
     if (priorityParam) setPriorityFilter(priorityParam);
@@ -65,6 +67,11 @@ function ChatsPageContent() {
     if (qParam) setSearchQuery(qParam);
     if (catParam) setCategoryFilter(catParam);
     if (tagParam) setTagFilter(tagParam);
+
+    if (openParam) {
+      if (!timeframeParam) setDateFilter('all');
+      if (!qParam) setSearchQuery(openParam);
+    }
   }, [searchParams]);
 
   // Init local notification preferences
@@ -102,6 +109,41 @@ function ChatsPageContent() {
     updateWindowTags,
     setActiveWindows,
   } = useFloatingWindows();
+
+  // Auto-open floating chat window when 'open' or 'chat_id' is present in URL
+  useEffect(() => {
+    if (!searchParams) return;
+    const openId = searchParams.get('open') || searchParams.get('chat_id');
+    if (!openId) return;
+    if (autoOpenedRef.current === openId) return;
+
+    const found = chats.find(
+      (c) =>
+        c.id === openId ||
+        c.id?.toLowerCase() === openId.toLowerCase() ||
+        c.id?.toLowerCase().includes(openId.toLowerCase())
+    );
+
+    if (found) {
+      openChatWindow(found);
+      autoOpenedRef.current = openId;
+      return;
+    }
+
+    if (!loading) {
+      fetch(`/api/chats?id=${encodeURIComponent(openId)}&summary_only=true`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            const directChat = data[0];
+            setChats((prev) => (prev.some((c) => c.id === directChat.id) ? prev : [directChat, ...prev]));
+            openChatWindow(directChat);
+            autoOpenedRef.current = openId;
+          }
+        })
+        .catch((e) => console.warn('Could not auto-open deep-linked chat:', e));
+    }
+  }, [searchParams, chats, loading, openChatWindow, setChats]);
 
   // 1. Filter by Active Company first
   const companyFilteredChats = useMemo(() => {

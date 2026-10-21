@@ -52,7 +52,7 @@ export async function sendTelegramReportNotification({
       .join(', ');
 
     const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://sift-ai-demo.vercel.app';
-    const chatLink = `${baseUrl}/chats?q=${encodeURIComponent(chatId)}`;
+    const chatLink = `${baseUrl}/chats?open=${encodeURIComponent(chatId)}&date=all`;
 
     const lines: string[] = [
       `🚨 <b>แจ้งเตือน: AI วิเคราะห์ไม่ถูกต้อง</b>`,
