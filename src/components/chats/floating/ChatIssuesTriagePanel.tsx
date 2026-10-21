@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { Loader2, RotateCcw, Check, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Loader2, RotateCcw, Check, CheckCircle2, AlertTriangle } from 'lucide-react';
 import ChatIssueItemCard from './ChatIssueItemCard';
+import ChatReportModal from './ChatReportModal';
 
 interface ChatIssuesTriagePanelProps {
   chat: any;
@@ -49,6 +50,7 @@ export default function ChatIssuesTriagePanel({
   copiedId,
   onCopyText,
 }: ChatIssuesTriagePanelProps) {
+  const [showReportModal, setShowReportModal] = useState(false);
   const hasIssues = (chatIssues && chatIssues.length > 0) || !!chat.category_id || !!chat.summary;
   const isWaitingForAI = retryingTriage || (loadingIssues && !hasIssues);
 
@@ -178,6 +180,16 @@ export default function ChatIssuesTriagePanel({
             <span>{retryingTriage ? 'กำลังประมวลผล...' : 'Sift AI วิเคราะห์ใหม่'}</span>
           </button>
 
+          <button
+            type="button"
+            onClick={() => setShowReportModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-amber-300/80 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-xs font-medium transition cursor-pointer"
+            title="รายงานผลการวิเคราะห์ AI ไม่ถูกต้องถึงผู้พัฒนา"
+          >
+            <AlertTriangle size={12} className="text-amber-600 dark:text-amber-400" />
+            <span>{language === 'th' ? 'รายงาน AI' : 'Report AI'}</span>
+          </button>
+
           {triageSuccess && (
             <span className="text-xs font-medium text-emerald-600 flex items-center gap-1 animate-fade-in">
               <Check size={12} /> {triageSuccess}
@@ -198,6 +210,17 @@ export default function ChatIssuesTriagePanel({
           </div>
         )}
       </div>
+
+      {/* Report AI Modal */}
+      <ChatReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        chat={chat}
+        categories={categories}
+        userProfile={userProfile}
+        language={language}
+        chatIssues={chatIssues}
+      />
     </>
   );
 }
