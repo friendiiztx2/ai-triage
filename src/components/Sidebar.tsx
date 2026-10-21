@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   History,
   FileSpreadsheet,
+  AlertTriangle,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -189,6 +190,11 @@ export default function Sidebar() {
   }
   if (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin') {
     visibleMenuItems.push({ href: '/audit-logs', label: t('auditLogs'), icon: History });
+    visibleMenuItems.push({
+      href: '/ai-reports',
+      label: language === 'th' ? 'ปัญหาจากผู้ใช้งาน' : 'User Issues',
+      icon: AlertTriangle,
+    });
   }
   if (allowedPermissions.includes('export_csv')) {
     visibleMenuItems.push({ href: '/reports', label: language === 'th' ? 'รายงานและส่งออก' : 'Reports & Export', icon: FileSpreadsheet });
