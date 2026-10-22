@@ -8,11 +8,12 @@ import {
   MessageSquare, 
   Settings, 
   Database,
-  ShieldCheck,
-  History,
-  FileSpreadsheet,
-  AlertTriangle,
-  ChevronLeft,
+  ShieldCheck, 
+  History, 
+  FileSpreadsheet, 
+  AlertTriangle, 
+  Send,
+  ChevronLeft, 
   ChevronRight
 } from 'lucide-react';
 
@@ -187,6 +188,13 @@ export default function Sidebar() {
   }
   if (allowedPermissions.includes('manage_users') && (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin')) {
     visibleMenuItems.push({ href: '/users', label: t('users'), icon: ShieldCheck });
+  }
+  if (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin' || userProfile?.role === 'admin') {
+    visibleMenuItems.push({
+      href: '/telegram-groups',
+      label: language === 'th' ? 'จัดการกลุ่ม Telegram' : 'Telegram Groups',
+      icon: Send,
+    });
   }
   if (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin') {
     visibleMenuItems.push({ href: '/audit-logs', label: t('auditLogs'), icon: History });
