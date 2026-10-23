@@ -13,6 +13,7 @@ import {
   FileSpreadsheet, 
   AlertTriangle, 
   Send,
+  Activity,
   ChevronLeft, 
   ChevronRight
 } from 'lucide-react';
@@ -190,6 +191,11 @@ export default function Sidebar() {
     visibleMenuItems.push({ href: '/users', label: t('users'), icon: ShieldCheck });
   }
   if (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin' || userProfile?.role === 'admin') {
+    visibleMenuItems.push({
+      href: '/usage-quotas',
+      label: language === 'th' ? 'การใช้งานและโควต้า' : 'Usage & Quotas',
+      icon: Activity,
+    });
     visibleMenuItems.push({
       href: '/telegram-groups',
       label: language === 'th' ? 'จัดการกลุ่ม Telegram' : 'Telegram Groups',
