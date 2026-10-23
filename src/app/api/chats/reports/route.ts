@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     // 1. Try querying `ai_feedback_reports`
     let query = supabase
       .from('ai_feedback_reports')
-      .select('*')
+      .select('id, chat_id, reported_by, reported_by_name, report_type, comment, status, ai_snapshot, admin_notes, created_at, updated_at')
       .order('created_at', { ascending: false });
 
     if (statusFilter !== 'all') {
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     // 2. Fallback: Query from `activity_logs` if `ai_feedback_reports` doesn't exist yet
     const { data: fallbackLogs, error: logErr } = await supabase
       .from('activity_logs')
-      .select('*')
+      .select('id, company_id, user_id, user_name, action_type, details, created_at')
       .eq('action_type', 'REPORT_AI_INACCURACY')
       .order('created_at', { ascending: false });
 

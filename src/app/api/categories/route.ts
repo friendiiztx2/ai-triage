@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('categories')
       .insert([insertData])
-      .select()
+      .select('id, name, description, company_id, name_en')
       .abortSignal(controller.signal);
 
     clearTimeout(timeoutId);
@@ -182,7 +182,7 @@ export async function PATCH(request: NextRequest) {
       query = query.eq('company_id', session.company_id);
     }
 
-    const { data, error } = await query.select().abortSignal(controller.signal);
+    const { data, error } = await query.select('id, name, description, company_id, name_en').abortSignal(controller.signal);
 
     clearTimeout(timeoutId);
     if (error) throw error;

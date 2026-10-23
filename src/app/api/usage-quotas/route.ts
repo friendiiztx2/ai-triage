@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const activeCompanyId = requestedCompanyId || getCompanyContext(request, session) || session.company_id || 'all';
 
     // 1. Fetch companies
-    let companiesQuery = db.from('companies').select('*').order('name', { ascending: true });
+    let companiesQuery = db.from('companies').select('id, name, quota, monthly_quota').order('name', { ascending: true });
     if (!isSysAdmin && session.company_id) {
       const allowedIds = (session.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
       if (allowedIds.length > 0) {
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     // 3. Query chats for the selected month
     let chatsQuery = db
       .from('chats')
-      .select('id, company_id, created_at, conversation')
+      .select('id, company_id, created_at')
       .gte('created_at', startOfMonth.toISOString())
       .lte('created_at', endOfMonth.toISOString());
 
@@ -103,13 +103,8 @@ export async function GET(request: NextRequest) {
       alertLevel = 'warning_80';
     }
 
-    // Token Estimation (Average ~180-250 tokens per customer chat or conversation length)
-    let totalChars = 0;
-    targetChats.forEach((c: any) => {
-      const len = typeof c.conversation === 'string' ? c.conversation.length : 120;
-      totalChars += len;
-    });
-    const tokensEstimated = Math.round(usedMessages * 180 + totalChars * 0.7);
+    // Token Estimation (Average ~220 tokens per customer chat without fetching heavy conversation text)
+    const tokensEstimated = Math.round(usedMessages * 220);
 
     // Pace and Forecast
     const dailyAverage = Math.round(usedMessages / daysElapsed);

@@ -55,10 +55,10 @@ export function useDashboardData({ dateRange, startDate, endDate, language }: Us
       const compId = rawCompId && rawCompId !== 'undefined' && rawCompId !== 'null' ? rawCompId : '';
 
       const chatsUrl = compId
-        ? `/api/chats?summary_only=true&company_id=${encodeURIComponent(compId)}&nocache=${Date.now()}`
-        : `/api/chats?summary_only=true&nocache=${Date.now()}`;
+        ? `/api/chats?summary_only=true&company_id=${encodeURIComponent(compId)}`
+        : `/api/chats?summary_only=true`;
       const custUrl = compId
-        ? `/api/customers?company_id=${encodeURIComponent(compId)}&nocache=${Date.now()}`
+        ? `/api/customers?company_id=${encodeURIComponent(compId)}`
         : `/api/customers?nocache=${Date.now()}`;
 
       const [catRes, chatsRes, custRes] = await Promise.all([
@@ -105,7 +105,7 @@ export function useDashboardData({ dateRange, startDate, endDate, language }: Us
       const compId = matchCookie
         ? decodeURIComponent(matchCookie[1])
         : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '' : '');
-      const chatsRes = await fetch(`/api/chats?company_id=${compId}&nocache=${Date.now()}`);
+      const chatsRes = await fetch(`/api/chats?company_id=${encodeURIComponent(compId)}`);
       if (chatsRes.ok) {
         const chats = await chatsRes.json();
         setAllChats(chats || []);
@@ -120,19 +120,25 @@ export function useDashboardData({ dateRange, startDate, endDate, language }: Us
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Realtime Supabase listener
+  // Realtime Supabase listener (debounced & pauses when tab is hidden)
   useEffect(() => {
+    let debounceTimer: any = null;
+    const debouncedReload = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        silentBackgroundReload();
+      }, 3000);
+    };
+
     const channel = supabase
       .channel('dashboard-realtime-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
-        silentBackgroundReload();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_issues' }, () => {
-        silentBackgroundReload();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, debouncedReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_issues' }, debouncedReload)
       .subscribe();
 
     return () => {
+      clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [silentBackgroundReload]);

@@ -5,7 +5,10 @@ interface CacheEntry {
 
 // Global in-memory cache across serverless invocations within the same process
 const serverCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 15000; // 15 Seconds TTL
+const CACHE_TTL_MS = 30000; // 30 Seconds TTL
+
+// In-flight request deduplication map to prevent multiple simultaneous queries
+const inFlightRequests = new Map<string, Promise<any>>();
 
 export function getCachedChats(key: string): any | null {
   const cached = serverCache.get(key);
@@ -21,4 +24,15 @@ export function setCachedChats(key: string, data: any) {
 
 export function clearChatsCache() {
   serverCache.clear();
+}
+
+export function getInFlightRequest(key: string): Promise<any> | null {
+  return inFlightRequests.get(key) || null;
+}
+
+export function setInFlightRequest(key: string, promise: Promise<any>) {
+  inFlightRequests.set(key, promise);
+  promise.finally(() => {
+    inFlightRequests.delete(key);
+  });
 }

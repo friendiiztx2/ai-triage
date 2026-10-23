@@ -2,11 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { sanitizeText } from '@/lib/sanitize';
 import { transformChatRow } from '@/lib/chatTransformers';
-import { getCachedChats, setCachedChats, clearChatsCache } from '@/lib/serverCache';
+import {
+  getCachedChats,
+  setCachedChats,
+  clearChatsCache,
+  getInFlightRequest,
+  setInFlightRequest,
+} from '@/lib/serverCache';
 import { verifyApiAuth, getCompanyContext, sanitizePostgrestFilter } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+// Strict column selections to prevent fetching vector embeddings (~15-20 KB/row) and huge conversations
+const CHAT_LIST_COLUMNS =
+  'id, customer_id, customer_name, summary, category_id, priority, status, confidence, company_id, created_at, keywords, tags, urgency, resolution';
+
+const CHAT_DETAIL_COLUMNS =
+  'id, customer_id, customer_name, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords, tags, urgency, resolution';
+
+const CHAT_ISSUES_COLUMNS =
+  'id, chat_id, issue_summary, category_id, priority, confidence, status, resolution, sentiment, created_at, department, recommended_reply';
+
+const URGENT_CHECK_COLUMNS =
+  'id, customer_id, customer_name, summary, priority, urgency, status, resolution, company_id, created_at';
 
 export async function GET(request: NextRequest) {
   const { session, errorResponse } = await verifyApiAuth(request);
@@ -14,318 +33,186 @@ export async function GET(request: NextRequest) {
 
   const targetId = request.nextUrl.searchParams.get('id');
   const companyId = getCompanyContext(request, session);
-  const cacheKey = request.url + (companyId ? `_comp_${companyId}` : `_user_${session.id}`);
-  const cached = !targetId ? getCachedChats(cacheKey) : null;
+  const urgentOnly = request.nextUrl.searchParams.get('urgent_only') === 'true';
 
-  if (cached) {
-    return NextResponse.json(cached, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
-        'X-Cache': 'HIT',
-      },
-    });
+  // Normalize cache key by removing random timestamp busters like `nocache`, `_t`, `_`
+  const cleanUrl = new URL(request.url);
+  cleanUrl.searchParams.delete('nocache');
+  cleanUrl.searchParams.delete('_t');
+  cleanUrl.searchParams.delete('_');
+  cleanUrl.searchParams.sort();
+  const cacheKey = `${cleanUrl.pathname}?${cleanUrl.searchParams.toString()}_comp_${companyId || 'all'}_user_${session.id}`;
+
+  // Check cache for list requests
+  if (!targetId) {
+    const cached = getCachedChats(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'X-Cache': 'HIT',
+        },
+      });
+    }
+
+    // Deduplicate simultaneous in-flight queries
+    const inFlight = getInFlightRequest(cacheKey);
+    if (inFlight) {
+      try {
+        const result = await inFlight;
+        return NextResponse.json(result, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+            'X-Cache': 'DEDUPED',
+          },
+        });
+      } catch {}
+    }
   }
 
   const db = supabaseAdmin || supabase;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
 
-  const search = request.nextUrl.searchParams.get('search');
-  const summaryOnly =
-    request.nextUrl.searchParams.get('summary_only') === 'true' ||
-    request.nextUrl.searchParams.get('light') === 'true';
+  // Handler function to execute the query
+  const executeQuery = async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-  try {
-    const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+    try {
+      // 1. Direct Single Chat Fetch: ONLY when viewing specific chat modal/inspector
+      if (targetId) {
+        let singleQuery = db
+          .from('chats')
+          .select(CHAT_DETAIL_COLUMNS)
+          .eq('id', targetId);
 
-    // Direct Single Chat Fetch: Immediate resolution for deep-linked chat IDs (Modals / Reports / Notifications)
-    if (targetId) {
-      let singleQuery = db.from('chats').select('*').eq('id', targetId);
-      if (!isSysAdmin && companyId && companyId !== 'all') {
-        singleQuery = singleQuery.eq('company_id', companyId);
-      }
-
-      const { data: singleData } = await singleQuery.abortSignal(controller.signal);
-      clearTimeout(timeoutId);
-
-      if (singleData && singleData.length > 0) {
-        const row = singleData[0];
-        const transformed: any = transformChatRow(row);
-
-        try {
-          const { data: issues } = await db
-            .from('chat_issues')
-            .select('*')
-            .eq('chat_id', targetId);
-          transformed.chat_issues = issues || [];
-        } catch {
-          transformed.chat_issues = [];
+        if (!isSysAdmin && companyId && companyId !== 'all') {
+          singleQuery = singleQuery.eq('company_id', companyId);
         }
 
-        return NextResponse.json([transformed], {
-          headers: {
-            'Cache-Control': 'no-store, max-age=0',
-          },
-        });
+        const { data: singleData } = await singleQuery.abortSignal(controller.signal);
+
+        if (singleData && singleData.length > 0) {
+          const row = singleData[0];
+          const transformed: any = transformChatRow(row);
+
+          try {
+            const { data: issues } = await db
+              .from('chat_issues')
+              .select(CHAT_ISSUES_COLUMNS)
+              .eq('chat_id', targetId);
+            transformed.chat_issues = issues || [];
+          } catch {
+            transformed.chat_issues = [];
+          }
+
+          clearTimeout(timeoutId);
+          return [transformed];
+        }
+
+        clearTimeout(timeoutId);
+        return [];
       }
 
-      // Fallback: check vw_triage_export if not directly in chats table
-      let fallbackQuery = db
-        .from('vw_triage_export')
-        .select('*')
-        .or(`chat_id.eq.${targetId},id.eq.${targetId}`);
-      if (!isSysAdmin && companyId && companyId !== 'all') {
-        fallbackQuery = fallbackQuery.eq('company_id', companyId);
+      // 2. Urgent-Only Notification Check: Lightweight query (< 1 KB)
+      if (urgentOnly) {
+        let urgentQuery = db
+          .from('chats')
+          .select(URGENT_CHECK_COLUMNS)
+          .in('priority', ['urgent', 'Urgent', 'critical', 'Critical'])
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (companyId && companyId !== 'all') {
+          urgentQuery = urgentQuery.eq('company_id', companyId);
+        }
+
+        const { data: urgentData } = await urgentQuery.abortSignal(controller.signal);
+        clearTimeout(timeoutId);
+
+        const items = (urgentData || []).map((row: any) => transformChatRow(row));
+        return items;
       }
 
-      const { data: fallbackData } = await fallbackQuery;
-      if (fallbackData && fallbackData.length > 0) {
-        const row = fallbackData[0];
-        const isPending =
-          row.status === 'pending' || (!row.category_id && !row.chat_summary && !row.issue_summary);
-        const item = {
-          id: row.chat_id || row.id,
-          customer_id: row.customer_id || null,
-          customer_name:
-            row.customer_name ||
-            (row.customer_id ? `ลูกค้า #${row.customer_id}` : `ลูกค้า #${targetId.substring(0, 8)}`),
-          summary: row.chat_summary || row.issue_summary || 'ไม่มีข้อมูลสรุป',
-          category_id: row.category_id || null,
-          priority: row.priority || null,
-          status: isPending ? 'pending' : 'completed',
-          confidence: 95,
-          company_id: row.company_id || null,
-          created_at: row.created_at || new Date().toISOString(),
-          conversation: row.conversation || '',
-          keywords: row.keywords || [],
-          tags: row.tags || [],
-          urgency: row.urgency || null,
-          resolution: row.resolution || null,
-          chat_issues: [],
-        };
-        return NextResponse.json([item], {
-          headers: {
-            'Cache-Control': 'no-store, max-age=0',
-          },
-        });
-      }
+      // 3. Chat List View (Chats Page, Dashboard, Reports)
+      // Strictly NO conversation text and NO embedding column
+      const limit = Math.min(200, Math.max(1, Number(request.nextUrl.searchParams.get('limit') || 100)));
+      const offset = Math.max(0, Number(request.nextUrl.searchParams.get('offset') || 0));
+      const search = request.nextUrl.searchParams.get('search');
+      const startDate = request.nextUrl.searchParams.get('start_date');
+      const endDate = request.nextUrl.searchParams.get('end_date');
 
-      return NextResponse.json([]);
-    }
-
-    const chatMap = new Map();
-
-    // Query all necessary fields including conversation text so modals open instantly without flickering
-    if (summaryOnly) {
-      let lightQuery = db
+      let listQuery = db
         .from('chats')
-        .select(
-          'id, customer_id, customer_name, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords, tags, urgency, resolution'
-        )
-        .order('created_at', { ascending: false });
+        .select(CHAT_LIST_COLUMNS)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
       if (companyId && companyId !== 'all') {
-        lightQuery = lightQuery.eq('company_id', companyId);
+        listQuery = listQuery.eq('company_id', companyId);
       }
 
-      if (targetId) {
-        lightQuery = lightQuery.eq('id', targetId);
+      if (startDate) {
+        listQuery = listQuery.gte('created_at', startDate);
+      }
+      if (endDate) {
+        listQuery = listQuery.lte('created_at', endDate);
       }
 
       if (search && search.trim()) {
         const q = sanitizePostgrestFilter(search.trim());
         if (q) {
-          lightQuery = lightQuery.or(
-            `summary.ilike.%${q}%,conversation.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`
+          listQuery = listQuery.or(
+            `summary.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`
           );
         }
       }
 
-      const { data: lightData, error: lightErr } = await lightQuery.abortSignal(controller.signal);
+      const { data: listData, error: listErr } = await listQuery.abortSignal(controller.signal);
       clearTimeout(timeoutId);
 
-      if (lightErr) {
-        console.error('lightQuery error:', lightErr);
+      if (listErr) {
+        console.error('List chats query error:', listErr);
       }
 
-      const items = (lightData || []).map((row: any) => transformChatRow(row));
-
-      setCachedChats(cacheKey, items);
-      return NextResponse.json(items, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
-          'X-Cache': 'MISS',
-        },
-      });
-    }
-
-    // 1. Fetch from 'chats' table FIRST to preserve full untruncated conversation text
-    let chatsQuery = db.from('chats').select('*').order('created_at', { ascending: false });
-
-    if (companyId && companyId !== 'all') {
-      chatsQuery = chatsQuery.eq('company_id', companyId);
-    }
-
-    if (targetId) {
-      chatsQuery = chatsQuery.eq('id', targetId);
-    }
-
-    if (search && search.trim()) {
-      const q = search.trim();
-      chatsQuery = chatsQuery.or(
-        `summary.ilike.%${q}%,conversation.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`
-      );
-    }
-
-    const { data: chatsData } = await chatsQuery.abortSignal(controller.signal);
-
-    if (chatsData && chatsData.length > 0) {
-      chatsData.forEach((row: any) => {
-        const id = row.id;
-        if (!id) return;
+      const items = (listData || []).map((row: any) => {
         const transformed: any = transformChatRow(row);
-        chatMap.set(id, {
-          ...transformed,
-          chat_issues: [],
-        });
+        transformed.chat_issues = [];
+        return transformed;
       });
-    }
 
-    if (targetId && chatMap.has(targetId)) {
-      const targetChat = chatMap.get(targetId);
-      const { data: issues } = await db
-        .from('chat_issues')
-        .select('*')
-        .eq('chat_id', targetId)
-        .abortSignal(controller.signal);
-      if (issues && issues.length > 0) {
-        targetChat.chat_issues = issues;
-      }
+      return items;
+    } catch (err: any) {
       clearTimeout(timeoutId);
-      return NextResponse.json([targetChat]);
+      console.error('API /chats error:', err);
+      return [];
     }
+  };
 
-    // 2. Fetch from 'vw_triage_export' view SECOND as enrichment for chat_issues
-    let exportQuery = db.from('vw_triage_export').select('*').order('created_at', { ascending: false });
-
-    if (companyId && companyId !== 'all') {
-      exportQuery = exportQuery.eq('company_id', companyId);
-    }
-
-    if (targetId) {
-      exportQuery = exportQuery.eq('chat_id', targetId);
-    }
-
-    const { data: exportData } = await exportQuery.abortSignal(controller.signal);
-
-    if (exportData && exportData.length > 0) {
-      exportData.forEach((row: any) => {
-        const id = row.chat_id || row.id;
-        if (!id) return;
-
-        if (!chatMap.has(id)) {
-          const isPending =
-            row.status === 'pending' || (!row.category_id && !row.chat_summary && !row.issue_summary);
-          chatMap.set(id, {
-            id: id,
-            customer_id: row.customer_id || null,
-            customer_name: row.customer_name || (row.customer_id ? `ลูกค้า #${row.customer_id}` : (id ? `ลูกค้า #${id.substring(0, 8)}` : 'ลูกค้าทั่วไป')),
-            summary: row.chat_summary || row.issue_summary || 'ไม่มีข้อมูลสรุป',
-            category_id: row.category_id || null,
-            priority: row.priority || null,
-            status: isPending ? 'pending' : 'completed',
-            confidence: 95,
-            company_id: row.company_id || null,
-            rawMessages: row.issue_summary ? [`ลูกค้า: ${row.issue_summary}`] : [],
-            conversation: row.issue_summary ? `ลูกค้า: ${row.issue_summary}` : null,
-            chat_issues: [],
-            tags: [],
-            created_at: row.created_at || new Date().toISOString(),
-          });
-        }
-
-        const existing = chatMap.get(id);
-        if (row.issue_summary) {
-          if (!existing.chat_issues.some((i: any) => i.summary === row.issue_summary)) {
-            existing.chat_issues.push({
-              id: `${id}-issue-${existing.chat_issues.length + 1}`,
-              chat_id: id,
-              category_id: row.category_id,
-              priority: row.priority,
-              department: row.department,
-              summary: row.issue_summary,
-              recommended_reply: row.ai_reply,
-              created_at: row.created_at,
-            });
-          }
-        }
-      });
-    }
-
-    // 3. Fetch all rows from 'chat_issues' table as backup/enrichment
-    const { data: issuesData } = await db
-      .from('chat_issues')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (issuesData && issuesData.length > 0) {
-      issuesData.forEach((issue: any) => {
-        const chatId = issue.chat_id;
-        if (!chatId) return;
-        const msgText = `ลูกค้า: ${issue.summary}`;
-
-        if (!chatMap.has(chatId)) {
-          const isPending = issue.status === 'pending' || (!issue.category_id && !issue.summary);
-          chatMap.set(chatId, {
-            id: chatId,
-            customer_id: issue.customer_id || null,
-            customer_name: issue.customer_name || (issue.customer_id ? `ลูกค้า #${issue.customer_id}` : `ลูกค้า #${chatId.substring(0, 8)}`),
-            summary: issue.summary,
-            category_id: issue.category_id || null,
-            priority: issue.priority || null,
-            status: isPending ? 'pending' : 'completed',
-            confidence: 95,
-            company_id: issue.company_id || null,
-            rawMessages: [msgText],
-            conversation: msgText,
-            chat_issues: [issue],
-            tags: [],
-            created_at: issue.created_at || new Date().toISOString(),
-          });
-        } else {
-          const existing = chatMap.get(chatId);
-          if (!existing.chat_issues) existing.chat_issues = [];
-          if (!existing.chat_issues.some((i: any) => i.id === issue.id || i.summary === issue.summary)) {
-            existing.chat_issues.push(issue);
-          }
-        }
-      });
-    }
-
-    clearTimeout(timeoutId);
-
-    let resultList = Array.from(chatMap.values());
-    if (companyId && companyId !== 'all') {
-      resultList = resultList.filter((c: any) => c.company_id === companyId);
-    }
-    if (targetId) {
-      resultList = resultList.filter((c: any) => c.id === targetId);
-    }
-
-    // Sort by created_at descending
-    resultList.sort(
-      (a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-    );
-    setCachedChats(cacheKey, resultList);
-    return NextResponse.json(resultList, {
+  if (targetId) {
+    const items = await executeQuery();
+    return NextResponse.json(items, {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
+  }
+
+  // Deduplicate and cache list requests
+  const promise = executeQuery();
+  setInFlightRequest(cacheKey, promise);
+
+  try {
+    const items = await promise;
+    setCachedChats(cacheKey, items);
+
+    return NextResponse.json(items, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
         'X-Cache': 'MISS',
       },
     });
   } catch (err: any) {
-    clearTimeout(timeoutId);
-    console.error('Error fetching chats:', err);
     return NextResponse.json([], { status: 500 });
   }
 }
@@ -337,7 +224,7 @@ export async function PATCH(request: NextRequest) {
 
   const db = supabaseAdmin || supabase;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
 
   try {
     const body = await request.json();
@@ -371,7 +258,10 @@ export async function PATCH(request: NextRequest) {
       query = query.eq('id', id);
     }
 
-    const { data, error } = await query.select().abortSignal(controller.signal);
+    // Select ONLY needed columns upon update (never embedding or full conversation)
+    const { data, error } = await query
+      .select('id, category_id, priority, status, keywords, tags, company_id')
+      .abortSignal(controller.signal);
 
     clearTimeout(timeoutId);
     if (error) {

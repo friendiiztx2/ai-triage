@@ -72,8 +72,11 @@ export function useUrgentNotifier() {
       return !!localStorage.getItem('user_session');
     };
 
+    // Lightweight query: ONLY fetches urgent chats (< 1 KB), never the whole table
     const pollUrgentChats = async () => {
       if (!checkSession()) return;
+      // Stop polling when browser tab is inactive/hidden to save egress
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       
       const isPopupOn = typeof window !== 'undefined' ? localStorage.getItem('desktop_popup_enabled') !== 'false' : true;
       if (!isPopupOn) return;
@@ -81,16 +84,10 @@ export function useUrgentNotifier() {
       try {
         const compId = getActiveCompanyId();
         const url = compId && compId !== 'all'
-          ? `/api/chats?summary_only=true&company_id=${compId}&nocache=${Date.now()}`
-          : `/api/chats?summary_only=true&nocache=${Date.now()}`;
+          ? `/api/chats?urgent_only=true&company_id=${encodeURIComponent(compId)}`
+          : `/api/chats?urgent_only=true`;
 
-        const res = await fetch(url, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-          },
-        });
+        const res = await fetch(url);
         if (!res.ok) return;
 
         const chats = await res.json();
@@ -144,9 +141,21 @@ export function useUrgentNotifier() {
       }
     };
 
+    // Initial check on mount
     pollUrgentChats();
-    const intervalId = setInterval(pollUrgentChats, 8000);
 
+    // Fallback polling: only every 5 minutes (300,000ms), Realtime handles live inserts
+    const intervalId = setInterval(pollUrgentChats, 300000);
+
+    // Refresh when user returns to tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        pollUrgentChats();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Realtime listener for immediate urgent alerts
     const channel = supabase
       .channel('global-urgent-notifier-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, (payload: any) => {
@@ -176,12 +185,10 @@ export function useUrgentNotifier() {
                 setTimeLeft(60);
                 setIsPaused(false);
                 triggerSound();
-                return;
               }
             }
           }
         }
-        pollUrgentChats();
       })
       .subscribe();
 
@@ -209,6 +216,7 @@ export function useUrgentNotifier() {
 
     return () => {
       clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       supabase.removeChannel(channel);
       window.removeEventListener('urgent-chat-detected', handleUrgentEvent);
     };

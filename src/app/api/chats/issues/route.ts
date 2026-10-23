@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data, error } = await supabase
       .from('chat_issues')
-      .select('*')
+      .select('id, chat_id, issue_summary, category_id, priority, confidence, status, resolution, sentiment, created_at, department, recommended_reply')
       .eq('chat_id', chatId)
       .order('created_at', { ascending: true })
       .abortSignal(controller.signal);

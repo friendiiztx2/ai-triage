@@ -37,8 +37,8 @@ export function useChatsData({ soundEnabled, desktopNotifyEnabled }: UseChatsDat
       }
 
       const [catRes, chatsRes] = await Promise.all([
-        fetch(`/api/categories?company_id=${compId}`),
-        fetch(`/api/chats?summary_only=true&company_id=${compId}&nocache=${Date.now()}`),
+        fetch(`/api/categories?company_id=${encodeURIComponent(compId)}`),
+        fetch(`/api/chats?company_id=${encodeURIComponent(compId)}`),
       ]);
 
       if (catRes.ok) {
@@ -114,19 +114,30 @@ export function useChatsData({ soundEnabled, desktopNotifyEnabled }: UseChatsDat
     }
   }, [fetchInitialData]);
 
-  // Realtime Supabase changes listener
+  // Realtime Supabase changes listener (debounced to avoid multiple rapid queries)
   useEffect(() => {
+    let debounceTimer: any = null;
+    const triggerDebouncedFetch = () => {
+      // Don't refetch if tab is hidden
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchInitialData();
+      }, 2500);
+    };
+
     const channel = supabase
       .channel('realtime-chats-chats-page')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
-        fetchInitialData();
+        triggerDebouncedFetch();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_issues' }, () => {
-        fetchInitialData();
+        triggerDebouncedFetch();
       })
       .subscribe();
 
     return () => {
+      clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [fetchInitialData]);

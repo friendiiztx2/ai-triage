@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   try {
     // 1. Fetch customers table and chats list in parallel (using admin client to bypass RLS)
     const [custRes, chatsRes] = await Promise.all([
-      Promise.resolve(db.from('customers').select('*').abortSignal(controller.signal)).catch(() => ({ data: null })),
+      Promise.resolve(db.from('customers').select('id, customer_id, name, line_user_id, company_id, created_at, tags').abortSignal(controller.signal)).catch(() => ({ data: null })),
       Promise.resolve(db.from('chats').select('customer_id').abortSignal(controller.signal)).catch(() => ({ data: null }))
     ]);
 

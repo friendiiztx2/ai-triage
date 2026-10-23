@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     let query = db
       .from('companies')
-      .select('*')
+      .select('id, name, created_at, status, quota, monthly_quota')
       .order('created_at', { ascending: false });
 
     // Multi-tenant Isolation: non-system_admin users only see their own assigned companies

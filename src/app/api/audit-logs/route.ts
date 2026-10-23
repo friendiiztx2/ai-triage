@@ -38,9 +38,9 @@ export async function GET(request: NextRequest) {
     // 1. Attempt to fetch from 'activity_logs' table
     let actQuery = db
       .from('activity_logs')
-      .select('*')
+      .select('id, company_id, user_id, user_name, action_type, details, created_at')
       .order('created_at', { ascending: false })
-      .limit(1000);
+      .limit(200);
 
     if (companyId && companyId !== 'all') {
       actQuery = actQuery.eq('company_id', companyId);
@@ -64,7 +64,8 @@ export async function GET(request: NextRequest) {
     // 2. Attempt to fetch from 'audit_logs' table
     let auditQuery = db
       .from('audit_logs')
-      .select('*')
+      .select('id, company_id, user_id, user_name, action, details, created_at')
+      .limit(200)
       .order('created_at', { ascending: false });
 
     if (companyId && companyId !== 'all') {
