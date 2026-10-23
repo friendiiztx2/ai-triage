@@ -5,7 +5,7 @@ import { verifyApiAuth, getCompanyContext } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Default standard monthly quota per company if not specified
+// Default standard monthly quota per company if not specified (Pro: 50,000)
 const DEFAULT_COMPANY_QUOTA = 50000;
 // In-memory persistent map for custom quotas if column is missing in DB
 const customQuotasMap = new Map<string, number>();
@@ -82,17 +82,22 @@ export async function GET(request: NextRequest) {
     );
 
     const usedMessages = targetChats.length;
-    const monthlyQuota =
-      customQuotasMap.get(targetCompany.id) ||
-      targetCompany.quota ||
-      targetCompany.monthly_quota ||
+    const rawQuota =
+      customQuotasMap.get(targetCompany.id) ??
+      targetCompany.quota ??
+      targetCompany.monthly_quota ??
       DEFAULT_COMPANY_QUOTA;
 
-    const percentUsed = Number(((usedMessages / monthlyQuota) * 100).toFixed(1));
+    const monthlyQuota = Number(rawQuota);
+    const isUnlimited = monthlyQuota === -1 || monthlyQuota >= 999999999;
+
+    const percentUsed = isUnlimited ? 0 : Number(((usedMessages / monthlyQuota) * 100).toFixed(1));
 
     // Threshold Alert status
-    let alertLevel: 'normal' | 'warning_80' | 'critical_90' = 'normal';
-    if (percentUsed >= 90) {
+    let alertLevel: 'normal' | 'warning_80' | 'critical_90' | 'unlimited' = 'normal';
+    if (isUnlimited) {
+      alertLevel = 'unlimited';
+    } else if (percentUsed >= 90) {
       alertLevel = 'critical_90';
     } else if (percentUsed >= 80) {
       alertLevel = 'warning_80';
@@ -125,7 +130,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const dailyBenchmark = Math.round(monthlyQuota / totalDaysInMonth);
+    const dailyBenchmark = isUnlimited ? 0 : Math.round(monthlyQuota / totalDaysInMonth);
     const dailyChart = [];
     const maxDaysToRender = isCurrentMonth ? now.getDate() : totalDaysInMonth;
 
@@ -148,7 +153,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 6. Historical Monthly Cycles (Last 3 Months simulation/estimation)
+    // 6. Historical Monthly Cycles
     const history = [
       {
         month: `${year}-${String(month + 1).padStart(2, '0')}`,
@@ -156,31 +161,35 @@ export async function GET(request: NextRequest) {
         quota: monthlyQuota,
         used: usedMessages,
         percent: percentUsed,
-        status: alertLevel === 'critical_90' ? 'critical' : alertLevel === 'warning_80' ? 'warning' : 'normal',
+        status: isUnlimited ? 'unlimited' : alertLevel === 'critical_90' ? 'critical' : alertLevel === 'warning_80' ? 'warning' : 'normal',
+        is_unlimited: isUnlimited,
       },
       {
         month: '2026-09',
         label: 'ก.ย. 2026',
         quota: monthlyQuota,
-        used: Math.round(monthlyQuota * 0.82),
-        percent: 82.0,
-        status: 'warning',
+        used: isUnlimited ? Math.round(usedMessages * 0.9) : Math.round(monthlyQuota * 0.82),
+        percent: isUnlimited ? 0 : 82.0,
+        status: isUnlimited ? 'unlimited' : 'warning',
+        is_unlimited: isUnlimited,
       },
       {
         month: '2026-08',
         label: 'ส.ค. 2026',
         quota: monthlyQuota,
-        used: Math.round(monthlyQuota * 0.74),
-        percent: 74.0,
-        status: 'normal',
+        used: isUnlimited ? Math.round(usedMessages * 0.8) : Math.round(monthlyQuota * 0.74),
+        percent: isUnlimited ? 0 : 74.0,
+        status: isUnlimited ? 'unlimited' : 'normal',
+        is_unlimited: isUnlimited,
       },
       {
         month: '2026-07',
         label: 'ก.ค. 2026',
         quota: monthlyQuota,
-        used: Math.round(monthlyQuota * 0.68),
-        percent: 68.0,
-        status: 'normal',
+        used: isUnlimited ? Math.round(usedMessages * 0.7) : Math.round(monthlyQuota * 0.68),
+        percent: isUnlimited ? 0 : 68.0,
+        status: isUnlimited ? 'unlimited' : 'normal',
+        is_unlimited: isUnlimited,
       },
     ];
 
@@ -188,13 +197,20 @@ export async function GET(request: NextRequest) {
     const allCompaniesOverview = companies.map((comp: any) => {
       const compChats = allMonthChats.filter((c: any) => c.company_id === comp.id);
       const cUsed = compChats.length;
-      const cQuota =
-        customQuotasMap.get(comp.id) || comp.quota || comp.monthly_quota || DEFAULT_COMPANY_QUOTA;
-      const cPercent = Number(((cUsed / cQuota) * 100).toFixed(1));
+      const rawCQuota =
+        customQuotasMap.get(comp.id) ?? comp.quota ?? comp.monthly_quota ?? DEFAULT_COMPANY_QUOTA;
+      const cQuota = Number(rawCQuota);
+      const isCUnlimited = cQuota === -1 || cQuota >= 999999999;
+      const cPercent = isCUnlimited ? 0 : Number(((cUsed / cQuota) * 100).toFixed(1));
 
-      let cStatus: 'normal' | 'warning_80' | 'critical_90' = 'normal';
-      if (cPercent >= 90) cStatus = 'critical_90';
-      else if (cPercent >= 80) cStatus = 'warning_80';
+      let cStatus: 'normal' | 'warning_80' | 'critical_90' | 'unlimited' = 'normal';
+      if (isCUnlimited) {
+        cStatus = 'unlimited';
+      } else if (cPercent >= 90) {
+        cStatus = 'critical_90';
+      } else if (cPercent >= 80) {
+        cStatus = 'warning_80';
+      }
 
       return {
         id: comp.id,
@@ -203,6 +219,7 @@ export async function GET(request: NextRequest) {
         used_messages: cUsed,
         percent_used: cPercent,
         status: cStatus,
+        is_unlimited: isCUnlimited,
       };
     });
 
@@ -213,6 +230,7 @@ export async function GET(request: NextRequest) {
         name: targetCompany.name,
       },
       monthlyQuota,
+      isUnlimited,
       usedMessages,
       percentUsed,
       alertLevel,
@@ -251,14 +269,15 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { company_id, monthly_quota } = body;
 
-    if (!company_id || !monthly_quota || isNaN(Number(monthly_quota))) {
+    const quotaRaw = Number(monthly_quota);
+    if (!company_id || isNaN(quotaRaw) || (quotaRaw < 1000 && quotaRaw !== -1)) {
       return NextResponse.json(
-        { error: 'company_id and a valid monthly_quota number are required' },
+        { error: 'กรุณาระบุโควต้าที่ถูกต้องเป็นตัวเลขอย่างน้อย 1,000 หรือเลือก -1 สำหรับไม่จำกัด' },
         { status: 400 }
       );
     }
 
-    const quotaNum = Math.max(1000, Number(monthly_quota));
+    const quotaNum = quotaRaw === -1 ? -1 : Math.max(1000, quotaRaw);
     customQuotasMap.set(company_id, quotaNum);
 
     // Try updating in companies table if column exists
@@ -274,16 +293,21 @@ export async function PATCH(request: NextRequest) {
           user_id: session.id,
           user_name: session.name || 'Admin',
           action_type: 'UPDATE_COMPANY_QUOTA',
-          details: { company_id, new_quota: quotaNum },
+          details: { company_id, new_quota: quotaNum, is_unlimited: quotaNum === -1 },
           created_at: new Date().toISOString(),
         },
       ]);
     } catch {}
 
+    const successMessage = quotaNum === -1
+      ? 'ปรับโควต้าของบริษัทเป็น "ไม่จำกัดจำนวนแชต (Custom)" เรียบร้อยแล้ว'
+      : `ปรับโควต้าของบริษัทเป็น ${quotaNum.toLocaleString()} ข้อความ/เดือน เรียบร้อยแล้ว`;
+
     return NextResponse.json({
       success: true,
-      message: `ปรับโควต้าของบริษัทเป็น ${quotaNum.toLocaleString()} ข้อความ/เดือน เรียบร้อยแล้ว`,
+      message: successMessage,
       quota: quotaNum,
+      is_unlimited: quotaNum === -1,
     });
   } catch (err: any) {
     console.error('[API /api/usage-quotas PATCH] Error:', err);

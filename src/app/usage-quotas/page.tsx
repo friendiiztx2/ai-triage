@@ -18,8 +18,9 @@ import {
   RefreshCw,
   BarChart3,
   Clock,
-  ArrowRight,
   ShieldAlert,
+  Sparkles,
+  Infinity,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -40,7 +41,8 @@ interface CompanyOverviewItem {
   monthly_quota: number;
   used_messages: number;
   percent_used: number;
-  status: 'normal' | 'warning_80' | 'critical_90';
+  status: 'normal' | 'warning_80' | 'critical_90' | 'unlimited';
+  is_unlimited?: boolean;
 }
 
 export default function UsageQuotasPage() {
@@ -100,11 +102,20 @@ export default function UsageQuotasPage() {
     if (!data?.history || data.history.length === 0) return;
 
     const headers = ['รอบเดือน,โควต้าที่จัดสรร (ข้อความ),ข้อความที่ใช้จริง,ร้อยละการใช้งาน (%),สถานะ'];
-    const rows = data.history.map((h: any) =>
-      `"${h.label}","${h.quota.toLocaleString()}","${h.used.toLocaleString()}","${h.percent}%","${
-        h.status === 'critical' ? 'วิกฤต (เกิน 90%)' : h.status === 'warning' ? 'เฝ้าระวัง (เกิน 80%)' : 'ปกติ'
-      }"`
-    );
+    const rows = data.history.map((h: any) => {
+      const quotaLabel = h.is_unlimited || h.quota === -1 ? 'ไม่จำกัด (Custom)' : h.quota.toLocaleString();
+      const percentLabel = h.is_unlimited || h.quota === -1 ? 'ไม่จำกัด' : `${h.percent}%`;
+      const statusLabel =
+        h.status === 'unlimited'
+          ? 'ไม่จำกัด (Custom)'
+          : h.status === 'critical'
+          ? 'วิกฤต (เกิน 90%)'
+          : h.status === 'warning'
+          ? 'เฝ้าระวัง (เกิน 80%)'
+          : 'ปกติ';
+
+      return `"${h.label}","${quotaLabel}","${h.used.toLocaleString()}","${percentLabel}","${statusLabel}"`;
+    });
 
     const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -128,20 +139,25 @@ export default function UsageQuotasPage() {
   }, [data?.allCompaniesOverview, companySearch]);
 
   const targetComp = data?.targetCompany;
+  const monthlyQuota = data?.monthlyQuota ?? 50000;
+  const isUnlimited = Boolean(data?.isUnlimited || monthlyQuota === -1 || monthlyQuota >= 999999999);
   const percentUsed = data?.percentUsed || 0;
-  const alertLevel = data?.alertLevel || 'normal';
-  const monthlyQuota = data?.monthlyQuota || 50000;
+  const alertLevel = data?.alertLevel || (isUnlimited ? 'unlimited' : 'normal');
   const usedMessages = data?.usedMessages || 0;
-  const remainingMessages = Math.max(0, monthlyQuota - usedMessages);
+  const remainingMessages = isUnlimited ? null : Math.max(0, monthlyQuota - usedMessages);
 
   // Status Color Logic
-  const getProgressColor = (percent: number) => {
+  const getProgressColor = (percent: number, unlimited = false) => {
+    if (unlimited) return 'from-purple-500 via-indigo-500 to-blue-500';
     if (percent >= 90) return 'from-rose-500 to-red-600';
     if (percent >= 80) return 'from-amber-500 to-orange-500';
     return 'from-emerald-500 to-teal-500';
   };
 
   const getBadgeStyle = (status: string) => {
+    if (status === 'unlimited') {
+      return 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200 dark:border-purple-800';
+    }
     if (status === 'critical_90' || status === 'critical') {
       return 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200 dark:border-rose-900';
     }
@@ -152,6 +168,7 @@ export default function UsageQuotasPage() {
   };
 
   const getBadgeLabel = (status: string) => {
+    if (status === 'unlimited') return 'ไม่จำกัด (Custom)';
     if (status === 'critical_90' || status === 'critical') return 'วิกฤต (≥90%)';
     if (status === 'warning_80' || status === 'warning') return 'เฝ้าระวัง (≥80%)';
     return 'ปกติ (<80%)';
@@ -238,8 +255,46 @@ export default function UsageQuotasPage() {
         </div>
       </div>
 
-      {/* 2. Automated Alert Banners (80% & 90% Thresholds) */}
-      {alertLevel === 'critical_90' && (
+      {/* 2. Automated Alert Banners (Unlimited / 80% / 90% Thresholds) */}
+      {isUnlimited ? (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-purple-600 text-white shrink-0">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm tracking-wide text-purple-800 dark:text-purple-300 uppercase">
+                  แพ็กเกจ Custom: ไม่จำกัดจำนวนแชต (Unlimited)
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-600 text-white">
+                  ไม่จำกัด
+                </span>
+              </div>
+              <p className="text-xs text-purple-800/80 dark:text-purple-300/80 mt-0.5">
+                บริษัท <strong>{targetComp?.name}</strong> ใช้งานแพ็กเกจแบบไม่จำกัดข้อความ (ใช้งานแล้ว{' '}
+                <strong>{usedMessages.toLocaleString()}</strong> ข้อความในรอบบิลนี้)
+                ระบบจะไม่จำกัดโควต้าและไม่มีการระงับการใช้งาน
+              </p>
+            </div>
+          </div>
+          {data?.isSystemAdmin && (
+            <button
+              onClick={() => {
+                setTargetEditCompany({
+                  id: targetComp?.id,
+                  name: targetComp?.name,
+                  monthly_quota: monthlyQuota,
+                });
+                setModalOpen(true);
+              }}
+              className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white shadow-xs transition cursor-pointer"
+            >
+              ปรับแต่งแพ็กเกจ
+            </button>
+          )}
+        </div>
+      ) : alertLevel === 'critical_90' ? (
         <div className="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 text-rose-800 dark:text-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md animate-pulse">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-rose-500 text-white shrink-0">
@@ -258,7 +313,7 @@ export default function UsageQuotasPage() {
                 บริษัท <strong>{targetComp?.name}</strong> ใช้งานไปแล้ว{' '}
                 <strong>{usedMessages.toLocaleString()}</strong> จาก{' '}
                 <strong>{monthlyQuota.toLocaleString()}</strong> ข้อความ (เหลืออีกเพียง{' '}
-                {remainingMessages.toLocaleString()} ข้อความ) เสี่ยงต่อการระงับข้อความอัตโนมัติหากเกิน 100%
+                {remainingMessages?.toLocaleString()} ข้อความ) เสี่ยงต่อการระงับข้อความอัตโนมัติหากเกิน 100%
               </p>
             </div>
           </div>
@@ -278,9 +333,7 @@ export default function UsageQuotasPage() {
             </button>
           )}
         </div>
-      )}
-
-      {alertLevel === 'warning_80' && (
+      ) : alertLevel === 'warning_80' ? (
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-500 text-white shrink-0">
@@ -297,7 +350,7 @@ export default function UsageQuotasPage() {
               </div>
               <p className="text-xs text-amber-700/90 dark:text-amber-300/90 mt-0.5">
                 บริษัท <strong>{targetComp?.name}</strong> ใช้งานถึง 80% ของโควต้าประจำเดือนแล้ว (เหลืออีก{' '}
-                {remainingMessages.toLocaleString()} ข้อความ ในอีก {data?.daysRemaining || 0} วัน)
+                {remainingMessages?.toLocaleString()} ข้อความ ในอีก {data?.daysRemaining || 0} วัน)
                 กรุณาวางแผนขยายแพ็กเกจล่วงหน้า
               </p>
             </div>
@@ -318,15 +371,13 @@ export default function UsageQuotasPage() {
             </button>
           )}
         </div>
-      )}
-
-      {alertLevel === 'normal' && (
+      ) : (
         <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
             <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>
               สถานะการใช้งานของ <strong>{targetComp?.name}</strong> อยู่ในเกณฑ์ปกติ (ใช้ไป {percentUsed}%)
-              พร้อมใช้งานได้อีก <strong>{remainingMessages.toLocaleString()}</strong> ข้อความในรอบเดือนนี้
+              พร้อมใช้งานได้อีก <strong>{remainingMessages?.toLocaleString()}</strong> ข้อความในรอบเดือนนี้
             </span>
           </div>
           <span className="hidden sm:inline-block font-mono text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -350,7 +401,7 @@ export default function UsageQuotasPage() {
                     {usedMessages.toLocaleString()}
                   </span>
                   <span className="text-sm md:text-base font-semibold text-neutral-400 font-mono">
-                    / {monthlyQuota.toLocaleString()} ข้อความ
+                    / {isUnlimited ? 'ไม่จำกัด (Unlimited)' : `${monthlyQuota.toLocaleString()} ข้อความ`}
                   </span>
                 </div>
               </div>
@@ -362,10 +413,10 @@ export default function UsageQuotasPage() {
                     alertLevel
                   )}`}
                 >
-                  {percentUsed}% {getBadgeLabel(alertLevel)}
+                  {isUnlimited ? 'Custom (ไม่จำกัด)' : `${percentUsed}% ${getBadgeLabel(alertLevel)}`}
                 </span>
                 <p className="text-[11px] text-neutral-400 mt-1">
-                  คงเหลือ {remainingMessages.toLocaleString()} ข้อความ
+                  {isUnlimited ? 'แพ็กเกจ Custom ไม่จำกัดแชต' : `คงเหลือ ${remainingMessages?.toLocaleString()} ข้อความ`}
                 </p>
               </div>
             </div>
@@ -374,18 +425,28 @@ export default function UsageQuotasPage() {
             <div className="w-full h-3.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden p-0.5 border border-neutral-200/50 dark:border-neutral-700/50">
               <div
                 className={`h-full rounded-full bg-gradient-to-r ${getProgressColor(
-                  percentUsed
+                  percentUsed,
+                  isUnlimited
                 )} transition-all duration-700 ease-out`}
-                style={{ width: `${Math.min(100, Math.max(2, percentUsed))}%` }}
+                style={{ width: isUnlimited ? '100%' : `${Math.min(100, Math.max(2, percentUsed))}%` }}
               />
             </div>
 
             {/* Threshold Markers Note */}
             <div className="flex justify-between items-center text-[10px] text-neutral-400 font-mono pt-0.5">
-              <span>0%</span>
-              <span className="text-amber-500 font-medium">▲ เตือน 80% ({Math.round(monthlyQuota * 0.8).toLocaleString()})</span>
-              <span className="text-rose-500 font-medium">▲ วิกฤต 90% ({Math.round(monthlyQuota * 0.9).toLocaleString()})</span>
-              <span>100% ({monthlyQuota.toLocaleString()})</span>
+              {isUnlimited ? (
+                <>
+                  <span className="text-purple-500 font-medium">✨ แพ็กเกจ Custom ไม่จำกัดจำนวนแชต</span>
+                  <span className="text-neutral-400 font-sans">ไม่มีการตัดรอบหรือระงับการใช้งานอัตโนมัติ</span>
+                </>
+              ) : (
+                <>
+                  <span>0%</span>
+                  <span className="text-amber-500 font-medium">▲ เตือน 80% ({Math.round(monthlyQuota * 0.8).toLocaleString()})</span>
+                  <span className="text-rose-500 font-medium">▲ วิกฤต 90% ({Math.round(monthlyQuota * 0.9).toLocaleString()})</span>
+                  <span>100% ({monthlyQuota.toLocaleString()})</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -419,7 +480,7 @@ export default function UsageQuotasPage() {
             {usedMessages.toLocaleString()}
           </div>
           <p className="text-[11px] text-neutral-400">
-            คิดเป็น {percentUsed}% ของโควต้าเดือนนี้
+            {isUnlimited ? 'แพ็กเกจ Custom ไม่จำกัดจำนวนแชต' : `คิดเป็น ${percentUsed}% ของโควต้าเดือนนี้`}
           </p>
         </div>
 
@@ -451,7 +512,9 @@ export default function UsageQuotasPage() {
             {Number(data?.dailyAverage || 0).toLocaleString()}
           </div>
           <p className="text-[11px] text-neutral-400">
-            เกณฑ์แนะนำ: ~{Math.round(monthlyQuota / (data?.totalDaysInMonth || 30)).toLocaleString()} ข้อความ/วัน
+            {isUnlimited
+              ? 'ไม่จำกัดโควต้าต่อวัน (Custom)'
+              : `เกณฑ์แนะนำ: ~${Math.round(monthlyQuota / (data?.totalDaysInMonth || 30)).toLocaleString()} ข้อความ/วัน`}
           </p>
         </div>
 
@@ -468,12 +531,16 @@ export default function UsageQuotasPage() {
           </div>
           <p
             className={`text-[11px] font-medium ${
-              Number(data?.projectedMonthEnd || 0) > monthlyQuota
+              isUnlimited
+                ? 'text-purple-600 dark:text-purple-400'
+                : Number(data?.projectedMonthEnd || 0) > monthlyQuota
                 ? 'text-rose-500'
                 : 'text-emerald-500'
             }`}
           >
-            {Number(data?.projectedMonthEnd || 0) > monthlyQuota
+            {isUnlimited
+              ? '✓ ใช้งานได้ไม่จำกัด (Custom Package)'
+              : Number(data?.projectedMonthEnd || 0) > monthlyQuota
               ? `⚠️ เสี่ยงเกินโควต้า (${Math.round(
                   (Number(data?.projectedMonthEnd || 0) / monthlyQuota) * 100
                 )}%)`
@@ -498,10 +565,12 @@ export default function UsageQuotasPage() {
                 <span className="w-2.5 h-2.5 rounded-xs bg-blue-500 inline-block" />
                 ข้อความที่ใช้
               </span>
-              <span className="flex items-center gap-1">
-                <span className="w-3 border-b-2 border-dashed border-rose-400 inline-block" />
-                เกณฑ์แนะนำต่อวัน
-              </span>
+              {!isUnlimited && (
+                <span className="flex items-center gap-1">
+                  <span className="w-3 border-b-2 border-dashed border-rose-400 inline-block" />
+                  เกณฑ์แนะนำต่อวัน
+                </span>
+              )}
             </div>
           </div>
 
@@ -529,7 +598,7 @@ export default function UsageQuotasPage() {
                     formatter={(val: any) => [`${val.toLocaleString()} ข้อความ`, 'การใช้งาน']}
                     labelFormatter={(label: any) => `วันที่ ${label} ของเดือน`}
                   />
-                  {data.dailyChart[0]?.benchmark && (
+                  {!isUnlimited && data.dailyChart[0]?.benchmark > 0 && (
                     <ReferenceLine
                       y={data.dailyChart[0].benchmark}
                       stroke="#f43f5e"
@@ -547,7 +616,9 @@ export default function UsageQuotasPage() {
                       <Cell
                         key={`cell-${index}`}
                         fill={
-                          entry.count > (entry.benchmark || 0) * 1.5
+                          isUnlimited
+                            ? '#6366f1'
+                            : entry.count > (entry.benchmark || 0) * 1.5
                             ? '#f43f5e'
                             : entry.count > (entry.benchmark || 0)
                             ? '#f59e0b'
@@ -647,43 +718,52 @@ export default function UsageQuotasPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60 font-mono">
-              {data?.history?.map((item: any, idx: number) => (
-                <tr key={idx} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition">
-                  <td className="py-3.5 pl-2 font-sans font-medium text-neutral-900 dark:text-neutral-100">
-                    {item.label}
-                  </td>
-                  <td className="py-3.5 text-neutral-600 dark:text-neutral-300">
-                    {item.quota.toLocaleString()}
-                  </td>
-                  <td className="py-3.5 font-bold text-neutral-900 dark:text-neutral-100">
-                    {item.used.toLocaleString()}
-                  </td>
-                  <td className="py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full bg-gradient-to-r ${getProgressColor(
-                            item.percent
-                          )}`}
-                          style={{ width: `${Math.min(100, item.percent)}%` }}
-                        />
-                      </div>
-                      <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right">
-                        {item.percent}%
+              {data?.history?.map((item: any, idx: number) => {
+                const itemUnlimited = item.is_unlimited || item.quota === -1;
+                return (
+                  <tr key={idx} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition">
+                    <td className="py-3.5 pl-2 font-sans font-medium text-neutral-900 dark:text-neutral-100">
+                      {item.label}
+                    </td>
+                    <td className="py-3.5 text-neutral-600 dark:text-neutral-300">
+                      {itemUnlimited ? 'ไม่จำกัด (Custom)' : item.quota.toLocaleString()}
+                    </td>
+                    <td className="py-3.5 font-bold text-neutral-900 dark:text-neutral-100">
+                      {item.used.toLocaleString()}
+                    </td>
+                    <td className="py-3.5">
+                      {itemUnlimited ? (
+                        <span className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold font-sans">
+                          ไม่จำกัด
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full bg-gradient-to-r ${getProgressColor(
+                                item.percent
+                              )}`}
+                              style={{ width: `${Math.min(100, item.percent)}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right">
+                            {item.percent}%
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3.5 pr-2 text-right">
+                      <span
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold border ${getBadgeStyle(
+                          item.status
+                        )}`}
+                      >
+                        {getBadgeLabel(item.status)}
                       </span>
-                    </div>
-                  </td>
-                  <td className="py-3.5 pr-2 text-right">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold border ${getBadgeStyle(
-                        item.status
-                      )}`}
-                    >
-                      {getBadgeLabel(item.status)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -701,7 +781,7 @@ export default function UsageQuotasPage() {
                 </h3>
               </div>
               <p className="text-xs text-neutral-400 mt-0.5">
-                เฉพาะ System Admin: ดูแลโควต้า ปรับแต่งขีดจำกัด และเฝ้าระวังบริษัทที่ใช้เกิน 80% หรือ 90%
+                เฉพาะ System Admin: ปรับแพ็กเกจ (Starter 20k / Pro 50k / Enterprise 120k / Custom ไม่จำกัด)
               </p>
             </div>
 
@@ -723,7 +803,7 @@ export default function UsageQuotasPage() {
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-[11px] font-semibold">
                   <th className="pb-3 pl-2">ชื่อบริษัท</th>
-                  <th className="pb-3">โควต้าต่อเดือน</th>
+                  <th className="pb-3">แพ็กเกจ / โควต้าต่อเดือน</th>
                   <th className="pb-3">ใช้ไปแล้ว</th>
                   <th className="pb-3 min-w-[150px]">สัดส่วน (%)</th>
                   <th className="pb-3">สถานะ</th>
@@ -731,77 +811,93 @@ export default function UsageQuotasPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60 font-mono">
-                {filteredCompanies.map((comp: CompanyOverviewItem) => (
-                  <tr
-                    key={comp.id}
-                    className={`hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition ${
-                      selectedCompanyId === comp.id ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
-                    }`}
-                  >
-                    <td className="py-3.5 pl-2 font-sans font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-                      <span>{comp.name}</span>
-                      {selectedCompanyId === comp.id && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded-xs bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
-                          เปิดอยู่
+                {filteredCompanies.map((comp: CompanyOverviewItem) => {
+                  const compUnlimited = comp.is_unlimited || comp.monthly_quota === -1;
+                  return (
+                    <tr
+                      key={comp.id}
+                      className={`hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition ${
+                        selectedCompanyId === comp.id ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
+                      }`}
+                    >
+                      <td className="py-3.5 pl-2 font-sans font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+                        <span>{comp.name}</span>
+                        {selectedCompanyId === comp.id && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded-xs bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-sans">
+                            เปิดอยู่
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5 text-neutral-600 dark:text-neutral-300">
+                        {compUnlimited ? (
+                          <span className="inline-flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400 font-sans">
+                            <Infinity size={13} />
+                            <span>ไม่จำกัด (Custom)</span>
+                          </span>
+                        ) : (
+                          `${comp.monthly_quota.toLocaleString()} ข้อความ`
+                        )}
+                      </td>
+                      <td className="py-3.5 font-bold text-neutral-900 dark:text-neutral-100">
+                        {comp.used_messages.toLocaleString()}
+                      </td>
+                      <td className="py-3.5">
+                        {compUnlimited ? (
+                          <span className="text-[11px] text-purple-600 dark:text-purple-400 font-sans font-semibold">
+                            ไม่จำกัด
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full bg-gradient-to-r ${getProgressColor(
+                                  comp.percent_used
+                                )}`}
+                                style={{ width: `${Math.min(100, comp.percent_used)}%` }}
+                              />
+                            </div>
+                            <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right">
+                              {comp.percent_used}%
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3.5">
+                        <span
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold border ${getBadgeStyle(
+                            comp.status
+                          )}`}
+                        >
+                          {getBadgeLabel(comp.status)}
                         </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 text-neutral-600 dark:text-neutral-300">
-                      {comp.monthly_quota.toLocaleString()}
-                    </td>
-                    <td className="py-3.5 font-bold text-neutral-900 dark:text-neutral-100">
-                      {comp.used_messages.toLocaleString()}
-                    </td>
-                    <td className="py-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full bg-gradient-to-r ${getProgressColor(
-                              comp.percent_used
-                            )}`}
-                            style={{ width: `${Math.min(100, comp.percent_used)}%` }}
-                          />
+                      </td>
+                      <td className="py-3.5 pr-2 text-right">
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            onClick={() => setSelectedCompanyId(comp.id)}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-sans font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition cursor-pointer"
+                          >
+                            ดูกราฟ
+                          </button>
+                          <button
+                            onClick={() => {
+                              setTargetEditCompany({
+                                id: comp.id,
+                                name: comp.name,
+                                monthly_quota: comp.monthly_quota,
+                              });
+                              setModalOpen(true);
+                            }}
+                            className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
+                            title="ปรับแต่งโควต้า"
+                          >
+                            <Sliders size={13} />
+                          </button>
                         </div>
-                        <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right">
-                          {comp.percent_used}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3.5">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold border ${getBadgeStyle(
-                          comp.status
-                        )}`}
-                      >
-                        {getBadgeLabel(comp.status)}
-                      </span>
-                    </td>
-                    <td className="py-3.5 pr-2 text-right">
-                      <div className="inline-flex items-center gap-1.5">
-                        <button
-                          onClick={() => setSelectedCompanyId(comp.id)}
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-sans font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition cursor-pointer"
-                        >
-                          ดูกราฟ
-                        </button>
-                        <button
-                          onClick={() => {
-                            setTargetEditCompany({
-                              id: comp.id,
-                              name: comp.name,
-                              monthly_quota: comp.monthly_quota,
-                            });
-                            setModalOpen(true);
-                          }}
-                          className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
-                          title="ปรับแต่งโควต้า"
-                        >
-                          <Sliders size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
