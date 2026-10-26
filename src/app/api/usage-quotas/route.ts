@@ -5,10 +5,12 @@ import { verifyApiAuth, getCompanyContext } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Default standard monthly quota per company if not specified (Pro: 50,000)
-const DEFAULT_COMPANY_QUOTA = 50000;
-// In-memory persistent map for custom quotas if column is missing in DB
-const customQuotasMap = new Map<string, number>();
+import {
+  DEFAULT_COMPANY_QUOTA,
+  hydrateCompanyQuotas,
+  resolveCompanyQuota,
+  setCompanyQuotaInMemory,
+} from '@/lib/companyQuotaStore';
 
 export async function GET(request: NextRequest) {
   const { session, errorResponse } = await verifyApiAuth(request, [
@@ -27,15 +29,18 @@ export async function GET(request: NextRequest) {
     const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
     const activeCompanyId = requestedCompanyId || getCompanyContext(request, session) || session.company_id || 'all';
 
-    // 1. Fetch companies
-    let companiesQuery = db.from('companies').select('id, name, quota, monthly_quota').order('name', { ascending: true });
+    // 1. Fetch companies & hydrate quotas in parallel
+    let companiesQuery = db.from('companies').select('id, name, domain, created_at').order('name', { ascending: true });
     if (!isSysAdmin && session.company_id) {
       const allowedIds = (session.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
       if (allowedIds.length > 0) {
         companiesQuery = companiesQuery.in('id', allowedIds);
       }
     }
-    const { data: companiesData } = await companiesQuery;
+    const [{ data: companiesData }, quotaMap] = await Promise.all([
+      companiesQuery,
+      hydrateCompanyQuotas(),
+    ]);
     const companies = companiesData || [];
 
     // Target company to calculate detailed metrics
@@ -82,11 +87,7 @@ export async function GET(request: NextRequest) {
     );
 
     const usedMessages = targetChats.length;
-    const rawQuota =
-      customQuotasMap.get(targetCompany.id) ??
-      targetCompany.quota ??
-      targetCompany.monthly_quota ??
-      DEFAULT_COMPANY_QUOTA;
+    const rawQuota = resolveCompanyQuota(targetCompany, quotaMap);
 
     const monthlyQuota = Number(rawQuota);
     const isUnlimited = monthlyQuota === -1 || monthlyQuota >= 999999999;
@@ -192,8 +193,7 @@ export async function GET(request: NextRequest) {
     const allCompaniesOverview = companies.map((comp: any) => {
       const compChats = allMonthChats.filter((c: any) => c.company_id === comp.id);
       const cUsed = compChats.length;
-      const rawCQuota =
-        customQuotasMap.get(comp.id) ?? comp.quota ?? comp.monthly_quota ?? DEFAULT_COMPANY_QUOTA;
+      const rawCQuota = resolveCompanyQuota(comp, quotaMap);
       const cQuota = Number(rawCQuota);
       const isCUnlimited = cQuota === -1 || cQuota >= 999999999;
       const cPercent = isCUnlimited ? 0 : Number(((cUsed / cQuota) * 100).toFixed(1));
@@ -273,7 +273,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const quotaNum = quotaRaw === -1 ? -1 : Math.max(1000, quotaRaw);
-    customQuotasMap.set(company_id, quotaNum);
+    setCompanyQuotaInMemory(company_id, quotaNum);
 
     // Try updating in companies table if column exists
     try {

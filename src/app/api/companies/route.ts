@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { verifyApiAuth } from '@/lib/auth';
+import {
+  hydrateCompanyQuotas,
+  resolveCompanyQuota,
+  getPackageInfoFromQuota,
+} from '@/lib/companyQuotaStore';
 
 export async function GET(request: NextRequest) {
   const { session, errorResponse } = await verifyApiAuth(request);
@@ -13,7 +18,7 @@ export async function GET(request: NextRequest) {
   try {
     let query = db
       .from('companies')
-      .select('id, name, created_at, status, quota, monthly_quota')
+      .select('id, name, domain, client_id, client_secret, created_at')
       .order('created_at', { ascending: false });
 
     // Multi-tenant Isolation: non-system_admin users only see their own assigned companies
@@ -26,12 +31,27 @@ export async function GET(request: NextRequest) {
       query = query.in('id', allowedIds);
     }
 
-    const { data: companies, error } = await query.abortSignal(controller.signal);
+    const [{ data: companies, error }, quotaMap] = await Promise.all([
+      query.abortSignal(controller.signal),
+      hydrateCompanyQuotas(),
+    ]);
 
     clearTimeout(timeoutId);
     if (error) throw error;
 
-    return NextResponse.json(companies || []);
+    const enriched = (companies || []).map((comp: any) => {
+      const quota = resolveCompanyQuota(comp, quotaMap);
+      const pkg = getPackageInfoFromQuota(quota);
+      return {
+        ...comp,
+        monthly_quota: quota,
+        package_name: pkg.name,
+        package_badge: pkg.badgeText,
+        is_unlimited: pkg.isUnlimited,
+      };
+    });
+
+    return NextResponse.json(enriched);
   } catch (err: any) {
     clearTimeout(timeoutId);
     console.error('Error fetching companies:', err);

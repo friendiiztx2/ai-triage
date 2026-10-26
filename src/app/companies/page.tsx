@@ -88,17 +88,17 @@ export default function CompaniesPage() {
           </h1>
           <p className="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm mt-0.5 font-normal">
             {language === 'th'
-              ? 'ลงทะเบียนบริษัท จัดการ Client ID / Secret และกำหนดคอนฟิกการเชื่อมต่อระบบ API'
-              : 'Register tenant companies, manage Client ID / Secret credentials, and configure API integrations.'}
+              ? 'สร้างและส่งมอบบริษัทใหม่ทีละขั้นตอน (แพ็กเกจโควต้า • บัญชีแอดมินลูกค้า • กลุ่ม Telegram • ใบส่งมอบระบบ)'
+              : 'Multi-step Company Onboarding Wizard: Package Quota, Initial Admin, Telegram Group, and Customer Handover Kit.'}
           </p>
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-colors cursor-pointer self-start sm:self-auto"
         >
-          <Plus size={13} />
-          <span>{language === 'th' ? 'ลงทะเบียนบริษัท' : 'Register Company'}</span>
+          <Plus size={15} />
+          <span>{language === 'th' ? 'สร้างและส่งมอบบริษัทใหม่ (Wizard 4 ขั้นตอน)' : 'Onboard New Company (4-Step Wizard)'}</span>
         </button>
       </div>
 

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (unassignedOnly) {
       const { data: unassigned, error } = await db
         .from('telegram_groups')
-        .select('id, name, group_name, group_id, chat_id, company_id, notify_urgent, notify_high, notify_medium, status, created_at')
+        .select('*')
         .or('company_id.is.null,company_id.eq.')
         .order('group_name', { ascending: true });
 
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const companyId = getCompanyContext(request, session);
     const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
 
-    let query = db.from('telegram_groups').select('id, name, group_name, group_id, chat_id, company_id, notify_urgent, notify_high, notify_medium, status, created_at').order('created_at', { ascending: false });
+    let query = db.from('telegram_groups').select('*').order('created_at', { ascending: false });
 
     if (companyId && companyId !== 'all') {
       query = query.eq('company_id', companyId);
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     // Check if group already exists in database
     const { data: existing } = await db
       .from('telegram_groups')
-      .select('id, name, group_name, group_id, chat_id, company_id, notify_urgent, notify_high, notify_medium, status, created_at')
+      .select('*')
       .eq('chat_id', chat_id)
       .maybeSingle();
 
@@ -201,7 +201,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data: existing, error: findErr } = await db
       .from('telegram_groups')
-      .select('id, name, group_name, group_id, chat_id, company_id, notify_urgent, notify_high, notify_medium, status, created_at')
+      .select('*')
       .eq('chat_id', chat_id)
       .single();
 

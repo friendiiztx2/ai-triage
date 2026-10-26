@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const filterCompanyId = searchParams.get('company_id');
 
-    let query = db.from('users').select('id, name, email, role, company_id, status, created_at');
+    let query = db.from('users').select('id, name, email, role, company_id, permissions, created_at');
 
     // Multi-tenant isolation: non-system_admin can ONLY see users in their own company
     if (session.role !== 'system_admin' && session.role !== 'super_admin') {
