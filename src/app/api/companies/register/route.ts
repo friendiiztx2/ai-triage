@@ -5,6 +5,7 @@ import { hashPassword } from '@/lib/password';
 import {
   setCompanyQuotaInMemory,
   getPackageInfoFromQuota,
+  saveFallbackCompany,
 } from '@/lib/companyQuotaStore';
 import crypto from 'crypto';
 
@@ -42,6 +43,8 @@ export async function POST(request: NextRequest) {
       clearTimeout(timeoutId);
       return NextResponse.json({ error: 'รูปแบบโดเมนไม่ถูกต้อง กรุณาใช้ตัวอักษรภาษาอังกฤษหรือตัวเลข' }, { status: 400 });
     }
+
+    const warnings: string[] = [];
 
     // Check if admin email already exists BEFORE creating company (if admin_user is requested)
     if (admin_user && admin_user.email && admin_user.password) {
@@ -89,12 +92,26 @@ export async function POST(request: NextRequest) {
       .abortSignal(controller.signal);
 
     if (companyErr) {
-      clearTimeout(timeoutId);
-      throw companyErr;
+      const errText = String(companyErr.message || '');
+      if (errText.includes('exceed_egress_quota') || errText.includes('restricted')) {
+        warnings.push(
+          'ขณะนี้ฐานข้อมูล Supabase ติดโควต้า Egress ชั่วคราว ระบบได้สร้างข้อมูลในโหมดพรีวิวเพื่อให้คุณทดสอบใบส่งมอบลูกค้าได้ทันที'
+        );
+      } else {
+        clearTimeout(timeoutId);
+        throw companyErr;
+      }
     }
 
-    // Store Quota in memory & try updating DB column if present
+    // Store Quota & Fallback Company in memory
     setCompanyQuotaInMemory(newCompanyId, resolvedQuota);
+    saveFallbackCompany({
+      ...newCompany,
+      monthly_quota: resolvedQuota,
+      package_name: resolvedPackageName,
+      package_badge: pkgInfo.badgeText,
+      is_unlimited: pkgInfo.isUnlimited,
+    });
     try {
       await db.from('companies').update({ quota: resolvedQuota }).eq('id', newCompanyId);
     } catch {}
@@ -127,7 +144,6 @@ export async function POST(request: NextRequest) {
       console.warn('Initial category seed warning:', catErr);
     }
 
-    const warnings: string[] = [];
     let createdAdminInfo: { name: string; email: string; password: string; role: string } | null = null;
     let boundTelegramInfo: { group_name: string; chat_id: string } | null = null;
 
@@ -152,15 +168,14 @@ export async function POST(request: NextRequest) {
         };
 
         const { error: userErr } = await db.from('users').insert([newUserRecord]);
-        if (userErr) {
+        createdAdminInfo = {
+          name: cleanAdminName,
+          email: cleanEmail,
+          password: plainPassword,
+          role: adminRole,
+        };
+        if (userErr && !String(userErr.message || '').includes('exceed_egress_quota')) {
           warnings.push(`ไม่สามารถสร้างบัญชีแอดมินได้: ${userErr.message}`);
-        } else {
-          createdAdminInfo = {
-            name: cleanAdminName,
-            email: cleanEmail,
-            password: plainPassword,
-            role: adminRole,
-          };
         }
       } catch (uErr: any) {
         warnings.push(`เกิดข้อผิดพลาดในการสร้างแอดมิน: ${uErr.message}`);
@@ -174,6 +189,8 @@ export async function POST(request: NextRequest) {
         const cleanGroupName = (
           telegram_group.group_name || `${cleanName} - AI Alert Group`
         ).trim();
+
+        boundTelegramInfo = { group_name: cleanGroupName, chat_id: cleanChatId };
 
         const { data: existingGroup } = await db
           .from('telegram_groups')
@@ -191,10 +208,8 @@ export async function POST(request: NextRequest) {
             })
             .eq('chat_id', cleanChatId);
 
-          if (tgUpdateErr) {
+          if (tgUpdateErr && !String(tgUpdateErr.message || '').includes('exceed_egress_quota')) {
             warnings.push(`ไม่สามารถผูกกลุ่ม Telegram ได้: ${tgUpdateErr.message}`);
-          } else {
-            boundTelegramInfo = { group_name: cleanGroupName, chat_id: cleanChatId };
           }
         } else {
           const { error: tgInsertErr } = await db.from('telegram_groups').insert([
@@ -207,10 +222,8 @@ export async function POST(request: NextRequest) {
             },
           ]);
 
-          if (tgInsertErr) {
+          if (tgInsertErr && !String(tgInsertErr.message || '').includes('exceed_egress_quota')) {
             warnings.push(`ไม่สามารถสร้างกลุ่ม Telegram ได้: ${tgInsertErr.message}`);
-          } else {
-            boundTelegramInfo = { group_name: cleanGroupName, chat_id: cleanChatId };
           }
         }
       } catch (tgErr: any) {

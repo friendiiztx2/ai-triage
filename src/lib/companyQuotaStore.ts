@@ -4,8 +4,21 @@ export const DEFAULT_COMPANY_QUOTA = 50000;
 
 // Shared in-memory cache for fast access within the same instance
 const customQuotasMap = new Map<string, number>();
+// In-memory store for newly created companies when Supabase is temporarily restricted
+const fallbackCompaniesMap = new Map<string, any>();
+
 let lastHydratedAt = 0;
 const HYDRATE_TTL_MS = 30000; // 30s
+
+export function saveFallbackCompany(company: any) {
+  if (company && company.id) {
+    fallbackCompaniesMap.set(company.id, company);
+  }
+}
+
+export function getFallbackCompanies(): any[] {
+  return Array.from(fallbackCompaniesMap.values());
+}
 
 export function getPackageInfoFromQuota(quota: number): {
   id: 'starter' | 'pro' | 'enterprise' | 'custom';

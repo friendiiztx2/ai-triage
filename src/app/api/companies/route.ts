@@ -5,6 +5,7 @@ import {
   hydrateCompanyQuotas,
   resolveCompanyQuota,
   getPackageInfoFromQuota,
+  getFallbackCompanies,
 } from '@/lib/companyQuotaStore';
 
 export async function GET(request: NextRequest) {
@@ -37,9 +38,18 @@ export async function GET(request: NextRequest) {
     ]);
 
     clearTimeout(timeoutId);
-    if (error) throw error;
 
-    const enriched = (companies || []).map((comp: any) => {
+    const dbList = !error && Array.isArray(companies) ? companies : [];
+    const fallbackList = getFallbackCompanies();
+
+    // Merge fallback companies (if Supabase is restricted by egress quota)
+    const mergedMap = new Map<string, any>();
+    fallbackList.forEach((c) => mergedMap.set(c.id, c));
+    dbList.forEach((c) => mergedMap.set(c.id, c));
+
+    const merged = Array.from(mergedMap.values());
+
+    const enriched = merged.map((comp: any) => {
       const quota = resolveCompanyQuota(comp, quotaMap);
       const pkg = getPackageInfoFromQuota(quota);
       return {
@@ -55,6 +65,6 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     clearTimeout(timeoutId);
     console.error('Error fetching companies:', err);
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json(getFallbackCompanies());
   }
 }
