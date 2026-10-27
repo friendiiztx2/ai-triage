@@ -174,69 +174,44 @@ export default function Sidebar() {
   );
 
   const visibleMenuItems: any[] = [];
-  const grpTriage = language === 'th' ? 'งานคัดแยกและวิเคราะห์' : 'Triage & Analytics';
-  const grpAiConfig = language === 'th' ? 'ตั้งค่า AI และแจ้งเตือน' : 'AI & Alert Config';
-  const grpAdmin = language === 'th' ? 'บริหารองค์กรและระบบ' : 'System Administration';
-
-  // Group 1: Core Operational Triage & Analytics
+  
   if (allowedPermissions.includes('view_dashboard')) {
-    visibleMenuItems.push({ href: '/', label: t('overview'), icon: LayoutDashboard, group: grpTriage });
+    visibleMenuItems.push({ href: '/', label: t('overview'), icon: LayoutDashboard });
   }
   if (allowedPermissions.includes('view_chats')) {
-    visibleMenuItems.push({
-      href: '/chats',
-      label: language === 'th' ? 'คัดแยกแชตลูกค้า' : t('chats'),
-      icon: MessageSquare,
-      group: grpTriage,
-    });
+    visibleMenuItems.push({ href: '/chats', label: t('chats'), icon: MessageSquare });
   }
-  if (allowedPermissions.includes('export_csv')) {
-    visibleMenuItems.push({
-      href: '/reports',
-      label: language === 'th' ? 'รายงานและส่งออก' : 'Reports & Export',
-      icon: FileSpreadsheet,
-      group: grpTriage,
-    });
-  }
-
-  // Group 2: AI Taxonomy, Alerts & Feedback
   if (allowedPermissions.includes('manage_categories')) {
-    visibleMenuItems.push({ href: '/categories', label: t('categories'), icon: Settings, group: grpAiConfig });
+    visibleMenuItems.push({ href: '/categories', label: t('categories'), icon: Settings });
   }
-  if (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin' || userProfile?.role === 'admin') {
-    visibleMenuItems.push({
-      href: '/telegram-groups',
-      label: language === 'th' ? 'กลุ่มแจ้งเตือน Telegram' : 'Telegram Groups',
-      icon: Send,
-      group: grpAiConfig,
-    });
-  }
-  if (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin') {
-    visibleMenuItems.push({
-      href: '/ai-reports',
-      label: language === 'th' ? 'ตรวจสอบความแม่นยำ AI' : 'AI Feedback Issues',
-      icon: AlertTriangle,
-      group: grpAiConfig,
-    });
-  }
-
-  // Group 3: Organization, Quotas & Security
   if (allowedPermissions.includes('manage_companies') && userProfile?.role === 'system_admin') {
-    visibleMenuItems.push({ href: '/companies', label: t('companies'), icon: Database, group: grpAdmin });
+    visibleMenuItems.push({ href: '/companies', label: t('companies'), icon: Database });
+  }
+  if (allowedPermissions.includes('manage_users') && (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin')) {
+    visibleMenuItems.push({ href: '/users', label: t('users'), icon: ShieldCheck });
   }
   if (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin' || userProfile?.role === 'admin') {
     visibleMenuItems.push({
       href: '/usage-quotas',
-      label: language === 'th' ? 'โควต้าและการใช้งาน' : 'Usage & Quotas',
+      label: language === 'th' ? 'การใช้งานและโควต้า' : 'Usage & Quotas',
       icon: Activity,
-      group: grpAdmin,
+    });
+    visibleMenuItems.push({
+      href: '/telegram-groups',
+      label: language === 'th' ? 'จัดการกลุ่ม Telegram' : 'Telegram Groups',
+      icon: Send,
     });
   }
-  if (allowedPermissions.includes('manage_users') && (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin')) {
-    visibleMenuItems.push({ href: '/users', label: t('users'), icon: ShieldCheck, group: grpAdmin });
-  }
   if (userProfile?.role === 'system_admin' || userProfile?.role === 'super_admin') {
-    visibleMenuItems.push({ href: '/audit-logs', label: t('auditLogs'), icon: History, group: grpAdmin });
+    visibleMenuItems.push({ href: '/audit-logs', label: t('auditLogs'), icon: History });
+    visibleMenuItems.push({
+      href: '/ai-reports',
+      label: language === 'th' ? 'ปัญหาจากผู้ใช้งาน' : 'User Issues',
+      icon: AlertTriangle,
+    });
+  }
+  if (allowedPermissions.includes('export_csv')) {
+    visibleMenuItems.push({ href: '/reports', label: language === 'th' ? 'รายงานและส่งออก' : 'Reports & Export', icon: FileSpreadsheet });
   }
 
   return (

@@ -41,6 +41,7 @@ export default function ChatFilterBar({
   searchQuery,
   onSearchChange,
   statusFilter,
+  onStatusChange,
   priorityFilter,
   onPriorityChange,
   categoryFilter,
@@ -52,6 +53,8 @@ export default function ChatFilterBar({
   dateFilter = 'today',
   categories,
   allAvailableTags,
+  pendingCount,
+  completedCount,
   urgentCount,
   highCount,
   mediumCount,
@@ -64,30 +67,27 @@ export default function ChatFilterBar({
 }: ChatFilterBarProps) {
   const hasActiveFilters = Boolean(
     searchQuery ||
-      statusFilter !== 'all' ||
-      priorityFilter !== 'all' ||
-      categoryFilter !== 'all' ||
-      tagFilter !== 'all' ||
-      auditFilter !== 'all' ||
-      dateFilter !== 'today'
+    statusFilter !== 'all' ||
+    priorityFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    tagFilter !== 'all' ||
+    auditFilter !== 'all' ||
+    dateFilter !== 'today'
   );
 
   return (
     <div
       className={`relative z-30 p-2 sm:p-2.5 flex flex-wrap items-center gap-2 ${
-        className ||
-        'rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 shadow-xs backdrop-blur-md'
+        className || 'rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 shadow-xs backdrop-blur-md'
       }`}
     >
       {/* 1. Spacious Search Box */}
-      <div className="relative flex-1 min-w-[200px] sm:min-w-[260px]">
+      <div className="relative flex-1 min-w-[180px] sm:min-w-[220px]">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" size={13} />
         <input
           type="text"
           placeholder={
-            language === 'th'
-              ? 'ค้นหาชื่อลูกค้า, รหัสแชต, หรือคำในสรุป AI...'
-              : 'Search customer, session ID, or AI summary...'
+            language === 'th' ? 'ค้นหาแชต, ชื่อลูกค้า, หรือสรุปประเด็น...' : 'Search chats, customer, summary...'
           }
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -106,7 +106,7 @@ export default function ChatFilterBar({
       </div>
 
       {/* 2. Category Dropdown */}
-      <div className="w-40 sm:w-48">
+      <div className="w-36 sm:w-44">
         <SelectDropdown
           value={categoryFilter}
           onChange={onCategoryChange}
@@ -127,30 +127,35 @@ export default function ChatFilterBar({
       </div>
 
       {/* 3. Priority Dropdown */}
-      <div className="w-36 sm:w-40">
+      <div className="w-32 sm:w-36">
         <SelectDropdown
           value={priorityFilter}
           onChange={onPriorityChange}
           options={[
             { value: 'all', label: language === 'th' ? 'ความด่วน: ทั้งหมด' : 'Priority: All' },
-            { value: 'urgent', label: `${language === 'th' ? 'ด่วนวิกฤต' : 'Urgent'} (${urgentCount})` },
-            { value: 'high', label: `${language === 'th' ? 'ด่วนสูง' : 'High'} (${highCount})` },
-            { value: 'medium', label: `${language === 'th' ? 'ปานกลาง' : 'Medium'} (${mediumCount})` },
-            { value: 'low', label: `${language === 'th' ? 'ทั่วไป' : 'Low'} (${lowCount})` },
+            { value: 'urgent', label: `Urgent (${urgentCount})` },
+            { value: 'high', label: `High (${highCount})` },
+            { value: 'medium', label: `Medium (${mediumCount})` },
+            { value: 'low', label: `Low (${lowCount})` },
           ]}
         />
       </div>
 
-      {/* 4. AI Audit Dropdown */}
-      <div className="w-36 sm:w-40">
+      {/* 4. Status Dropdown */}
+      <div className="w-32 sm:w-36">
         <SelectDropdown
-          value={auditFilter}
-          onChange={onAuditChange}
+          value={statusFilter}
+          onChange={onStatusChange}
           options={[
-            { value: 'all', label: language === 'th' ? 'การตรวจทาน: ทั้งหมด' : 'Review: All' },
-            { value: 'unverified', label: language === 'th' ? '⏳ รอตรวจทาน' : 'Needs Review' },
-            { value: 'confirmed', label: language === 'th' ? '✓ ยืนยันตาม AI' : 'Confirmed AI' },
-            { value: 'corrected', label: language === 'th' ? '✎ แก้ไขหมวดแล้ว' : 'Corrected' },
+            { value: 'all', label: language === 'th' ? 'สถานะ: ทั้งหมด' : 'Status: All' },
+            {
+              value: 'completed',
+              label: `${language === 'th' ? 'วิเคราะห์แล้ว' : 'Analyzed'} (${completedCount})`,
+            },
+            {
+              value: 'pending',
+              label: `${language === 'th' ? 'รอวิเคราะห์' : 'Pending'} (${pendingCount})`,
+            },
           ]}
         />
       </div>
@@ -178,14 +183,27 @@ export default function ChatFilterBar({
         />
       </div>
 
-      {/* 6. Active Result Count Badge & Reset Filters Button */}
+      {/* 6. AI Audit Dropdown */}
+      <div className="w-32 sm:w-36">
+        <SelectDropdown
+          value={auditFilter}
+          onChange={onAuditChange}
+          options={[
+            { value: 'all', label: language === 'th' ? 'ตรวจ AI: ทั้งหมด' : 'AI Audit: All' },
+            { value: 'confirmed', label: language === 'th' ? 'ตรงกับ AI' : 'Confirmed' },
+            { value: 'corrected', label: language === 'th' ? 'แก้ไขหมวด' : 'Corrected' },
+          ]}
+        />
+      </div>
+
+      {/* 7. Active Result Count Badge & Reset Filters Button */}
       {hasActiveFilters && (
         <div className="flex items-center gap-2 shrink-0 animate-in fade-in duration-150">
           {filteredCount !== undefined && totalCount !== undefined && (
             <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700/80 shadow-2xs">
               {language === 'th'
-                ? `${filteredCount.toLocaleString()} / ${totalCount.toLocaleString()} รายการ`
-                : `${filteredCount.toLocaleString()} / ${totalCount.toLocaleString()}`}
+                ? `พบ ${filteredCount.toLocaleString()} จาก ${totalCount.toLocaleString()} รายการ`
+                : `Found ${filteredCount.toLocaleString()} of ${totalCount.toLocaleString()}`}
             </span>
           )}
           <button
@@ -195,7 +213,7 @@ export default function ChatFilterBar({
             title={language === 'th' ? 'ล้างตัวกรองทั้งหมดกลับเป็นค่าเริ่มต้น' : 'Reset all active filters'}
           >
             <RotateCcw size={11} />
-            <span>{language === 'th' ? 'ล้างค่า' : 'Reset'}</span>
+            <span>{language === 'th' ? 'ล้างตัวกรอง' : 'Reset'}</span>
           </button>
         </div>
       )}
