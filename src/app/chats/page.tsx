@@ -5,7 +5,14 @@ import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageContext';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
 import { isSoundEnabled } from '@/lib/audio';
-import { filterChats, chatHasImage, isImageWithTextChat, isImageOnlyChat } from '@/lib/chatFilters';
+import {
+  filterChats,
+  chatHasImage,
+  isImageWithTextChat,
+  isImageOnlyChat,
+  getChatAuditState,
+} from '@/lib/chatFilters';
+import { submitApproveAI, submitChatFeedback } from '@/lib/chatFeedback';
 import { exportChatsToCSV } from '@/lib/chatExport';
 import { DEFAULT_SYSTEM_TAGS } from '@/lib/tags';
 import { useFloatingWindows } from '@/hooks/useFloatingWindows';
@@ -107,7 +114,6 @@ function ChatsPageContent() {
     focusWindow,
     updateWindowPosition,
     updateWindowTags,
-    setActiveWindows,
   } = useFloatingWindows();
 
   // Auto-open floating chat window when 'open', 'open_chat', or 'chat_id' is present in URL
@@ -249,9 +255,72 @@ function ChatsPageContent() {
     }
     return pri === 'low' || issueMatch;
   }).length;
+  const pendingAuditCount = timeframeFilteredChats.filter((c) => getChatAuditState(c) === 'unverified').length;
   const imageCount = timeframeFilteredChats.filter(chatHasImage).length;
   const imageWithTextCount = timeframeFilteredChats.filter(isImageWithTextChat).length;
   const imageOnlyCount = timeframeFilteredChats.filter(isImageOnlyChat).length;
+
+  // Quick 1-click AI Approve directly from the table row
+  const handleQuickApprove = async (chat: any) => {
+    const newVerified = {
+      is_correct: true,
+      liked_by: userProfile?.name || 'Admin',
+      created_at: new Date().toISOString(),
+    };
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === chat.id ? { ...c, status: 'completed', ai_feedback: [newVerified] } : c
+      )
+    );
+    try {
+      await submitApproveAI({
+        chat,
+        userProfile,
+        chatIssues: Array.isArray(chat.chat_issues) ? chat.chat_issues : [],
+      });
+    } catch (e) {
+      console.warn('Quick approve failed:', e);
+    }
+  };
+
+  // Quick inline Category Change directly from the table row
+  const handleQuickCategoryChange = async (chat: any, newCatId: string) => {
+    const newVerified = {
+      is_correct: false,
+      liked_by: userProfile?.name || 'Admin',
+      created_at: new Date().toISOString(),
+    };
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === chat.id
+          ? { ...c, category_id: newCatId, status: 'completed', ai_feedback: [newVerified] }
+          : c
+      )
+    );
+    try {
+      const issuesList = Array.isArray(chat.chat_issues) ? chat.chat_issues : [];
+      const editIssuesMap: Record<string, { category_id: string; priority: string }> = {};
+      if (issuesList.length > 0) {
+        issuesList.forEach((iss: any, idx: number) => {
+          editIssuesMap[iss.id] = {
+            category_id: idx === 0 ? newCatId : iss.category_id || newCatId,
+            priority: iss.priority || chat.priority || 'low',
+          };
+        });
+      }
+      await submitChatFeedback({
+        chat,
+        userProfile,
+        customerInfo: { name: chat.customer_name },
+        chatIssues: issuesList,
+        editIssues: editIssuesMap,
+        editCategory: newCatId,
+        editPriority: chat.priority || 'low',
+      });
+    } catch (e) {
+      console.warn('Quick category change failed:', e);
+    }
+  };
 
   // Update Tags
   const handleUpdateTags = async (chatId: string, newTags: string[]) => {
@@ -324,16 +393,19 @@ function ChatsPageContent() {
         language={language}
       />
 
-      {/* 1. Unified Triage Control Panel (Quick Tabs + Search & Filters) */}
+      {/* 1. Unified Triage Control Panel (Quick Queue Tabs + Search & Filters) */}
       <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 shadow-xs backdrop-blur-md overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800/60">
         <ChatQuickTabs
           totalCount={totalCount}
           urgentCount={urgentCount}
+          highCount={highCount}
+          pendingAuditCount={pendingAuditCount}
           imageCount={imageCount}
           imageWithTextCount={imageWithTextCount}
           imageOnlyCount={imageOnlyCount}
           statusFilter={statusFilter}
           priorityFilter={priorityFilter}
+          auditFilter={auditFilter}
           tagFilter={tagFilter}
           dateFilter={dateFilter}
           onDateFilterChange={setDateFilter}
@@ -345,12 +417,32 @@ function ChatsPageContent() {
             if (tab === 'all') {
               setStatusFilter('all');
               setPriorityFilter('all');
+              setAuditFilter('all');
               setTagFilter('all');
             } else if (tab === 'urgent') {
               if (priorityFilter === 'urgent') {
                 setPriorityFilter('all');
               } else {
                 setPriorityFilter('urgent');
+                setStatusFilter('all');
+                setAuditFilter('all');
+                setTagFilter('all');
+              }
+            } else if (tab === 'high') {
+              if (priorityFilter === 'high') {
+                setPriorityFilter('all');
+              } else {
+                setPriorityFilter('high');
+                setStatusFilter('all');
+                setAuditFilter('all');
+                setTagFilter('all');
+              }
+            } else if (tab === 'unverified') {
+              if (auditFilter === 'unverified') {
+                setAuditFilter('all');
+              } else {
+                setAuditFilter('unverified');
+                setPriorityFilter('all');
                 setStatusFilter('all');
                 setTagFilter('all');
               }
@@ -366,6 +458,7 @@ function ChatsPageContent() {
                 setTagFilter('#รูปภาพทั้งหมด');
                 setStatusFilter('all');
                 setPriorityFilter('all');
+                setAuditFilter('all');
               }
             } else if (tab === 'image-with-text') {
               if (
@@ -378,6 +471,7 @@ function ChatsPageContent() {
                 setTagFilter('#รูปภาพแนบ');
                 setStatusFilter('all');
                 setPriorityFilter('all');
+                setAuditFilter('all');
               }
             } else if (tab === 'image-only') {
               if (tagFilter === '#รูปภาพล้วน' || tagFilter === 'image-only') {
@@ -386,6 +480,7 @@ function ChatsPageContent() {
                 setTagFilter('#รูปภาพล้วน');
                 setStatusFilter('all');
                 setPriorityFilter('all');
+                setAuditFilter('all');
               }
             }
           }}
@@ -423,7 +518,7 @@ function ChatsPageContent() {
         />
       </div>
 
-      {/* 3. Chat Table */}
+      {/* 2. High-Efficiency 5-Column Chat Triage Table */}
       <ChatTable
         chats={filteredChats}
         loading={loading}
@@ -431,12 +526,14 @@ function ChatsPageContent() {
         activeWindows={activeWindows}
         onSelectChat={openChatWindow}
         onHoverImg={setTableHoveredImg}
+        onQuickApprove={handleQuickApprove}
+        onQuickCategoryChange={handleQuickCategoryChange}
         dateFilter={dateFilter}
         onDateChange={setDateFilter}
         language={language}
       />
 
-      {/* 5. Floating Windows */}
+      {/* 3. Floating Windows */}
       <FloatingWindowsContainer
         activeWindows={activeWindows}
         categories={categories}
@@ -452,7 +549,7 @@ function ChatsPageContent() {
         language={language}
       />
 
-      {/* 6. Tag Management Modals */}
+      {/* 4. Tag Management Modals */}
       <TagRenameModal
         isOpen={showTagRenameModal}
         onClose={() => setShowTagRenameModal(false)}
