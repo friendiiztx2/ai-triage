@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { RefreshCw, MessageSquare, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import ChatTableRow from './ChatTableRow';
 import { getCategoryLabel, getBaseCatId } from '@/lib/categories';
+import { getChatAuditState } from '@/lib/chatFilters';
 import SortHeader from '@/components/ui/SortHeader';
 
 export interface ChatTableProps {
@@ -11,12 +12,14 @@ export interface ChatTableProps {
   activeWindows: any[];
   onSelectChat: (chat: any) => void;
   onHoverImg: (imgUrl: string | null) => void;
+  onQuickApprove?: (chat: any) => Promise<void> | void;
+  onQuickCategoryChange?: (chat: any, newCategoryId: string) => Promise<void> | void;
   dateFilter?: string;
   onDateChange?: (val: string) => void;
   language?: 'th' | 'en';
 }
 
-type ChatSortColumn = 'id' | 'customer' | 'summary' | 'category' | 'priority' | 'status' | 'time';
+type ChatSortColumn = 'priority' | 'customer' | 'summary' | 'category' | 'audit' | 'time';
 
 const priorityWeight = (p: string) => {
   const norm = (p || '').toLowerCase();
@@ -34,6 +37,8 @@ export default function ChatTable({
   activeWindows,
   onSelectChat,
   onHoverImg,
+  onQuickApprove,
+  onQuickCategoryChange,
   dateFilter,
   onDateChange,
   language = 'th',
@@ -59,9 +64,9 @@ export default function ChatTable({
       let valA: string | number = '';
       let valB: string | number = '';
 
-      if (sortColumn === 'id') {
-        valA = (a.id || '').toLowerCase();
-        valB = (b.id || '').toLowerCase();
+      if (sortColumn === 'priority') {
+        valA = priorityWeight(a.priority);
+        valB = priorityWeight(b.priority);
       } else if (sortColumn === 'customer') {
         valA = (a.customer_name || a.customer_id || a.id || '').toLowerCase();
         valB = (b.customer_name || b.customer_id || b.id || '').toLowerCase();
@@ -69,16 +74,17 @@ export default function ChatTable({
         valA = (a.summary || '').toLowerCase();
         valB = (b.summary || '').toLowerCase();
       } else if (sortColumn === 'category') {
-        const catA = categories.find((c) => c.id === a.category_id || getBaseCatId(c.id) === getBaseCatId(a.category_id));
-        const catB = categories.find((c) => c.id === b.category_id || getBaseCatId(c.id) === getBaseCatId(b.category_id));
+        const catA = categories.find(
+          (c) => c.id === a.category_id || getBaseCatId(c.id) === getBaseCatId(a.category_id)
+        );
+        const catB = categories.find(
+          (c) => c.id === b.category_id || getBaseCatId(c.id) === getBaseCatId(b.category_id)
+        );
         valA = getCategoryLabel(catA || a.category_id, language).toLowerCase();
         valB = getCategoryLabel(catB || b.category_id, language).toLowerCase();
-      } else if (sortColumn === 'priority') {
-        valA = priorityWeight(a.priority);
-        valB = priorityWeight(b.priority);
-      } else if (sortColumn === 'status') {
-        valA = (a.status || '').toLowerCase();
-        valB = (b.status || '').toLowerCase();
+      } else if (sortColumn === 'audit') {
+        valA = getChatAuditState(a);
+        valB = getChatAuditState(b);
       } else if (sortColumn === 'time') {
         valA = new Date(a.created_at || 0).getTime();
         valB = new Date(b.created_at || 0).getTime();
@@ -96,7 +102,6 @@ export default function ChatTable({
   const [pageSize, setPageSize] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Restore saved page size preference from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('chats_page_size');
@@ -109,7 +114,6 @@ export default function ChatTable({
     }
   }, []);
 
-  // Reset to page 1 whenever chats or pageSize change
   useEffect(() => {
     setCurrentPage(1);
   }, [chats, pageSize]);
@@ -188,67 +192,48 @@ export default function ChatTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-neutral-50/70 dark:bg-neutral-900/60 border-b border-neutral-200/80 dark:border-neutral-800/80">
-              <th className="px-3 py-3 whitespace-nowrap">
+            <tr className="bg-neutral-50/80 dark:bg-neutral-900/70 border-b border-neutral-200/80 dark:border-neutral-800/80">
+              <th className="px-3.5 py-3 whitespace-nowrap w-[135px]">
                 <SortHeader
-                  label={language === 'th' ? 'รหัสแชต' : 'Session ID'}
-                  active={sortColumn === 'id'}
+                  label={language === 'th' ? 'ความด่วน & เวลา' : 'Priority & Time'}
+                  active={sortColumn === 'priority'}
                   direction={sortDirection}
-                  onSort={() => handleSort('id')}
+                  onSort={() => handleSort('priority')}
                 />
               </th>
-              <th className="px-3 py-3 whitespace-nowrap">
+              <th className="px-3.5 py-3 whitespace-nowrap w-[170px]">
                 <SortHeader
-                  label={language === 'th' ? 'ลูกค้า' : 'Customer'}
+                  label={language === 'th' ? 'ลูกค้า & รหัสเคส' : 'Customer & ID'}
                   active={sortColumn === 'customer'}
                   direction={sortDirection}
                   onSort={() => handleSort('customer')}
                 />
               </th>
-              <th className="px-3 py-3 max-w-[420px]">
+              <th className="px-3.5 py-3">
                 <SortHeader
-                  label={language === 'th' ? 'สรุปประเด็น AI' : 'Intent & Summary'}
+                  label={language === 'th' ? 'สรุปประเด็น AI & รูปแนบ' : 'AI Summary & Media'}
                   active={sortColumn === 'summary'}
                   direction={sortDirection}
                   onSort={() => handleSort('summary')}
                 />
               </th>
-              <th className="px-3 py-3 whitespace-nowrap">
+              <th className="px-3.5 py-3 whitespace-nowrap w-[210px]">
                 <SortHeader
-                  label={language === 'th' ? 'หมวดหมู่' : 'Category'}
+                  label={language === 'th' ? 'หมวดหมู่ (คลิกเปลี่ยนได้)' : 'Category'}
                   active={sortColumn === 'category'}
                   direction={sortDirection}
                   onSort={() => handleSort('category')}
                 />
               </th>
-              <th className="px-3 py-3 whitespace-nowrap text-center">
+              <th className="px-3.5 py-3 whitespace-nowrap text-right w-[155px]">
                 <SortHeader
-                  label={language === 'th' ? 'ความด่วน' : 'SLA Priority'}
-                  active={sortColumn === 'priority'}
+                  label={language === 'th' ? 'การคัดแยกเคส' : 'Triage Action'}
+                  active={sortColumn === 'audit'}
                   direction={sortDirection}
-                  onSort={() => handleSort('priority')}
-                  align="center"
-                />
-              </th>
-              <th className="px-3 py-3 whitespace-nowrap text-center">
-                <SortHeader
-                  label={language === 'th' ? 'สถานะ' : 'Status'}
-                  active={sortColumn === 'status'}
-                  direction={sortDirection}
-                  onSort={() => handleSort('status')}
-                  align="center"
-                />
-              </th>
-              <th className="px-3 py-3 whitespace-nowrap text-right">
-                <SortHeader
-                  label={language === 'th' ? 'เวลา' : 'Time'}
-                  active={sortColumn === 'time'}
-                  direction={sortDirection}
-                  onSort={() => handleSort('time')}
+                  onSort={() => handleSort('audit')}
                   align="right"
                 />
               </th>
-              <th className="px-2 py-3 w-8"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60 text-neutral-700 dark:text-neutral-300">
@@ -260,6 +245,8 @@ export default function ChatTable({
                 isSelected={activeWindows.some((w) => w.id === chat.id)}
                 onSelectChat={onSelectChat}
                 onHoverImg={onHoverImg}
+                onQuickApprove={onQuickApprove}
+                onQuickCategoryChange={onQuickCategoryChange}
                 language={language}
               />
             ))}
@@ -270,16 +257,15 @@ export default function ChatTable({
       {/* Pagination Footer */}
       {sortedChats.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/50 select-none">
-          {/* Record Count & Page Size Selector */}
           <div className="flex flex-wrap items-center gap-2.5 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
             <span className="font-mono">
               {isAll
-                ? (language === 'th'
-                    ? `แสดงทั้งหมด ${sortedChats.length.toLocaleString()} รายการ`
-                    : `Showing all ${sortedChats.length.toLocaleString()} items`)
-                : (language === 'th'
-                    ? `แสดง ${fromRecord.toLocaleString()} - ${toRecord.toLocaleString()} จากทั้งหมด ${sortedChats.length.toLocaleString()} รายการ`
-                    : `Showing ${fromRecord.toLocaleString()} - ${toRecord.toLocaleString()} of ${sortedChats.length.toLocaleString()} items`)}
+                ? language === 'th'
+                  ? `แสดงทั้งหมด ${sortedChats.length.toLocaleString()} รายการ`
+                  : `Showing all ${sortedChats.length.toLocaleString()} items`
+                : language === 'th'
+                ? `แสดง ${fromRecord.toLocaleString()} - ${toRecord.toLocaleString()} จากทั้งหมด ${sortedChats.length.toLocaleString()} รายการ`
+                : `Showing ${fromRecord.toLocaleString()} - ${toRecord.toLocaleString()} of ${sortedChats.length.toLocaleString()} items`}
             </span>
 
             <span className="text-neutral-300 dark:text-neutral-700 hidden sm:inline">•</span>

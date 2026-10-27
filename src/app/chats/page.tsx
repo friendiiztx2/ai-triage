@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageContext';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
 import { isSoundEnabled } from '@/lib/audio';
-import { filterChats, chatHasImage, isImageWithTextChat, isImageOnlyChat } from '@/lib/chatFilters';
+import { filterChats, chatHasImage, isImageWithTextChat, isImageOnlyChat, getChatAuditState } from '@/lib/chatFilters';
+import { submitApproveAI } from '@/lib/chatFeedback';
 import { exportChatsToCSV } from '@/lib/chatExport';
 import { DEFAULT_SYSTEM_TAGS } from '@/lib/tags';
 import { useFloatingWindows } from '@/hooks/useFloatingWindows';
@@ -252,6 +253,90 @@ function ChatsPageContent() {
   const imageCount = timeframeFilteredChats.filter(chatHasImage).length;
   const imageWithTextCount = timeframeFilteredChats.filter(isImageWithTextChat).length;
   const imageOnlyCount = timeframeFilteredChats.filter(isImageOnlyChat).length;
+  const pendingAuditCount = timeframeFilteredChats.filter((c) => getChatAuditState(c) === 'unverified').length;
+
+  // Inline 1-Click AI Approve from Table Row
+  const handleQuickApprove = async (chat: any) => {
+    const newLog = {
+      timestamp: new Date().toISOString(),
+      actor: `${userProfile?.name || 'Admin'} (อนุมัติตาม AI)`,
+      old_category: chat.category_id || '',
+      new_category: chat.category_id || '',
+      old_priority: chat.priority || 'low',
+      new_priority: chat.priority || 'low',
+    };
+    const nextResolution = JSON.stringify([newLog]);
+
+    // Optimistic UI update
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === chat.id ? { ...c, status: 'completed', resolution: nextResolution } : c
+      )
+    );
+
+    try {
+      await submitApproveAI({
+        chat,
+        userProfile,
+        chatIssues: chat.chat_issues || [],
+      });
+    } catch (e) {
+      console.warn('Quick approve warning:', e);
+    }
+  };
+
+  // Inline Quick Category Change from Table Row
+  const handleQuickCategoryChange = async (chat: any, newCategoryId: string) => {
+    const newLog = {
+      timestamp: new Date().toISOString(),
+      actor: userProfile?.name || 'Admin',
+      old_category: chat.category_id || '',
+      new_category: newCategoryId,
+      old_priority: chat.priority || 'low',
+      new_priority: chat.priority || 'low',
+    };
+    const nextResolution = JSON.stringify([newLog]);
+
+    // Optimistic UI update
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === chat.id
+          ? {
+              ...c,
+              category_id: newCategoryId,
+              status: 'completed',
+              resolution: nextResolution,
+            }
+          : c
+      )
+    );
+
+    try {
+      await fetch('/api/chats/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chat.id,
+          is_correct: false,
+          liked_by: userProfile?.name || 'Admin',
+          issues: [
+            {
+              id: `${chat.id}-primary`,
+              category_id: newCategoryId,
+              priority: chat.priority || 'low',
+              summary: chat.summary || 'ประเด็นหลัก',
+            },
+          ],
+          category_id: newCategoryId,
+          priority: chat.priority || 'low',
+          status: 'completed',
+          resolution: nextResolution,
+        }),
+      });
+    } catch (e) {
+      console.warn('Quick category change warning:', e);
+    }
+  };
 
   // Update Tags
   const handleUpdateTags = async (chatId: string, newTags: string[]) => {
@@ -329,12 +414,15 @@ function ChatsPageContent() {
         <ChatQuickTabs
           totalCount={totalCount}
           urgentCount={urgentCount}
+          highCount={highCount}
+          pendingAuditCount={pendingAuditCount}
           imageCount={imageCount}
           imageWithTextCount={imageWithTextCount}
           imageOnlyCount={imageOnlyCount}
           statusFilter={statusFilter}
           priorityFilter={priorityFilter}
           tagFilter={tagFilter}
+          auditFilter={auditFilter}
           dateFilter={dateFilter}
           onDateFilterChange={setDateFilter}
           startDate={startDate}
@@ -346,12 +434,32 @@ function ChatsPageContent() {
               setStatusFilter('all');
               setPriorityFilter('all');
               setTagFilter('all');
+              setAuditFilter('all');
             } else if (tab === 'urgent') {
               if (priorityFilter === 'urgent') {
                 setPriorityFilter('all');
               } else {
                 setPriorityFilter('urgent');
                 setStatusFilter('all');
+                setTagFilter('all');
+                setAuditFilter('all');
+              }
+            } else if (tab === 'high') {
+              if (priorityFilter === 'high') {
+                setPriorityFilter('all');
+              } else {
+                setPriorityFilter('high');
+                setStatusFilter('all');
+                setTagFilter('all');
+                setAuditFilter('all');
+              }
+            } else if (tab === 'unverified') {
+              if (auditFilter === 'unverified') {
+                setAuditFilter('all');
+              } else {
+                setAuditFilter('unverified');
+                setStatusFilter('all');
+                setPriorityFilter('all');
                 setTagFilter('all');
               }
             } else if (tab === 'has-image' || tab === 'image') {
@@ -366,6 +474,7 @@ function ChatsPageContent() {
                 setTagFilter('#รูปภาพทั้งหมด');
                 setStatusFilter('all');
                 setPriorityFilter('all');
+                setAuditFilter('all');
               }
             } else if (tab === 'image-with-text') {
               if (
@@ -378,6 +487,7 @@ function ChatsPageContent() {
                 setTagFilter('#รูปภาพแนบ');
                 setStatusFilter('all');
                 setPriorityFilter('all');
+                setAuditFilter('all');
               }
             } else if (tab === 'image-only') {
               if (tagFilter === '#รูปภาพล้วน' || tagFilter === 'image-only') {
@@ -386,6 +496,7 @@ function ChatsPageContent() {
                 setTagFilter('#รูปภาพล้วน');
                 setStatusFilter('all');
                 setPriorityFilter('all');
+                setAuditFilter('all');
               }
             }
           }}
@@ -431,6 +542,8 @@ function ChatsPageContent() {
         activeWindows={activeWindows}
         onSelectChat={openChatWindow}
         onHoverImg={setTableHoveredImg}
+        onQuickApprove={handleQuickApprove}
+        onQuickCategoryChange={handleQuickCategoryChange}
         dateFilter={dateFilter}
         onDateChange={setDateFilter}
         language={language}

@@ -67,6 +67,28 @@ export function isImageWithTextChat(c: any): boolean {
   return chatHasImage(c) && !isImageOnlyChat(c);
 }
 
+export function getChatAuditState(c: any): 'unverified' | 'confirmed' | 'corrected' {
+  if (!c) return 'unverified';
+  try {
+    if (c.resolution && c.resolution !== 'Pending' && c.resolution !== 'Solved') {
+      const parsed = JSON.parse(c.resolution);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const latest = parsed[0];
+        if (
+          latest &&
+          (String(latest.actor || '').includes('อนุมัติตาม AI') ||
+            (latest.old_category === latest.new_category &&
+              latest.old_priority === latest.new_priority))
+        ) {
+          return 'confirmed';
+        }
+        return 'corrected';
+      }
+    }
+  } catch (e) {}
+  return 'unverified';
+}
+
 export function filterChats(chats: any[], criteria: ChatFilterCriteria): any[] {
   let result = chats;
 
@@ -205,19 +227,14 @@ export function filterChats(chats: any[], criteria: ChatFilterCriteria): any[] {
   // Audit
   if (criteria.auditFilter && criteria.auditFilter !== 'all') {
     result = result.filter((c) => {
-      let hasOverride = false;
-      try {
-        if (c.resolution && c.resolution !== 'Pending' && c.resolution !== 'Solved') {
-          const parsed = JSON.parse(c.resolution);
-          if (Array.isArray(parsed) && parsed.length > 0) hasOverride = true;
-        }
-      } catch (e) {}
-
-      if (criteria.auditFilter === 'confirmed') return !hasOverride;
-      if (criteria.auditFilter === 'corrected') return hasOverride;
+      const state = getChatAuditState(c);
+      if (criteria.auditFilter === 'unverified') return state === 'unverified';
+      if (criteria.auditFilter === 'confirmed') return state === 'confirmed';
+      if (criteria.auditFilter === 'corrected') return state === 'corrected';
       return true;
     });
   }
 
   return result;
 }
+
