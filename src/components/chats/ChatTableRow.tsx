@@ -168,7 +168,7 @@ export default function ChatTableRow({
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
-              className="font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[155px]"
+              className="font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[185px]"
               title={chat.customer_name || chat.customer_id}
             >
               {chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8))}
@@ -182,16 +182,16 @@ export default function ChatTableRow({
           </div>
           <div className="flex items-center gap-1">
             <span
-              className="font-mono text-[10px] text-neutral-400 dark:text-neutral-500 truncate max-w-[125px]"
+              className="font-mono text-[10px] text-neutral-500 dark:text-neutral-400 truncate max-w-[230px]"
               title={chat.id}
             >
-              #{chat.id && chat.id.length > 14 ? `${chat.id.slice(0, 8)}...${chat.id.slice(-4)}` : chat.id}
+              {language === 'th' ? 'แชตไอดี:' : 'ID:'} {chat.id}
             </span>
             <button
               type="button"
               onClick={handleCopyId}
-              className="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-0.5 rounded transition-opacity cursor-pointer"
-              title={language === 'th' ? 'คัดลอกรหัสแชต' : 'Copy Session ID'}
+              className="opacity-70 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-0.5 rounded transition-opacity cursor-pointer shrink-0"
+              title={language === 'th' ? 'คัดลอกแชตไอดี' : 'Copy Session ID'}
             >
               {copiedId ? <Check size={10} className="text-emerald-500" /> : <Copy size={10} />}
             </button>

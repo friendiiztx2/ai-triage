@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Image as ImageIcon, ZoomIn, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { Image as ImageIcon, ZoomIn, FileText, Copy, Check } from 'lucide-react';
 
 interface ChatConversationViewProps {
   chat: any;
@@ -16,23 +16,24 @@ export default function ChatConversationView({
   language,
   onHoverImg,
 }: ChatConversationViewProps) {
+  const [copiedChatId, setCopiedChatId] = useState(false);
+
+  const handleCopyChatId = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!chat?.id) return;
+    navigator.clipboard.writeText(chat.id);
+    setCopiedChatId(true);
+    setTimeout(() => setCopiedChatId(false), 1800);
+  };
+
   let rawText = chat.conversation;
   
   if (!rawText && chatIssues && chatIssues.length > 0) {
-    rawText = chatIssues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
+    rawText = chatIssues.map((i: any) => `ลูกค้า: ${i.summary || i.issue_summary}`).join('\n');
   } else if (!rawText && chat.chat_issues && chat.chat_issues.length > 0) {
-    rawText = chat.chat_issues.map((i: any) => `ลูกค้า: ${i.summary}`).join('\n');
+    rawText = chat.chat_issues.map((i: any) => `ลูกค้า: ${i.summary || i.issue_summary}`).join('\n');
   } else if (!rawText && chat.summary) {
     rawText = `ลูกค้า: ${chat.summary}`;
-  }
-
-  if (!rawText) {
-    return (
-      <div className="text-neutral-400 dark:text-neutral-500 text-xs p-8 text-center flex flex-col items-center justify-center space-y-2">
-        <FileText size={20} className="text-neutral-300 dark:text-neutral-600" />
-        <span>ไม่มีประวัติบทสนทนา</span>
-      </div>
-    );
   }
 
   // Extract Image URLs
@@ -42,7 +43,7 @@ export default function ChatConversationView({
   }
 
   const genericUrlRegex = /(https?:\/\/[^\s\n"']+)/gi;
-  const urlMatches = rawText.match(genericUrlRegex) || [];
+  const urlMatches = (rawText || '').match(genericUrlRegex) || [];
   urlMatches.forEach((url: string) => {
     const cleanUrl = url.trim().replace(/[,\.\)]$/, '');
     const isImg = /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(cleanUrl) ||
@@ -56,7 +57,7 @@ export default function ChatConversationView({
   });
 
   // Clean text display: strip raw image URLs so message text is clean
-  let cleanedText = rawText;
+  let cleanedText = rawText || '';
   foundImages.forEach((imgUrl) => {
     cleanedText = cleanedText.replace(imgUrl, '').trim();
   });
@@ -66,8 +67,28 @@ export default function ChatConversationView({
 
   return (
     <div className="p-4 space-y-3.5 flex-1 overflow-y-auto">
-      {/* If image-only: Render explicit informative banner */}
-      {isImageOnlyChat ? (
+      {/* Section Header: Conversation History & Full Chat ID (แชตไอดี) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-neutral-100 dark:border-neutral-800/80">
+        <h4 className="font-bold text-neutral-800 dark:text-neutral-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+          <span>💬 {language === 'th' ? 'ประวัติการคุย (CONVERSATION HISTORY)' : 'CONVERSATION HISTORY'}</span>
+        </h4>
+        <button
+          type="button"
+          onClick={handleCopyChatId}
+          className="inline-flex items-center gap-1.5 text-[10px] text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200 font-mono font-semibold bg-neutral-100 hover:bg-neutral-200/70 dark:bg-neutral-800 dark:hover:bg-neutral-700 px-2 py-0.5 rounded-md border border-neutral-200/70 dark:border-neutral-700/70 transition-colors cursor-pointer select-text"
+          title={language === 'th' ? 'คลิกเพื่อคัดลอกแชตไอดี' : 'Click to copy Chat ID'}
+        >
+          <span>{language === 'th' ? 'แชตไอดี:' : 'Chat ID:'} {chat.id}</span>
+          {copiedChatId ? <Check size={10} className="text-emerald-500" /> : <Copy size={10} className="opacity-70" />}
+        </button>
+      </div>
+
+      {!rawText ? (
+        <div className="text-neutral-400 dark:text-neutral-500 text-xs p-8 text-center flex flex-col items-center justify-center space-y-2">
+          <FileText size={20} className="text-neutral-300 dark:text-neutral-600" />
+          <span>ไม่มีประวัติบทสนทนา</span>
+        </div>
+      ) : isImageOnlyChat ? (
         <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 p-3.5 rounded-xl flex items-center justify-between gap-3 text-xs shadow-2xs">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0">
@@ -75,7 +96,7 @@ export default function ChatConversationView({
             </div>
             <div>
               <div className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs flex items-center gap-2">
-                <span>{language === 'th' ? 'ลูกค้าส่งเฉพาะรูปภาพ' : 'Image-Only Message'}</span>
+                <span>{language === 'th' ? 'ลูกค้าส่งรูปภาพแนบมาในบทสนทนา' : 'Image-Only Message'}</span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
                   {language === 'th' ? 'ไม่มีข้อความ' : 'No text'}
                 </span>

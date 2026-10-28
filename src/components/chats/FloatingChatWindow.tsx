@@ -91,6 +91,7 @@ export default function FloatingChatWindow({
   // Triage and Feedback Hook
   const {
     customerInfo,
+    fullConversation,
     chatIssues,
     loadingIssues,
     retryingTriage,
@@ -113,6 +114,8 @@ export default function FloatingChatWindow({
   });
 
   if (!chat) return null;
+
+  const chatWithConversation = fullConversation ? { ...chat, conversation: fullConversation } : chat;
 
   const handleTogglePresetTag = (tagName: string) => {
     let nextTags: string[];
@@ -158,7 +161,7 @@ export default function FloatingChatWindow({
     >
       {/* 1. Header with Window Controls */}
       <FloatingChatHeader
-        chat={chat}
+        chat={chatWithConversation}
         customerInfo={customerInfo}
         onMouseDown={handleMouseDown}
         isMinimized={isMinimized}
@@ -177,7 +180,7 @@ export default function FloatingChatWindow({
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden divide-y md:divide-y-0 md:divide-x divide-neutral-200/80 dark:divide-neutral-800">
           {/* Left Column: Full Raw Chat Dialogue & Media Preview */}
           <ChatConversationView
-            chat={chat}
+            chat={chatWithConversation}
             chatIssues={chatIssues}
             language={language}
             onHoverImg={setHoveredImg}

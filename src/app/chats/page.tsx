@@ -218,7 +218,7 @@ function ChatsPageContent() {
 
   // 3. Fully Filtered Chats (applied to the main table)
   const filteredChats = useMemo(() => {
-    return filterChats(companyFilteredChats, {
+    const primary = filterChats(companyFilteredChats, {
       searchQuery,
       statusFilter,
       priorityFilter,
@@ -229,6 +229,18 @@ function ChatsPageContent() {
       endDate,
       auditFilter,
     });
+    if (primary.length === 0 && searchQuery && searchQuery.trim().length > 0 && dateFilter !== 'all') {
+      return filterChats(companyFilteredChats, {
+        searchQuery,
+        statusFilter,
+        priorityFilter,
+        categoryFilter,
+        tagFilter,
+        dateFilter: 'all',
+        auditFilter,
+      });
+    }
+    return primary;
   }, [companyFilteredChats, searchQuery, statusFilter, priorityFilter, categoryFilter, tagFilter, dateFilter, startDate, endDate, auditFilter]);
 
   // Badge & Dropdown Counts (calculated from the currently selected timeframe)

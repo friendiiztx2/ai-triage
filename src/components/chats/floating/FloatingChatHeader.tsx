@@ -51,8 +51,11 @@ export default function FloatingChatHeader({
             {customerDisplayName}
           </h3>
         </div>
-        <span className="text-[10px] font-mono text-neutral-400 dark:text-neutral-500 shrink-0">
-          #{chat.id?.substring(0, 8)}
+        <span
+          className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md border border-neutral-200/70 dark:border-neutral-700/70 shrink-0 select-all"
+          title={chat.id}
+        >
+          แชตไอดี: {chat.id}
         </span>
       </div>
 

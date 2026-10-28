@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   cleanUrl.searchParams.delete('_t');
   cleanUrl.searchParams.delete('_');
   cleanUrl.searchParams.sort();
-  const cacheKey = `${cleanUrl.pathname}?${cleanUrl.searchParams.toString()}_comp_${companyId || 'all'}_user_${session.id}`;
+  const cacheKey = `v3_${cleanUrl.pathname}?${cleanUrl.searchParams.toString()}_comp_${companyId || 'all'}_user_${session.id}`;
 
   // Check cache for list requests
   if (!targetId) {
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     if (cached) {
       return NextResponse.json(cached, {
         headers: {
-          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'Cache-Control': 'private, no-cache, no-store, must-revalidate',
           'X-Cache': 'HIT',
         },
       });
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         const result = await inFlight;
         return NextResponse.json(result, {
           headers: {
-            'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+            'Cache-Control': 'private, no-cache, no-store, must-revalidate',
             'X-Cache': 'DEDUPED',
           },
         });
@@ -96,7 +96,20 @@ export async function GET(request: NextRequest) {
         const { data: singleData } = await singleQuery.abortSignal(controller.signal);
 
         if (singleData && singleData.length > 0) {
-          const row = singleData[0];
+          const row: any = { ...singleData[0] };
+          if (!row.customer_name && row.customer_id) {
+            try {
+              const { data: custRow } = await db
+                .from('customers')
+                .select('name')
+                .eq('id', row.customer_id)
+                .maybeSingle();
+              if (custRow?.name) {
+                row.customer_name = custRow.name;
+              }
+            } catch {}
+          }
+
           const transformed: any = transformChatRow(row);
 
           try {
@@ -139,10 +152,7 @@ export async function GET(request: NextRequest) {
 
       // 3. Chat List View (Chats Page, Dashboard, Reports)
       // Strictly NO embedding vector column
-      const summaryOnly =
-        request.nextUrl.searchParams.get('summary_only') === 'true' ||
-        request.nextUrl.searchParams.get('light') === 'true';
-      const limit = Math.min(200, Math.max(1, Number(request.nextUrl.searchParams.get('limit') || 100)));
+      const limit = Math.min(2000, Math.max(1, Number(request.nextUrl.searchParams.get('limit') || 1000)));
       const offset = Math.max(0, Number(request.nextUrl.searchParams.get('offset') || 0));
       const search = request.nextUrl.searchParams.get('search');
       const startDate = request.nextUrl.searchParams.get('start_date');
@@ -169,20 +179,41 @@ export async function GET(request: NextRequest) {
         const q = sanitizePostgrestFilter(search.trim());
         if (q) {
           listQuery = listQuery.or(
-            `summary.ilike.%${q}%,customer_id.ilike.%${q}%,id.ilike.%${q}%`
+            `summary.ilike.%${q}%,customer_id.ilike.%${q}%,customer_name.ilike.%${q}%,id.ilike.%${q}%`
           );
         }
       }
 
-      const { data: listData, error: listErr } = await listQuery.abortSignal(controller.signal);
+      const [chatsRes, custRes] = await Promise.all([
+        listQuery.abortSignal(controller.signal),
+        Promise.resolve(
+          db.from('customers').select('id, name').abortSignal(controller.signal)
+        ).catch(() => ({ data: null })),
+      ]);
+
       clearTimeout(timeoutId);
 
+      const { data: listData, error: listErr } = chatsRes;
       if (listErr) {
         console.error('List chats query error:', listErr);
       }
 
+      const custNameMap = new Map<string, string>();
+      if (Array.isArray(custRes?.data)) {
+        custRes.data.forEach((c: any) => {
+          if (c?.id && c?.name) {
+            custNameMap.set(c.id, c.name);
+          }
+        });
+      }
+
       const items = (listData || []).map((row: any) => {
-        const transformed: any = transformChatRow(row);
+        const enrichedRow = {
+          ...row,
+          customer_name:
+            row.customer_name || (row.customer_id ? custNameMap.get(row.customer_id) || null : null),
+        };
+        const transformed: any = transformChatRow(enrichedRow);
         transformed.chat_issues = [];
         return transformed;
       });
@@ -214,7 +245,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(items, {
       headers: {
-        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
         'X-Cache': 'MISS',
       },
     });

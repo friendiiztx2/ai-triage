@@ -14,6 +14,7 @@ interface UseChatTriageOptions {
 
 export function useChatTriage({ chat, userProfile, onSaved, language }: UseChatTriageOptions) {
   const [customerInfo, setCustomerInfo] = useState<any>(null);
+  const [fullConversation, setFullConversation] = useState<string>(chat?.conversation || '');
   const [chatIssues, setChatIssues] = useState<any[]>([]);
   const [loadingIssues, setLoadingIssues] = useState<boolean>(true);
   const [retryingTriage, setRetryingTriage] = useState<boolean>(false);
@@ -114,11 +115,23 @@ export function useChatTriage({ chat, userProfile, onSaved, language }: UseChatT
     let isMounted = true;
     setEditCategory(chat?.category_id || '');
     setEditPriority(chat?.priority || 'low');
+    setFullConversation(chat?.conversation || '');
     setTriageError(null);
     setTriageSuccess(null);
 
     async function loadData() {
       await loadChatIssues();
+      if (chat?.id && (!chat.conversation || chat.conversation === chat.summary)) {
+        try {
+          const detailRes = await fetch(`/api/chats?id=${encodeURIComponent(chat.id)}`);
+          if (detailRes.ok && isMounted) {
+            const detailArr = await detailRes.json();
+            if (Array.isArray(detailArr) && detailArr.length > 0 && detailArr[0]?.conversation) {
+              setFullConversation(detailArr[0].conversation);
+            }
+          }
+        } catch (e) {}
+      }
       if (chat?.customer_id) {
         try {
           const custRes = await fetch('/api/customers?customer_id=' + chat.customer_id);
@@ -133,7 +146,7 @@ export function useChatTriage({ chat, userProfile, onSaved, language }: UseChatT
     return () => {
       isMounted = false;
     };
-  }, [chat?.id, loadChatIssues]);
+  }, [chat?.id, chat?.conversation, chat?.summary, loadChatIssues]);
 
   // Polling check if status is pending
   useEffect(() => {
@@ -187,6 +200,7 @@ export function useChatTriage({ chat, userProfile, onSaved, language }: UseChatT
 
   return {
     customerInfo,
+    fullConversation,
     chatIssues,
     loadingIssues,
     retryingTriage,
