@@ -27,11 +27,16 @@ export default function SidebarWorkspaceSwitcher({
     : (userProfile?.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
 
   const availableCompanies = isSystemAdmin
-    ? companies
+    ? [{ id: 'all', name: 'ทุกบริษัท (All Companies)' }, ...companies]
     : companies.filter((c) => allowedIds.includes(c.id));
 
   const showDropdown = isSystemAdmin || allowedIds.length > 1;
-  const currentCompany = companies.find((c) => c.id === activeCompany)?.name || userProfile?.company_name || 'Enterprise';
+  const currentCompany =
+    !activeCompany || activeCompany === 'all' || activeCompany === 'null'
+      ? isSystemAdmin
+        ? 'ทุกบริษัท (All Companies)'
+        : userProfile?.company_name || 'Enterprise'
+      : companies.find((c) => c.id === activeCompany)?.name || userProfile?.company_name || 'Enterprise';
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

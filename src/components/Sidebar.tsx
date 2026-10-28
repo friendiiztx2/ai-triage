@@ -80,28 +80,22 @@ export default function Sidebar() {
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             setCompanies(data);
-            if (parsed.role === 'system_admin') {
-              setActiveCompany((prev) => {
-                if (!prev) {
-                  const firstId = data[0].id;
-                  document.cookie = `company_id=${firstId}; path=/; max-age=31536000`;
-                  localStorage.setItem('company_id', firstId);
-                  return firstId;
-                }
-                return prev;
-              });
-            }
           }
         })
         .catch((err) => console.error('Error loading companies:', err));
 
       const isSystemAdmin = parsed.role === 'system_admin';
       const matchCookie = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
-      const currentActive = matchCookie ? decodeURIComponent(matchCookie[1]) : localStorage.getItem('company_id');
+      const rawActive = matchCookie ? decodeURIComponent(matchCookie[1]) : localStorage.getItem('company_id');
+      const currentActive =
+        rawActive && rawActive !== 'null' && rawActive !== 'undefined' ? rawActive : '';
 
       if (isSystemAdmin) {
-        if (currentActive) {
-          setActiveCompany(currentActive);
+        const effective = currentActive || 'all';
+        setActiveCompany(effective);
+        if (!rawActive || rawActive === 'null' || rawActive === 'undefined') {
+          document.cookie = `company_id=${effective}; path=/; max-age=31536000`;
+          localStorage.setItem('company_id', effective);
         }
       } else {
         const allowedIds = (parsed.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);

@@ -407,7 +407,7 @@ function ChatsPageContent() {
       />
 
       {/* 1. Unified Triage Control Panel (Quick Queue Tabs + Search & Filters) */}
-      <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 shadow-xs backdrop-blur-md overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800/60">
+      <div className="relative z-30 rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 shadow-xs backdrop-blur-md divide-y divide-neutral-100 dark:divide-neutral-800/60">
         <ChatQuickTabs
           totalCount={totalCount}
           urgentCount={urgentCount}
