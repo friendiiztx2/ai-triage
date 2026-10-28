@@ -121,9 +121,11 @@ export function useChatTriage({ chat, userProfile, onSaved, language }: UseChatT
 
     async function loadData() {
       await loadChatIssues();
-      if (chat?.id && (!chat.conversation || chat.conversation === chat.summary)) {
+      if (chat?.id) {
         try {
-          const detailRes = await fetch(`/api/chats?id=${encodeURIComponent(chat.id)}`);
+          const detailRes = await fetch(`/api/chats?id=${encodeURIComponent(chat.id)}`, {
+            cache: 'no-store',
+          });
           if (detailRes.ok && isMounted) {
             const detailArr = await detailRes.json();
             if (Array.isArray(detailArr) && detailArr.length > 0 && detailArr[0]?.conversation) {

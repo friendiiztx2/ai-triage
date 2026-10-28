@@ -52,8 +52,8 @@ export function useChatsData({ soundEnabled, desktopNotifyEnabled }: UseChatsDat
 
       const compQuery = compId ? `?company_id=${encodeURIComponent(compId)}` : '';
       const [catRes, chatsRes] = await Promise.all([
-        fetch(`/api/categories${compQuery}`),
-        fetch(`/api/chats${compQuery}`),
+        fetch(`/api/categories${compQuery}`, { cache: 'no-store' }),
+        fetch(`/api/chats${compQuery}`, { cache: 'no-store' }),
       ]);
 
       if (catRes.ok) {

@@ -27,11 +27,25 @@ export default function ChatConversationView({
   };
 
   let rawText = chat.conversation;
-  
-  if (!rawText && chatIssues && chatIssues.length > 0) {
-    rawText = chatIssues.map((i: any) => `ลูกค้า: ${i.summary || i.issue_summary}`).join('\n');
-  } else if (!rawText && chat.chat_issues && chat.chat_issues.length > 0) {
-    rawText = chat.chat_issues.map((i: any) => `ลูกค้า: ${i.summary || i.issue_summary}`).join('\n');
+  const isJustSummary =
+    !rawText || (chat.summary && rawText.trim() === String(chat.summary).trim());
+
+  if (isJustSummary && chatIssues && chatIssues.length > 0) {
+    rawText = chatIssues
+      .map((i: any) => i.issue_summary || i.summary)
+      .filter(Boolean)
+      .join(' ');
+    if (rawText && !rawText.startsWith('ลูกค้า:')) {
+      rawText = `ลูกค้า: ${rawText}`;
+    }
+  } else if (isJustSummary && chat.chat_issues && chat.chat_issues.length > 0) {
+    rawText = chat.chat_issues
+      .map((i: any) => i.issue_summary || i.summary)
+      .filter(Boolean)
+      .join(' ');
+    if (rawText && !rawText.startsWith('ลูกค้า:')) {
+      rawText = `ลูกค้า: ${rawText}`;
+    }
   } else if (!rawText && chat.summary) {
     rawText = `ลูกค้า: ${chat.summary}`;
   }
