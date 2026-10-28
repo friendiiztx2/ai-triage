@@ -14,9 +14,12 @@ import { verifyApiAuth, getCompanyContext, sanitizePostgrestFilter } from '@/lib
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Strict column selections to prevent fetching vector embeddings (~15-20 KB/row) and huge conversations
-const CHAT_LIST_COLUMNS =
+// Strict column selections to prevent fetching vector embeddings (~15-20 KB/row)
+const CHAT_SUMMARY_COLUMNS =
   'id, customer_id, customer_name, summary, category_id, priority, status, confidence, company_id, created_at, keywords, tags, urgency, resolution';
+
+const CHAT_LIST_COLUMNS =
+  'id, customer_id, customer_name, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords, tags, urgency, resolution';
 
 const CHAT_DETAIL_COLUMNS =
   'id, customer_id, customer_name, summary, conversation, category_id, priority, status, confidence, company_id, created_at, keywords, tags, urgency, resolution';
@@ -135,7 +138,10 @@ export async function GET(request: NextRequest) {
       }
 
       // 3. Chat List View (Chats Page, Dashboard, Reports)
-      // Strictly NO conversation text and NO embedding column
+      // Strictly NO embedding vector column
+      const summaryOnly =
+        request.nextUrl.searchParams.get('summary_only') === 'true' ||
+        request.nextUrl.searchParams.get('light') === 'true';
       const limit = Math.min(200, Math.max(1, Number(request.nextUrl.searchParams.get('limit') || 100)));
       const offset = Math.max(0, Number(request.nextUrl.searchParams.get('offset') || 0));
       const search = request.nextUrl.searchParams.get('search');

@@ -31,23 +31,16 @@ export function useChatTriage({ chat, userProfile, onSaved, language }: UseChatT
     setLoadingIssues(true);
     setTriageError(null);
     try {
-      const { data: issues, error } = await supabase
-        .from('chat_issues')
-        .select('id, category_id, priority, department, summary, recommended_reply')
-        .eq('chat_id', chat.id);
-
-      let issuesList = issues;
-      if (error || !issuesList || issuesList.length === 0) {
-        try {
-          const apiRes = await fetch(`/api/chats/issues?chat_id=${chat.id}`);
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (Array.isArray(apiData) && apiData.length > 0) {
-              issuesList = apiData;
-            }
+      let issuesList: any[] | null = null;
+      try {
+        const apiRes = await fetch(`/api/chats/issues?chat_id=${encodeURIComponent(chat.id)}`);
+        if (apiRes.ok) {
+          const apiData = await apiRes.json();
+          if (Array.isArray(apiData) && apiData.length > 0) {
+            issuesList = apiData;
           }
-        } catch (e) {}
-      }
+        }
+      } catch (e) {}
 
       if (issuesList && Array.isArray(issuesList) && issuesList.length > 0) {
         setChatIssues(issuesList);
