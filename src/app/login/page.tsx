@@ -92,10 +92,17 @@ export default function LoginPage() {
       ),
     };
 
+    const cleanCompanyId =
+      sessionObj.company_id &&
+      sessionObj.company_id !== 'null' &&
+      sessionObj.company_id !== 'undefined'
+        ? sessionObj.company_id
+        : 'all';
+
     document.cookie = `user_session=${encodeURIComponent(JSON.stringify(sessionObj))}; path=/; max-age=31536000`;
-    document.cookie = `company_id=${sessionObj.company_id}; path=/; max-age=31536000`;
+    document.cookie = `company_id=${cleanCompanyId}; path=/; max-age=31536000`;
     localStorage.setItem('user_session', JSON.stringify(sessionObj));
-    localStorage.setItem('company_id', sessionObj.company_id);
+    localStorage.setItem('company_id', cleanCompanyId);
 
     window.location.href = '/';
   };

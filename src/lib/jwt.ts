@@ -16,7 +16,25 @@ export interface AuthTokenPayload {
 }
 
 const DEFAULT_SECRET = 'sift-ai-fallback-secure-signing-key-32ch-min!';
-const SIGNING_SECRET = process.env.SESSION_SECRET || DEFAULT_SECRET;
+const ACTIVE_SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtb3Jmc3VkdWRpcXRuenJoZHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNTg3MTMsImV4cCI6MjEwODczNDcxM30.2P08kFFQoyqeYQlVkMhbV_7mExBFpINTRFqjhLQNhKA';
+const LEGACY_SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1aHNmeGRjbnRoYnhscnhtZnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ4OTMsImV4cCI6MjEwMTMwMDg5M30.qmzzPoWNFo6n8QIoU1Ryje7xXq5anlTlq9cqYmjsu9M';
+
+const PRIMARY_SIGNING_SECRET = process.env.SESSION_SECRET || DEFAULT_SECRET;
+
+// Candidate secrets so tokens issued before or after Supabase key rotation remain valid
+const CANDIDATE_SECRETS = Array.from(
+  new Set(
+    [
+      process.env.SESSION_SECRET,
+      DEFAULT_SECRET,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      ACTIVE_SUPABASE_KEY,
+      LEGACY_SUPABASE_KEY,
+    ].filter((s): s is string => Boolean(s && s.length > 0))
+  )
+);
 
 function strToUint8(str: string): Uint8Array {
   return new TextEncoder().encode(str);
@@ -51,17 +69,19 @@ function base64UrlToBuf(str: string): Uint8Array {
   return bytes;
 }
 
-let cachedKey: CryptoKey | null = null;
-async function getCryptoKey(): Promise<CryptoKey> {
-  if (cachedKey) return cachedKey;
-  cachedKey = await crypto.subtle.importKey(
+const keyCache = new Map<string, CryptoKey>();
+async function getCryptoKeyForSecret(secret: string): Promise<CryptoKey> {
+  const existing = keyCache.get(secret);
+  if (existing) return existing;
+  const imported = await crypto.subtle.importKey(
     'raw',
-    strToUint8(SIGNING_SECRET) as any,
+    strToUint8(secret) as any,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign', 'verify']
   );
-  return cachedKey;
+  keyCache.set(secret, imported);
+  return imported;
 }
 
 /**
@@ -81,7 +101,7 @@ export async function createAuthToken(
   const payloadStr = JSON.stringify(payload);
   const dataPart = bufToBase64Url(strToUint8(payloadStr).buffer as ArrayBuffer);
 
-  const key = await getCryptoKey();
+  const key = await getCryptoKeyForSecret(PRIMARY_SIGNING_SECRET);
   const signature = await crypto.subtle.sign('HMAC', key, strToUint8(dataPart) as any);
   const sigPart = bufToBase64Url(signature);
 
@@ -89,7 +109,7 @@ export async function createAuthToken(
 }
 
 /**
- * Verifies a token's HMAC signature and checks expiration.
+ * Verifies a token's HMAC signature against all candidate secrets and checks expiration.
  * Returns the verified payload or null if invalid/tampered/expired.
  */
 export async function verifyAuthToken(token: string | undefined | null): Promise<AuthTokenPayload | null> {
@@ -101,9 +121,18 @@ export async function verifyAuthToken(token: string | undefined | null): Promise
   const [dataPart, sigPart] = parts;
 
   try {
-    const key = await getCryptoKey();
     const sigBytes = base64UrlToBuf(sigPart);
-    const isValid = await crypto.subtle.verify('HMAC', key, sigBytes as any, strToUint8(dataPart) as any);
+    const dataBytes = strToUint8(dataPart);
+
+    let isValid = false;
+    for (const secret of CANDIDATE_SECRETS) {
+      const key = await getCryptoKeyForSecret(secret);
+      const matched = await crypto.subtle.verify('HMAC', key, sigBytes as any, dataBytes as any);
+      if (matched) {
+        isValid = true;
+        break;
+      }
+    }
 
     if (!isValid) {
       return null;

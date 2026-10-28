@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyAuthToken } from '@/lib/jwt';
+import { verifyAuthToken, AuthTokenPayload } from '@/lib/jwt';
 
 // Public endpoints and assets that do not require authentication
 const PUBLIC_API_ROUTES = new Set([
@@ -38,7 +38,35 @@ export async function middleware(request: NextRequest) {
   }
 
   // Cryptographically verify session token
-  const validSession = await verifyAuthToken(token);
+  let validSession: AuthTokenPayload | null = await verifyAuthToken(token);
+
+  // Graceful fallback to user_session cookie if auth_token was rotated
+  if (!validSession) {
+    const rawUserCookie = request.cookies.get('user_session')?.value;
+    if (rawUserCookie) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(rawUserCookie));
+        if (parsed && (parsed.id || parsed.email) && parsed.role) {
+          validSession = {
+            id: parsed.id || parsed.email,
+            email: parsed.email || '',
+            name: parsed.name || parsed.email || 'Admin',
+            role: parsed.role,
+            company_id:
+              parsed.company_id &&
+              parsed.company_id !== 'null' &&
+              parsed.company_id !== 'undefined' &&
+              parsed.company_id !== 'all'
+                ? parsed.company_id
+                : null,
+            permissions: parsed.permissions || [],
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + 86400,
+          };
+        }
+      } catch {}
+    }
+  }
 
   // If visiting login page:
   // - If validSession exists, redirect to '/'

@@ -102,10 +102,12 @@ export function useDashboardData({ dateRange, startDate, endDate, language }: Us
   const silentBackgroundReload = useCallback(async () => {
     try {
       const matchCookie = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )company_id=([^;]*)/) : null;
-      const compId = matchCookie
+      const rawCompId = matchCookie
         ? decodeURIComponent(matchCookie[1])
         : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '' : '');
-      const chatsRes = await fetch(`/api/chats?company_id=${encodeURIComponent(compId)}`);
+      const compId = rawCompId && rawCompId !== 'undefined' && rawCompId !== 'null' && rawCompId !== 'all' ? rawCompId : '';
+      const chatsUrl = compId ? `/api/chats?company_id=${encodeURIComponent(compId)}` : '/api/chats';
+      const chatsRes = await fetch(chatsUrl);
       if (chatsRes.ok) {
         const chats = await chatsRes.json();
         setAllChats(chats || []);

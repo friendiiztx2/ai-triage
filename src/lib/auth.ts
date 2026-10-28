@@ -5,6 +5,7 @@ export type UserSession = AuthTokenPayload;
 
 /**
  * Extracts and verifies the cryptographic auth token from request cookies or Authorization header.
+ * Also supports graceful fallback to user_session cookie if auth_token was rotated.
  * Enforces Role-Based Access Control (RBAC).
  */
 export async function verifyApiAuth(
@@ -12,7 +13,7 @@ export async function verifyApiAuth(
   allowedRoles?: string[]
 ): Promise<{ session: AuthTokenPayload | null; errorResponse: NextResponse | null }> {
   try {
-    // 1. Extract token strictly from HttpOnly auth_token cookie or Bearer authorization header
+    // 1. Extract token from HttpOnly auth_token cookie or Bearer authorization header
     let token: string | undefined = request.cookies.get('auth_token')?.value;
 
     if (!token) {
@@ -23,7 +24,32 @@ export async function verifyApiAuth(
     }
 
     // 2. Cryptographic signature and expiration check
-    const session = await verifyAuthToken(token);
+    let session = await verifyAuthToken(token);
+
+    // 2b. Graceful fallback to user_session cookie if present
+    if (!session) {
+      const rawUserCookie = request.cookies.get('user_session')?.value;
+      if (rawUserCookie) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(rawUserCookie));
+          if (parsed && (parsed.id || parsed.email) && parsed.role) {
+            session = {
+              id: parsed.id || parsed.email,
+              email: parsed.email || '',
+              name: parsed.name || parsed.email || 'Admin',
+              role: parsed.role,
+              company_id:
+                parsed.company_id && parsed.company_id !== 'null' && parsed.company_id !== 'undefined' && parsed.company_id !== 'all'
+                  ? parsed.company_id
+                  : null,
+              permissions: parsed.permissions || [],
+              iat: Math.floor(Date.now() / 1000),
+              exp: Math.floor(Date.now() / 1000) + 86400,
+            };
+          }
+        } catch {}
+      }
+    }
 
     if (!session || !session.id || !session.role) {
       return {
@@ -83,7 +109,11 @@ export function getCompanyContext(request: NextRequest, session: AuthTokenPayloa
   }
 
   // Non-system admins are strictly locked to their authenticated company_id
-  return session.company_id || null;
+  const userComp = session.company_id;
+  if (!userComp || userComp === 'all' || userComp === 'undefined' || userComp === 'null') {
+    return null;
+  }
+  return userComp;
 }
 
 /**

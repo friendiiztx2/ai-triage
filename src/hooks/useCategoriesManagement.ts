@@ -28,14 +28,16 @@ export function useCategoriesManagement() {
   ]);
 
   const getActiveCompanyId = useCallback(() => {
+    let raw = '';
     if (typeof document !== 'undefined') {
       const matchCookie = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
-      if (matchCookie) return decodeURIComponent(matchCookie[1]);
+      if (matchCookie) raw = decodeURIComponent(matchCookie[1]);
     }
-    if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem('company_id') || '';
+    if (!raw && typeof localStorage !== 'undefined') {
+      raw = localStorage.getItem('company_id') || '';
     }
-    return '';
+    if (!raw || raw === 'all' || raw === 'null' || raw === 'undefined') return '';
+    return raw;
   }, []);
 
   const fetchCategories = useCallback(async () => {

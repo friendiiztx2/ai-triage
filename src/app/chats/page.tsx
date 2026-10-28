@@ -189,10 +189,23 @@ function ChatsPageContent() {
       (c) =>
         !activeCompanyId ||
         activeCompanyId === 'all' ||
+        activeCompanyId === 'null' ||
+        activeCompanyId === 'undefined' ||
         c.company_id === activeCompanyId ||
         (currentOpenId && (c.id === currentOpenId || c.id?.toLowerCase() === currentOpenId.toLowerCase()))
     );
   }, [chats, activeCompanyId, currentOpenId]);
+
+  // Auto-switch initial timeframe from 'today' to '30days' once if there are chats in the DB but 0 today
+  const didAutoFallbackDateRef = useRef(false);
+  useEffect(() => {
+    if (didAutoFallbackDateRef.current || loading || companyFilteredChats.length === 0) return;
+    didAutoFallbackDateRef.current = true;
+    const hasTodayChats = filterChats(companyFilteredChats, { dateFilter: 'today' }).length > 0;
+    if (!hasTodayChats && dateFilter === 'today') {
+      setDateFilter('30days');
+    }
+  }, [loading, companyFilteredChats, dateFilter]);
 
   // 2. Filter by Active Timeframe (for badge counts & filter dropdowns)
   const timeframeFilteredChats = useMemo(() => {

@@ -9,6 +9,15 @@ interface UseChatsDataOptions {
   desktopNotifyEnabled: boolean;
 }
 
+function normalizeCompanyId(val: string | null | undefined): string {
+  if (!val) return '';
+  const trimmed = val.trim();
+  if (trimmed === 'all' || trimmed === 'null' || trimmed === 'undefined') {
+    return '';
+  }
+  return trimmed;
+}
+
 export function useChatsData({ soundEnabled, desktopNotifyEnabled }: UseChatsDataOptions) {
   const [chats, setChats] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -24,31 +33,37 @@ export function useChatsData({ soundEnabled, desktopNotifyEnabled }: UseChatsDat
       const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
       const urlCompId = urlParams ? urlParams.get('company_id') : null;
       const matchCookie = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )company_id=([^;]*)/) : null;
-      const compId = (urlCompId && urlCompId !== 'all')
-        ? urlCompId
-        : (matchCookie
-            ? decodeURIComponent(matchCookie[1])
-            : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '' : ''));
+      const rawCompId =
+        urlCompId && urlCompId !== 'all'
+          ? urlCompId
+          : matchCookie
+          ? decodeURIComponent(matchCookie[1])
+          : typeof localStorage !== 'undefined'
+          ? localStorage.getItem('company_id') || ''
+          : '';
+      const compId = normalizeCompanyId(rawCompId);
       setActiveCompanyId(compId);
 
       if (urlCompId && typeof document !== 'undefined') {
-        document.cookie = `company_id=${urlCompId}; path=/; max-age=31536000`;
-        localStorage.setItem('company_id', urlCompId);
+        const cleanUrlComp = normalizeCompanyId(urlCompId) || 'all';
+        document.cookie = `company_id=${cleanUrlComp}; path=/; max-age=31536000`;
+        localStorage.setItem('company_id', cleanUrlComp);
       }
 
+      const compQuery = compId ? `?company_id=${encodeURIComponent(compId)}` : '';
       const [catRes, chatsRes] = await Promise.all([
-        fetch(`/api/categories?company_id=${encodeURIComponent(compId)}`),
-        fetch(`/api/chats?company_id=${encodeURIComponent(compId)}`),
+        fetch(`/api/categories${compQuery}`),
+        fetch(`/api/chats${compQuery}`),
       ]);
 
       if (catRes.ok) {
         const catData = await catRes.json();
-        setCategories(catData);
+        setCategories(Array.isArray(catData) ? catData : []);
       }
 
       if (chatsRes.ok) {
         const chatsData = await chatsRes.json();
-        if (chatsData) {
+        if (Array.isArray(chatsData)) {
           const processed = chatsData.map((c: any) => ({
             ...c,
             status: c.status || 'pending',
