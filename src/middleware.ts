@@ -40,11 +40,15 @@ export async function middleware(request: NextRequest) {
   // Cryptographically verify session token
   const validSession = await verifyAuthToken(token);
 
-  // If already logged in and visiting login page, redirect to home
+  // If visiting login page:
+  // - If validSession exists, redirect to '/'
+  // - If validSession is null/expired, clear any stale auth_token / user_session cookies to prevent redirect loops
   if (pathname === '/login') {
     if (validSession) {
       return NextResponse.redirect(new URL('/', request.url));
     }
+    response.cookies.delete('auth_token');
+    response.cookies.delete('user_session');
     return response;
   }
 
@@ -64,9 +68,12 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Protect UI pages: redirect unauthenticated requests to /login
+  // Protect UI pages: redirect unauthenticated requests to /login and clear stale cookies
   if (!validSession) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const redirectRes = NextResponse.redirect(new URL('/login', request.url));
+    redirectRes.cookies.delete('auth_token');
+    redirectRes.cookies.delete('user_session');
+    return redirectRes;
   }
 
   return response;

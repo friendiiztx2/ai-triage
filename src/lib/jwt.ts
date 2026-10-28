@@ -16,10 +16,7 @@ export interface AuthTokenPayload {
 }
 
 const DEFAULT_SECRET = 'sift-ai-fallback-secure-signing-key-32ch-min!';
-const SIGNING_SECRET =
-  process.env.SESSION_SECRET ||
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  DEFAULT_SECRET;
+const SIGNING_SECRET = process.env.SESSION_SECRET || DEFAULT_SECRET;
 
 function strToUint8(str: string): Uint8Array {
   return new TextEncoder().encode(str);

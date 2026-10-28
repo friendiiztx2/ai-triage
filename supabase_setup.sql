@@ -1,32 +1,33 @@
 -- =================================================================
--- COMPLETE & FULLY AUDITED SUPABASE SCHEMA FOR AI-TRIAGE SYSTEM
+-- COMPLETE SUPABASE SCHEMA FOR SIFT AI (https://dmorfsududiqtnzrhdvb.supabase.co)
 -- =================================================================
--- ตรวจสอบและซิงก์ครบทุก คอลัมน์/ตาราง ที่โค้ดใน src/app/api และ components ทั้งหมดเรียกใช้เรียบร้อยแล้ว
--- วิธีใช้: คัดลอกโค้ดทั้งหมดนี้ไปวางที่ Supabase Web Console -> SQL Editor แล้วกด Run
+-- วิธีใช้: คัดลอกโค้ดทั้งหมดนี้ไปวางที่ Supabase Dashboard -> SQL Editor แล้วกด Run
 
--- -------------------------------------------------------------
--- SECTION 1: ตารางบริษัท (COMPANIES TABLE)
--- -------------------------------------------------------------
-
--- 1. เคลียร์ข้อมูลบริษัทเดิมเพื่อรีเซ็ต
-TRUNCATE public.companies CASCADE;
 -- 1. COMPANIES TABLE (บริษัท)
 CREATE TABLE IF NOT EXISTS public.companies (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     domain TEXT,
     client_id TEXT,
     client_secret TEXT,
+    quota INT DEFAULT 1000,
+    tier_id TEXT DEFAULT 'starter',
+    telegram_group_id TEXT,
+    contact_name TEXT,
+    contact_phone TEXT,
+    line_oa_name TEXT,
+    line_channel_id TEXT,
+    industry TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.companies DISABLE ROW LEVEL SECURITY;
 
 -- 2. USERS TABLE (ผู้ใช้งาน)
 CREATE TABLE IF NOT EXISTS public.users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     email TEXT UNIQUE NOT NULL,
     name TEXT,
-    role TEXT NOT NULL DEFAULT 'agent',
+    role TEXT NOT NULL DEFAULT 'staff',
     company_id TEXT,
     password TEXT,
     permissions TEXT[],
@@ -36,14 +37,12 @@ CREATE TABLE IF NOT EXISTS public.users (
 );
 ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
 
--- 2. บันทึกข้อมูลบริษัทตั้งต้น 2 บริษัทเข้าไปในระบบ
-INSERT INTO public.companies (id, name, domain, client_id, client_secret, created_at) VALUES
-('2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', 'Mika Co.', 'mika.com', 'client_mika', 'secret_mika', NOW()),
-('2e65829a-6a60-4022-8289-0fe64ec98fae', 'Alpha Support Co., Ltd.', 'alphasupport.com', 'client_alpha', 'secret_alpha', NOW());
 -- 3. CATEGORIES TABLE (หมวดหมู่)
 CREATE TABLE IF NOT EXISTS public.categories (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
+    name_th TEXT,
+    name_en TEXT,
     description TEXT,
     color TEXT,
     company_id TEXT,
@@ -53,7 +52,7 @@ ALTER TABLE public.categories DISABLE ROW LEVEL SECURITY;
 
 -- 4. CUSTOMERS TABLE (ลูกค้า)
 CREATE TABLE IF NOT EXISTS public.customers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     name TEXT NOT NULL,
     email TEXT,
     phone TEXT,
@@ -65,19 +64,25 @@ ALTER TABLE public.customers DISABLE ROW LEVEL SECURITY;
 
 -- 5. CHATS TABLE (แชท & ประวัติคัดกรอง)
 CREATE TABLE IF NOT EXISTS public.chats (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    customer_id TEXT,
     customer_name TEXT,
     channel TEXT,
     status TEXT DEFAULT 'pending',
     priority TEXT DEFAULT 'medium',
-    category_id TEXT REFERENCES public.categories(id) ON DELETE SET NULL,
+    urgency TEXT DEFAULT 'low',
+    confidence NUMERIC DEFAULT 0,
+    category_id TEXT,
     company_id TEXT,
+    conversation TEXT,
     last_message TEXT,
     audio_url TEXT,
     transcript TEXT,
     summary TEXT,
-    resolution TEXT,
+    resolution TEXT DEFAULT 'Pending',
+    keywords JSONB DEFAULT '[]'::jsonb,
+    tags TEXT[] DEFAULT '{}',
+    media_urls TEXT[] DEFAULT '{}',
     issue_count INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -86,20 +91,27 @@ ALTER TABLE public.chats DISABLE ROW LEVEL SECURITY;
 
 -- 6. CHAT ISSUES TABLE (ประเด็น/ปัญหาในแชท)
 CREATE TABLE IF NOT EXISTS public.chat_issues (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_id UUID REFERENCES public.chats(id) ON DELETE CASCADE,
-    category_id TEXT REFERENCES public.categories(id) ON DELETE SET NULL,
-    priority TEXT,
-    title TEXT NOT NULL,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    chat_id TEXT REFERENCES public.chats(id) ON DELETE CASCADE,
+    category_id TEXT,
+    priority TEXT DEFAULT 'low',
+    confidence NUMERIC DEFAULT 0,
+    title TEXT,
+    summary TEXT,
+    issue_summary TEXT,
     status TEXT DEFAULT 'open',
+    resolution TEXT,
+    sentiment TEXT,
+    department TEXT,
+    recommended_reply TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.chat_issues DISABLE ROW LEVEL SECURITY;
 
--- 7. LIKE RESULTS TABLE (FEEDBACK การคัดกรอง)
+-- 7. LIKE RESULTS & AI FEEDBACK TABLES (FEEDBACK การคัดกรอง)
 CREATE TABLE IF NOT EXISTS public.like_results (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_id UUID REFERENCES public.chats(id) ON DELETE CASCADE,
+    chat_id TEXT,
     is_liked BOOLEAN,
     is_correct BOOLEAN,
     liked_by TEXT,
@@ -109,7 +121,34 @@ CREATE TABLE IF NOT EXISTS public.like_results (
 );
 ALTER TABLE public.like_results DISABLE ROW LEVEL SECURITY;
 
--- 8. AUDIT LOGS TABLE (ประวัติกิจกรรม)
+CREATE TABLE IF NOT EXISTS public.ai_feedback_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    chat_id TEXT NOT NULL,
+    company_id TEXT,
+    reported_by TEXT NOT NULL,
+    reporter_id TEXT,
+    reasons TEXT[] DEFAULT '{}',
+    comment TEXT,
+    ai_snapshot JSONB DEFAULT '{}'::jsonb,
+    status TEXT DEFAULT 'pending',
+    developer_notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.ai_feedback_reports DISABLE ROW LEVEL SECURITY;
+
+-- 8. ACTIVITY LOGS & AUDIT LOGS TABLES (ประวัติกิจกรรม)
+CREATE TABLE IF NOT EXISTS public.activity_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id TEXT,
+    user_id TEXT,
+    user_name TEXT,
+    action_type TEXT,
+    details JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.activity_logs DISABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS public.audit_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     action TEXT NOT NULL,
@@ -122,25 +161,37 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 );
 ALTER TABLE public.audit_logs DISABLE ROW LEVEL SECURITY;
 
--- 2. ล้างข้อมูลผู้ใช้เก่า
-TRUNCATE public.users;
+-- 9. TELEGRAM GROUPS & MEMBERS TABLES (ผูกกลุ่มแจ้งเตือนเคสด่วน Telegram)
+CREATE TABLE IF NOT EXISTS public.telegram_groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id TEXT UNIQUE NOT NULL,
+    group_name TEXT,
+    company_id TEXT,
+    status TEXT DEFAULT 'active',
+    member_count INT DEFAULT 0,
+    bot_is_admin BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.telegram_groups DISABLE ROW LEVEL SECURITY;
 
--- =================================================================
--- SEED INITIAL DATA (ข้อมูลเริ่มต้น)
--- =================================================================
+CREATE TABLE IF NOT EXISTS public.telegram_group_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id TEXT NOT NULL,
+    user_id TEXT,
+    username TEXT,
+    first_name TEXT,
+    role TEXT DEFAULT 'member',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.telegram_group_members DISABLE ROW LEVEL SECURITY;
 
--- 3. บันทึกบัญชีผู้ใช้งานตั้งต้น 2 บัญชีหลักตามระเบียบใหม่
--- บัญชีที่ 1: System Admin (แอดมินกลางดูแลทุกบริษัท)
--- บัญชีที่ 2: aor (Super Admin ของ Alpha Support Co., Ltd.)
--- ล้างข้อมูลเดิมและลงข้อมูลตั้งต้น
-TRUNCATE public.companies, public.users CASCADE;
+-- 10. SEED INITIAL COMPANIES & ADMIN ACCOUNTS (ปลอดภัย ไม่ลบข้อมูลเดิม)
+INSERT INTO public.companies (id, name, domain, client_id, client_secret, quota, tier_id, created_at) VALUES
+('2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', 'Mika Co.', 'mika.com', 'client_mika', 'secret_mika', 5000, 'growth', NOW()),
+('2e65829a-6a60-4022-8289-0fe64ec98fae', 'Alpha Support Co., Ltd.', 'alphasupport.com', 'client_alpha', 'secret_alpha', 5000, 'growth', NOW())
+ON CONFLICT (id) DO NOTHING;
 
--- เพิ่มบริษัทเริ่มต้น 2 บริษัท
-INSERT INTO public.companies (id, name, domain, client_id, client_secret, created_at) VALUES
-('2c3f46cc-fae8-4ef8-99e1-874dec8b2af2', 'Mika Co.', 'mika.com', 'client_mika', 'secret_mika', NOW()),
-('2e65829a-6a60-4022-8289-0fe64ec98fae', 'Alpha Support Co., Ltd.', 'alphasupport.com', 'client_alpha', 'secret_alpha', NOW());
-
--- เพิ่มบัญชีผู้ใช้เริ่มต้น (System Admin & Super Admin)
 INSERT INTO public.users (id, email, name, role, company_id, password, permissions, is_2fa_enabled, created_at) VALUES
 (
   '10000000-0000-0000-0000-000000000001', 
@@ -163,30 +214,12 @@ INSERT INTO public.users (id, email, name, role, company_id, password, permissio
   ARRAY['view_dashboard', 'view_chats', 'manage_categories', 'manage_users', 'export_csv'],
   false, 
   NOW()
-);
+)
+ON CONFLICT (email) DO NOTHING;
 
-
--- -------------------------------------------------------------
--- SECTION 3: Performance Indexes (ดรรชนีเร่งความเร็วในการคีย์ข้อมูล)
--- -------------------------------------------------------------
-
+-- 11. PERFORMANCE INDEXES
 CREATE INDEX IF NOT EXISTS idx_chats_company_id ON public.chats (company_id);
+CREATE INDEX IF NOT EXISTS idx_chats_created_at ON public.chats (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_chats_status ON public.chats (status);
 CREATE INDEX IF NOT EXISTS idx_chats_priority ON public.chats (priority);
 CREATE INDEX IF NOT EXISTS idx_users_company_id ON public.users (company_id);
-
-
--- -------------------------------------------------------------
--- SECTION 4: Production Security Guidance & RLS Template
--- -------------------------------------------------------------
--- ข้อเสนอแนะความปลอดภัยสำหรับ Production:
--- 1. หากต้องการเปิดใช้งาน RLS ให้ใช้คำสั่ง:
---    ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY;
---    ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;
---    ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
--- 2. ตัวอย่างนโยบาย RLS แบบจำกัดองค์กร (Multi-tenant Policy Example):
---    CREATE POLICY tenant_isolation_chats ON public.chats
---      FOR ALL USING (company_id = auth.jwt() ->> 'company_id' OR auth.jwt() ->> 'role' = 'system_admin');
--- 3. สำหรับการเก็บ Password แนะนำให้แฮชด้วย Supabase Auth / bcrypt ในระบบ Production จริง
-
--- การตั้งค่าความสมบูรณ์เสร็จเรียบร้อย! ฐานข้อมูลทั้งหมดซิงก์กัน 100% แล้วครับ

@@ -1,20 +1,35 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let supabaseUrl = process.env.SUPABASE_URL || '';
+const ACTIVE_SUPABASE_URL = 'https://dmorfsududiqtnzrhdvb.supabase.co';
+const ACTIVE_SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtb3Jmc3VkdWRpcXRuenJoZHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNTg3MTMsImV4cCI6MjEwODczNDcxM30.2P08kFFQoyqeYQlVkMhbV_7mExBFpINTRFqjhLQNhKA';
+
+let supabaseUrl = process.env.SUPABASE_URL || ACTIVE_SUPABASE_URL;
 if (supabaseUrl && !supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
   supabaseUrl = `https://${supabaseUrl}.supabase.co`;
 }
 
-const supabaseKey =
+// Automatically switch away from the restricted legacy project if Vercel env vars still hold the old URL
+const isLegacyRestrictedProject = supabaseUrl.includes('luhsfxdcnthbxlrxmfvh');
+if (isLegacyRestrictedProject) {
+  supabaseUrl = ACTIVE_SUPABASE_URL;
+}
+
+const rawKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_ANON_KEY ||
   process.env.SUPABASE_KEY ||
   '';
 
-// Server-side client using strictly server-only environment variables
+const supabaseKey =
+  !rawKey || isLegacyRestrictedProject || rawKey.includes('bHVoc2Z4ZGNudGhieGxyeG1mdmg')
+    ? ACTIVE_SUPABASE_KEY
+    : rawKey;
+
+// Server-side client using active Sift AI Supabase project
 export const supabaseAdmin: SupabaseClient = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseKey || 'placeholder-key',
+  supabaseUrl || ACTIVE_SUPABASE_URL,
+  supabaseKey || ACTIVE_SUPABASE_KEY,
   {
     auth: {
       persistSession: false,
