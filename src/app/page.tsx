@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/components/LanguageContext';
 import { isSoundEnabled } from '@/lib/audio';
 import { getCategoryLabel } from '@/lib/categories';
@@ -13,6 +13,7 @@ import DashboardCharts from '@/components/dashboard/DashboardCharts';
 
 export default function DashboardPage() {
   const { language } = useLanguage();
+  const didAutoFallbackRef = useRef(false);
 
   // Filters & Controls
   const [dateRange, setDateRange] = useState('today');
@@ -27,6 +28,7 @@ export default function DashboardPage() {
 
   const {
     loading,
+    allChats,
     stats,
     aiMetrics,
     chartData,
@@ -37,6 +39,19 @@ export default function DashboardPage() {
     categories,
     loadDashboardData,
   } = useDashboardData({ dateRange, startDate, endDate, language });
+
+  useEffect(() => {
+    if (didAutoFallbackRef.current || loading || !allChats || allChats.length === 0) return;
+    didAutoFallbackRef.current = true;
+    const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+    const hasToday = allChats.some((c: any) => {
+      if (!c.created_at) return false;
+      return new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' }) === todayLocalStr;
+    });
+    if (!hasToday && dateRange === 'today') {
+      setDateRange('30days');
+    }
+  }, [loading, allChats, dateRange]);
 
   const uniqueCategoryNames =
     rawCategories.length > 0

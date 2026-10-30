@@ -52,7 +52,10 @@ export function useDashboardData({ dateRange, startDate, endDate, language }: Us
       const rawCompId = matchCookie
         ? decodeURIComponent(matchCookie[1])
         : (typeof localStorage !== 'undefined' ? localStorage.getItem('company_id') || '' : '');
-      const compId = rawCompId && rawCompId !== 'undefined' && rawCompId !== 'null' ? rawCompId : '';
+      const compId =
+        rawCompId && rawCompId !== 'undefined' && rawCompId !== 'null' && rawCompId !== 'all'
+          ? rawCompId
+          : '';
 
       const chatsUrl = compId
         ? `/api/chats?summary_only=true&company_id=${encodeURIComponent(compId)}`
@@ -62,9 +65,9 @@ export function useDashboardData({ dateRange, startDate, endDate, language }: Us
         : `/api/customers?nocache=${Date.now()}`;
 
       const [catRes, chatsRes, custRes] = await Promise.all([
-        fetch('/api/categories'),
-        fetch(chatsUrl),
-        fetch(custUrl),
+        fetch('/api/categories', { cache: 'no-store' }),
+        fetch(chatsUrl, { cache: 'no-store' }),
+        fetch(custUrl, { cache: 'no-store' }),
       ]);
 
       if (catRes.ok) {
@@ -228,6 +231,7 @@ export function useDashboardData({ dateRange, startDate, endDate, language }: Us
   return {
     loading,
     error,
+    allChats,
     stats,
     aiMetrics,
     chartData,

@@ -57,14 +57,20 @@ export default function ReportsPage() {
       try {
         const parsed = JSON.parse(savedSession);
         setUserProfile(parsed);
-        const compId = localStorage.getItem('company_id') || parsed.companyId || parsed.company_id || '';
+        const rawCompId = localStorage.getItem('company_id') || parsed.companyId || parsed.company_id || '';
+        const compId =
+          rawCompId && rawCompId !== 'null' && rawCompId !== 'undefined' && rawCompId !== 'all'
+            ? rawCompId
+            : '';
         setActiveCompanyId(compId);
-        setSelectedCompanyFilter(parsed.role === 'system_admin' ? 'all' : compId);
+        setSelectedCompanyFilter(
+          parsed.role === 'system_admin' || parsed.role === 'super_admin' || !compId ? 'all' : compId
+        );
       } catch (e) {}
     }
 
     // Load category definitions
-    fetch('/api/categories')
+    fetch('/api/categories', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setCategories(data);
@@ -72,7 +78,7 @@ export default function ReportsPage() {
       .catch((err) => console.error('Error loading categories:', err));
 
     // Load companies list
-    fetch('/api/companies')
+    fetch('/api/companies', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setCompanies(data);
@@ -88,10 +94,22 @@ export default function ReportsPage() {
   const fetchChatsData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/chats?summary_only=true');
+      const res = await fetch('/api/chats?summary_only=true', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) setChats(data);
+        if (Array.isArray(data)) {
+          setChats(data);
+          if (data.length > 0 && dateRange === 'today') {
+            const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+            const hasToday = data.some((c: any) => {
+              if (!c.created_at) return false;
+              return new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' }) === todayLocalStr;
+            });
+            if (!hasToday) {
+              setDateRange('30days');
+            }
+          }
+        }
       }
     } catch (err) {
       console.error('Error loading chats for reports:', err);
