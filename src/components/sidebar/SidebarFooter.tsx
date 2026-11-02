@@ -83,6 +83,18 @@ export default function SidebarFooter({
           <LogOut size={14} />
         </button>
       </div>
+
+      {/* Developer Attribution Footer */}
+      {!isCollapsed && (
+        <div className="pt-1 flex flex-col items-center justify-center gap-0.5 text-center select-none border-t border-neutral-200/40 dark:border-neutral-800/40">
+          <span className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
+            {t('systemDeveloper')}
+          </span>
+          <span className="text-[9px] text-neutral-400/60 dark:text-neutral-600 font-mono tracking-wider">
+            v1.0 • Sift AI Backoffice
+          </span>
+        </div>
+      )}
     </div>
   );
 }

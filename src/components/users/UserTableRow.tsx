@@ -155,7 +155,13 @@ export default function UserTableRow({
         {/* Password */}
         <td className="px-4 py-3">
           <div className="flex items-center gap-1.5 font-mono text-xs text-neutral-500 dark:text-neutral-400">
-            <span>{isPasswordVisible ? user.password || '••••••' : '••••••'}</span>
+            <span>
+              {isPasswordVisible
+                ? (user.password?.startsWith('$2')
+                    ? <span className="text-[10px] font-sans font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-955/40 px-1.5 py-0.5 rounded border border-indigo-200/50 dark:border-indigo-800/40" title={user.password}>🔒 เข้ารหัสปลอดภัย (Bcrypt)</span>
+                    : user.password || '••••••')
+                : '••••••'}
+            </span>
             <button
               type="button"
               onClick={() => onTogglePassword(user.id)}

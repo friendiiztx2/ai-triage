@@ -19,7 +19,7 @@ const translations = {
     logout: 'ออกจากระบบ (Logout)',
     tenantLabel: 'บริษัทผู้ใช้งาน (Tenant Context)',
     connectionLabel: 'เชื่อมต่อ:',
-    systemDeveloper: 'ระบบพัฒนาร่วมกับ อ้อ (Or)',
+    systemDeveloper: 'ระบบพัฒนาโดยทีม Sift AI',
     switchTheme: 'สลับโหมด',
     switchLanguage: 'ภาษา / Language',
 
@@ -103,7 +103,7 @@ const translations = {
     logout: 'Logout',
     tenantLabel: 'Tenant Context',
     connectionLabel: 'Connected:',
-    systemDeveloper: 'Developed with Or',
+    systemDeveloper: 'Developed by Sift AI Team',
     switchTheme: 'Theme',
     switchLanguage: 'Language',
 
