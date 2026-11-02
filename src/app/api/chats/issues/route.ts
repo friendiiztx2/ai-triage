@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { verifyApiAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -17,9 +17,10 @@ export async function GET(request: NextRequest) {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const { data, error } = await supabase
+    const db = supabaseAdmin || supabase;
+    const { data, error } = await db
       .from('chat_issues')
-      .select('id, chat_id, issue_summary, category_id, priority, confidence, status, resolution, sentiment, created_at, department, recommended_reply')
+      .select('id, chat_id, category_id, priority, department, summary, recommended_reply, created_at, is_human_verified')
       .eq('chat_id', chatId)
       .order('created_at', { ascending: true })
       .abortSignal(controller.signal);
