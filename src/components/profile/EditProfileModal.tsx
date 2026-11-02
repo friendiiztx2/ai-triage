@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, Camera, Lock, Eye, EyeOff, Check, AlertCircle, 
-  Loader2, Trash2, Shield, User as UserIcon, Sparkles 
+  Loader2, Trash2, Shield, User as UserIcon, Sparkles,
+  KeyRound, ChevronDown, ChevronUp, Mail
 } from 'lucide-react';
 
 interface EditProfileModalProps {
@@ -19,6 +21,7 @@ export default function EditProfileModal({
   userProfile,
   onProfileUpdated,
 }: EditProfileModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [nickname, setNickname] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
@@ -35,7 +38,11 @@ export default function EditProfileModal({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync state when modal opens or userProfile changes
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Sync state when modal opens
   useEffect(() => {
     if (isOpen && userProfile) {
       setNickname(userProfile.name || '');
@@ -50,7 +57,17 @@ export default function EditProfileModal({
     }
   }, [isOpen, userProfile]);
 
-  if (!isOpen) return null;
+  // Handle ESC key to close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted) return null;
 
   // Handle client-side image compression
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,7 +113,6 @@ export default function EditProfileModal({
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
-    // Reset file input value so re-selecting same file triggers onChange
     e.target.value = '';
   };
 
@@ -109,10 +125,9 @@ export default function EditProfileModal({
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    // Validation
     const trimmedNick = nickname.trim();
     if (!trimmedNick) {
-      setErrorMsg('กรุณากรอกชื่อเล่นหรือชื่อที่แสดง');
+      setErrorMsg('กรุณากรอกชื่อเล่นหรือชื่อที่ต้องการแสดง');
       return;
     }
 
@@ -136,7 +151,7 @@ export default function EditProfileModal({
     try {
       const payload: Record<string, any> = {
         name: trimmedNick,
-        avatar: avatar, // compressed base64 data URI or null
+        avatar: avatar,
       };
 
       if (showPasswordSection && newPassword.trim()) {
@@ -156,7 +171,6 @@ export default function EditProfileModal({
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
       }
 
-      // Update storage and notify parent
       const updatedUser = data.user;
       if (updatedUser) {
         localStorage.setItem('user_session', JSON.stringify(updatedUser));
@@ -164,69 +178,76 @@ export default function EditProfileModal({
         onProfileUpdated(updatedUser);
       }
 
-      setSuccessMsg('บันทึกข้อมูลเรียบร้อยแล้ว!');
+      setSuccessMsg('บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว');
       setTimeout(() => {
         onClose();
-      }, 1000);
+      }, 900);
     } catch (err: any) {
-      setErrorMsg(err.message || 'เกิดข้อผิดพลาด');
+      setErrorMsg(err.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setIsLoading(false);
     }
   };
 
   const initial = (nickname || userProfile?.name || 'A').charAt(0).toUpperCase();
+  const roleDisplay = userProfile?.role?.replace('_', ' ') || 'admin';
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+  const modalContent = (
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm select-none animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div 
-        className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden flex flex-col"
+        className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-3xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] border border-neutral-200/90 dark:border-neutral-800 overflow-hidden flex flex-col transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200/80 dark:border-neutral-800/80">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-              <UserIcon size={18} />
+        <div className="px-6 py-5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-gradient-to-r from-blue-50/50 via-white to-purple-50/30 dark:from-neutral-900 dark:to-neutral-900">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+              <Sparkles size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
-                แก้ไขข้อมูลส่วนตัว
+              <h3 className="text-base font-bold text-neutral-900 dark:text-white leading-tight">
+                จัดการข้อมูลส่วนตัว
               </h3>
-              <p className="text-[11px] text-neutral-400">
-                เปลี่ยนรูปโปรไฟล์ ชื่อเล่น และรหัสผ่านของคุณ
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                ปรับแต่งรูปโปรไฟล์ ชื่อเล่น และรหัสผ่านความปลอดภัย
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
+            className="p-2 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[80vh]">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[82vh]">
           {/* Notifications */}
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400">
+            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 flex items-start gap-3 text-xs text-rose-600 dark:text-rose-400">
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
+              <span className="font-medium">{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center gap-2.5 text-xs text-emerald-600 dark:text-emerald-400">
+            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 flex items-center gap-3 text-xs text-emerald-600 dark:text-emerald-400">
               <Check size={16} className="shrink-0" />
-              <span>{successMsg}</span>
+              <span className="font-semibold">{successMsg}</span>
             </div>
           )}
 
-          {/* 1. Avatar Section */}
-          <div className="flex flex-col items-center justify-center gap-3">
-            <div className="relative group">
-              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shadow-md">
+          {/* 1. Avatar Card */}
+          <div className="p-5 rounded-2xl bg-neutral-50/70 dark:bg-neutral-800/40 border border-neutral-200/70 dark:border-neutral-800 flex flex-col sm:flex-row items-center gap-5">
+            <div className="relative group shrink-0">
+              <div className="w-22 h-22 rounded-full overflow-hidden border-3 border-white dark:border-neutral-800 bg-neutral-200 dark:bg-neutral-800 shadow-md flex items-center justify-center">
                 {avatar ? (
                   <img
                     src={avatar}
@@ -234,24 +255,24 @@ export default function EditProfileModal({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-[#1a73e8] text-white flex items-center justify-center text-2xl font-bold font-sans">
+                  <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center text-3xl font-bold font-sans">
                     {initial}
                   </div>
                 )}
               </div>
 
-              {/* Upload Overlay Button */}
+              {/* Quick Camera Trigger */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 p-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition cursor-pointer border-2 border-white dark:border-neutral-900"
-                title="อัปโหลดรูปใหม่"
+                className="absolute bottom-0 right-0 p-2 rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 transition cursor-pointer border-2 border-white dark:border-neutral-900"
+                title="เลือกรูปภาพใหม่"
               >
-                <Camera size={13} />
+                <Camera size={14} />
               </button>
             </div>
 
-            {/* Hidden File Input */}
+            {/* Hidden Input */}
             <input
               ref={fileInputRef}
               type="file"
@@ -260,82 +281,105 @@ export default function EditProfileModal({
               onChange={handleFileChange}
             />
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition cursor-pointer"
-              >
-                เปลี่ยนรูปภาพ
-              </button>
-              {avatar && (
+            <div className="flex-1 text-center sm:text-left space-y-2">
+              <div>
+                <h4 className="text-sm font-bold text-neutral-800 dark:text-neutral-200">
+                  รูปถ่ายโปรไฟล์
+                </h4>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  แนะนำรูปสี่เหลี่ยมจัตุรัส ระบบจะย่อขนาดให้อัตโนมัติ
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={handleRemoveAvatar}
-                  className="px-2.5 py-1 rounded-lg text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer flex items-center gap-1"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-neutral-800 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60 shadow-2xs hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
                 >
-                  <Trash2 size={12} />
-                  ลบรูป
+                  เลือกรูปใหม่
                 </button>
-              )}
+                {avatar && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    className="px-3 py-1.5 rounded-xl text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/40 transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Trash2 size={13} />
+                    <span>ใช้รูปเริ่มต้น</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* 2. Display Name / Nickname */}
+          {/* 2. Display Name Input */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center justify-between">
-              <span>ชื่อเล่น / ชื่อที่แสดง</span>
-              <span className="text-[10px] text-neutral-400 font-normal">แสดงในเมนูและแถบควบคุม</span>
+            <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 flex items-center justify-between">
+              <span>ชื่อเล่น / ชื่อที่ใช้แสดงในระบบ</span>
+              <span className="text-[11px] text-neutral-400 font-normal">แสดงในเมนูด้านข้าง</span>
             </label>
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="เช่น มิกะ, zoon"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              required
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="เช่น มิกะ, zoon"
+                className="w-full px-4 py-2.5 pl-10 rounded-xl border border-neutral-300/80 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                required
+              />
+              <UserIcon size={16} className="absolute left-3.5 top-3 text-neutral-400" />
+            </div>
           </div>
 
-          {/* User Meta (Read Only) */}
-          <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800 flex items-center justify-between text-xs">
-            <div className="space-y-0.5">
-              <span className="text-[10px] text-neutral-400">บัญชีผู้ใช้</span>
-              <p className="font-mono font-medium text-neutral-700 dark:text-neutral-300">
-                {userProfile?.email || userProfile?.name || 'User'}
+          {/* 3. Account Meta Info */}
+          <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-neutral-50/70 dark:bg-neutral-800/40 border border-neutral-200/70 dark:border-neutral-800 text-xs">
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 flex items-center gap-1">
+                <Mail size={12} />
+                บัญชีผู้ใช้งาน
+              </span>
+              <p className="font-mono font-semibold text-neutral-800 dark:text-neutral-200 truncate" title={userProfile?.email}>
+                {userProfile?.email || userProfile?.name || 'user'}
               </p>
             </div>
-            <div className="text-right space-y-0.5">
-              <span className="text-[10px] text-neutral-400">สิทธิ์ในระบบ</span>
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 flex items-center gap-1">
+                <Shield size={12} />
+                ระดับสิทธิ์
+              </span>
               <div>
-                <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 uppercase">
-                  {userProfile?.role?.replace('_', ' ') || 'admin'}
+                <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100/80 dark:bg-blue-955/40 text-blue-700 dark:text-blue-300 uppercase">
+                  {roleDisplay}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* 3. Password Section Toggle */}
-          <div className="pt-2 border-t border-neutral-200/80 dark:border-neutral-800/80">
+          {/* 4. Password Accordion */}
+          <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900/60">
             <button
               type="button"
               onClick={() => setShowPasswordSection(!showPasswordSection)}
-              className="w-full flex items-center justify-between py-2 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer"
+              className="w-full px-4 py-3.5 flex items-center justify-between text-xs font-bold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50/80 dark:hover:bg-neutral-800/50 transition cursor-pointer"
             >
-              <div className="flex items-center gap-2">
-                <Lock size={14} className="text-blue-500" />
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <KeyRound size={15} />
+                </div>
                 <span>เปลี่ยนรหัสผ่านเข้าสู่ระบบ</span>
               </div>
-              <span className="text-[11px] text-blue-600 dark:text-blue-400">
-                {showPasswordSection ? 'ซ่อน' : '+ เปลี่ยนรหัส'}
-              </span>
+              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold text-xs">
+                <span>{showPasswordSection ? 'ซ่อนแบบฟอร์ม' : 'ต้องการเปลี่ยนรหัสผ่าน'}</span>
+                {showPasswordSection ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              </div>
             </button>
 
             {showPasswordSection && (
-              <div className="mt-3 space-y-3 p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800 animate-in fade-in duration-150">
+              <div className="p-4 pt-1 space-y-3.5 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/40 dark:bg-neutral-800/20">
                 {/* Current Password */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                  <label className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
                     รหัสผ่านเดิม (ถ้ามี)
                   </label>
                   <div className="relative">
@@ -344,90 +388,92 @@ export default function EditProfileModal({
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="ใส่รหัสผ่านเดิมเพื่อความปลอดภัย"
-                      className="w-full px-3 py-2 pr-9 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrentPass(!showCurrentPass)}
-                      className="absolute right-2.5 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer"
+                      className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer"
                     >
                       {showCurrentPass ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                 </div>
 
-                {/* New Password */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
-                    รหัสผ่านใหม่ <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showNewPass ? 'text' : 'password'}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="กำหนดรหัสผ่านใหม่อย่างน้อย 4 ตัวอักษร"
-                      className="w-full px-3 py-2 pr-9 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPass(!showNewPass)}
-                      className="absolute right-2.5 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer"
-                    >
-                      {showNewPass ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* New Password */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                      รหัสผ่านใหม่ <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPass ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="อย่างน้อย 4 ตัวอักษร"
+                        className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPass(!showNewPass)}
+                        className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer"
+                      >
+                        {showNewPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Confirm New Password */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
-                    ยืนยันรหัสผ่านใหม่ <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPass ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
-                      className="w-full px-3 py-2 pr-9 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPass(!showConfirmPass)}
-                      className="absolute right-2.5 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer"
-                    >
-                      {showConfirmPass ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
+                  {/* Confirm Password */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                      ยืนยันรหัสใหม่ <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPass ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="กรอกรหัสใหม่อีกครั้ง"
+                        className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPass(!showConfirmPass)}
+                        className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer"
+                      >
+                        {showConfirmPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-neutral-200/80 dark:border-neutral-800/80">
+          {/* Modal Footer */}
+          <div className="pt-2 flex items-center justify-end gap-3 border-t border-neutral-100 dark:border-neutral-800">
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer disabled:opacity-50"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold shadow-xs hover:bg-blue-700 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:bg-blue-700 transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
             >
               {isLoading ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" />
+                  <Loader2 size={15} className="animate-spin" />
                   <span>กำลังบันทึก...</span>
                 </>
               ) : (
                 <>
-                  <Check size={14} />
+                  <Check size={15} />
                   <span>บันทึกการเปลี่ยนแปลง</span>
                 </>
               )}
@@ -437,4 +483,6 @@ export default function EditProfileModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
