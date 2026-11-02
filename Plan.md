@@ -35,7 +35,7 @@
 * **สิ่งที่อัปเดต:**
   * ภาษาไทย (`th`): `ระบบพัฒนาโดยทีม Sift AI`
   * ภาษาอังกฤษ (`en`): `Developed by Sift AI Team`
-  * ปรับแต่ง UI บริเวณส่วนท้ายของ Sidebar ให้มี Version Badge `v1.0 • Sift AI Backoffice` สวยงามและเป็นสัดส่วนขึ้นใน [Sidebar.tsx](file:///d:/siftai-bo/src/components/Sidebar.tsx) และ [LanguageContext.tsx](file:///d:/siftai-bo/src/components/LanguageContext.tsx)
+  * ปรับแต่ง UI บริเวณส่วนท้ายของ Sidebar ให้มี Version Badge `v3.0 • Sift AI Backoffice` สวยงามและเป็นสัดส่วนขึ้นใน [Sidebar.tsx](file:///d:/siftai-bo/src/components/Sidebar.tsx) และ [LanguageContext.tsx](file:///d:/siftai-bo/src/components/LanguageContext.tsx)
 
 ---
 

@@ -91,7 +91,7 @@ export default function SidebarFooter({
             {t('systemDeveloper')}
           </span>
           <span className="text-[9px] text-neutral-400/60 dark:text-neutral-600 font-mono tracking-wider">
-            v1.0 • Sift AI Backoffice
+            v3.0 • Sift AI Backoffice
           </span>
         </div>
       )}
