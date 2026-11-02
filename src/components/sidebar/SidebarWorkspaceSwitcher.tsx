@@ -63,13 +63,11 @@ export default function SidebarWorkspaceSwitcher({
   if (isCollapsed) {
     return (
       <div className="flex items-center justify-center mb-6">
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center p-1.5 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 shadow-sm">
-          <img
-            src="/sift-ai-logo.png"
-            alt="Sift AI"
-            className="w-full h-full object-contain select-none"
-          />
-        </div>
+        <img
+          src="/sift-ai-logo.png"
+          alt="Sift AI"
+          className="w-10 h-10 object-contain select-none hover:scale-105 transition-transform"
+        />
       </div>
     );
   }
@@ -85,13 +83,11 @@ export default function SidebarWorkspaceSwitcher({
         } ${isOpen ? 'ring-2 ring-[#1a73e8]/20 border-[#1a73e8]/50' : ''}`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-1 bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700/60 shadow-sm shrink-0">
-            <img
-              src="/sift-ai-logo.png"
-              alt="Sift AI"
-              className="w-full h-full object-contain select-none"
-            />
-          </div>
+          <img
+            src="/sift-ai-logo.png"
+            alt="Sift AI"
+            className="w-[52px] h-[52px] object-contain select-none shrink-0 drop-shadow-xs transition-transform group-hover:scale-105"
+          />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-xs text-neutral-900 dark:text-white leading-tight tracking-tight">
