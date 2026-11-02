@@ -19,6 +19,14 @@ const sarabun = Sarabun({
 export const metadata: Metadata = {
   title: "Sift AI Back Office",
   description: "ระบบคัดแยกปัญหาแชตลูกค้าวิเคราะห์ด้วย AI (Sift AI)",
+  icons: {
+    icon: [
+      { url: "/sift-ai-logo.png", type: "image/png" },
+      { url: "/icon.png", type: "image/png" }
+    ],
+    shortcut: "/sift-ai-logo.png",
+    apple: "/sift-ai-logo.png",
+  },
 };
 
 export default function RootLayout({

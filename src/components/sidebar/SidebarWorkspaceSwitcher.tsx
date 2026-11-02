@@ -63,11 +63,11 @@ export default function SidebarWorkspaceSwitcher({
   if (isCollapsed) {
     return (
       <div className="flex items-center justify-center mb-6">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center p-1 bg-white/60 dark:bg-neutral-900 border border-black/[0.06] dark:border-neutral-800 shadow-xs">
+        <div className="w-11 h-11 rounded-2xl flex items-center justify-center p-1.5 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 shadow-sm">
           <img
             src="/sift-ai-logo.png"
             alt="Sift AI"
-            className="w-6 h-6 object-contain select-none"
+            className="w-full h-full object-contain select-none"
           />
         </div>
       </div>
@@ -85,11 +85,11 @@ export default function SidebarWorkspaceSwitcher({
         } ${isOpen ? 'ring-2 ring-[#1a73e8]/20 border-[#1a73e8]/50' : ''}`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center p-1 bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700/60 shadow-xs shrink-0">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-1 bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700/60 shadow-sm shrink-0">
             <img
               src="/sift-ai-logo.png"
               alt="Sift AI"
-              className="w-6 h-6 object-contain select-none"
+              className="w-full h-full object-contain select-none"
             />
           </div>
           <div className="min-w-0 flex-1">
