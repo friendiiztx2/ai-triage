@@ -111,6 +111,22 @@ export default function Sidebar() {
     } catch (e) {
       window.location.href = '/login';
     }
+
+    const handleSessionUpdate = () => {
+      const saved = localStorage.getItem('user_session');
+      if (saved) {
+        try {
+          setUserProfile(JSON.parse(saved));
+        } catch {}
+      }
+    };
+    window.addEventListener('user_session_updated', handleSessionUpdate);
+    window.addEventListener('storage', handleSessionUpdate);
+
+    return () => {
+      window.removeEventListener('user_session_updated', handleSessionUpdate);
+      window.removeEventListener('storage', handleSessionUpdate);
+    };
   }, [pathname]);
 
   const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -247,6 +263,7 @@ export default function Sidebar() {
         onToggleLanguage={toggleLanguage}
         onLogout={handleLogout}
         t={t}
+        onProfileUpdated={(updated) => setUserProfile(updated)}
       />
     </aside>
   );
