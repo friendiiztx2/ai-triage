@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import {
-  ChevronRight,
-  Star,
+import { Star,
   Image as ImageIcon,
   Check,
   CheckCircle2,
@@ -391,13 +389,6 @@ export default function ChatTableRow({
               <span>{language === 'th' ? 'ยืนยัน AI' : 'Approve AI'}</span>
             </button>
           ) : null}
-
-          <span
-            className="inline-flex items-center justify-center w-7 h-7 rounded-xl text-neutral-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-950/50 transition-all"
-            title={language === 'th' ? 'เปิดดูรายละเอียดบทสนทนาและ AI Triage' : 'Open chat details'}
-          >
-            <ChevronRight size={15} />
-          </span>
         </div>
       </td>
     </tr>
