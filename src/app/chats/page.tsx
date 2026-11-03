@@ -398,7 +398,9 @@ function ChatsPageContent() {
 
   return (
     <div className="space-y-4">
-      {/* Top Header */}
+      {/* Sticky Top Header & Control Panel */}
+      <div className="sticky top-0 z-30 -mt-6 md:-mt-8 lg:-mt-10 pt-6 md:pt-8 lg:pt-10 pb-3.5 bg-[#f8fafc]/95 dark:bg-neutral-950/95 backdrop-blur-md space-y-3.5 transition-all border-b border-neutral-200/60 dark:border-neutral-800/60 shadow-2xs">
+        {/* Top Header */}
       <ChatHeader
         soundEnabled={soundEnabled}
         onToggleSound={() => {
@@ -541,6 +543,7 @@ function ChatsPageContent() {
           language={language}
           className="bg-transparent border-0 rounded-none shadow-none"
         />
+        </div>
       </div>
 
       {/* 2. High-Efficiency 5-Column Chat Triage Table */}
