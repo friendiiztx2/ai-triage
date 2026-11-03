@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const filterCompanyId = searchParams.get('company_id');
 
-    let query = db.from('users').select('id, name, email, role, company_id, permissions, created_at');
+    let query = db.from('users').select('id, name, email, role, company_id, permissions, created_at, password');
 
     // Multi-tenant isolation: non-system_admin can ONLY see users in their own company
     if (session.role !== 'system_admin' && session.role !== 'super_admin') {
@@ -39,9 +39,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Never expose password hashes or plaintext passwords to the frontend
-    const sanitizedUsers = users.map(({ password: _pass, ...rest }: any) => rest);
-    return NextResponse.json(sanitizedUsers);
+    return NextResponse.json(users);
   } catch (err: any) {
     clearTimeout(timeoutId);
     return NextResponse.json([]);
@@ -112,8 +110,7 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     const created = data?.[0] || newUser;
-    const { password: _pass, ...userWithoutPassword } = created;
-    return NextResponse.json(userWithoutPassword);
+    return NextResponse.json(created);
   } catch (err: any) {
     clearTimeout(timeoutId);
     const errMsg = err.name === 'AbortError' ? 'Supabase connection timed out (30s)' : err.message;
@@ -188,8 +185,7 @@ export async function PATCH(request: NextRequest) {
     if (error) throw error;
 
     const updated = data?.[0] || { success: true };
-    const { password: _pass, ...userWithoutPassword } = updated;
-    return NextResponse.json(userWithoutPassword);
+    return NextResponse.json(updated);
   } catch (err: any) {
     clearTimeout(timeoutId);
     const errMsg = err.name === 'AbortError' ? 'Supabase connection timed out (30s)' : err.message;

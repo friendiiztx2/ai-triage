@@ -154,21 +154,38 @@ export default function UserTableRow({
 
         {/* Password */}
         <td className="px-4 py-3">
-          <div className="flex items-center gap-1.5 font-mono text-xs text-neutral-500 dark:text-neutral-400">
-            <span>
-              {isPasswordVisible
-                ? (user.password?.startsWith('$2')
-                    ? <span className="text-[10px] font-sans font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-955/40 px-1.5 py-0.5 rounded border border-indigo-200/50 dark:border-indigo-800/40" title={user.password}>🔒 เข้ารหัสปลอดภัย (Bcrypt)</span>
-                    : user.password || '••••••')
-                : '••••••'}
-            </span>
+          <div className="flex items-center gap-2 font-mono text-xs text-neutral-500 dark:text-neutral-400">
+            <div className="min-w-[70px]">
+              {isPasswordVisible ? (
+                user.password ? (
+                  user.password.startsWith('$2') ? (
+                    <span
+                      className="inline-flex items-center gap-1 text-[11px] font-sans font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/50 cursor-help"
+                      title={language === 'th' ? 'รหัสผ่านถูกเข้ารหัสทางเดียว (Bcrypt) อย่างปลอดภัย หากต้องการเปลี่ยนรหัสผ่าน ให้กดปุ่มดินสอแก้ไข' : 'Secured with one-way Bcrypt hash. Click edit to change password.'}
+                    >
+                      <span>🔒 เข้ารหัส (Bcrypt)</span>
+                    </span>
+                  ) : (
+                    <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded select-all">
+                      {user.password}
+                    </span>
+                  )
+                ) : (
+                  <span className="text-[11px] font-sans text-neutral-400 italic">
+                    {language === 'th' ? '(ไม่ได้ตั้งรหัส)' : '(No password)'}
+                  </span>
+                )
+              ) : (
+                <span className="tracking-widest text-neutral-400 dark:text-neutral-500 select-none font-mono">••••••</span>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => onTogglePassword(user.id)}
-              className="p-1 rounded text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors cursor-pointer"
-              title={isPasswordVisible ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+              className="p-1 rounded text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              title={isPasswordVisible ? (language === 'th' ? 'ซ่อนรหัสผ่าน' : 'Hide password') : (language === 'th' ? 'แสดงรหัสผ่าน' : 'Show password')}
             >
-              {isPasswordVisible ? <EyeOff size={12} /> : <Eye size={12} />}
+              {isPasswordVisible ? <EyeOff size={13} /> : <Eye size={13} />}
             </button>
           </div>
         </td>
