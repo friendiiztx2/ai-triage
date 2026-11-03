@@ -188,7 +188,7 @@ export default function FloatingChatWindow({
 
           {/* Right Column: AI Triage, Categorization & Resolution Timeline */}
           <div className="w-full md:w-1/2 flex flex-col h-full bg-white dark:bg-neutral-900 overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4">
               {/* Sift AI Triage Panel */}
               <ChatIssuesTriagePanel
                 chat={chat}

@@ -63,7 +63,7 @@ export default function ChatIssueItemCard({
       </div>
 
       {/* 2. Category Dropdown & Priority Selector */}
-      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 pt-1 min-w-0">
+      <div className="flex flex-wrap items-center gap-2 pt-1 min-w-0">
         <div className="flex-1 min-w-[160px]">
           <SelectDropdown
             value={selectedCategoryVal}

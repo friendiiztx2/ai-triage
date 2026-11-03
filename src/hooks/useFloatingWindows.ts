@@ -44,16 +44,18 @@ export function useFloatingWindows() {
         setMaxZIndex(newZ);
         const cascadeOffset = (activeWindows.length % 5) * 24;
         const sidebarWidth = 240;
-        const defaultWinWidth = 880;
-        const defaultWinHeight = 640;
 
         const screenW = typeof window !== 'undefined' ? window.innerWidth : 1440;
         const screenH = typeof window !== 'undefined' ? window.innerHeight : 900;
+        
+        // Enlarged default window dimensions (~1140px x 740px) for spacious 2-column layout
+        const defaultWinWidth = Math.min(1160, Math.max(920, screenW - sidebarWidth - 60));
+        const defaultWinHeight = Math.min(760, Math.max(640, screenH - 90));
         const availableW = Math.max(400, screenW - sidebarWidth);
 
         // Center window in main content workspace to the right of the sidebar
         const preferredX = sidebarWidth + Math.max(20, Math.floor((availableW - defaultWinWidth) / 2));
-        const preferredY = Math.max(30, Math.floor((screenH - defaultWinHeight) / 2));
+        const preferredY = Math.max(24, Math.floor((screenH - defaultWinHeight) / 2));
 
         const initialX = Math.max(sidebarWidth + 16, Math.min(Math.max(sidebarWidth + 20, screenW - 350), preferredX + cascadeOffset));
         const initialY = Math.max(20, Math.min(Math.max(50, screenH - 200), preferredY + cascadeOffset));
@@ -102,6 +104,5 @@ export function useFloatingWindows() {
     focusWindow,
     updateWindowPosition,
     updateWindowTags,
-    setActiveWindows,
   };
 }

@@ -14,15 +14,30 @@ interface UseWindowDragResizeOptions {
 export function useWindowDragResize({
   initialX,
   initialY,
-  initialWidth = 880,
-  initialHeight = 640,
+  initialWidth,
+  initialHeight,
   onFocus,
   onPositionChange,
 }: UseWindowDragResizeOptions) {
   const [x, setX] = useState(initialX);
   const [y, setY] = useState(initialY);
-  const [width, setWidth] = useState(initialWidth);
-  const [height, setHeight] = useState(initialHeight);
+
+  const [width, setWidth] = useState(() => {
+    if (initialWidth) return initialWidth;
+    if (typeof window !== 'undefined') {
+      return Math.min(1160, Math.max(920, window.innerWidth - 300));
+    }
+    return 1140;
+  });
+
+  const [height, setHeight] = useState(() => {
+    if (initialHeight) return initialHeight;
+    if (typeof window !== 'undefined') {
+      return Math.min(760, Math.max(640, window.innerHeight - 90));
+    }
+    return 740;
+  });
+
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
 
