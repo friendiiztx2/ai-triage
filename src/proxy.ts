@@ -9,7 +9,11 @@ const PUBLIC_API_ROUTES = new Set([
   '/api/schema',
 ]);
 
-export async function middleware(request: NextRequest) {
+/**
+ * Next.js 16 Proxy Convention
+ * Replaces deprecated middleware convention for high-performance edge/server pre-routing.
+ */
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
 
