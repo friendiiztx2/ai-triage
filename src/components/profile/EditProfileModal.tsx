@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { 
   X, Camera, Lock, Eye, EyeOff, Check, AlertCircle, 
   Loader2, Trash2, Shield, User as UserIcon, Sparkles,
-  KeyRound, ChevronDown, ChevronUp, Mail
+  KeyRound, ChevronDown, Mail
 } from 'lucide-react';
 
 interface EditProfileModalProps {
@@ -369,9 +369,8 @@ export default function EditProfileModal({
                 </div>
                 <span>เปลี่ยนรหัสผ่านเข้าสู่ระบบ</span>
               </div>
-              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold text-xs">
-                <span>{showPasswordSection ? 'ซ่อนแบบฟอร์ม' : 'ต้องการเปลี่ยนรหัสผ่าน'}</span>
-                {showPasswordSection ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              <div className="p-1 rounded-lg text-neutral-400 dark:text-neutral-400 transition">
+                <ChevronDown size={16} className={`transition-transform duration-200 ${showPasswordSection ? 'rotate-180 text-blue-500' : ''}`} />
               </div>
             </button>
 
