@@ -40,8 +40,8 @@ export default function SidebarFooter({
         {/* 1. Profile Section (Clickable to open Edit Profile Modal) */}
         <div 
           onClick={() => setIsEditProfileOpen(true)}
-          className={`group flex items-center gap-2.5 min-w-0 p-1.5 -mx-1.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-all cursor-pointer ${isCollapsed ? 'justify-center' : 'w-full'}`}
-          title="คลิกเพื่อแก้ไขรูปโปรไฟล์ / เปลี่ยนชื่อเล่น / เปลี่ยนรหัสผ่าน"
+          className={`relative group flex items-center gap-2.5 min-w-0 p-1.5 -mx-1.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-all cursor-pointer ${isCollapsed ? 'justify-center' : 'w-full'}`}
+          title={!isCollapsed ? 'คลิกเพื่อแก้ไขรูปโปรไฟล์ / เปลี่ยนชื่อเล่น / เปลี่ยนรหัสผ่าน' : ''}
         >
           <div className="relative shrink-0">
             <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1a73e8] text-white flex items-center justify-center text-xs font-semibold shadow-xs border border-neutral-200/60 dark:border-neutral-700/60">
@@ -75,36 +75,76 @@ export default function SidebarFooter({
               </p>
             </div>
           )}
+
+          {/* Floating Tooltip when Collapsed */}
+          {isCollapsed && (
+            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[9999] pointer-events-none">
+              <div className="bg-neutral-900/95 dark:bg-neutral-800/95 text-white text-[12px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl backdrop-blur-md border border-white/10 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 relative">
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-neutral-900/95 dark:border-r-neutral-800/95" />
+                {displayName} (จัดการข้อมูลส่วนตัว)
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 2. Action Icons (Bottom) */}
         <div className={`w-full flex items-center ${isCollapsed ? 'flex-col gap-1.5' : 'justify-between gap-1 pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60'}`}>
-          <button
-            onClick={onToggleLanguage}
-            className={`h-7 px-1.5 rounded-lg flex items-center justify-center gap-1 text-[11px] font-mono font-medium text-neutral-400 dark:text-neutral-300 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer ${!isCollapsed ? 'flex-1' : ''}`}
-            title={language === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
-          >
-            <Languages size={13} className="shrink-0" />
-            {!isCollapsed && (
-              <span className="uppercase text-[10px] font-bold tracking-wider">{language}</span>
+          <div className="relative group">
+            <button
+              onClick={onToggleLanguage}
+              className={`h-7 px-1.5 rounded-lg flex items-center justify-center gap-1 text-[11px] font-mono font-medium text-neutral-400 dark:text-neutral-300 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer ${!isCollapsed ? 'flex-1' : 'w-7'}`}
+              title={!isCollapsed ? (language === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย') : ''}
+            >
+              <Languages size={13} className="shrink-0" />
+              {!isCollapsed && (
+                <span className="uppercase text-[10px] font-bold tracking-wider">{language}</span>
+              )}
+            </button>
+            {isCollapsed && (
+              <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[9999] pointer-events-none">
+                <div className="bg-neutral-900/95 dark:bg-neutral-800/95 text-white text-[12px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl backdrop-blur-md border border-white/10 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 relative">
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-neutral-900/95 dark:border-r-neutral-800/95" />
+                  {language === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
+                </div>
+              </div>
             )}
-          </button>
+          </div>
 
-          <button
-            onClick={onToggleTheme}
-            className={`h-7 px-1.5 rounded-lg flex items-center justify-center text-neutral-400 dark:text-neutral-300 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer ${!isCollapsed ? 'flex-1' : ''}`}
-            title={theme === 'light' ? t('themeLight') : t('themeDark')}
-          >
-            {theme === 'light' ? <Sun size={14} /> : <Moon size={14} />}
-          </button>
+          <div className="relative group">
+            <button
+              onClick={onToggleTheme}
+              className={`h-7 px-1.5 rounded-lg flex items-center justify-center text-neutral-400 dark:text-neutral-300 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer ${!isCollapsed ? 'flex-1' : 'w-7'}`}
+              title={!isCollapsed ? (theme === 'light' ? t('themeLight') : t('themeDark')) : ''}
+            >
+              {theme === 'light' ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+            {isCollapsed && (
+              <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[9999] pointer-events-none">
+                <div className="bg-neutral-900/95 dark:bg-neutral-800/95 text-white text-[12px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl backdrop-blur-md border border-white/10 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 relative">
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-neutral-900/95 dark:border-r-neutral-800/95" />
+                  {theme === 'light' ? t('themeLight') : t('themeDark')}
+                </div>
+              </div>
+            )}
+          </div>
 
-          <button
-            onClick={onLogout}
-            className={`h-7 px-1.5 rounded-lg flex items-center justify-center text-neutral-400 dark:text-neutral-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/[0.08] transition-colors cursor-pointer ${!isCollapsed ? 'flex-1' : ''}`}
-            title={t('logout')}
-          >
-            <LogOut size={14} />
-          </button>
+          <div className="relative group">
+            <button
+              onClick={onLogout}
+              className={`h-7 px-1.5 rounded-lg flex items-center justify-center text-neutral-400 dark:text-neutral-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/[0.08] transition-colors cursor-pointer ${!isCollapsed ? 'flex-1' : 'w-7'}`}
+              title={!isCollapsed ? t('logout') : ''}
+            >
+              <LogOut size={14} />
+            </button>
+            {isCollapsed && (
+              <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[9999] pointer-events-none">
+                <div className="bg-neutral-900/95 dark:bg-neutral-800/95 text-white text-[12px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl backdrop-blur-md border border-white/10 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 relative">
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-neutral-900/95 dark:border-r-neutral-800/95" />
+                  {t('logout')}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Developer Attribution Footer */}

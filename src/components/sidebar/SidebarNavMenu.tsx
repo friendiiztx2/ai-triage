@@ -29,22 +29,31 @@ export default function SidebarNavMenu({
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center rounded-lg text-[13px] font-medium transition-all duration-150 group ${
+            className={`relative flex items-center rounded-lg text-[13px] font-medium transition-all duration-150 group ${
               isActive
-                ? 'bg-[#e8f0fe] dark:bg-blue-950/50 text-[#1a73e8] dark:text-blue-200 font-semibold'
-                : 'text-neutral-600 dark:text-neutral-200 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
-            } ${isCollapsed ? 'justify-center p-2' : 'gap-2.5 px-2.5 py-1.5'}`}
-            title={isCollapsed ? item.label : ''}
+                ? 'bg-[#e8f0fe] dark:bg-blue-950/50 text-[#1a73e8] dark:text-blue-200 font-semibold shadow-2xs'
+                : 'text-neutral-600 dark:text-neutral-200 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
+            } ${isCollapsed ? 'justify-center p-2.5' : 'gap-2.5 px-2.5 py-1.5'}`}
           >
             <Icon
-              size={15}
+              size={16}
               className={`shrink-0 transition-colors ${
                 isActive
                   ? 'text-[#1a73e8] dark:text-blue-300'
-                  : 'text-neutral-400 dark:text-neutral-300 group-hover:text-neutral-800 dark:group-hover:text-white'
+                  : 'text-neutral-400 dark:text-neutral-400 group-hover:text-neutral-800 dark:group-hover:text-white'
               }`}
             />
             {!isCollapsed && <span className="truncate">{item.label}</span>}
+
+            {/* Modern Floating Tooltip on Hover when Sidebar is Collapsed */}
+            {isCollapsed && (
+              <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[9999] pointer-events-none">
+                <div className="bg-neutral-900/95 dark:bg-neutral-800/95 text-white text-[12px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl backdrop-blur-md border border-white/10 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 relative">
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-neutral-900/95 dark:border-r-neutral-800/95" />
+                  {item.label}
+                </div>
+              </div>
+            )}
           </Link>
         );
       })}

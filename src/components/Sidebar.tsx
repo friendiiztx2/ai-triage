@@ -225,7 +225,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={`bg-white/80 dark:bg-neutral-900/70 backdrop-blur-md border-r border-neutral-200/80 dark:border-neutral-800/80 h-screen flex flex-col justify-between transition-all duration-200 relative z-30 select-none shadow-xs ${isCollapsed ? 'w-16' : 'w-60'}`}>
+    <aside className={`bg-white/80 dark:bg-neutral-900/70 backdrop-blur-md border-r border-neutral-200/80 dark:border-neutral-800/80 h-screen flex flex-col justify-between transition-all duration-200 relative z-30 select-none shadow-xs ${isCollapsed ? 'w-16 overflow-visible' : 'w-60'}`}>
       {/* Collapse/Expand Toggle Button */}
       <button 
         onClick={toggleCollapse}
@@ -235,7 +235,7 @@ export default function Sidebar() {
         {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
 
-      <div className={`flex-1 overflow-y-auto ${isCollapsed ? 'p-2' : 'p-3'}`}>
+      <div className={`flex-1 ${isCollapsed ? 'overflow-visible p-2' : 'overflow-y-auto p-3'}`}>
         {/* Unified Workspace Switcher (Logo + Company context) */}
         <SidebarWorkspaceSwitcher
           companies={companies}
