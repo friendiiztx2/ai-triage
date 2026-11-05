@@ -150,6 +150,8 @@ export default function EditProfileModal({
 
     try {
       const payload: Record<string, any> = {
+        userId: userProfile?.id,
+        userEmail: userProfile?.email,
         name: trimmedNick,
         avatar: avatar,
       };

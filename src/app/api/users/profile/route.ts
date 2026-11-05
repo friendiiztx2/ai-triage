@@ -14,24 +14,56 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { name, avatar, currentPassword, newPassword } = await request.json();
+    const { name, avatar, currentPassword, newPassword, userId, userEmail } = await request.json();
 
-    // 2. Fetch target user from DB by ID or email
-    let userQuery = db.from('users').select('*');
-    if (session.id && !session.id.startsWith('admin-')) {
-      userQuery = userQuery.eq('id', session.id);
-    } else if (session.email) {
-      userQuery = userQuery.eq('email', session.email);
-    } else {
-      userQuery = userQuery.eq('id', session.id);
+    const isUUID = (val: any) =>
+      typeof val === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+    let candidate: any = null;
+
+    // 2. Fetch target user from DB by valid UUID first
+    const targetUuid = [session.id, userId].find((id) => isUUID(id));
+    if (targetUuid) {
+      const { data } = await db.from('users').select('*').eq('id', targetUuid).limit(1);
+      if (data && data.length > 0) {
+        candidate = data[0];
+      }
     }
 
-    const { data: users, error: fetchErr } = await userQuery.limit(1);
-    if (fetchErr || !users || users.length === 0) {
+    // 2b. Fallback: Search by email or username if ID is not a UUID or not found
+    if (!candidate) {
+      const searchTerms = [
+        session.email,
+        userEmail,
+        !isUUID(session.id) ? session.id : null,
+        !isUUID(userId) ? userId : null,
+        session.name,
+      ].filter(Boolean) as string[];
+
+      for (const term of searchTerms) {
+        if (!term || typeof term !== 'string') continue;
+        const cleanTerm = term.trim();
+        if (!cleanTerm) continue;
+
+        const { data: byEmail } = await db.from('users').select('*').eq('email', cleanTerm).limit(1);
+        if (byEmail && byEmail.length > 0) {
+          candidate = byEmail[0];
+          break;
+        }
+
+        const { data: byName } = await db.from('users').select('*').eq('name', cleanTerm).limit(1);
+        if (byName && byName.length > 0) {
+          candidate = byName[0];
+          break;
+        }
+      }
+    }
+
+    if (!candidate) {
       return NextResponse.json({ error: 'ไม่พบบัญชีผู้ใช้งานในระบบ' }, { status: 404 });
     }
 
-    const candidate = users[0];
     const updateData: Record<string, any> = {};
 
     // 3. Handle password change if requested
@@ -70,6 +102,11 @@ export async function PUT(request: NextRequest) {
     if (avatar !== undefined) {
       existingPrefs.avatar = avatar; // base64 string, url, or null
       prefsChanged = true;
+      if (typeof avatar === 'string' && (avatar.startsWith('http') || avatar.startsWith('data:'))) {
+        updateData.avatar_url = avatar;
+      } else if (avatar === null) {
+        updateData.avatar_url = null;
+      }
     }
     if (name !== undefined && name.trim()) {
       existingPrefs.nickname = name.trim();
@@ -84,7 +121,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ไม่มีข้อมูลที่เปลี่ยนแปลง' }, { status: 400 });
     }
 
-    // 6. Save update to Supabase
+    // 6. Save update to Supabase using candidate's validated UUID
     const { data: updatedRows, error: updateErr } = await db
       .from('users')
       .update(updateData)
@@ -101,7 +138,7 @@ export async function PUT(request: NextRequest) {
 
     // 7. Log activity
     try {
-      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate.id);
+      const isValidUUID = isUUID(candidate.id);
       await db.from('activity_logs').insert([
         {
           company_id: candidate.company_id || null,
@@ -120,7 +157,7 @@ export async function PUT(request: NextRequest) {
       console.warn('Failed to record update_profile log:', logErr);
     }
 
-    // 8. Re-issue signed cryptographic auth token with updated name/info
+    // 8. Re-issue signed cryptographic auth token with updated name/info and validated UUID
     const token = await createAuthToken({
       id: userWithoutPassword.id,
       email: userWithoutPassword.email,
@@ -133,11 +170,14 @@ export async function PUT(request: NextRequest) {
     const isProd = process.env.NODE_ENV === 'production';
     const response = NextResponse.json({
       success: true,
-      user: userWithoutPassword,
+      user: {
+        ...userWithoutPassword,
+        avatar: existingPrefs.avatar || userWithoutPassword.avatar_url || null,
+      },
       message: 'บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว',
     });
 
-    // Update authentication cookies
+    // Update authentication cookies with sanitized updated user session
     response.cookies.set('auth_token', token, {
       httpOnly: true,
       secure: isProd,
@@ -146,7 +186,10 @@ export async function PUT(request: NextRequest) {
       path: '/',
     });
 
-    response.cookies.set('user_session', encodeURIComponent(JSON.stringify(userWithoutPassword)), {
+    response.cookies.set('user_session', encodeURIComponent(JSON.stringify({
+      ...userWithoutPassword,
+      avatar: existingPrefs.avatar || userWithoutPassword.avatar_url || null,
+    })), {
       httpOnly: false,
       secure: isProd,
       sameSite: 'lax',

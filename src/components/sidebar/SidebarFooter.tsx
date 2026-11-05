@@ -32,7 +32,7 @@ export default function SidebarFooter({
   const displayName = userProfile?.name || 'Administrator';
   const initial = displayName.charAt(0).toUpperCase() || 'A';
   const roleDisplay = userProfile?.role?.replace('_', ' ') || 'admin';
-  const avatarUrl = userProfile?.avatar || userProfile?.preferences?.avatar || null;
+  const avatarUrl = userProfile?.avatar || userProfile?.preferences?.avatar || userProfile?.avatar_url || null;
 
   return (
     <>
