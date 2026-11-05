@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
-import { Inter, Sarabun } from "next/font/google";
+import { Inter, IBM_Plex_Sans_Thai } from "next/font/google";
 import ThemeInitializer from "@/components/ThemeInitializer";
 import { LanguageProvider } from "@/components/LanguageContext";
 import AppShell from "@/components/layout/AppShell";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-sans",
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const sarabun = Sarabun({
-  variable: "--font-sarabun",
+const ibmPlexSansThai = IBM_Plex_Sans_Thai({
+  variable: "--font-ibm-plex-sans-thai",
   weight: ["300", "400", "500", "600", "700"],
-  subsets: ["thai"],
+  subsets: ["thai", "latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -38,7 +40,7 @@ export default function RootLayout({
     <html
       lang="th"
       suppressHydrationWarning
-      className={`${inter.variable} ${sarabun.variable} h-screen overflow-hidden antialiased`}
+      className={`${inter.variable} ${ibmPlexSansThai.variable} font-sans h-screen overflow-hidden antialiased`}
     >
       <head>
         <ThemeInitializer />
