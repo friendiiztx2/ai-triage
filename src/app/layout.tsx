@@ -23,11 +23,11 @@ export const metadata: Metadata = {
   description: "ระบบคัดแยกปัญหาแชตลูกค้าวิเคราะห์ด้วย AI (Sift AI)",
   icons: {
     icon: [
-      { url: "/sift-ai-logo.png", type: "image/png" },
+      { url: "/sift-ai-icon.png", type: "image/png" },
       { url: "/icon.png", type: "image/png" }
     ],
-    shortcut: "/sift-ai-logo.png",
-    apple: "/sift-ai-logo.png",
+    shortcut: "/sift-ai-icon.png",
+    apple: "/sift-ai-icon.png",
   },
 };
 

@@ -12,7 +12,7 @@ export default function SidebarLogo({ isCollapsed }: SidebarLogoProps) {
       <div className="relative group cursor-pointer shrink-0">
         <div className="relative flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
           <img
-            src="/sift-ai-logo.png"
+            src="/sift-ai-icon.png"
             alt="Sift AI Logo"
             className="w-9 h-9 object-contain drop-shadow-md select-none"
           />

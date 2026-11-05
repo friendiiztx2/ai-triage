@@ -64,7 +64,7 @@ export default function SidebarWorkspaceSwitcher({
     return (
       <div className="flex items-center justify-center mb-6">
         <img
-          src="/sift-ai-logo.png"
+          src="/sift-ai-icon.png"
           alt="Sift AI"
           className="w-10 h-10 object-contain select-none hover:scale-105 transition-transform"
         />
@@ -84,9 +84,9 @@ export default function SidebarWorkspaceSwitcher({
       >
         <div className="flex items-center gap-2.5 min-w-0">
           <img
-            src="/sift-ai-logo.png"
+            src="/sift-ai-icon.png"
             alt="Sift AI"
-            className="w-[52px] h-[52px] object-contain select-none shrink-0 drop-shadow-xs transition-transform group-hover:scale-105"
+            className="w-11 h-11 object-contain select-none shrink-0 drop-shadow-xs transition-transform group-hover:scale-105"
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
