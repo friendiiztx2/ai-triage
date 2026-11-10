@@ -8,9 +8,10 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const chatId = searchParams.get('chat_id');
+  const chatIdsParam = searchParams.get('chat_ids');
 
-  if (!chatId) {
-    return NextResponse.json({ error: 'chat_id query parameter is required' }, { status: 400 });
+  if (!chatId && !chatIdsParam) {
+    return NextResponse.json({ error: 'chat_id or chat_ids query parameter is required' }, { status: 400 });
   }
 
   const controller = new AbortController();
@@ -18,12 +19,19 @@ export async function GET(request: NextRequest) {
 
   try {
     const db = supabaseAdmin || supabase;
-    const { data, error } = await db
+    let query = db
       .from('chat_issues')
       .select('id, chat_id, category_id, priority, department, summary, recommended_reply, created_at, is_human_verified')
-      .eq('chat_id', chatId)
-      .order('created_at', { ascending: true })
-      .abortSignal(controller.signal);
+      .order('created_at', { ascending: true });
+
+    if (chatIdsParam) {
+      const ids = chatIdsParam.split(',').map((s: string) => s.trim()).filter(Boolean);
+      query = query.in('chat_id', ids);
+    } else {
+      query = query.eq('chat_id', chatId);
+    }
+
+    const { data, error } = await query.abortSignal(controller.signal);
 
     clearTimeout(timeoutId);
     if (error) throw error;
