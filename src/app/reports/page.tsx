@@ -7,9 +7,9 @@ import ReportFilterBar from '@/components/reports/ReportFilterBar';
 import ReportMetricsGrid from '@/components/reports/ReportMetricsGrid';
 import ExportActionPanel, { ExportFormatMode } from '@/components/reports/ExportActionPanel';
 import ExportHistoryLogs, { ExportHistoryItem } from '@/components/reports/ExportHistoryLogs';
-import { exportMultiSheetXLSX, exportSingleCSV, exportToGoogleDocs } from '@/lib/reportExport';
+import { exportMultiSheetXLSX, exportSingleCSV, exportToGoogleSheets } from '@/lib/reportExport';
 import { useReportMetrics } from '@/hooks/useReportMetrics';
-import { CheckCircle2, ExternalLink, Copy, X } from 'lucide-react';
+import { CheckCircle2, Copy, X, ExternalLink } from 'lucide-react';
 
 export default function ReportsPage() {
   const { language } = useLanguage();
@@ -25,7 +25,7 @@ export default function ReportsPage() {
   // Selected Report Type State: 'overall' | 'finance' | 'marketing'
   const [reportType, setReportType] = useState<'overall' | 'finance' | 'marketing'>('overall');
 
-  // Selected Export Format Mode: 'xlsx_multi_sheet' | 'csv_single' | 'google_docs'
+  // Selected Export Format Mode: 'xlsx_multi_sheet' | 'csv_single' | 'google_sheets'
   const [exportFormatMode, setExportFormatMode] = useState<ExportFormatMode>('xlsx_multi_sheet');
 
   // Filter States
@@ -40,8 +40,8 @@ export default function ReportsPage() {
   // Dynamic Export History Logs
   const [exportHistory, setExportHistory] = useState<ExportHistoryItem[]>([]);
 
-  // Google Docs Modal / Toast Notice
-  const [googleDocsSuccessNotice, setGoogleDocsSuccessNotice] = useState<{
+  // Google Sheets Modal / Toast Notice
+  const [googleSheetsNotice, setGoogleSheetsNotice] = useState<{
     open: boolean;
     itemCount: number;
     openUrl: string;
@@ -145,13 +145,13 @@ export default function ReportsPage() {
   const handleExportMain = async (historyItem?: ExportHistoryItem) => {
     let exportResult: { filename: string; size: string; openUrl?: string; rowCount?: number } | null = null;
 
-    if (exportFormatMode === 'google_docs') {
-      exportResult = await exportToGoogleDocs(chats, reportType, currentFilterOptions, dateRange, userProfile, 'document');
+    if (exportFormatMode === 'google_sheets') {
+      exportResult = await exportToGoogleSheets(chats, reportType, currentFilterOptions, dateRange, userProfile);
       if (exportResult) {
-        setGoogleDocsSuccessNotice({
+        setGoogleSheetsNotice({
           open: true,
           itemCount: exportResult.rowCount || metrics.filteredCount,
-          openUrl: exportResult.openUrl || 'https://docs.google.com/document/create',
+          openUrl: exportResult.openUrl || 'https://docs.google.com/spreadsheets/create',
         });
       }
     } else if (exportFormatMode === 'xlsx_multi_sheet') {
@@ -171,8 +171,8 @@ export default function ReportsPage() {
       id: newId,
       name: exportResult.filename,
       type:
-        exportFormatMode === 'google_docs'
-          ? `docs.google (${reportType})`
+        exportFormatMode === 'google_sheets'
+          ? `Google Sheets (${reportType})`
           : exportFormatMode === 'xlsx_multi_sheet'
           ? `Excel 3 แท็บชีต (${dateRange})`
           : `CSV (${reportType})`,
@@ -201,8 +201,8 @@ export default function ReportsPage() {
         </h1>
         <p className="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm mt-0.5 font-normal">
           {language === 'th'
-            ? 'ส่งออกข้อมูลแชต สรุปประเด็นธุรกรรม และสถิติการสนทนาในรูปแบบ Excel (แยกแท็บชีต), CSV หรือ docs.google'
-            : 'Export chat telemetry, transaction summaries, and conversation logs as multi-tab Excel, CSV or docs.google'}
+            ? 'ส่งออกข้อมูลแชต สรุปประเด็นธุรกรรม และสถิติการสนทนาในรูปแบบ Excel (แยกแท็บชีต), CSV หรือ Google Sheets'
+            : 'Export chat telemetry, transaction summaries, and conversation logs as multi-tab Excel, CSV or Google Sheets'}
         </p>
       </div>
 
@@ -261,33 +261,33 @@ export default function ReportsPage() {
         language={language}
       />
 
-      {/* Google Docs Helpful Notification Banner */}
-      {googleDocsSuccessNotice && googleDocsSuccessNotice.open && (
-        <div className="rounded-xl border border-blue-200/90 dark:border-blue-900/80 bg-blue-50/80 dark:bg-blue-950/40 p-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+      {/* Google Sheets Helpful Notification Banner */}
+      {googleSheetsNotice && googleSheetsNotice.open && (
+        <div className="rounded-xl border border-emerald-200/90 dark:border-emerald-900/80 bg-emerald-50/80 dark:bg-emerald-950/40 p-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-[#1a73e8] dark:text-blue-300 shrink-0">
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-[#0f9d58] dark:text-emerald-300 shrink-0">
                 <CheckCircle2 size={18} />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h4 className="font-semibold text-xs sm:text-sm text-neutral-900 dark:text-neutral-100">
-                    {language === 'th' ? 'เปิดหน้า docs.google เรียบร้อยแล้ว!' : 'docs.google opened successfully!'}
+                    {language === 'th' ? 'เปิดหน้า Google Sheets เรียบร้อยแล้ว!' : 'Google Sheets opened successfully!'}
                   </h4>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-blue-100 dark:bg-blue-900/50 text-[#1a73e8] dark:text-blue-300">
-                    {googleDocsSuccessNotice.itemCount} {language === 'th' ? 'รายการ' : 'items'}
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-100 dark:bg-emerald-900/50 text-[#0f9d58] dark:text-emerald-300">
+                    {googleSheetsNotice.itemCount} {language === 'th' ? 'รายการ' : 'items'}
                   </span>
                 </div>
                 <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
                   {language === 'th' ? (
                     <>
-                      ระบบได้เปิดหน้า <strong className="text-[#1a73e8] font-mono">docs.google.com</strong> ในแท็บใหม่ และคัดลอกตารางข้อมูลลงคลิปบอร์ดแล้ว
-                      <br className="hidden sm:inline" /> เพียงกด <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[11px] font-mono font-semibold shadow-2xs">Ctrl + V</kbd> หรือคลิกขวาแล้วเลือก <strong className="font-medium">วาง (Paste)</strong> ในหน้า Google Docs ตารางข้อมูลพร้อมหัวข้อจะปรากฏทันทีค่ะ ✨
+                      ระบบได้เปิดหน้า <strong className="text-[#0f9d58] font-mono">Google Sheets</strong> ในแท็บใหม่ และคัดลอกตารางข้อมูลลงคลิปบอร์ดแล้ว
+                      <br className="hidden sm:inline" /> เพียงกด <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[11px] font-mono font-semibold shadow-2xs">Ctrl + V</kbd> หรือคลิกขวาแล้วเลือก <strong className="font-medium">วาง (Paste)</strong> ในเซลล์ A1 ของหน้า Google Sheets ตารางข้อมูลพร้อมหัวข้อจะปรากฏทันทีค่ะ ✨
                     </>
                   ) : (
                     <>
-                      Opened <strong className="text-[#1a73e8] font-mono">docs.google.com</strong> in a new tab and copied report table to your clipboard.
-                      <br className="hidden sm:inline" /> Press <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[11px] font-mono font-semibold shadow-2xs">Ctrl + V</kbd> or right-click <strong className="font-medium">Paste</strong> in Google Docs to insert the table.
+                      Opened <strong className="text-[#0f9d58] font-mono">Google Sheets</strong> in a new tab and copied report table to your clipboard.
+                      <br className="hidden sm:inline" /> Press <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[11px] font-mono font-semibold shadow-2xs">Ctrl + V</kbd> or right-click <strong className="font-medium">Paste</strong> into cell A1 in Google Sheets.
                     </>
                   )}
                 </p>
@@ -295,31 +295,30 @@ export default function ReportsPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      exportToGoogleDocs(chats, reportType, currentFilterOptions, dateRange, userProfile, 'document');
+                      exportToGoogleSheets(chats, reportType, currentFilterOptions, dateRange, userProfile);
                     }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#1a73e8] hover:bg-[#1557b0] text-white transition-colors cursor-pointer select-none"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#0f9d58] hover:bg-[#0b8043] text-white transition-colors cursor-pointer select-none"
                   >
                     <Copy size={12} />
                     <span>{language === 'th' ? 'คัดลอกตารางใหม่อีกครั้ง' : 'Copy Table Again'}</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      exportToGoogleDocs(chats, reportType, currentFilterOptions, dateRange, userProfile, 'spreadsheets');
-                    }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer select-none"
+                  <a
+                    href="https://docs.google.com/spreadsheets/create"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:underline"
                   >
                     <ExternalLink size={12} />
-                    <span>{language === 'th' ? 'เปิดใน Google Sheets (ตารางคำนวณ)' : 'Open in Google Sheets'}</span>
-                  </button>
+                    <span>{language === 'th' ? 'เปิดแท็บ Google Sheets อีกครั้ง' : 'Open Tab Again'}</span>
+                  </a>
                 </div>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() => setGoogleDocsSuccessNotice(null)}
+              onClick={() => setGoogleSheetsNotice(null)}
               className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-1 rounded-lg transition-colors cursor-pointer"
             >
               <X size={15} />
@@ -333,7 +332,7 @@ export default function ReportsPage() {
         logs={exportHistory}
         onReDownload={(item) => {
           if (item?.openUrl) {
-            exportToGoogleDocs(chats, reportType, currentFilterOptions, dateRange, userProfile, 'document');
+            exportToGoogleSheets(chats, reportType, currentFilterOptions, dateRange, userProfile);
           } else {
             handleExportMain(item);
           }

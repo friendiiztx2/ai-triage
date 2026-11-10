@@ -346,13 +346,12 @@ export function exportSingleCSV(
   return { filename, size: `${Math.round(blob.size / 1024)} KB` };
 }
 
-export async function exportToGoogleDocs(
+export async function exportToGoogleSheets(
   chats: any[],
   targetType: 'overall' | 'finance' | 'marketing',
   filterOptions: any,
   dateRange: string,
-  userProfile?: any,
-  targetService: 'document' | 'spreadsheets' = 'document'
+  userProfile?: any
 ): Promise<{ filename: string; size: string; openUrl: string; rowCount: number } | null> {
   const result = filterChatsForReport(chats, targetType, filterOptions);
   if (result.length === 0) return null;
@@ -375,7 +374,7 @@ export async function exportToGoogleDocs(
 
   const nowFormatted = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
 
-  // 1. Generate High-Fidelity HTML Table for Google Docs / Sheets
+  // 1. Generate High-Fidelity HTML Table (Pasting into Google Sheets preserves cell structure, bold headers, and colors)
   const rowsHtml = result
     .map((c, i) => {
       const customerId = c.customer_id || c.cust_id || '-';
@@ -400,52 +399,39 @@ export async function exportToGoogleDocs(
 
       return `
       <tr style="border-bottom: 1px solid #dadce0; ${i % 2 === 1 ? 'background-color: #f8f9fa;' : 'background-color: #ffffff;'}">
-        <td style="padding: 10px 12px; font-family: monospace; font-size: 11px; text-align: center; color: #5f6368;">${i + 1}</td>
-        <td style="padding: 10px 12px; font-family: monospace; font-size: 11px; color: #1a73e8; font-weight: 500;">${c.id || '-'}</td>
-        <td style="padding: 10px 12px; font-size: 12px; font-weight: 500; color: #202124;">${custName} <span style="font-size: 10px; color: #80868b;">(${customerId})</span></td>
-        <td style="padding: 10px 12px; font-size: 12px; color: #3c4043;">${catName}</td>
-        <td style="padding: 10px 12px; text-align: center;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; ${priorityStyle}">${priority.toUpperCase()}</span></td>
-        <td style="padding: 10px 12px; font-size: 12px; font-weight: 500; color: ${statusColor};">${statusText}</td>
-        <td style="padding: 10px 12px; font-size: 12px; line-height: 1.4; color: #202124;">${summary}</td>
-        <td style="padding: 10px 12px; font-size: 11px; color: #5f6368; white-space: nowrap;">${timeFormatted}</td>
+        <td style="padding: 8px 10px; font-family: monospace; font-size: 11px; text-align: center; color: #5f6368;">${i + 1}</td>
+        <td style="padding: 8px 10px; font-family: monospace; font-size: 11px; color: #1a73e8; font-weight: 500;">${c.id || '-'}</td>
+        <td style="padding: 8px 10px; font-size: 12px; font-weight: 500; color: #202124;">${custName} (${customerId})</td>
+        <td style="padding: 8px 10px; font-size: 12px; color: #3c4043;">${catName}</td>
+        <td style="padding: 8px 10px; text-align: center;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; ${priorityStyle}">${priority.toUpperCase()}</span></td>
+        <td style="padding: 8px 10px; font-size: 12px; font-weight: 500; color: ${statusColor};">${statusText}</td>
+        <td style="padding: 8px 10px; font-size: 12px; line-height: 1.4; color: #202124;">${summary}</td>
+        <td style="padding: 8px 10px; font-size: 11px; color: #5f6368; white-space: nowrap;">${timeFormatted}</td>
       </tr>`;
     })
     .join('');
 
   const fullHtml = `
-    <div style="font-family: Arial, sans-serif; color: #202124; max-width: 1200px; padding: 16px;">
-      <div style="border-bottom: 2px solid #1a73e8; padding-bottom: 14px; margin-bottom: 16px;">
-        <h1 style="margin: 0 0 6px 0; font-size: 22px; color: #1a73e8;">📊 ${reportTitle}</h1>
-        <p style="margin: 0; font-size: 12px; color: #5f6368; line-height: 1.6;">
-          ช่วงเวลาข้อมูล: <strong>${dateLabel}</strong> &nbsp;|&nbsp; วันที่ส่งออก: <strong>${nowFormatted}</strong> &nbsp;|&nbsp; จำนวนรายการ: <strong>${result.length} แชต</strong> &nbsp;|&nbsp; ผู้ส่งออก: <strong>${userProfile?.name || 'Admin'}</strong>
-        </p>
-      </div>
-
-      <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; border: 1px solid #dadce0;">
-        <thead>
-          <tr style="background-color: #1a73e8; color: #ffffff; text-align: left;">
-            <th style="padding: 12px 10px; font-size: 11px; text-align: center; width: 45px; border-right: 1px solid rgba(255,255,255,0.2);">#</th>
-            <th style="padding: 12px 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">รหัสแชต</th>
-            <th style="padding: 12px 10px; font-size: 11px; width: 150px; border-right: 1px solid rgba(255,255,255,0.2);">ลูกค้า</th>
-            <th style="padding: 12px 10px; font-size: 11px; width: 130px; border-right: 1px solid rgba(255,255,255,0.2);">หมวดหมู่</th>
-            <th style="padding: 12px 10px; font-size: 11px; text-align: center; width: 90px; border-right: 1px solid rgba(255,255,255,0.2);">ความด่วน</th>
-            <th style="padding: 12px 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">สถานะ</th>
-            <th style="padding: 12px 10px; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.2);">สรุปประเด็นปัญหา (AI Summary)</th>
-            <th style="padding: 12px 10px; font-size: 11px; width: 140px;">วันเวลา</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
-
-      <div style="margin-top: 20px; font-size: 11px; color: #70757a; text-align: right; border-top: 1px solid #e0e0e0; padding-top: 8px;">
-        สร้างโดยระบบ Sift AI Assistant • จัดส่งออกไปยัง Google Docs
-      </div>
-    </div>
+    <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; border: 1px solid #dadce0;">
+      <thead>
+        <tr style="background-color: #0f9d58; color: #ffffff; text-align: left;">
+          <th style="padding: 10px; font-size: 11px; text-align: center; width: 45px; border-right: 1px solid rgba(255,255,255,0.2);">#</th>
+          <th style="padding: 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">รหัสแชต</th>
+          <th style="padding: 10px; font-size: 11px; width: 150px; border-right: 1px solid rgba(255,255,255,0.2);">ลูกค้า</th>
+          <th style="padding: 10px; font-size: 11px; width: 130px; border-right: 1px solid rgba(255,255,255,0.2);">หมวดหมู่</th>
+          <th style="padding: 10px; font-size: 11px; text-align: center; width: 90px; border-right: 1px solid rgba(255,255,255,0.2);">ความด่วน</th>
+          <th style="padding: 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">สถานะ</th>
+          <th style="padding: 10px; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.2);">สรุปประเด็นปัญหา (AI Summary)</th>
+          <th style="padding: 10px; font-size: 11px; width: 140px;">วันเวลา</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
   `;
 
-  // 2. Plain Text / TSV Format for Direct Spreadsheet Paste
+  // 2. TSV Format for Native Cell Separation in Google Sheets
   const plainTextHeaders = ['#', 'รหัสแชต', 'ลูกค้า', 'หมวดหมู่', 'ความด่วน', 'สถานะ', 'สรุปประเด็นปัญหา', 'วันเวลา'];
   const plainTextRows = result.map((c, i) =>
     [
@@ -461,14 +447,11 @@ export async function exportToGoogleDocs(
   );
 
   const plainText = [
-    `📊 ${reportTitle} (${dateLabel})`,
-    `ส่งออกเมื่อ: ${nowFormatted} | รวม ${result.length} รายการ`,
-    '',
     plainTextHeaders.join('\t'),
     ...plainTextRows,
   ].join('\n');
 
-  // 3. Write Rich HTML & Plain Text to Clipboard
+  // 3. Write Rich HTML & TSV to Clipboard
   try {
     if (typeof navigator !== 'undefined' && navigator.clipboard && typeof ClipboardItem !== 'undefined') {
       const blobHtml = new Blob([fullHtml], { type: 'text/html' });
@@ -486,20 +469,19 @@ export async function exportToGoogleDocs(
     console.warn('Clipboard write warning:', clipErr);
   }
 
-  // 4. Open Google Docs / Google Sheets in New Tab
-  const openUrl =
-    targetService === 'spreadsheets'
-      ? 'https://docs.google.com/spreadsheets/create'
-      : 'https://docs.google.com/document/create';
-
+  // 4. Open Google Sheets in New Tab
+  const openUrl = 'https://docs.google.com/spreadsheets/create';
   if (typeof window !== 'undefined') {
     window.open(openUrl, '_blank', 'noopener,noreferrer');
   }
 
   const formattedDate = new Date().toISOString().split('T')[0];
-  const filename = `Sift_AI_${targetType}_GoogleDocs_${formattedDate}`;
+  const filename = `Sift_AI_${targetType}_GoogleSheets_${formattedDate}`;
   const size = `${(fullHtml.length / 1024).toFixed(1)} KB`;
 
   return { filename, size, openUrl, rowCount: result.length };
 }
+
+// Backwards-compatible alias
+export const exportToGoogleDocs = exportToGoogleSheets;
 

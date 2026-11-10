@@ -56,11 +56,9 @@ export default function ExportHistoryLogs({
               <div className="p-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500 shrink-0">
                 {log.openUrl ? (
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                    <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#4285F4"/>
-                    <path d="M14 2V8H20L14 2Z" fill="#A1C2FA"/>
-                    <line x1="8" y1="13" x2="16" y2="13" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                    <line x1="8" y1="17" x2="14" y2="17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                    <line x1="8" y1="9" x2="11" y2="9" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#0F9D58"/>
+                    <path d="M14 2V8H20L14 2Z" fill="#87CEAC"/>
+                    <path d="M8 12H16M8 15H16M8 9H11M12 9V18" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
                   </svg>
                 ) : (
                   <FileText size={13} />
@@ -93,10 +91,10 @@ export default function ExportHistoryLogs({
                     window.open(log.openUrl, '_blank', 'noopener,noreferrer');
                     onReDownload(log);
                   }}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-mono border border-blue-200 dark:border-blue-900/60 text-[#1a73e8] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer select-none"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-mono border border-emerald-200 dark:border-emerald-900/60 text-[#0f9d58] dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer select-none"
                 >
                   <ExternalLink size={11} />
-                  <span>{language === 'th' ? 'เปิดเอกสาร' : 'Open'}</span>
+                  <span>{language === 'th' ? 'เปิดสเปรดชีต' : 'Open Sheet'}</span>
                 </button>
               ) : (
                 <button
