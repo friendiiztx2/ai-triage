@@ -41,6 +41,20 @@ export function useUrgentNotifier() {
     } catch (e) {}
   };
 
+  const triggerDesktopNotification = (chat: UrgentToastData) => {
+    if (typeof window === 'undefined') return;
+    const popupOn = localStorage.getItem('desktop_popup_enabled') !== 'false';
+    if (!popupOn) return;
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('🚨 เคสด่วนวิกฤตเข้ามาใหม่!', {
+          body: `ลูกค้า ${chat.customerName}: ${chat.summary}`,
+          icon: '/favicon.ico',
+        });
+      } catch (e) {}
+    }
+  };
+
   const getNotifiedIds = (): Set<string> => {
     if (typeof window === 'undefined') return new Set();
     try {
@@ -135,6 +149,13 @@ export function useUrgentNotifier() {
           setTimeLeft(60);
           setIsPaused(false);
           triggerSound();
+          triggerDesktopNotification({
+            id: newest.id,
+            customerName: newest.customer_name || `ลูกค้า #${newest.customer_id || newest.id}`,
+            summary: newest.summary || 'พบเคสด่วนต้องการความช่วยเหลือเร่งด่วน',
+            priority: newest.priority || 'urgent',
+            companyId: newest.company_id,
+          });
         }
       } catch (err) {
         console.error('Polling urgent chats failed:', err);
@@ -185,6 +206,13 @@ export function useUrgentNotifier() {
                 setTimeLeft(60);
                 setIsPaused(false);
                 triggerSound();
+                triggerDesktopNotification({
+                  id: row.id,
+                  customerName: row.customer_name || `ลูกค้า #${row.customer_id || row.id}`,
+                  summary: row.summary || 'พบเคสด่วนต้องการความช่วยเหลือเร่งด่วน',
+                  priority: row.priority || 'urgent',
+                  companyId: row.company_id,
+                });
               }
             }
           }
@@ -208,6 +236,13 @@ export function useUrgentNotifier() {
               companyId,
             });
             triggerSound();
+            triggerDesktopNotification({
+              id,
+              customerName: customerName || `ลูกค้า #${id}`,
+              summary: summary || 'พบเคสด่วนต้องการความช่วยเหลือเร่งด่วน',
+              priority: priority || 'urgent',
+              companyId,
+            });
           }
         }
       }

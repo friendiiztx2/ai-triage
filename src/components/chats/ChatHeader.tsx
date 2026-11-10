@@ -45,7 +45,7 @@ export default function ChatHeader({
               ? 'bg-[#e8f0fe] dark:bg-blue-950/60 text-[#1a73e8] dark:text-blue-300 border-[#1a73e8]/30 font-medium'
               : 'bg-white/70 dark:bg-neutral-900/70 border-neutral-200/80 dark:border-neutral-800/80 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
           }`}
-          title={soundEnabled ? 'ปิดเสียงเตือนเคสด่วน' : 'เปิดเสียงเตือนเคสด่วน'}
+          title={soundEnabled ? (language === 'th' ? 'ปิดเสียงเตือนเคสด่วน' : 'Mute sound alerts') : (language === 'th' ? 'เปิดเสียงเตือนเคสด่วน (คลิกเพื่อทดสอบเสียง)' : 'Enable sound alerts (test sound)')}
         >
           {soundEnabled ? (
             <>
@@ -68,7 +68,7 @@ export default function ChatHeader({
               ? 'bg-[#e8f0fe] dark:bg-blue-950/60 text-[#1a73e8] dark:text-blue-300 border-[#1a73e8]/30 font-medium'
               : 'bg-white/70 dark:bg-neutral-900/70 border-neutral-200/80 dark:border-neutral-800/80 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
           }`}
-          title="การแจ้งเตือนหน้าจอ"
+          title={desktopNotifyEnabled ? (language === 'th' ? 'ปิดการแจ้งเตือนหน้าจอ' : 'Disable desktop alerts') : (language === 'th' ? 'เปิดการแจ้งเตือนหน้าจอ' : 'Enable desktop alerts')}
         >
           {desktopNotifyEnabled ? (
             <>

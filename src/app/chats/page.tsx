@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageContext';
 import SoundSettingsModal from '@/components/SoundSettingsModal';
-import { isSoundEnabled } from '@/lib/audio';
+import { isSoundEnabled, playAlertTone } from '@/lib/audio';
 import {
   filterChats,
   chatHasImage,
@@ -407,10 +407,44 @@ function ChatsPageContent() {
           const next = !soundEnabled;
           setSoundEnabled(next);
           localStorage.setItem('chats_sound_enabled', String(next));
+          if (next) {
+            playAlertTone(undefined, undefined, true);
+          }
         }}
         desktopNotifyEnabled={desktopNotifyEnabled}
-        onToggleDesktopNotify={() => {
+        onToggleDesktopNotify={async () => {
           const next = !desktopNotifyEnabled;
+          if (next && typeof window !== 'undefined' && 'Notification' in window) {
+            let perm = Notification.permission;
+            if (perm === 'default') {
+              perm = await Notification.requestPermission();
+            }
+            if (perm === 'granted') {
+              setDesktopNotifyEnabled(true);
+              localStorage.setItem('desktop_popup_enabled', 'true');
+              window.dispatchEvent(new Event('desktop-popup-setting-changed'));
+              try {
+                new Notification(
+                  language === 'th' ? '🔔 เปิดการแจ้งเตือนหน้าจอเรียบร้อยแล้ว' : '🔔 Desktop Alerts Enabled',
+                  {
+                    body: language === 'th' ? 'ระบบจะแจ้งเตือนเมื่อมีเคสด่วนวิกฤตเข้ามาใหม่' : 'You will be alerted when new urgent cases arrive',
+                    icon: '/favicon.ico',
+                  }
+                );
+              } catch (e) {}
+              return;
+            } else if (perm === 'denied') {
+              alert(
+                language === 'th'
+                  ? 'เบราว์เซอร์ของคุณปิดกั้นการแจ้งเตือน กรุณาอนุญาตในการตั้งค่าของเบราว์เซอร์ (Site Settings -> Notifications -> Allow)'
+                  : 'Notification permission is blocked. Please enable it in browser site settings.'
+              );
+              setDesktopNotifyEnabled(false);
+              localStorage.setItem('desktop_popup_enabled', 'false');
+              window.dispatchEvent(new Event('desktop-popup-setting-changed'));
+              return;
+            }
+          }
           setDesktopNotifyEnabled(next);
           localStorage.setItem('desktop_popup_enabled', String(next));
           window.dispatchEvent(new Event('desktop-popup-setting-changed'));
