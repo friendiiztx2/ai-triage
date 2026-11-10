@@ -178,7 +178,7 @@ export default function AddCompanyModal({
     setErrorMsg(null);
     if (step === 1) {
       if (!name.trim() || !domain.trim()) {
-        setErrorMsg('กรุณาระบุชื่อบริษัทและรหัสโดเมน (Domain Identifier) ให้ครบถ้วน');
+        setErrorMsg('กรุณาระบุชื่อบริษัทและรหัสโดเมน ให้ครบถ้วน');
         return;
       }
       // Pre-fill default admin name & email if empty
@@ -278,8 +278,8 @@ export default function AddCompanyModal({
             <div>
               <h2 className="font-extrabold text-sm sm:text-base text-neutral-900 dark:text-white">
                 {successData
-                  ? 'ใบส่งมอบระบบบริษัทใหม่ (Customer Handover Kit)'
-                  : 'สร้างและส่งมอบบริษัทใหม่ทีละขั้นตอน (Company Onboarding Wizard)'}
+                  ? 'ใบส่งมอบระบบบริษัทใหม่'
+                  : 'สร้างและส่งมอบบริษัทใหม่ทีละขั้นตอน'}
               </h2>
               <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                 {successData
@@ -370,7 +370,7 @@ export default function AddCompanyModal({
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="block font-bold text-neutral-700 dark:text-neutral-300 text-xs">
-                      ชื่อบริษัท / องค์กรลูกค้า (Company Name) <span className="text-rose-500">*</span>
+                      ชื่อบริษัท / องค์กรลูกค้า <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -384,7 +384,7 @@ export default function AddCompanyModal({
 
                   <div className="space-y-1.5">
                     <label className="block font-bold text-neutral-700 dark:text-neutral-300 text-xs">
-                      รหัสโดเมนประจำบริษัท (Domain Identifier) <span className="text-rose-500">*</span>
+                      รหัสโดเมนประจำบริษัท <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -398,7 +398,7 @@ export default function AddCompanyModal({
                       className="w-full px-3.5 py-2.5 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm"
                     />
                     <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                      ใช้สำหรับสร้างรหัส <code className="font-mono">Client ID</code> และแยกพื้นที่ข้อมูล (Multi-Tenant Isolation) ของลูกค้าแต่ละรายออกจากกัน
+                      ใช้สำหรับสร้างรหัส <code className="font-mono">Client ID</code> และแยกพื้นที่ข้อมูลอย่างปลอดภัย ของลูกค้าแต่ละรายออกจากกัน
                     </p>
                   </div>
 
@@ -503,7 +503,7 @@ export default function AddCompanyModal({
                   <div className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800">
                     <div className="space-y-0.5">
                       <div className="font-bold text-neutral-900 dark:text-white text-xs">
-                        สร้างบัญชีผู้ดูแลคนแรกให้ลูกค้าทันที (Company Admin)
+                        สร้างบัญชีผู้ดูแลคนแรกให้ลูกค้าทันที
                       </div>
                       <div className="text-[11px] text-neutral-500 dark:text-neutral-400">
                         สร้าง Username และรหัสผ่านสำหรับให้ลูกค้าล็อกอินเข้าดูเฉพาะข้อมูลของบริษัทตนเอง
@@ -525,7 +525,7 @@ export default function AddCompanyModal({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         <div className="space-y-1.5">
                           <label className="block font-bold text-neutral-700 dark:text-neutral-300">
-                            ชื่อผู้ดูแลระบบ (Display Name) <span className="text-rose-500">*</span>
+                            ชื่อผู้ดูแลระบบ <span className="text-rose-500">*</span>
                           </label>
                           <input
                             type="text"
@@ -538,7 +538,7 @@ export default function AddCompanyModal({
 
                         <div className="space-y-1.5">
                           <label className="block font-bold text-neutral-700 dark:text-neutral-300">
-                            ระดับสิทธิ์ในบริษัท (Role)
+                            ระดับสิทธิ์ในบริษัท
                           </label>
                           <select
                             value={adminRole}
@@ -568,7 +568,7 @@ export default function AddCompanyModal({
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <label className="block font-bold text-neutral-700 dark:text-neutral-300">
-                              รหัสผ่านเริ่มต้น (Password) <span className="text-rose-500">*</span>
+                              รหัสผ่านเริ่มต้น <span className="text-rose-500">*</span>
                             </label>
                             <button
                               type="button"
@@ -640,7 +640,7 @@ export default function AddCompanyModal({
                       {unassignedGroups.length > 0 && (
                         <div className="space-y-1.5">
                           <label className="block font-bold text-sky-600 dark:text-sky-400 text-[11px]">
-                            เลือกจากกลุ่มที่รอผูกในระบบ (Unassigned Telegram Groups):
+                            เลือกจากกลุ่มที่รอผูกในระบบ:
                           </label>
                           <select
                             onChange={(e) => {

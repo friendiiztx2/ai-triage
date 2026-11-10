@@ -114,7 +114,7 @@ export default function ManageMembersModal({
 
       setToastMsg({
         text: `อัปเดตสิทธิ์ของ ${member.first_name || member.username || 'สมาชิก'} เป็น ${
-          newRole === 'executive' ? '⭐️ ผู้บริหาร (Executive)' : '👤 สมาชิกทั่วไป (Member)'
+          newRole === 'executive' ? '⭐️ ผู้บริหาร' : '👤 สมาชิกทั่วไป'
         } สำเร็จ`,
         type: 'success',
       });
@@ -351,10 +351,10 @@ export default function ManageMembersModal({
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 bg-neutral-50 dark:bg-neutral-800/90 backdrop-blur-xs text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-100 dark:border-neutral-800 z-10">
                 <tr>
-                  <th className="py-2.5 px-6">สมาชิก (Member)</th>
+                  <th className="py-2.5 px-6">สมาชิก</th>
                   <th className="py-2.5 px-4">Telegram ID</th>
                   <th className="py-2.5 px-4">ใช้งานล่าสุด</th>
-                  <th className="py-2.5 px-6 text-right">สิทธิ์การสั่งการ (RBAC Role)</th>
+                  <th className="py-2.5 px-6 text-right">สิทธิ์การสั่งการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800 text-[12.5px]">
@@ -484,8 +484,8 @@ export default function ManageMembersModal({
           <div className="flex items-center gap-2">
             <ShieldCheck size={14} className="text-blue-600 dark:text-blue-400 shrink-0" />
             <span>
-              <strong>เงื่อนไขสิทธิ์ (RBAC Policy):</strong> เฉพาะสิทธิ์{' '}
-              <strong className="text-amber-600 dark:text-amber-400 font-semibold">ผู้บริหาร (Executive)</strong>{' '}
+              <strong>เงื่อนไขสิทธิ์:</strong> เฉพาะสิทธิ์{' '}
+              <strong className="text-amber-600 dark:text-amber-400 font-semibold">ผู้บริหาร</strong>{' '}
               เท่านั้นที่สามารถสั่งการและพิมพ์ถามบอท AI ได้
             </span>
           </div>

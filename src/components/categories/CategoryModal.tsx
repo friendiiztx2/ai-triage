@@ -88,7 +88,7 @@ export default function CategoryModal({
         {!isEdit ? (
           <div>
             <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-[10px] uppercase tracking-wider mb-1.5">
-              ไอดีหมวดหมู่ (Category ID / Slug) <span className="text-rose-500">*</span>
+              ไอดีหมวดหมู่ <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -122,7 +122,7 @@ export default function CategoryModal({
         {/* Category Name (English) */}
         <div>
           <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-[10px] uppercase tracking-wider mb-1.5">
-            {language === 'th' ? 'ชื่อหมวดหมู่ภาษาอังกฤษ (English Name)' : 'English Category Name'}
+            {language === 'th' ? 'ชื่อหมวดหมู่ภาษาอังกฤษ' : 'English Category Name'}
           </label>
           <input
             type="text"
@@ -136,7 +136,7 @@ export default function CategoryModal({
         {/* Category Description */}
         <div>
           <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-[10px] uppercase tracking-wider mb-1.5">
-            เกณฑ์หรือคำอธิบายสำหรับ AI (Intent Description)
+            เกณฑ์หรือคำอธิบายสำหรับ AI
           </label>
           <textarea
             placeholder="อธิบายสิ่งที่ลูกค้าแจ้ง เช่น การโอนเงินไม่เข้า ขอเงินคืน หรือแจ้งสลิปผิดพลาด"

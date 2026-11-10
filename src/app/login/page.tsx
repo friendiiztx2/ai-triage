@@ -44,7 +44,7 @@ export default function LoginPage() {
 
       if (res.ok && resData.user) {
         const dbUser = resData.user;
-        let compName = dbUser.company_name || (dbUser.role === 'system_admin' ? 'ทุกบริษัท (All Companies)' : 'บริษัทของฉัน');
+        let compName = dbUser.company_name || (dbUser.role === 'system_admin' ? 'ทุกบริษัท' : 'บริษัทของฉัน');
         if (dbUser.company_id) {
           try {
             const compRes = await fetch('/api/companies');

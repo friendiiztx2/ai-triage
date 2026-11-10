@@ -45,7 +45,7 @@ export default function UrgentToastCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-              🔴 เคสเร่งด่วนที่สุด! (URGENT)
+              🔴 เคสเร่งด่วนที่สุด!
             </span>
             <div className="flex items-center gap-1.5">
               <span 

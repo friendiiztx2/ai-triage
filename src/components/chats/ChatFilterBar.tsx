@@ -84,13 +84,13 @@ export default function ChatFilterBar({
   const getPriorityName = (pri: string) => {
     switch (pri) {
       case 'urgent':
-        return language === 'th' ? '🚨 ด่วนที่สุด (Urgent)' : '🚨 Urgent';
+        return language === 'th' ? '🚨 ด่วนที่สุด' : '🚨 Urgent';
       case 'high':
-        return language === 'th' ? '🔥 ด่วนสูง (High)' : '🔥 High';
+        return language === 'th' ? '🔥 ด่วนสูง' : '🔥 High';
       case 'medium':
-        return language === 'th' ? '⚡ ปานกลาง (Med)' : '⚡ Medium';
+        return language === 'th' ? '⚡ ปานกลาง' : '⚡ Medium';
       case 'low':
-        return language === 'th' ? '⚪ ปกติ (Low)' : '⚪ Low';
+        return language === 'th' ? '⚪ ปกติ' : '⚪ Low';
       default:
         return pri;
     }

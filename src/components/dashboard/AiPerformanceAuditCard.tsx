@@ -34,7 +34,7 @@ export default function AiPerformanceAuditCard({
             </h2>
           </div>
           <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700/60">
-            Audit Mode
+            {language === 'th' ? 'โหมดตรวจสอบ' : 'Audit Mode'}
           </span>
         </div>
 
@@ -49,7 +49,7 @@ export default function AiPerformanceAuditCard({
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                 : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
             }`}>
-              {isHealthy ? 'Optimal' : 'Needs Review'}
+              {isHealthy ? (language === 'th' ? 'แม่นยำสูง' : 'Optimal') : (language === 'th' ? 'ควรตรวจสอบ' : 'Needs Review')}
             </span>
           </div>
 

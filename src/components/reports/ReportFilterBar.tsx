@@ -102,10 +102,10 @@ export default function ReportFilterBar({
             size="md"
             options={[
               { value: 'all', label: language === 'th' ? 'ทุกระดับความด่วน' : 'All Priorities' },
-              { value: 'urgent', label: language === 'th' ? 'ด่วนมาก (Urgent)' : 'Urgent' },
-              { value: 'high', label: language === 'th' ? 'ด่วน (High)' : 'High' },
-              { value: 'medium', label: language === 'th' ? 'ปานกลาง (Medium)' : 'Medium' },
-              { value: 'low', label: language === 'th' ? 'ทั่วไป (Low)' : 'Low' },
+              { value: 'urgent', label: language === 'th' ? 'ด่วนมาก' : 'Urgent' },
+              { value: 'high', label: language === 'th' ? 'ด่วน' : 'High' },
+              { value: 'medium', label: language === 'th' ? 'ปานกลาง' : 'Medium' },
+              { value: 'low', label: language === 'th' ? 'ทั่วไป' : 'Low' },
             ]}
           />
         </div>

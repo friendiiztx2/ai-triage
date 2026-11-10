@@ -84,7 +84,7 @@ export default function ChatConversationView({
       {/* Section Header: Conversation History & Full Chat ID (แชตไอดี) */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-neutral-100 dark:border-neutral-800/80">
         <h4 className="font-bold text-neutral-800 dark:text-neutral-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
-          <span>💬 {language === 'th' ? 'ประวัติการคุย (CONVERSATION HISTORY)' : 'CONVERSATION HISTORY'}</span>
+          <span>💬 {language === 'th' ? 'ประวัติการสนทนา' : 'CONVERSATION HISTORY'}</span>
         </h4>
         <button
           type="button"

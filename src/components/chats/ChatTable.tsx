@@ -293,7 +293,7 @@ export default function ChatTable({
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
-                  <option value={-1}>{language === 'th' ? 'ทั้งหมด (All)' : 'All'}</option>
+                  <option value={-1}>{language === 'th' ? 'ทั้งหมด' : 'All'}</option>
                 </select>
                 <ChevronDown
                   size={12}

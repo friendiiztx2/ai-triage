@@ -41,7 +41,7 @@ export default function TagManagerModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="จัดการป้ายกำกับเคส (Tag Manager)"
+      title="จัดการป้ายกำกับเคส"
       maxWidth="lg"
       zIndex="z-[9999]"
     >

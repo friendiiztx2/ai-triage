@@ -181,7 +181,7 @@ export default function LinkGroupModal({
           <div className="space-y-1.5">
             <label className="text-[12px] font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
               <Building2 size={13} className="text-neutral-500" />
-              <span>บริษัทผู้ใช้งาน (Target Company)</span>
+              <span>บริษัทผู้ใช้งาน</span>
             </label>
             <select
               value={targetCompanyId}
@@ -275,7 +275,7 @@ export default function LinkGroupModal({
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
-                    ชื่อกลุ่ม (Group Name)
+                    ชื่อกลุ่ม
                   </label>
                   <input
                     type="text"

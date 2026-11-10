@@ -33,7 +33,7 @@ export default function UserTableRow({
   // Resolve company label
   const getCompanyLabel = () => {
     if (user.role === 'system_admin') {
-      return language === 'th' ? 'ดูแลระบบทั้งหมด (Global)' : 'All Companies (Global)';
+      return language === 'th' ? 'ดูแลระบบทั้งหมด' : 'All Companies (Global)';
     }
     if (user.company_name) return user.company_name;
     const found = companies.find((c) => c.id === user.company_id);
@@ -163,7 +163,7 @@ export default function UserTableRow({
                       className="inline-flex items-center gap-1 text-[11px] font-sans font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/50 cursor-help whitespace-nowrap"
                       title={language === 'th' ? 'รหัสผ่านถูกเข้ารหัสทางเดียว (Bcrypt) อย่างปลอดภัย หากต้องการเปลี่ยนรหัสผ่าน ให้กดปุ่มดินสอแก้ไข' : 'Secured with one-way Bcrypt hash. Click edit to change password.'}
                     >
-                      <span>🔒 เข้ารหัส (Bcrypt)</span>
+                      <span>🔒 {language === 'th' ? 'เข้ารหัสแล้ว' : 'Encrypted'}</span>
                     </span>
                   ) : (
                     <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded select-all truncate block max-w-[120px]">

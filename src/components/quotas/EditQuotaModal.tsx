@@ -161,7 +161,7 @@ export default function EditQuotaModal({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[12px] font-medium text-neutral-700 dark:text-neutral-300">
-                เลือกแพ็กเกจมาตรฐาน (Sift AI Packages):
+                เลือกแพ็กเกจมาตรฐาน:
               </label>
               <span className="text-[11px] text-neutral-400">เลือกค่าด่วน</span>
             </div>
@@ -213,7 +213,7 @@ export default function EditQuotaModal({
           <div className="space-y-1.5 pt-1">
             <div className="flex items-center justify-between">
               <label className="text-[12px] font-medium text-neutral-700 dark:text-neutral-300">
-                โควต้าข้อความสูงสุดต่อเดือน (Monthly Quota) *
+                โควต้าข้อความสูงสุดต่อเดือน *
               </label>
               {isUnlimited ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
@@ -231,7 +231,7 @@ export default function EditQuotaModal({
                   </div>
                   <div>
                     <div className="text-xs font-bold text-purple-950 dark:text-purple-200">
-                      แพ็กเกจ Custom: ไม่จำกัดจำนวนแชต (Unlimited)
+                      แพ็กเกจพิเศษ: ไม่จำกัดจำนวนแชต
                     </div>
                     <div className="text-[11px] text-purple-700/80 dark:text-purple-300/80">
                       ระบบจะไม่จำกัดโควต้า และไม่มีการแจ้งเตือน 80% / 90%

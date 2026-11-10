@@ -116,7 +116,7 @@ export default function CategoryListGrid({
         {!canManage && (
           <div className="inline-flex items-center gap-1.5 text-[11px] text-neutral-500 bg-neutral-100 dark:bg-neutral-800/80 px-2.5 py-1 rounded-md border border-neutral-200/60 dark:border-neutral-700/60 font-mono">
             <Lock size={11} className="text-neutral-400" />
-            <span>{language === 'th' ? 'โหมดอ่านอย่างเดียว (Read Only)' : 'Read-only access'}</span>
+            <span>{language === 'th' ? 'โหมดอ่านอย่างเดียว' : 'Read-only access'}</span>
           </div>
         )}
       </div>
@@ -267,7 +267,7 @@ export default function CategoryListGrid({
                 <td className="py-3 px-4">
                   <div className="flex flex-col">
                     <span className="font-medium text-neutral-800 dark:text-neutral-200 text-xs flex items-center gap-1.5">
-                      <span>{language === 'th' ? 'เรื่องอื่นๆ (Other / Unclassified)' : 'Other / Unclassified'}</span>
+                      <span>{language === 'th' ? 'เรื่องอื่นๆ' : 'Other / Unclassified'}</span>
                       <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-neutral-200/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
                         Default
                       </span>

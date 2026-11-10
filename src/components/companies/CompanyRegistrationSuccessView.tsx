@@ -57,7 +57,7 @@ export default function CompanyRegistrationSuccessView({
 
   const quotaDisplay =
     successData.is_unlimited || successData.monthly_quota === -1
-      ? 'ไม่จำกัดจำนวนแชต (Unlimited)'
+      ? 'ไม่จำกัดจำนวนแชต'
       : `${(successData.monthly_quota || 50000).toLocaleString()} แชต / เดือน`;
 
   const pkgName = successData.package_name || 'Pro';
@@ -68,13 +68,13 @@ export default function CompanyRegistrationSuccessView({
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       `🏢 บริษัท: ${successData.name} (${successData.domain})`,
       `📦 แพ็กเกจ: ${pkgName} (โควต้า ${quotaDisplay})`,
-      `🌐 ลิงก์เข้าใช้งานระบบ (Back Office): ${originUrl}/login`,
+      `🌐 ลิงก์เข้าใช้งานระบบ: ${originUrl}/login`,
       ``,
     ];
 
     if (successData.admin_created && successData.admin_user) {
       lines.push(
-        `👤 บัญชีผู้ดูแลระบบ (Company Admin):`,
+        `👤 บัญชีผู้ดูแลระบบ:`,
         `• ชื่อผู้ใช้งาน: ${successData.admin_user.name}`,
         `• อีเมล / ชื่อบัญชีเข้าสู่ระบบ: ${successData.admin_user.email}`,
         `• รหัสผ่านเริ่มต้น: ${successData.admin_user.password || '-'}`,
@@ -164,7 +164,7 @@ export default function CompanyRegistrationSuccessView({
         <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 space-y-1.5">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
             <Building2 size={13} />
-            <span>1. ข้อมูลบริษัท (Company)</span>
+            <span>1. ข้อมูลบริษัท</span>
           </div>
           <div className="font-extrabold text-neutral-900 dark:text-white text-sm truncate">
             {successData.name}
@@ -178,7 +178,7 @@ export default function CompanyRegistrationSuccessView({
         <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 space-y-1.5">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">
             <PackageCheck size={13} />
-            <span>2. แพ็กเกจโควต้า (Package)</span>
+            <span>2. แพ็กเกจโควต้า</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 font-extrabold text-xs border border-emerald-500/30">
@@ -197,7 +197,7 @@ export default function CompanyRegistrationSuccessView({
         <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 space-y-1.5">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase">
             <UserCheck size={13} />
-            <span>3. บัญชีแอดมินลูกค้า (Admin)</span>
+            <span>3. บัญชีแอดมินลูกค้า</span>
           </div>
           {successData.admin_created && successData.admin_user ? (
             <div className="space-y-0.5 text-[11px]">

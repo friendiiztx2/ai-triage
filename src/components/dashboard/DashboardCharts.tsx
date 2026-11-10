@@ -110,7 +110,7 @@ export default function DashboardCharts({
             </h2>
           </div>
           <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
-            Timeline
+            {language === 'th' ? 'เส้นเวลา' : 'Timeline'}
           </span>
         </div>
 
@@ -159,11 +159,11 @@ export default function DashboardCharts({
           <div className="flex items-center gap-2">
             <BarChart2 size={14} className="text-neutral-500 dark:text-neutral-400" />
             <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 tracking-tight">
-              {language === 'th' ? 'สถิติระดับความเร่งด่วน (SLA Priority)' : 'Priority Distribution'}
+              {language === 'th' ? 'สถิติระดับความเร่งด่วน' : 'Priority Distribution'}
             </h2>
           </div>
           <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
-            SLA Matrix
+            {language === 'th' ? 'ระดับความด่วน' : 'SLA Matrix'}
           </span>
         </div>
 

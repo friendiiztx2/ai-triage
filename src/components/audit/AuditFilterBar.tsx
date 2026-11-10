@@ -59,10 +59,10 @@ export default function AuditFilterBar({
             size="md"
             options={[
               { value: 'all', label: t('auditFilterAll') },
-              { value: 'CREATE', label: language === 'th' ? 'สร้าง (Create)' : 'Create' },
-              { value: 'UPDATE', label: language === 'th' ? 'แก้ไข (Update)' : 'Update' },
-              { value: 'DELETE', label: language === 'th' ? 'ลบ (Delete)' : 'Delete' },
-              { value: 'LOGIN', label: language === 'th' ? 'เข้าสู่ระบบ (Login)' : 'Login' },
+              { value: 'CREATE', label: language === 'th' ? 'สร้าง' : 'Create' },
+              { value: 'UPDATE', label: language === 'th' ? 'แก้ไข' : 'Update' },
+              { value: 'DELETE', label: language === 'th' ? 'ลบ' : 'Delete' },
+              { value: 'LOGIN', label: language === 'th' ? 'เข้าสู่ระบบ' : 'Login' },
             ]}
           />
         </div>

@@ -155,7 +155,7 @@ export default function SystemTagsManager({
               <tr className="border-b border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-900/60">
                 <th className="py-3 px-4">
                   <SortHeader
-                    label="ชื่อแท็กระบบ (System Tag)"
+                    label="ชื่อแท็กระบบ"
                     active={sortActive}
                     direction={sortDirection}
                     onSort={handleSort}

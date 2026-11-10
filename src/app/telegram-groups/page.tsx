@@ -229,9 +229,9 @@ export default function TelegramGroupsPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                <span>จัดการกลุ่ม Telegram & สิทธิ์ผู้บริหาร</span>
+                <span>{language === 'th' ? 'จัดการกลุ่ม Telegram & สิทธิ์ผู้บริหาร' : 'Telegram Groups & Executive Access'}</span>
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
-                  Multi-Tenant Bot
+                  {language === 'th' ? 'ระบบแยกบริษัท' : 'Multi-Tenant Bot'}
                 </span>
               </h1>
               <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-0.5">
@@ -257,7 +257,7 @@ export default function TelegramGroupsPage() {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white text-[12px] font-semibold shadow-xs transition cursor-pointer"
           >
             <Plus size={14} />
-            <span>ผูกกลุ่มใหม่ (Link Group)</span>
+            <span>{language === 'th' ? 'ผูกกลุ่มใหม่' : 'Link New Group'}</span>
           </button>
         </div>
       </div>
@@ -323,7 +323,7 @@ export default function TelegramGroupsPage() {
         {/* Total Executives */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4.5 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-[12px] font-medium text-neutral-500 dark:text-neutral-400">ผู้บริหาร (สิทธิ์ถาม AI)</span>
+            <span className="text-[12px] font-medium text-neutral-500 dark:text-neutral-400">{language === 'th' ? 'ผู้บริหาร (สิทธิ์ถาม AI)' : 'Executives (AI Access)'}</span>
             <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Star size={15} className="fill-amber-500 text-amber-500" />
             </div>
@@ -382,7 +382,7 @@ export default function TelegramGroupsPage() {
                 onChange={(e) => setCompanyFilter(e.target.value)}
                 className="w-full px-3 py-2 text-[12.5px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
               >
-                <option value="all">ทุกบริษัท (All Companies)</option>
+                <option value="all">{language === 'th' ? 'ทุกบริษัท' : 'All Companies'}</option>
                 {companies.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -434,12 +434,12 @@ export default function TelegramGroupsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-850 text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                <th className="py-3 px-6">กลุ่ม Telegram</th>
+                <th className="py-3 px-6">{language === 'th' ? 'กลุ่ม Telegram' : 'Telegram Group'}</th>
                 <th className="py-3 px-4">Chat ID</th>
-                <th className="py-3 px-4">บริษัทที่ผูก</th>
-                <th className="py-3 px-4">สมาชิกในกลุ่ม</th>
-                <th className="py-3 px-4 text-center">สถานะ AI Bot</th>
-                <th className="py-3 px-6 text-right">การจัดการ</th>
+                <th className="py-3 px-4">{language === 'th' ? 'บริษัทที่ผูก' : 'Linked Company'}</th>
+                <th className="py-3 px-4">{language === 'th' ? 'สมาชิกในกลุ่ม' : 'Members'}</th>
+                <th className="py-3 px-4 text-center">{language === 'th' ? 'สถานะ AI Bot' : 'AI Bot Status'}</th>
+                <th className="py-3 px-6 text-right">{language === 'th' ? 'การจัดการ' : 'Actions'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800 text-[12.5px]">

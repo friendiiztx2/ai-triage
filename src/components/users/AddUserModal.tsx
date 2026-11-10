@@ -153,7 +153,7 @@ export default function AddUserModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="block font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-                ชื่อผู้ใช้ (Name)
+                ชื่อผู้ใช้
               </label>
               <input
                 type="text"
@@ -206,7 +206,7 @@ export default function AddUserModal({
 
             <div className="space-y-1">
               <label className="block font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-                บทบาทหลัก (Role)
+                ระดับสิทธิ์การใช้งาน
               </label>
               <SelectDropdown
                 value={role}

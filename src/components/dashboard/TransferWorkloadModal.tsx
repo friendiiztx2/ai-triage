@@ -47,7 +47,7 @@ export default function TransferWorkloadModal({
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl max-w-md w-full p-6 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] space-y-5 animate-scale-in">
         <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
           <h3 className="font-extrabold text-neutral-800 dark:text-neutral-100 text-sm flex items-center gap-2">
-            🔄 โอนย้ายกระจายภาระงาน (Transfer Workload)
+            🔄 โอนย้ายกระจายภาระงาน
           </h3>
           <button
             onClick={onClose}

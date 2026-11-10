@@ -139,7 +139,7 @@ export default function CompanyTable({
               </th>
               <th className="py-3.5 px-5 whitespace-nowrap">Client ID</th>
               <th className="py-3.5 px-5 whitespace-nowrap">
-                {language === 'th' ? 'รหัสลับ (Client Secret)' : 'Client Secret'}
+                {language === 'th' ? 'รหัสลับ' : 'Client Secret'}
               </th>
             </tr>
           </thead>

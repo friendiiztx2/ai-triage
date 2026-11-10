@@ -27,14 +27,14 @@ export default function SidebarWorkspaceSwitcher({
     : (userProfile?.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
 
   const availableCompanies = isSystemAdmin
-    ? [{ id: 'all', name: 'ทุกบริษัท (All Companies)' }, ...companies]
+    ? [{ id: 'all', name: 'ทุกบริษัท' }, ...companies]
     : companies.filter((c) => allowedIds.includes(c.id));
 
   const showDropdown = isSystemAdmin || allowedIds.length > 1;
   const currentCompany =
     !activeCompany || activeCompany === 'all' || activeCompany === 'null'
       ? isSystemAdmin
-        ? 'ทุกบริษัท (All Companies)'
+        ? 'ทุกบริษัท'
         : userProfile?.company_name || 'Enterprise'
       : companies.find((c) => c.id === activeCompany)?.name || userProfile?.company_name || 'Enterprise';
 
@@ -112,7 +112,7 @@ export default function SidebarWorkspaceSwitcher({
       {showDropdown && isOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 z-[9999] bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-[0_16px_40px_-4px_rgba(0,0,0,0.3)] p-1.5 space-y-1 animate-scale-in">
           <div className="px-2.5 py-1 text-[10px] font-semibold text-neutral-400 dark:text-neutral-400 uppercase tracking-wider">
-            พื้นที่ทำงาน (Workspace)
+            พื้นที่ทำงาน
           </div>
           <div className="max-h-56 overflow-y-auto space-y-0.5">
             {availableCompanies.map((c) => {

@@ -10,7 +10,7 @@ export interface ImageHoverZoomProps {
 
 export default function ImageHoverZoom({
   imageUrl,
-  title = 'พรีวิวรูปภาพจากแชต (Hover Zoom)',
+  title = 'พรีวิวรูปภาพจากแชต',
   hint = 'เลื่อนเมาส์ออกเพื่อปิด',
 }: ImageHoverZoomProps) {
   if (!imageUrl) return null;

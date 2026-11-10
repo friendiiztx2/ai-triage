@@ -11,25 +11,25 @@ export interface ToneOption {
 export const TONE_OPTIONS: ToneOption[] = [
   {
     id: 'siren',
-    title: '🚨 ไซเรนเตือนฉุกเฉิน (Digital Siren)',
+    title: '🚨 ไซเรนเตือนฉุกเฉิน',
     desc: 'เสียงสังเคราะห์ความถี่สูงสลับจังหวะ ชัดเจนสะดุดตาที่สุด',
     icon: ShieldAlert,
   },
   {
     id: 'dual_chime',
-    title: '🎵 เสียงสองโทน (Dual Chime)',
+    title: '🎵 เสียงสองโทน',
     desc: 'เสียงชิเมะสองโทนกังวานใส นุ่มนวลฟังสบาย',
     icon: Music,
   },
   {
     id: 'radar_pulse',
-    title: '📡 เรดาร์เตือนถี่ (Radar Pulse)',
+    title: '📡 เรดาร์เตือนถี่',
     desc: 'เสียงบี๊บเรดาร์สัญญาณ 4 จังหวะเตือนสั้นถี่',
     icon: Radio,
   },
   {
     id: 'emergency_horn',
-    title: '📢 แตรฉุกเฉิน (Emergency Horn)',
+    title: '📢 แตรฉุกเฉิน',
     desc: 'เสียงแตรเตือนภัยความถี่ต่ำก้องกังวานในห้องทำงาน',
     icon: Megaphone,
   },

@@ -71,7 +71,7 @@ export default function CompaniesPage() {
         </h2>
         <p className="text-neutral-400 max-w-sm font-sans text-xs">
           {language === 'th'
-            ? 'หน้านี้สงวนสิทธิ์เฉพาะผู้ดูแลระบบโครงสร้างส่วนกลาง (System Administrator) เท่านั้น'
+            ? 'หน้านี้สงวนสิทธิ์เฉพาะผู้ดูแลระบบโครงสร้างส่วนกลาง เท่านั้น'
             : 'This page is restricted to global System Administrators only.'}
         </p>
       </div>
@@ -88,7 +88,7 @@ export default function CompaniesPage() {
           </h1>
           <p className="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm mt-0.5 font-normal">
             {language === 'th'
-              ? 'สร้างและส่งมอบบริษัทใหม่ทีละขั้นตอน (แพ็กเกจโควต้า • บัญชีแอดมินลูกค้า • กลุ่ม Telegram • ใบส่งมอบระบบ)'
+              ? 'สร้างและส่งมอบบริษัทใหม่ทีละขั้นตอน: แพ็กเกจโควต้า บัญชีผู้ดูแลระบบ และกลุ่ม Telegram'
               : 'Multi-step Company Onboarding Wizard: Package Quota, Initial Admin, Telegram Group, and Customer Handover Kit.'}
           </p>
         </div>
@@ -98,7 +98,7 @@ export default function CompaniesPage() {
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-colors cursor-pointer self-start sm:self-auto"
         >
           <Plus size={15} />
-          <span>{language === 'th' ? 'สร้างและส่งมอบบริษัทใหม่ (Wizard 4 ขั้นตอน)' : 'Onboard New Company (4-Step Wizard)'}</span>
+          <span>{language === 'th' ? 'สร้างและส่งมอบบริษัทใหม่' : 'Onboard New Company'}</span>
         </button>
       </div>
 

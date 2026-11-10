@@ -211,7 +211,7 @@ export default function UserIssuesPage() {
           <ShieldAlert size={24} />
         </div>
         <h2 className="text-base font-semibold text-neutral-800 dark:text-neutral-100">
-          จำกัดสิทธิ์การเข้าถึง (System Admin Only)
+          จำกัดสิทธิ์การเข้าถึงเฉพาะผู้ดูแลระบบ
         </h2>
         <p className="text-xs text-neutral-500 max-w-sm">
           หน้านี้สงวนไว้สำหรับผู้ดูแลระบบระดับ System Admin เท่านั้นเพื่อใช้ตรวจสอบและปรับปรุงคุณภาพการวิเคราะห์ของ AI

@@ -75,7 +75,7 @@ export default function SoundSettingsModal({ isOpen, onClose, onSettingsChanged 
               <Bell size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-neutral-800 dark:text-neutral-100 text-base">ตั้งค่าเสียงแจ้งเตือนเคสด่วน (Sound Alert Settings)</h3>
+              <h3 className="font-bold text-neutral-800 dark:text-neutral-100 text-base">ตั้งค่าเสียงแจ้งเตือนเคสด่วน</h3>
               <p className="text-neutral-400 text-xs mt-0.5">เลือกโทนเสียง ปรับความดัง และทดสอบฟังเสียงได้ทันที</p>
             </div>
           </div>

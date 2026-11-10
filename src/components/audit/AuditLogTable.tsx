@@ -132,7 +132,7 @@ export default function AuditLogTable({
               <tr className="border-b border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/70 dark:bg-neutral-900/60">
                 <th className="px-6 py-3.5">
                   <SortHeader
-                    label={language === 'th' ? 'ผู้ดำเนินการ (Admin)' : 'Actor (Admin)'}
+                    label={language === 'th' ? 'ผู้ดำเนินการ' : 'Actor'}
                     active={sortColumn === 'actor'}
                     direction={sortDirection}
                     onSort={() => handleSort('actor')}

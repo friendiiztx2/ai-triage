@@ -118,7 +118,7 @@ export default function DashboardKpiGrid({
         </div>
         <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-2">
           {hasUrgent
-            ? (language === 'th' ? 'ต้องการตอบกลับทันที (<5m)' : 'Immediate SLA response')
+            ? (language === 'th' ? 'ต้องการตอบกลับทันที' : 'Immediate SLA response')
             : (language === 'th' ? 'สถานะปกติ ไม่มีค้าง SLA' : 'SLA conditions nominal')}
         </p>
       </Link>
@@ -136,7 +136,7 @@ export default function DashboardKpiGrid({
             {aiMetrics.accuracyRate}%
           </div>
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-medium">
-            Nominal
+            {language === 'th' ? 'ปกติ' : 'Nominal'}
           </span>
         </div>
         <div className="flex items-center justify-between text-[11px] text-neutral-400 dark:text-neutral-500 mt-2">
