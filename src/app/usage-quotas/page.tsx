@@ -48,7 +48,7 @@ interface CompanyOverviewItem {
 }
 
 export default function UsageQuotasPage() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
@@ -171,14 +171,14 @@ export default function UsageQuotasPage() {
   };
 
   const getStatusLabel = (status: string) => {
-    if (status === 'unlimited') return 'ไม่จำกัด';
-    if (status === 'critical_90' || status === 'critical') return 'วิกฤต';
-    if (status === 'warning_80' || status === 'warning') return 'เฝ้าระวัง';
-    return 'ปกติ';
+    if (status === 'unlimited') return t('quotaStatusUnlimited');
+    if (status === 'critical_90' || status === 'critical') return t('quotaStatusCritical');
+    if (status === 'warning_80' || status === 'warning') return t('quotaStatusWarning');
+    return t('quotaStatusNormal');
   };
 
   const getStatusThreshold = (status: string) => {
-    if (status === 'unlimited') return '(Custom)';
+    if (status === 'unlimited') return language === 'th' ? '(พิเศษ)' : '(Custom)';
     if (status === 'critical_90' || status === 'critical') return '(≥90%)';
     if (status === 'warning_80' || status === 'warning') return '(≥80%)';
     return '(<80%)';
@@ -199,10 +199,10 @@ export default function UsageQuotasPage() {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                ระบบติดตามการใช้งานและโควต้า
+                {t('quotaTitle')}
               </h1>
               <p className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400">
-                ตรวจสอบปริมาณข้อความ, โทเคน AI และระบบแจ้งเตือนอัตโนมัติ 80% / 90%
+                {t('quotaSub')}
               </p>
             </div>
           </div>
@@ -240,7 +240,7 @@ export default function UsageQuotasPage() {
             onClick={fetchData}
             disabled={loading}
             className="p-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition shadow-xs cursor-pointer"
-            title="รีเฟรชข้อมูล"
+            title={t('quotaRefresh')}
           >
             <RefreshCw size={15} className={loading ? 'animate-spin text-blue-500' : ''} />
           </button>
@@ -259,7 +259,7 @@ export default function UsageQuotasPage() {
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition cursor-pointer"
             >
               <Sliders size={13} />
-              <span>ปรับแต่งโควต้า</span>
+              <span>{t('quotaEditBtn')}</span>
             </button>
           )}
         </div>
@@ -275,16 +275,26 @@ export default function UsageQuotasPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm tracking-wide text-purple-800 dark:text-purple-300 uppercase">
-                  แพ็กเกจ Custom: ไม่จำกัดจำนวนแชต (Unlimited)
+                  {t('quotaUnlimitedPlan')}
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-600 text-white">
-                  ไม่จำกัด
+                  {t('quotaUnlimitedBadge')}
                 </span>
               </div>
               <p className="text-xs text-purple-800/80 dark:text-purple-300/80 mt-0.5">
-                บริษัท <strong>{targetComp?.name}</strong> ใช้งานแพ็กเกจแบบไม่จำกัดข้อความ (ใช้งานแล้ว{' '}
-                <strong>{usedMessages.toLocaleString()}</strong> ข้อความในรอบบิลนี้)
-                ระบบจะไม่จำกัดโควต้าและไม่มีการระงับการใช้งาน
+                {language === 'th' ? (
+                  <>
+                    บริษัท <strong>{targetComp?.name}</strong> ใช้งานแพ็กเกจแบบไม่จำกัดข้อความ (ใช้งานแล้ว{' '}
+                    <strong>{usedMessages.toLocaleString()}</strong> ข้อความในรอบบิลนี้)
+                    ระบบจะไม่จำกัดโควต้าและไม่มีการระงับการใช้งาน
+                  </>
+                ) : (
+                  <>
+                    Company <strong>{targetComp?.name}</strong> is on an unlimited plan ({' '}
+                    <strong>{usedMessages.toLocaleString()}</strong> messages used this billing cycle).
+                    The system will not restrict quota or throttle usage.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -300,7 +310,7 @@ export default function UsageQuotasPage() {
               }}
               className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white shadow-xs transition cursor-pointer"
             >
-              ปรับแต่งแพ็กเกจ
+              {language === 'th' ? 'ปรับแต่งแพ็กเกจ' : 'Edit Plan'}
             </button>
           )}
         </div>
@@ -313,17 +323,28 @@ export default function UsageQuotasPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm tracking-wide text-rose-700 dark:text-rose-300 uppercase">
-                  วิกฤต: โควต้าใกล้เต็ม 90% (Critical Alert)
+                  {t('quotaCriticalTitle')}
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500 text-white">
-                  {percentUsed}% แล้ว
+                  {percentUsed}% {language === 'th' ? 'แล้ว' : 'Used'}
                 </span>
               </div>
               <p className="text-xs text-rose-700/90 dark:text-rose-300/90 mt-0.5">
-                บริษัท <strong>{targetComp?.name}</strong> ใช้งานไปแล้ว{' '}
-                <strong>{usedMessages.toLocaleString()}</strong> จาก{' '}
-                <strong>{monthlyQuota.toLocaleString()}</strong> ข้อความ (เหลืออีกเพียง{' '}
-                {remainingMessages?.toLocaleString()} ข้อความ) เสี่ยงต่อการระงับข้อความอัตโนมัติหากเกิน 100%
+                {language === 'th' ? (
+                  <>
+                    บริษัท <strong>{targetComp?.name}</strong> ใช้งานไปแล้ว{' '}
+                    <strong>{usedMessages.toLocaleString()}</strong> จาก{' '}
+                    <strong>{monthlyQuota.toLocaleString()}</strong> ข้อความ (เหลืออีกเพียง{' '}
+                    {remainingMessages?.toLocaleString()} ข้อความ) เสี่ยงต่อการระงับข้อความอัตโนมัติหากเกิน 100%
+                  </>
+                ) : (
+                  <>
+                    Company <strong>{targetComp?.name}</strong> has used{' '}
+                    <strong>{usedMessages.toLocaleString()}</strong> of{' '}
+                    <strong>{monthlyQuota.toLocaleString()}</strong> messages (only{' '}
+                    {remainingMessages?.toLocaleString()} remaining). Messages risk being paused if 100% is reached.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -339,7 +360,7 @@ export default function UsageQuotasPage() {
               }}
               className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition cursor-pointer"
             >
-              เพิ่มโควต้าทันที
+              {language === 'th' ? 'เพิ่มโควต้าทันที' : 'Upgrade Quota'}
             </button>
           )}
         </div>
@@ -352,16 +373,24 @@ export default function UsageQuotasPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm text-amber-800 dark:text-amber-300 uppercase">
-                  แจ้งเตือนเฝ้าระวัง: ใช้โควต้าถึง 80% (Warning Alert)
+                  {t('quotaWarningTitle')}
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500 text-white">
                   {percentUsed}%
                 </span>
               </div>
               <p className="text-xs text-amber-700/90 dark:text-amber-300/90 mt-0.5">
-                บริษัท <strong>{targetComp?.name}</strong> ใช้งานถึง 80% ของโควต้าประจำเดือนแล้ว (เหลืออีก{' '}
-                {remainingMessages?.toLocaleString()} ข้อความ ในอีก {data?.daysRemaining || 0} วัน)
-                กรุณาวางแผนขยายแพ็กเกจล่วงหน้า
+                {language === 'th' ? (
+                  <>
+                    บริษัท <strong>{targetComp?.name}</strong> ใช้งานถึง 80% ของโควต้าประจำเดือนแล้ว (เหลืออีก{' '}
+                    {remainingMessages?.toLocaleString()} ข้อความ ในอีก {data?.daysRemaining || 0} วัน)
+                    กรุณาวางแผนขยายแพ็กเกจล่วงหน้า
+                  </>
+                ) : (
+                  <>
+                    Company <strong>{targetComp?.name}</strong> has reached 80% of monthly quota ({remainingMessages?.toLocaleString()} messages left for {data?.daysRemaining || 0} days). Please plan quota expansion in advance.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -386,8 +415,17 @@ export default function UsageQuotasPage() {
           <div className="flex items-center gap-2.5">
             <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>
-              สถานะการใช้งานของ <strong>{targetComp?.name}</strong> อยู่ในเกณฑ์ปกติ (ใช้ไป {percentUsed}%)
-              พร้อมใช้งานได้อีก <strong>{remainingMessages?.toLocaleString()}</strong> ข้อความในรอบเดือนนี้
+              {language === 'th' ? (
+                <>
+                  สถานะการใช้งานของ <strong>{targetComp?.name}</strong> อยู่ในเกณฑ์ปกติ (ใช้ไป {percentUsed}%)
+                  พร้อมใช้งานได้อีก <strong>{remainingMessages?.toLocaleString()}</strong> ข้อความในรอบเดือนนี้
+                </>
+              ) : (
+                <>
+                  Usage status for <strong>{targetComp?.name}</strong> is normal ({percentUsed}% used).{' '}
+                  <strong>{remainingMessages?.toLocaleString()}</strong> messages remain available this cycle.
+                </>
+              )}
             </span>
           </div>
           <span className="hidden sm:inline-block font-mono text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -404,14 +442,14 @@ export default function UsageQuotasPage() {
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-                  โควต้าประจำเดือน ({data?.currentMonthLabel || selectedMonth})
+                  {t('quotaMonthlyTitle')} ({data?.currentMonthLabel || selectedMonth})
                 </span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-2xl md:text-3xl font-extrabold font-mono text-neutral-900 dark:text-white">
                     {usedMessages.toLocaleString()}
                   </span>
                   <span className="text-sm md:text-base font-semibold text-neutral-400 font-mono">
-                    / {isUnlimited ? 'ไม่จำกัด (Unlimited)' : `${monthlyQuota.toLocaleString()} ข้อความ`}
+                    / {isUnlimited ? t('quotaUnlimitedBadge') : `${monthlyQuota.toLocaleString()} ${t('quotaMessagesUnit')}`}
                   </span>
                 </div>
               </div>
@@ -447,7 +485,11 @@ export default function UsageQuotasPage() {
                   </span>
                 </div>
                 <p className="text-[11px] text-neutral-400 font-sans">
-                  {isUnlimited ? 'แพ็กเกจ Custom ไม่จำกัดแชต' : `คงเหลือ ${remainingMessages?.toLocaleString()} ข้อความ`}
+                  {isUnlimited
+                    ? t('quotaUnlimitedPlan')
+                    : language === 'th'
+                    ? `คงเหลือ ${remainingMessages?.toLocaleString()} ข้อความ`
+                    : `${remainingMessages?.toLocaleString()} messages remaining`}
                 </p>
               </div>
             </div>
@@ -467,14 +509,14 @@ export default function UsageQuotasPage() {
             <div className="flex justify-between items-center text-[10px] text-neutral-400 font-mono pt-0.5">
               {isUnlimited ? (
                 <>
-                  <span className="text-purple-500 font-medium">✨ แพ็กเกจ Custom ไม่จำกัดจำนวนแชต</span>
-                  <span className="text-neutral-400 font-sans">ไม่มีการตัดรอบหรือระงับการใช้งานอัตโนมัติ</span>
+                  <span className="text-purple-500 font-medium">{t('quotaUnlimitedPackageNote')}</span>
+                  <span className="text-neutral-400 font-sans">{t('quotaUnlimitedNoCutoff')}</span>
                 </>
               ) : (
                 <>
                   <span>0%</span>
-                  <span className="text-amber-500 font-medium">▲ เตือน 80% ({Math.round(monthlyQuota * 0.8).toLocaleString()})</span>
-                  <span className="text-rose-500 font-medium">▲ วิกฤต 90% ({Math.round(monthlyQuota * 0.9).toLocaleString()})</span>
+                  <span className="text-amber-500 font-medium">▲ {language === 'th' ? 'เตือน' : 'Warning'} 80% ({Math.round(monthlyQuota * 0.8).toLocaleString()})</span>
+                  <span className="text-rose-500 font-medium">▲ {language === 'th' ? 'วิกฤต' : 'Critical'} 90% ({Math.round(monthlyQuota * 0.9).toLocaleString()})</span>
                   <span>100% ({monthlyQuota.toLocaleString()})</span>
                 </>
               )}
@@ -485,13 +527,16 @@ export default function UsageQuotasPage() {
           <div className="lg:w-72 p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200/60 dark:border-neutral-800 flex flex-col justify-center space-y-1.5 shrink-0">
             <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-xs">
               <Clock size={14} />
-              <span>รอบระยะเวลาการใช้งาน</span>
+              <span>{t('quotaCyclePeriod')}</span>
             </div>
             <div className="text-lg font-bold text-neutral-800 dark:text-neutral-200">
-              เหลืออีก {data?.daysRemaining || 0} วัน
+              {t('quotaRemainingDays', { n: data?.daysRemaining || 0 })}
             </div>
             <p className="text-[11px] text-neutral-400">
-              ผ่านไปแล้ว {data?.daysElapsed || 0} จากทั้งหมด {data?.totalDaysInMonth || 30} วัน ในรอบเดือนนี้
+              {t('quotaElapsedDays', {
+                elapsed: data?.daysElapsed || 0,
+                total: data?.totalDaysInMonth || 30,
+              })}
             </p>
           </div>
         </div>
@@ -502,7 +547,7 @@ export default function UsageQuotasPage() {
         {/* Card 1: Used Messages */}
         <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-1.5">
           <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-xs font-medium">ข้อความที่ใช้ในเดือนนี้</span>
+            <span className="text-xs font-medium">{t('quotaCardUsed')}</span>
             <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <MessageSquare size={16} />
             </div>
@@ -511,14 +556,18 @@ export default function UsageQuotasPage() {
             {usedMessages.toLocaleString()}
           </div>
           <p className="text-[11px] text-neutral-400">
-            {isUnlimited ? 'แพ็กเกจ Custom ไม่จำกัดจำนวนแชต' : `คิดเป็น ${percentUsed}% ของโควต้าเดือนนี้`}
+            {isUnlimited
+              ? t('quotaUnlimitedPlan')
+              : language === 'th'
+              ? `คิดเป็น ${percentUsed}% ของโควต้าเดือนนี้`
+              : `${percentUsed}% of monthly quota`}
           </p>
         </div>
 
         {/* Card 2: Estimated Tokens */}
         <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-1.5">
           <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-xs font-medium">โทเคน AI ประมาณการ</span>
+            <span className="text-xs font-medium">{t('quotaCardTokens')}</span>
             <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
               <Cpu size={16} />
             </div>
@@ -527,14 +576,14 @@ export default function UsageQuotasPage() {
             ~{(Number(data?.tokensEstimated || 0) / 1000000).toFixed(2)}M
           </div>
           <p className="text-[11px] text-neutral-400 font-mono">
-            {Number(data?.tokensEstimated || 0).toLocaleString()} Tokens
+            {Number(data?.tokensEstimated || 0).toLocaleString()} {t('quotaTokensUnit')}
           </p>
         </div>
 
         {/* Card 3: Daily Average */}
         <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-1.5">
           <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-xs font-medium">เฉลี่ยต่อวัน (Daily Avg)</span>
+            <span className="text-xs font-medium">{t('quotaCardDailyAvg')}</span>
             <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <TrendingUp size={16} />
             </div>
@@ -544,15 +593,17 @@ export default function UsageQuotasPage() {
           </div>
           <p className="text-[11px] text-neutral-400">
             {isUnlimited
-              ? 'ไม่จำกัดโควต้าต่อวัน (Custom)'
-              : `เกณฑ์แนะนำ: ~${Math.round(monthlyQuota / (data?.totalDaysInMonth || 30)).toLocaleString()} ข้อความ/วัน`}
+              ? (language === 'th' ? 'ไม่จำกัดโควต้าต่อวัน' : 'No daily limit')
+              : (language === 'th'
+                  ? `เกณฑ์แนะนำ: ~${Math.round(monthlyQuota / (data?.totalDaysInMonth || 30)).toLocaleString()} ข้อความ/วัน`
+                  : `Target: ~${Math.round(monthlyQuota / (data?.totalDaysInMonth || 30)).toLocaleString()} messages/day`)}
           </p>
         </div>
 
         {/* Card 4: Month-end Forecast */}
         <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-1.5">
           <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-xs font-medium">พยากรณ์สิ้นเดือน</span>
+            <span className="text-xs font-medium">{t('quotaCardForecast')}</span>
             <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
               <CalendarClock size={16} />
             </div>
@@ -570,12 +621,12 @@ export default function UsageQuotasPage() {
             }`}
           >
             {isUnlimited
-              ? '✓ ใช้งานได้ไม่จำกัด (Custom Package)'
+              ? t('quotaUnlimitedForecast')
               : Number(data?.projectedMonthEnd || 0) > monthlyQuota
-              ? `⚠️ เสี่ยงเกินโควต้า (${Math.round(
-                  (Number(data?.projectedMonthEnd || 0) / monthlyQuota) * 100
-                )}%)`
-              : '✓ ปลอดภัย อยู่ในกรอบโควต้า'}
+              ? t('quotaRiskForecast', {
+                  p: Math.round((Number(data?.projectedMonthEnd || 0) / monthlyQuota) * 100),
+                })
+              : t('quotaSafeForecast')}
           </p>
         </div>
       </div>
@@ -588,18 +639,18 @@ export default function UsageQuotasPage() {
             <div className="flex items-center gap-2">
               <BarChart3 size={18} className="text-blue-500" />
               <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
-                ปริมาณการใช้งานรายวัน (Daily Usage Trend)
+                {t('quotaDailyTrend')}
               </h3>
             </div>
             <div className="flex items-center gap-3 text-[11px] text-neutral-400">
               <span className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 rounded-xs bg-blue-500 inline-block" />
-                ข้อความที่ใช้
+                {language === 'th' ? 'ข้อความที่ใช้' : 'Messages Used'}
               </span>
               {!isUnlimited && (
                 <span className="flex items-center gap-1">
                   <span className="w-3 border-b-2 border-dashed border-rose-400 inline-block" />
-                  เกณฑ์แนะนำต่อวัน
+                  {t('quotaDailyTarget')}
                 </span>
               )}
             </div>
@@ -626,8 +677,8 @@ export default function UsageQuotasPage() {
                       color: '#ffffff',
                       fontSize: '12px',
                     }}
-                    formatter={(val: any) => [`${val.toLocaleString()} ข้อความ`, 'การใช้งาน']}
-                    labelFormatter={(label: any) => `วันที่ ${label} ของเดือน`}
+                    formatter={(val: any) => [`${val.toLocaleString()} ${t('quotaMessagesUnit')}`, t('quotaUsageVolume')]}
+                    labelFormatter={(label: any) => t('quotaDayLabel', { d: label })}
                   />
                   {!isUnlimited && data.dailyChart[0]?.benchmark > 0 && (
                     <ReferenceLine
@@ -635,7 +686,7 @@ export default function UsageQuotasPage() {
                       stroke="#f43f5e"
                       strokeDasharray="4 4"
                       label={{
-                        value: 'เกณฑ์เฉลี่ย',
+                        value: t('quotaBenchmarkLabel'),
                         fill: '#f43f5e',
                         fontSize: 10,
                         position: 'insideTopRight',
@@ -662,7 +713,7 @@ export default function UsageQuotasPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-neutral-400">
-                ยังไม่มีข้อมูลการใช้งานรายวันในเดือนนี้
+                {t('quotaNoDailyData')}
               </div>
             )}
           </div>
@@ -674,7 +725,7 @@ export default function UsageQuotasPage() {
             <div className="flex items-center gap-2">
               <Clock size={18} className="text-purple-500" />
               <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
-                ช่วงเวลาการใช้งานสูงสุด (Peak Hours)
+                {t('quotaPeakHours')}
               </h3>
             </div>
             <span className="text-[11px] text-neutral-400">00:00 - 23:00</span>
@@ -702,15 +753,15 @@ export default function UsageQuotasPage() {
                       color: '#ffffff',
                       fontSize: '12px',
                     }}
-                    formatter={(val: any) => [`${val.toLocaleString()} ข้อความ`, 'ปริมาณแชท']}
-                    labelFormatter={(label: any) => `เวลา ${label}`}
+                    formatter={(val: any) => [`${val.toLocaleString()} ${t('quotaMessagesUnit')}`, t('quotaChatVolume')]}
+                    labelFormatter={(label: any) => t('quotaHourLabel', { h: label })}
                   />
                   <Bar dataKey="count" fill="#8b5cf6" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-neutral-400">
-                ยังไม่มีข้อมูลชั่วโมงสนทนา
+                {t('quotaNoHourlyData')}
               </div>
             )}
           </div>
@@ -722,10 +773,12 @@ export default function UsageQuotasPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
-              ประวัติการใช้งานย้อนหลัง (Historical Usage Cycles)
+              {t('quotaHistoryTitle')}
             </h3>
             <p className="text-xs text-neutral-400">
-              เปรียบเทียบโควต้าและการใช้งานจริงในรอบ 4 เดือนล่าสุดของ {targetComp?.name}
+              {language === 'th'
+                ? `เปรียบเทียบโควต้าและการใช้งานจริงในรอบ 4 เดือนล่าสุดของ ${targetComp?.name}`
+                : `Quota vs. actual usage comparison over the last 4 billing cycles for ${targetComp?.name}`}
             </p>
           </div>
           <button
@@ -733,7 +786,7 @@ export default function UsageQuotasPage() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-xs font-medium transition cursor-pointer self-start sm:self-auto"
           >
             <Download size={13} />
-            <span>ส่งออก CSV</span>
+            <span>{t('quotaExportCsv')}</span>
           </button>
         </div>
 
@@ -741,11 +794,11 @@ export default function UsageQuotasPage() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-[11px] font-semibold">
-                <th className="pb-3 pl-3">รอบเดือน</th>
-                <th className="pb-3 px-4">โควต้าที่จัดสรร</th>
-                <th className="pb-3 px-4">ข้อความที่ใช้จริง</th>
-                <th className="pb-3 px-4 min-w-[180px]">สัดส่วนการใช้งาน (%)</th>
-                <th className="pb-3 pr-3 text-right">สถานะ</th>
+                <th className="pb-3 pl-3">{t('quotaColMonth')}</th>
+                <th className="pb-3 px-4">{t('quotaColAllocated')}</th>
+                <th className="pb-3 px-4">{t('quotaColActual')}</th>
+                <th className="pb-3 px-4 min-w-[180px]">{t('quotaColRatio')}</th>
+                <th className="pb-3 pr-3 text-right">{t('quotaColStatus')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60 font-mono">
@@ -757,7 +810,7 @@ export default function UsageQuotasPage() {
                       {item.label}
                     </td>
                     <td className="py-3.5 px-4 text-neutral-600 dark:text-neutral-300">
-                      {itemUnlimited ? 'ไม่จำกัด (Custom)' : item.quota.toLocaleString()}
+                      {itemUnlimited ? t('quotaUnlimitedBadge') : item.quota.toLocaleString()}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-neutral-900 dark:text-neutral-100">
                       {item.used.toLocaleString()}
@@ -822,11 +875,11 @@ export default function UsageQuotasPage() {
               <div className="flex items-center gap-2">
                 <Building2 size={18} className="text-blue-500" />
                 <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
-                  ภาพรวมโควต้าของทุกบริษัท (Multi-Tenant Quotas Overview)
+                  {t('quotaAllCompaniesTitle')}
                 </h3>
               </div>
               <p className="text-xs text-neutral-400 mt-0.5">
-                เฉพาะ System Admin: ปรับแพ็กเกจ (Starter 20k / Pro 50k / Enterprise 120k / Custom ไม่จำกัด)
+                {t('quotaAllCompaniesSub')}
               </p>
             </div>
 
@@ -835,7 +888,7 @@ export default function UsageQuotasPage() {
               <Search size={14} className="absolute left-3 top-2.5 text-neutral-400" />
               <input
                 type="text"
-                placeholder="ค้นหาชื่อบริษัท..."
+                placeholder={t('quotaSearchCompany')}
                 value={companySearch}
                 onChange={(e) => setCompanySearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
@@ -847,12 +900,12 @@ export default function UsageQuotasPage() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-[11px] font-semibold">
-                  <th className="pb-3 pl-3">ชื่อบริษัท</th>
-                  <th className="pb-3 px-4">แพ็กเกจ / โควต้าต่อเดือน</th>
-                  <th className="pb-3 px-4">ใช้ไปแล้ว</th>
-                  <th className="pb-3 px-4 min-w-[170px]">สัดส่วน (%)</th>
-                  <th className="pb-3 px-4">สถานะ</th>
-                  <th className="pb-3 pr-3 text-right">การจัดการ</th>
+                  <th className="pb-3 pl-3">{t('quotaColCompany')}</th>
+                  <th className="pb-3 px-4">{t('quotaColPackage')}</th>
+                  <th className="pb-3 px-4">{t('quotaColUsed')}</th>
+                  <th className="pb-3 px-4 min-w-[170px]">{t('quotaColRatioShort')}</th>
+                  <th className="pb-3 px-4">{t('quotaColStatus')}</th>
+                  <th className="pb-3 pr-3 text-right">{t('quotaColActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60 font-mono">
@@ -870,7 +923,7 @@ export default function UsageQuotasPage() {
                           <span>{comp.name}</span>
                           {selectedCompanyId === comp.id && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-sans font-medium">
-                              เปิดอยู่
+                              {t('quotaActiveBadge')}
                             </span>
                           )}
                         </div>
@@ -879,10 +932,10 @@ export default function UsageQuotasPage() {
                         {compUnlimited ? (
                           <span className="inline-flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400 font-sans">
                             <Infinity size={13} />
-                            <span>ไม่จำกัด (Custom)</span>
+                            <span>{t('quotaUnlimitedBadge')}</span>
                           </span>
                         ) : (
-                          `${comp.monthly_quota.toLocaleString()} ข้อความ`
+                          `${comp.monthly_quota.toLocaleString()} ${t('quotaMessagesUnit')}`
                         )}
                       </td>
                       <td className="py-3.5 px-4 font-bold text-neutral-900 dark:text-neutral-100">
@@ -938,7 +991,7 @@ export default function UsageQuotasPage() {
                             onClick={() => setSelectedCompanyId(comp.id)}
                             className="px-2.5 py-1 rounded-lg text-[11px] font-sans font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition cursor-pointer"
                           >
-                            ดูกราฟ
+                            {t('quotaViewChart')}
                           </button>
                           <button
                             onClick={() => {
@@ -950,7 +1003,7 @@ export default function UsageQuotasPage() {
                               setModalOpen(true);
                             }}
                             className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
-                            title="ปรับปรุงโควต้า"
+                            title={t('quotaEditBtn')}
                           >
                             <Sliders size={13} />
                           </button>
