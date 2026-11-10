@@ -13,7 +13,7 @@ import {
   getChatAuditState,
 } from '@/lib/chatFilters';
 import { submitApproveAI, submitChatFeedback } from '@/lib/chatFeedback';
-import { exportChatsToCSV } from '@/lib/chatExport';
+import { exportChatsToCSV, exportChatsToGoogleSheets } from '@/lib/chatExport';
 import { DEFAULT_SYSTEM_TAGS } from '@/lib/tags';
 import { useFloatingWindows } from '@/hooks/useFloatingWindows';
 import { useChatsData } from '@/hooks/useChatsData';
@@ -34,6 +34,7 @@ function ChatsPageContent() {
 
   // Sound & Desktop Notification
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [chatsGoogleSheetsNotice, setChatsGoogleSheetsNotice] = useState<{ open: boolean; count: number } | null>(null);
   const [showSoundModal, setShowSoundModal] = useState(false);
   const [desktopNotifyEnabled, setDesktopNotifyEnabled] = useState(false);
 
@@ -451,8 +452,48 @@ function ChatsPageContent() {
         }}
         onOpenTagManager={() => setShowTagManagerModal(true)}
         onExportCSV={() => exportChatsToCSV(filteredChats, dateFilter)}
+        onExportGoogleSheets={async () => {
+          const ok = await exportChatsToGoogleSheets(filteredChats, dateFilter);
+          if (ok) {
+            setChatsGoogleSheetsNotice({ open: true, count: filteredChats.length });
+            setTimeout(() => setChatsGoogleSheetsNotice(null), 8000);
+          }
+        }}
         language={language}
       />
+
+      {/* Google Sheets Success Toast Banner */}
+      {chatsGoogleSheetsNotice && chatsGoogleSheetsNotice.open && (
+        <div className="rounded-xl border border-emerald-200/90 dark:border-emerald-900/80 bg-emerald-50/90 dark:bg-emerald-950/40 p-3 shadow-sm flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-[#0f9d58] dark:text-emerald-300 shrink-0">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#0F9D58"/>
+                <path d="M14 2V8H20L14 2Z" fill="#87CEAC"/>
+                <path d="M8 12H16M8 15H16M8 9H11M12 9V18" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <p className="text-xs text-neutral-700 dark:text-neutral-200 truncate">
+              {language === 'th' ? (
+                <>
+                  เปิดหน้า <strong>Google Sheets</strong> เรียบร้อยแล้ว! คัดลอกข้อมูล <strong>{chatsGoogleSheetsNotice.count} แชต</strong> ลงคลิปบอร์ดแล้ว เพียงกด <kbd className="px-1 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[10px] font-mono font-semibold">Ctrl + V</kbd> ในเซลล์ A1 เพื่อวางข้อมูลทันที ✨
+                </>
+              ) : (
+                <>
+                  Opened <strong>Google Sheets</strong> and copied <strong>{chatsGoogleSheetsNotice.count} chats</strong> to clipboard! Press <kbd className="px-1 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[10px] font-mono font-semibold">Ctrl + V</kbd> to paste.
+                </>
+              )}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setChatsGoogleSheetsNotice(null)}
+            className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-1 rounded-md cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* 1. Unified Triage Control Panel (Quick Queue Tabs + Search & Filters) */}
       <div className="relative z-30 rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 shadow-xs backdrop-blur-md divide-y divide-neutral-100 dark:divide-neutral-800/60">
