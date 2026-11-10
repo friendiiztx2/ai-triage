@@ -34,6 +34,8 @@ import {
   Cell,
 } from 'recharts';
 import EditQuotaModal from '@/components/quotas/EditQuotaModal';
+import MonthPicker from '@/components/ui/MonthPicker';
+import { useLanguage } from '@/components/LanguageContext';
 
 interface CompanyOverviewItem {
   id: string;
@@ -46,6 +48,7 @@ interface CompanyOverviewItem {
 }
 
 export default function UsageQuotasPage() {
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
@@ -196,16 +199,12 @@ export default function UsageQuotasPage() {
 
         {/* Right Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Month Picker */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-medium shadow-xs">
-            <Calendar size={14} className="text-neutral-400" />
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-transparent border-none text-xs focus:outline-hidden font-mono text-neutral-700 dark:text-neutral-300 cursor-pointer"
-            />
-          </div>
+          {/* Custom Month Picker */}
+          <MonthPicker
+            value={selectedMonth}
+            onChange={(m) => setSelectedMonth(m)}
+            language={language}
+          />
 
           {/* Company Switcher (if System Admin) */}
           {data?.isSystemAdmin && data?.companies?.length > 1 && (
