@@ -1,4 +1,5 @@
 import { getCategoryLabel } from './categories';
+import { formatExportCustomerName } from './chatExport';
 import * as XLSX from 'xlsx';
 
 export function extractBankProvider(text: string): string {
@@ -410,11 +411,7 @@ export async function exportToGoogleSheets(
   // 2. High-Fidelity HTML Table
   const rowsHtml = result
     .map((c, i) => {
-      const customerId = c.customer_id || c.cust_id || '';
-      const defaultCustName = isEn ? `Customer #${customerId || (c.id || '').substring(0, 8)}` : `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
-      const rawName = c.customer_name || c.name || defaultCustName;
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
-      const custName = !customerId || isUuid ? rawName : `${rawName} (${customerId})`;
+      const custName = formatExportCustomerName(c, isEn);
 
       const priority = (c.priority || 'low').toLowerCase();
       const priorityStyle =
@@ -499,11 +496,7 @@ export async function exportToGoogleSheets(
   const plainTextHeaders = tableHeadersTh;
 
   const plainTextRows = result.map((c, i) => {
-    const customerId = c.customer_id || c.cust_id || '';
-    const defaultCustName = isEn ? `Customer #${customerId || (c.id || '').substring(0, 8)}` : `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
-    const rawName = c.customer_name || c.name || defaultCustName;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
-    const custName = !customerId || isUuid ? rawName : `${rawName} (${customerId})`;
+    const custName = formatExportCustomerName(c, isEn);
 
     const catName = getCategoryLabel(c.category_name || c.category_id, isEn ? 'en' : 'th');
     const statusText = isEn

@@ -1,5 +1,28 @@
 import { getCategoryLabel } from './categories';
 
+export function formatExportCustomerName(c: any, isEn: boolean = false): string {
+  const customerId = (c.customer_id || c.cust_id || '').trim();
+  const defaultCustName = isEn
+    ? `Customer #${customerId || (c.id || '').substring(0, 8)}`
+    : `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
+  const rawName = (c.customer_name || c.name || defaultCustName).trim();
+
+  if (!customerId) return rawName;
+
+  // If rawName already includes the customerId (e.g. "Guest Customer (cust-today060)"), don't duplicate
+  if (rawName.toLowerCase().includes(customerId.toLowerCase())) {
+    return rawName;
+  }
+
+  // If customerId is a raw UUID, avoid appending long uuid strings
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
+  if (isUuid) {
+    return rawName;
+  }
+
+  return `${rawName} (${customerId})`;
+}
+
 export function exportChatsToCSV(filteredChats: any[], dateFilter: string, language: string = 'th') {
   if (!filteredChats || filteredChats.length === 0) return;
   const isEn = language === 'en';
@@ -93,11 +116,7 @@ export async function exportChatsToGoogleSheets(
   // 2. High-Fidelity HTML Table (Formatted for native Google Sheets paste)
   const rowsHtml = filteredChats
     .map((c, i) => {
-      const customerId = c.customer_id || c.cust_id || '';
-      const defaultCustName = isEn ? `Customer #${customerId || (c.id || '').substring(0, 8)}` : `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
-      const rawName = c.customer_name || c.name || defaultCustName;
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
-      const custName = !customerId || isUuid ? rawName : `${rawName} (${customerId})`;
+      const custName = formatExportCustomerName(c, isEn);
 
       const priority = (c.priority || 'low').toLowerCase();
       const priorityStyle =
@@ -183,11 +202,7 @@ export async function exportChatsToGoogleSheets(
   const plainTextHeaders = tableHeadersTh;
 
   const plainTextRows = filteredChats.map((c, i) => {
-    const customerId = c.customer_id || c.cust_id || '';
-    const defaultCustName = isEn ? `Customer #${customerId || (c.id || '').substring(0, 8)}` : `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
-    const rawName = c.customer_name || c.name || defaultCustName;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
-    const custName = !customerId || isUuid ? rawName : `${rawName} (${customerId})`;
+    const custName = formatExportCustomerName(c, isEn);
 
     const catName = getCategoryLabel(c.category_name || c.category_id, isEn ? 'en' : 'th');
     const statusText = isEn
