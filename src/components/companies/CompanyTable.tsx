@@ -242,39 +242,43 @@ export default function CompanyTable({
                     )}
                   </td>
 
-                  <td className="py-3.5 px-5 font-mono whitespace-nowrap">
+                  <td className="py-3.5 px-5 font-mono">
                     {c.client_secret ? (
-                      <div className="flex items-center gap-2">
-                        <span className="bg-amber-50/50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 px-2.5 py-1 rounded text-[11px] border border-amber-200/60 dark:border-amber-800/50 flex items-center gap-1.5">
-                          <KeyRound size={12} className="text-amber-500 shrink-0" />
-                          {showSecrets[c.id] ? c.client_secret : '••••••••••••••••••••••••'}
-                        </span>
-                        <button
-                          onClick={() => handleToggleSecret(c.id)}
-                          className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-1 rounded transition cursor-pointer"
-                          title={
-                            showSecrets[c.id]
-                              ? language === 'th'
-                                ? 'ซ่อนรหัสลับ'
-                                : 'Hide Secret'
-                              : language === 'th'
-                              ? 'แสดงรหัสลับ'
-                              : 'Show Secret'
-                          }
-                        >
-                          {showSecrets[c.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
-                        <button
-                          onClick={() => handleCopy(c.client_secret, `sec-${c.id}`)}
-                          className="text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded transition cursor-pointer"
-                          title={language === 'th' ? 'คัดลอก Client Secret' : 'Copy Client Secret'}
-                        >
-                          {copiedKey === `sec-${c.id}` ? (
-                            <Check size={13} className="text-emerald-500" />
-                          ) : (
-                            <Copy size={13} />
-                          )}
-                        </button>
+                      <div className="flex items-center gap-1.5">
+                        <div className="bg-amber-50/50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded text-[10.5px] border border-amber-200/60 dark:border-amber-800/50 flex items-start gap-1.5 w-[180px] shrink-0">
+                          <KeyRound size={12} className="text-amber-500 shrink-0 mt-0.5" />
+                          <span className={showSecrets[c.id] ? 'break-all leading-tight text-[10px]' : 'tracking-widest'}>
+                            {showSecrets[c.id] ? c.client_secret : '••••••••••••••••'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <button
+                            onClick={() => handleToggleSecret(c.id)}
+                            className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-1 rounded transition cursor-pointer"
+                            title={
+                              showSecrets[c.id]
+                                ? language === 'th'
+                                  ? 'ซ่อนรหัสลับ'
+                                  : 'Hide Secret'
+                                : language === 'th'
+                                ? 'แสดงรหัสลับ'
+                                : 'Show Secret'
+                            }
+                          >
+                            {showSecrets[c.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                          <button
+                            onClick={() => handleCopy(c.client_secret, `sec-${c.id}`)}
+                            className="text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded transition cursor-pointer"
+                            title={language === 'th' ? 'คัดลอก Client Secret' : 'Copy Client Secret'}
+                          >
+                            {copiedKey === `sec-${c.id}` ? (
+                              <Check size={13} className="text-emerald-500" />
+                            ) : (
+                              <Copy size={13} />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <span className="text-neutral-400 italic flex items-center gap-1 text-[11px]">
