@@ -124,23 +124,23 @@ export default function CompanyTable({
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full min-w-[880px] text-left border-collapse">
           <thead>
             <tr className="border-b border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/40 text-[11px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-              <th className="py-3.5 px-6">
+              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">
                 {language === 'th' ? 'ชื่อบริษัท / แบรนด์' : 'Company Name'}
               </th>
-              <th className="py-3.5 px-6">
+              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">
                 {language === 'th' ? 'โดเมน (Domain)' : 'Domain'}
               </th>
-              <th className="py-3.5 px-6">
+              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">
                 {language === 'th' ? 'แพ็กเกจ / โควต้าแชต' : 'Package & Quota'}
               </th>
-              <th className="py-3.5 px-6">Client ID</th>
-              <th className="py-3.5 px-6">
+              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">Client ID</th>
+              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">
                 {language === 'th' ? 'รหัสลับ (Client Secret)' : 'Client Secret'}
               </th>
-              <th className="py-3.5 px-6 text-right">
+              <th className="py-3.5 px-5 whitespace-nowrap text-right min-w-[130px]">
                 {language === 'th' ? 'วันที่จัดตั้ง' : 'Created Date'}
               </th>
             </tr>
@@ -156,7 +156,7 @@ export default function CompanyTable({
                   key={c.id}
                   className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/30 transition-colors"
                 >
-                  <td className="py-4 px-6 font-bold text-neutral-800 dark:text-neutral-100">
+                  <td className="py-3.5 px-5 font-bold text-neutral-800 dark:text-neutral-100">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500/10 to-violet-500/10 dark:from-indigo-500/20 dark:to-violet-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase shrink-0">
                         {(c.name || 'CO').slice(0, 2)}
@@ -170,14 +170,14 @@ export default function CompanyTable({
                     </div>
                   </td>
 
-                  <td className="py-4 px-6">
+                  <td className="py-3.5 px-5 whitespace-nowrap">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                       <Globe size={12} className="text-indigo-500" />
                       {c.domain}
                     </span>
                   </td>
 
-                  <td className="py-4 px-6">
+                  <td className="py-3.5 px-5 whitespace-nowrap">
                     <div className="flex flex-col items-start gap-1">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold border ${getBadgeStyle(
@@ -203,7 +203,7 @@ export default function CompanyTable({
                     </div>
                   </td>
 
-                  <td className="py-4 px-6 font-mono text-neutral-600 dark:text-neutral-300">
+                  <td className="py-3.5 px-5 font-mono text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
                     {c.client_id ? (
                       <div className="flex items-center gap-2">
                         <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded text-[11px] border border-neutral-200 dark:border-neutral-700">
@@ -226,7 +226,7 @@ export default function CompanyTable({
                     )}
                   </td>
 
-                  <td className="py-4 px-6 font-mono">
+                  <td className="py-3.5 px-5 font-mono whitespace-nowrap">
                     {c.client_secret ? (
                       <div className="flex items-center gap-2">
                         <span className="bg-amber-50/50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 px-2.5 py-1 rounded text-[11px] border border-amber-200/60 dark:border-amber-800/50 flex items-center gap-1.5">
@@ -267,7 +267,7 @@ export default function CompanyTable({
                     )}
                   </td>
 
-                  <td className="py-4 px-6 text-right text-neutral-400 font-medium">
+                  <td className="py-3.5 px-5 text-right whitespace-nowrap text-neutral-500 dark:text-neutral-400 font-medium tabular-nums">
                     {c.created_at
                       ? new Date(c.created_at).toLocaleDateString(
                           language === 'th' ? 'th-TH' : 'en-US',
