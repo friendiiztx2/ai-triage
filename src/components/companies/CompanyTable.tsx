@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   PackageCheck,
   Infinity as InfinityIcon,
+  Calendar,
 } from 'lucide-react';
 
 export interface Company {
@@ -124,24 +125,21 @@ export default function CompanyTable({
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[880px] text-left border-collapse">
+        <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/40 text-[11px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">
+              <th className="py-3.5 px-5 whitespace-nowrap">
                 {language === 'th' ? 'ชื่อบริษัท / แบรนด์' : 'Company Name'}
               </th>
-              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">
-                {language === 'th' ? 'โดเมน (Domain)' : 'Domain'}
+              <th className="py-3.5 px-5 whitespace-nowrap">
+                {language === 'th' ? 'โดเมน / วันที่จัดตั้ง' : 'Domain & Created Date'}
               </th>
-              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">
+              <th className="py-3.5 px-5 whitespace-nowrap">
                 {language === 'th' ? 'แพ็กเกจ / โควต้าแชต' : 'Package & Quota'}
               </th>
-              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">Client ID</th>
-              <th className="py-3.5 px-5 whitespace-nowrap min-w-[180px]">
+              <th className="py-3.5 px-5 whitespace-nowrap">Client ID</th>
+              <th className="py-3.5 px-5 whitespace-nowrap">
                 {language === 'th' ? 'รหัสลับ (Client Secret)' : 'Client Secret'}
-              </th>
-              <th className="py-3.5 px-5 whitespace-nowrap text-right min-w-[130px]">
-                {language === 'th' ? 'วันที่จัดตั้ง' : 'Created Date'}
               </th>
             </tr>
           </thead>
@@ -170,11 +168,29 @@ export default function CompanyTable({
                     </div>
                   </td>
 
-                  <td className="py-3.5 px-5 whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-                      <Globe size={12} className="text-indigo-500" />
-                      {c.domain}
-                    </span>
+                  <td className="py-3.5 px-5">
+                    <div className="flex flex-col items-start gap-1">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                        <Globe size={11} className="text-indigo-500 shrink-0" />
+                        <span className="truncate max-w-[150px]">{c.domain}</span>
+                      </span>
+                      {c.created_at && (
+                        <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium flex items-center gap-1 pl-1 tabular-nums whitespace-nowrap">
+                          <Calendar size={10} className="text-neutral-400 shrink-0" />
+                          <span>
+                            {language === 'th' ? 'จัดตั้ง ' : 'Created '}
+                            {new Date(c.created_at).toLocaleDateString(
+                              language === 'th' ? 'th-TH' : 'en-US',
+                              {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              }
+                            )}
+                          </span>
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   <td className="py-3.5 px-5 whitespace-nowrap">
@@ -267,18 +283,7 @@ export default function CompanyTable({
                     )}
                   </td>
 
-                  <td className="py-3.5 px-5 text-right whitespace-nowrap text-neutral-500 dark:text-neutral-400 font-medium tabular-nums">
-                    {c.created_at
-                      ? new Date(c.created_at).toLocaleDateString(
-                          language === 'th' ? 'th-TH' : 'en-US',
-                          {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          }
-                        )
-                      : '-'}
-                  </td>
+                  
                 </tr>
               );
             })}
