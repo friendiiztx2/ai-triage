@@ -159,22 +159,33 @@ export default function UsageQuotasPage() {
 
   const getBadgeStyle = (status: string) => {
     if (status === 'unlimited') {
-      return 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200 dark:border-purple-800';
+      return 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/60';
     }
     if (status === 'critical_90' || status === 'critical') {
-      return 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200 dark:border-rose-900';
+      return 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200/80 dark:border-rose-900/60';
     }
     if (status === 'warning_80' || status === 'warning') {
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-900';
+      return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60';
     }
-    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900';
+    return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-900/60';
+  };
+
+  const getStatusLabel = (status: string) => {
+    if (status === 'unlimited') return 'ไม่จำกัด';
+    if (status === 'critical_90' || status === 'critical') return 'วิกฤต';
+    if (status === 'warning_80' || status === 'warning') return 'เฝ้าระวัง';
+    return 'ปกติ';
+  };
+
+  const getStatusThreshold = (status: string) => {
+    if (status === 'unlimited') return '(Custom)';
+    if (status === 'critical_90' || status === 'critical') return '(≥90%)';
+    if (status === 'warning_80' || status === 'warning') return '(≥80%)';
+    return '(<80%)';
   };
 
   const getBadgeLabel = (status: string) => {
-    if (status === 'unlimited') return 'ไม่จำกัด (Custom)';
-    if (status === 'critical_90' || status === 'critical') return 'วิกฤต (≥90%)';
-    if (status === 'warning_80' || status === 'warning') return 'เฝ้าระวัง (≥80%)';
-    return 'ปกติ (<80%)';
+    return `${getStatusLabel(status)} ${getStatusThreshold(status)}`;
   };
 
   return (
@@ -405,16 +416,37 @@ export default function UsageQuotasPage() {
                 </div>
               </div>
 
-              {/* Percent Badge */}
-              <div className="text-right">
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-bold font-mono border ${getBadgeStyle(
-                    alertLevel
-                  )}`}
-                >
-                  {isUnlimited ? 'Custom (ไม่จำกัด)' : `${percentUsed}% ${getBadgeLabel(alertLevel)}`}
-                </span>
-                <p className="text-[11px] text-neutral-400 mt-1">
+              {/* Status & Percent Badge */}
+              <div className="flex flex-col items-end gap-1.5">
+                <div className="flex items-center gap-2.5">
+                  {!isUnlimited && (
+                    <span className="text-xl md:text-2xl font-bold font-mono tracking-tight text-neutral-900 dark:text-white tabular-nums">
+                      {percentUsed}%
+                    </span>
+                  )}
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium font-sans border shadow-2xs ${getBadgeStyle(
+                      alertLevel
+                    )}`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        alertLevel === 'critical_90' || alertLevel === 'critical'
+                          ? 'bg-rose-500 animate-pulse'
+                          : alertLevel === 'warning_80' || alertLevel === 'warning'
+                          ? 'bg-amber-500 animate-pulse'
+                          : alertLevel === 'unlimited'
+                          ? 'bg-purple-500'
+                          : 'bg-emerald-500'
+                      }`}
+                    />
+                    <span className="font-semibold">{getStatusLabel(alertLevel)}</span>
+                    <span className="text-[11px] opacity-75 font-mono tracking-tight">
+                      {getStatusThreshold(alertLevel)}
+                    </span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-400 font-sans">
                   {isUnlimited ? 'แพ็กเกจ Custom ไม่จำกัดแชต' : `คงเหลือ ${remainingMessages?.toLocaleString()} ข้อความ`}
                 </p>
               </div>
@@ -709,11 +741,11 @@ export default function UsageQuotasPage() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-[11px] font-semibold">
-                <th className="pb-3 pl-2">รอบเดือน</th>
-                <th className="pb-3">โควต้าที่จัดสรร</th>
-                <th className="pb-3">ข้อความที่ใช้จริง</th>
-                <th className="pb-3 min-w-[160px]">สัดส่วนการใช้งาน (%)</th>
-                <th className="pb-3 pr-2 text-right">สถานะ</th>
+                <th className="pb-3 pl-3">รอบเดือน</th>
+                <th className="pb-3 px-4">โควต้าที่จัดสรร</th>
+                <th className="pb-3 px-4">ข้อความที่ใช้จริง</th>
+                <th className="pb-3 px-4 min-w-[180px]">สัดส่วนการใช้งาน (%)</th>
+                <th className="pb-3 pr-3 text-right">สถานะ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60 font-mono">
@@ -721,16 +753,16 @@ export default function UsageQuotasPage() {
                 const itemUnlimited = item.is_unlimited || item.quota === -1;
                 return (
                   <tr key={idx} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition">
-                    <td className="py-3.5 pl-2 font-sans font-medium text-neutral-900 dark:text-neutral-100">
+                    <td className="py-3.5 pl-3 font-sans font-medium text-neutral-900 dark:text-neutral-100">
                       {item.label}
                     </td>
-                    <td className="py-3.5 text-neutral-600 dark:text-neutral-300">
+                    <td className="py-3.5 px-4 text-neutral-600 dark:text-neutral-300">
                       {itemUnlimited ? 'ไม่จำกัด (Custom)' : item.quota.toLocaleString()}
                     </td>
-                    <td className="py-3.5 font-bold text-neutral-900 dark:text-neutral-100">
+                    <td className="py-3.5 px-4 font-bold text-neutral-900 dark:text-neutral-100">
                       {item.used.toLocaleString()}
                     </td>
-                    <td className="py-3.5">
+                    <td className="py-3.5 px-4">
                       {itemUnlimited ? (
                         <span className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold font-sans">
                           ไม่จำกัด
@@ -745,19 +777,33 @@ export default function UsageQuotasPage() {
                               style={{ width: `${Math.min(100, item.percent)}%` }}
                             />
                           </div>
-                          <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right">
+                          <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right tabular-nums">
                             {item.percent}%
                           </span>
                         </div>
                       )}
                     </td>
-                    <td className="py-3.5 pr-2 text-right">
+                    <td className="py-3.5 pr-3 text-right whitespace-nowrap">
                       <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold border ${getBadgeStyle(
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-sans font-medium border shadow-2xs ${getBadgeStyle(
                           item.status
                         )}`}
                       >
-                        {getBadgeLabel(item.status)}
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            item.status === 'critical_90' || item.status === 'critical'
+                              ? 'bg-rose-500 animate-pulse'
+                              : item.status === 'warning_80' || item.status === 'warning'
+                              ? 'bg-amber-500 animate-pulse'
+                              : item.status === 'unlimited'
+                              ? 'bg-purple-500'
+                              : 'bg-emerald-500'
+                          }`}
+                        />
+                        <span className="font-semibold">{getStatusLabel(item.status)}</span>
+                        <span className="text-[10px] opacity-75 font-mono">
+                          {getStatusThreshold(item.status)}
+                        </span>
                       </span>
                     </td>
                   </tr>
@@ -801,12 +847,12 @@ export default function UsageQuotasPage() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-[11px] font-semibold">
-                  <th className="pb-3 pl-2">ชื่อบริษัท</th>
-                  <th className="pb-3">แพ็กเกจ / โควต้าต่อเดือน</th>
-                  <th className="pb-3">ใช้ไปแล้ว</th>
-                  <th className="pb-3 min-w-[150px]">สัดส่วน (%)</th>
-                  <th className="pb-3">สถานะ</th>
-                  <th className="pb-3 pr-2 text-right">การจัดการ</th>
+                  <th className="pb-3 pl-3">ชื่อบริษัท</th>
+                  <th className="pb-3 px-4">แพ็กเกจ / โควต้าต่อเดือน</th>
+                  <th className="pb-3 px-4">ใช้ไปแล้ว</th>
+                  <th className="pb-3 px-4 min-w-[170px]">สัดส่วน (%)</th>
+                  <th className="pb-3 px-4">สถานะ</th>
+                  <th className="pb-3 pr-3 text-right">การจัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60 font-mono">
@@ -819,15 +865,17 @@ export default function UsageQuotasPage() {
                         selectedCompanyId === comp.id ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
                       }`}
                     >
-                      <td className="py-3.5 pl-2 font-sans font-medium text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-                        <span>{comp.name}</span>
-                        {selectedCompanyId === comp.id && (
-                          <span className="text-[10px] px-1.5 py-0.2 rounded-xs bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-sans">
-                            เปิดอยู่
-                          </span>
-                        )}
+                      <td className="py-3.5 pl-3 font-sans font-medium text-neutral-900 dark:text-neutral-100">
+                        <div className="flex items-center gap-2">
+                          <span>{comp.name}</span>
+                          {selectedCompanyId === comp.id && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-sans font-medium">
+                              เปิดอยู่
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td className="py-3.5 text-neutral-600 dark:text-neutral-300">
+                      <td className="py-3.5 px-4 text-neutral-600 dark:text-neutral-300">
                         {compUnlimited ? (
                           <span className="inline-flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400 font-sans">
                             <Infinity size={13} />
@@ -837,10 +885,10 @@ export default function UsageQuotasPage() {
                           `${comp.monthly_quota.toLocaleString()} ข้อความ`
                         )}
                       </td>
-                      <td className="py-3.5 font-bold text-neutral-900 dark:text-neutral-100">
+                      <td className="py-3.5 px-4 font-bold text-neutral-900 dark:text-neutral-100">
                         {comp.used_messages.toLocaleString()}
                       </td>
-                      <td className="py-3.5">
+                      <td className="py-3.5 px-4">
                         {compUnlimited ? (
                           <span className="text-[11px] text-purple-600 dark:text-purple-400 font-sans font-semibold">
                             ไม่จำกัด
@@ -855,22 +903,36 @@ export default function UsageQuotasPage() {
                                 style={{ width: `${Math.min(100, comp.percent_used)}%` }}
                               />
                             </div>
-                            <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right">
+                            <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right tabular-nums">
                               {comp.percent_used}%
                             </span>
                           </div>
                         )}
                       </td>
-                      <td className="py-3.5">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-semibold border ${getBadgeStyle(
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-sans font-medium border shadow-2xs ${getBadgeStyle(
                             comp.status
                           )}`}
                         >
-                          {getBadgeLabel(comp.status)}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              (comp.status as string) === 'critical_90' || (comp.status as string) === 'critical'
+                                ? 'bg-rose-500 animate-pulse'
+                                : (comp.status as string) === 'warning_80' || (comp.status as string) === 'warning'
+                                ? 'bg-amber-500 animate-pulse'
+                                : comp.status === 'unlimited'
+                                ? 'bg-purple-500'
+                                : 'bg-emerald-500'
+                            }`}
+                          />
+                          <span className="font-semibold">{getStatusLabel(comp.status)}</span>
+                          <span className="text-[10px] opacity-75 font-mono">
+                            {getStatusThreshold(comp.status)}
+                          </span>
                         </span>
                       </td>
-                      <td className="py-3.5 pr-2 text-right">
+                      <td className="py-3.5 pr-3 text-right">
                         <div className="inline-flex items-center gap-1.5">
                           <button
                             onClick={() => setSelectedCompanyId(comp.id)}
@@ -888,7 +950,7 @@ export default function UsageQuotasPage() {
                               setModalOpen(true);
                             }}
                             className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
-                            title="ปรับแต่งโควต้า"
+                            title="ปรับปรุงโควต้า"
                           >
                             <Sliders size={13} />
                           </button>
