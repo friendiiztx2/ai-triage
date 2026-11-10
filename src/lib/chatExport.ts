@@ -77,15 +77,26 @@ export async function exportChatsToGoogleSheets(filteredChats: any[], dateFilter
       const catName = c.category_name || c.category_id || 'ทั่วไป';
       const summary = c.summary || c.conversation || '-';
 
+      // Extract AI Tags / Keywords
+      const rawTags = Array.isArray(c.tags) && c.tags.length > 0
+        ? c.tags
+        : Array.isArray(c.keywords)
+        ? c.keywords
+        : [];
+      const aiTags = rawTags
+        .filter((t: string) => typeof t === 'string' && !t.startsWith('#รูปภาพ') && t !== '#VIP')
+        .join(', ') || '-';
+
       return `
       <tr style="border-bottom: 1px solid #dadce0; ${i % 2 === 1 ? 'background-color: #f8f9fa;' : 'background-color: #ffffff;'}">
         <td style="padding: 8px 10px; font-family: monospace; font-size: 11px; text-align: center; color: #5f6368;">${i + 1}</td>
         <td style="padding: 8px 10px; font-family: monospace; font-size: 11px; color: #1a73e8; font-weight: 500;">${c.id || '-'}</td>
-        <td style="padding: 8px 10px; font-size: 12px; font-weight: 500; color: #202124;">${custName} (${customerId})</td>
+        <td style="padding: 8px 10px; font-size: 12px; font-weight: 500; color: #202124;">${custName}</td>
         <td style="padding: 8px 10px; font-size: 12px; color: #3c4043;">${catName}</td>
         <td style="padding: 8px 10px; text-align: center;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; ${priorityStyle}">${priority.toUpperCase()}</span></td>
         <td style="padding: 8px 10px; font-size: 12px; font-weight: 500; color: ${statusColor};">${statusText}</td>
         <td style="padding: 8px 10px; font-size: 12px; line-height: 1.4; color: #202124;">${summary}</td>
+        <td style="padding: 8px 10px; font-size: 11px; color: #1a73e8; font-weight: 500;">${aiTags}</td>
         <td style="padding: 8px 10px; font-size: 11px; color: #5f6368; white-space: nowrap;">${timeFormatted}</td>
       </tr>`;
     })
@@ -102,6 +113,7 @@ export async function exportChatsToGoogleSheets(filteredChats: any[], dateFilter
           <th style="padding: 10px; font-size: 11px; text-align: center; width: 90px; border-right: 1px solid rgba(255,255,255,0.2);">ความด่วน</th>
           <th style="padding: 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">สถานะ</th>
           <th style="padding: 10px; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.2);">สรุปประเด็นปัญหา (AI Summary)</th>
+          <th style="padding: 10px; font-size: 11px; width: 180px; border-right: 1px solid rgba(255,255,255,0.2);">ประเด็นที่ AI จำแนก (AI Tags)</th>
           <th style="padding: 10px; font-size: 11px; width: 140px;">วันเวลา</th>
         </tr>
       </thead>
@@ -112,7 +124,7 @@ export async function exportChatsToGoogleSheets(filteredChats: any[], dateFilter
   `;
 
   // 2. TSV Format for Native Cell Separation in Google Sheets
-  const plainTextHeaders = ['#', 'รหัสแชต', 'ลูกค้า', 'หมวดหมู่', 'ความด่วน', 'สถานะ', 'สรุปประเด็นปัญหา', 'วันเวลา'];
+  const plainTextHeaders = ['#', 'รหัสแชต', 'ลูกค้า', 'หมวดหมู่', 'ความด่วน', 'สถานะ', 'สรุปประเด็นปัญหา (AI Summary)', 'ประเด็นที่ AI จำแนก (AI Tags)', 'วันเวลา'];
   const plainTextRows = filteredChats.map((c, i) =>
     [
       i + 1,
@@ -122,6 +134,9 @@ export async function exportChatsToGoogleSheets(filteredChats: any[], dateFilter
       (c.priority || 'low').toUpperCase(),
       c.status === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ',
       (c.summary || '').replace(/\t|\n/g, ' '),
+      ((Array.isArray(c.tags) && c.tags.length > 0 ? c.tags : Array.isArray(c.keywords) ? c.keywords : [])
+        .filter((t: string) => typeof t === 'string' && !t.startsWith('#รูปภาพ') && t !== '#VIP')
+        .join(', ') || '-').replace(/\t|\n/g, ' '),
       c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '',
     ].join('\t')
   );
