@@ -116,7 +116,7 @@ export default function UserTable({
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="bg-neutral-50/70 dark:bg-neutral-900/60 border-b border-neutral-200/80 dark:border-neutral-800/80">
-              <th className="px-4 py-3">
+              <th className="px-4 py-3 min-w-[200px]">
                 <SortHeader
                   label={language === 'th' ? 'ผู้ใช้งาน & อีเมล' : 'User & Email'}
                   active={sortColumn === 'user'}
@@ -124,7 +124,7 @@ export default function UserTable({
                   onSort={() => handleSort('user')}
                 />
               </th>
-              <th className="px-4 py-3">
+              <th className="px-4 py-3 w-[180px] min-w-[170px] whitespace-nowrap">
                 <SortHeader
                   label={language === 'th' ? 'สังกัดบริษัท' : 'Tenant Company'}
                   active={sortColumn === 'company'}
@@ -132,7 +132,7 @@ export default function UserTable({
                   onSort={() => handleSort('company')}
                 />
               </th>
-              <th className="px-4 py-3">
+              <th className="px-4 py-3 w-[120px] min-w-[120px] whitespace-nowrap">
                 <SortHeader
                   label={language === 'th' ? 'บทบาท' : 'Role'}
                   active={sortColumn === 'role'}
@@ -140,13 +140,13 @@ export default function UserTable({
                   onSort={() => handleSort('role')}
                 />
               </th>
-              <th className="px-4 py-3 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+              <th className="px-4 py-3 text-xs font-semibold text-neutral-600 dark:text-neutral-300 w-[180px] min-w-[170px] whitespace-nowrap">
                 {language === 'th' ? 'ขอบเขตสิทธิ์' : 'Privileges'}
               </th>
-              <th className="px-4 py-3 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+              <th className="px-4 py-3 text-xs font-semibold text-neutral-600 dark:text-neutral-300 w-[170px] min-w-[170px] whitespace-nowrap">
                 {language === 'th' ? 'รหัสผ่าน' : 'Credentials'}
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+              <th className="px-4 py-3 text-right text-xs font-semibold text-neutral-600 dark:text-neutral-300 w-[90px] min-w-[90px] whitespace-nowrap">
                 {language === 'th' ? 'จัดการ' : 'Actions'}
               </th>
             </tr>
