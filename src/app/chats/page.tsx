@@ -451,9 +451,9 @@ function ChatsPageContent() {
           window.dispatchEvent(new Event('desktop-popup-setting-changed'));
         }}
         onOpenTagManager={() => setShowTagManagerModal(true)}
-        onExportCSV={() => exportChatsToCSV(filteredChats, dateFilter)}
+        onExportCSV={() => exportChatsToCSV(filteredChats, dateFilter, language)}
         onExportGoogleSheets={async () => {
-          const ok = await exportChatsToGoogleSheets(filteredChats, dateFilter);
+          const ok = await exportChatsToGoogleSheets(filteredChats, dateFilter, language);
           if (ok) {
             setChatsGoogleSheetsNotice({ open: true, count: filteredChats.length });
             setTimeout(() => setChatsGoogleSheetsNotice(null), 8000);

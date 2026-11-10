@@ -352,10 +352,12 @@ export async function exportToGoogleSheets(
   targetType: 'overall' | 'finance' | 'marketing',
   filterOptions: any,
   dateRange: string,
-  userProfile?: any
+  userProfile?: any,
+  language: string = 'th'
 ): Promise<{ filename: string; size: string; openUrl: string; rowCount: number } | null> {
   const result = filterChatsForReport(chats, targetType, filterOptions);
   if (result.length === 0) return null;
+  const isEn = language === 'en';
 
   // 1. Batch fetch chat_issues for all chats if missing
   const issuesMap = new Map<string, any[]>();
@@ -391,29 +393,26 @@ export async function exportToGoogleSheets(
     }
   }
 
-  const reportTitle =
-    targetType === 'finance'
-      ? 'รายงานธุรกรรมการเงินและการชำระเงิน'
-      : targetType === 'marketing'
-      ? 'รายงานการตลาดและลูกค้าใหม่'
-      : 'รายงานภาพรวมระบบและสถิติปัญหาแชต';
+  const reportTitle = isEn
+    ? (targetType === 'finance'
+        ? 'Financial & Payment Transactions Report'
+        : targetType === 'marketing'
+        ? 'Marketing & Customer Acquisition Report'
+        : 'Executive System Overview & Chat Triage Report')
+    : (targetType === 'finance'
+        ? 'รายงานธุรกรรมการเงินและการชำระเงิน'
+        : targetType === 'marketing'
+        ? 'รายงานการตลาดและลูกค้าใหม่'
+        : 'รายงานภาพรวมระบบและสถิติปัญหาแชต');
 
-  const dateLabel =
-    dateRange === 'today'
-      ? 'ประจำวันนี้'
-      : dateRange === '7days'
-      ? 'ย้อนหลัง 7 วัน'
-      : dateRange === '30days'
-      ? 'ย้อนหลัง 30 วัน'
-      : 'ตามช่วงเวลาที่เลือก';
-
-  const nowFormatted = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+  const nowFormatted = new Date().toLocaleString(isEn ? 'en-US' : 'th-TH', { timeZone: 'Asia/Bangkok' });
 
   // 2. High-Fidelity HTML Table
   const rowsHtml = result
     .map((c, i) => {
       const customerId = c.customer_id || c.cust_id || '';
-      const rawName = c.customer_name || c.name || `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
+      const defaultCustName = isEn ? `Customer #${customerId || (c.id || '').substring(0, 8)}` : `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
+      const rawName = c.customer_name || c.name || defaultCustName;
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
       const custName = !customerId || isUuid ? rawName : `${rawName} (${customerId})`;
 
@@ -427,19 +426,22 @@ export async function exportToGoogleSheets(
           ? 'background-color: #e8f0fe; color: #1a73e8;'
           : 'background-color: #f1f3f4; color: #5f6368;';
 
-      const statusText = c.status === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ';
+      const statusText = isEn
+        ? (c.status === 'completed' ? 'Completed' : 'Pending')
+        : (c.status === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ');
       const statusColor = c.status === 'completed' ? '#137333' : '#e37400';
+
       const timeFormatted = c.created_at
-        ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
+        ? new Date(c.created_at).toLocaleString(isEn ? 'en-US' : 'th-TH', { timeZone: 'Asia/Bangkok' })
         : '-';
 
-      const catName = getCategoryLabel(c.category_name || c.category_id, 'th');
+      const catName = getCategoryLabel(c.category_name || c.category_id, isEn ? 'en' : 'th');
       const summary = c.summary || c.conversation || '-';
 
       // Multi-issue Classified Categories
       const chatIssues = issuesMap.get(c.id) || [];
       const subIssueLabels = chatIssues.map((iss: any, idx: number) => {
-        const catLabel = getCategoryLabel(iss.category_id, 'th');
+        const catLabel = getCategoryLabel(iss.category_id, isEn ? 'en' : 'th');
         return `#${idx + 1} ${catLabel}`;
       });
 
@@ -468,19 +470,23 @@ export async function exportToGoogleSheets(
     })
     .join('');
 
+  const tableHeadersTh = isEn
+    ? ['#', 'Chat ID', 'Customer', 'Primary Category', 'Priority', 'Status', 'AI Summary', 'Identified Sub-issues (AI)', 'Date & Time']
+    : ['#', 'รหัสแชต', 'ลูกค้า', 'หมวดหมู่หลัก', 'ความด่วน', 'สถานะ', 'สรุปประเด็นปัญหา (AI Summary)', 'ประเด็นที่ AI จำแนก (AI Sub-issues)', 'วันเวลา'];
+
   const fullHtml = `
     <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; border: 1px solid #dadce0;">
       <thead>
         <tr style="background-color: #0f9d58; color: #ffffff; text-align: left;">
-          <th style="padding: 10px; font-size: 11px; text-align: center; width: 45px; border-right: 1px solid rgba(255,255,255,0.2);">#</th>
-          <th style="padding: 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">รหัสแชต</th>
-          <th style="padding: 10px; font-size: 11px; width: 150px; border-right: 1px solid rgba(255,255,255,0.2);">ลูกค้า</th>
-          <th style="padding: 10px; font-size: 11px; width: 140px; border-right: 1px solid rgba(255,255,255,0.2);">หมวดหมู่หลัก</th>
-          <th style="padding: 10px; font-size: 11px; text-align: center; width: 90px; border-right: 1px solid rgba(255,255,255,0.2);">ความด่วน</th>
-          <th style="padding: 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">สถานะ</th>
-          <th style="padding: 10px; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.2);">สรุปประเด็นปัญหา (AI Summary)</th>
-          <th style="padding: 10px; font-size: 11px; width: 220px; border-right: 1px solid rgba(255,255,255,0.2);">ประเด็นที่ AI จำแนก (AI Sub-issues)</th>
-          <th style="padding: 10px; font-size: 11px; width: 140px;">วันเวลา</th>
+          <th style="padding: 10px; font-size: 11px; text-align: center; width: 45px; border-right: 1px solid rgba(255,255,255,0.2);">${tableHeadersTh[0]}</th>
+          <th style="padding: 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">${tableHeadersTh[1]}</th>
+          <th style="padding: 10px; font-size: 11px; width: 150px; border-right: 1px solid rgba(255,255,255,0.2);">${tableHeadersTh[2]}</th>
+          <th style="padding: 10px; font-size: 11px; width: 150px; border-right: 1px solid rgba(255,255,255,0.2);">${tableHeadersTh[3]}</th>
+          <th style="padding: 10px; font-size: 11px; text-align: center; width: 90px; border-right: 1px solid rgba(255,255,255,0.2);">${tableHeadersTh[4]}</th>
+          <th style="padding: 10px; font-size: 11px; width: 100px; border-right: 1px solid rgba(255,255,255,0.2);">${tableHeadersTh[5]}</th>
+          <th style="padding: 10px; font-size: 11px; border-right: 1px solid rgba(255,255,255,0.2);">${tableHeadersTh[6]}</th>
+          <th style="padding: 10px; font-size: 11px; width: 220px; border-right: 1px solid rgba(255,255,255,0.2);">${tableHeadersTh[7]}</th>
+          <th style="padding: 10px; font-size: 11px; width: 140px;">${tableHeadersTh[8]}</th>
         </tr>
       </thead>
       <tbody>
@@ -490,31 +496,30 @@ export async function exportToGoogleSheets(
   `;
 
   // 3. TSV Format
-  const plainTextHeaders = [
-    '#',
-    'รหัสแชต',
-    'ลูกค้า',
-    'หมวดหมู่หลัก',
-    'ความด่วน',
-    'สถานะ',
-    'สรุปประเด็นปัญหา (AI Summary)',
-    'ประเด็นที่ AI จำแนก (AI Sub-issues)',
-    'วันเวลา',
-  ];
+  const plainTextHeaders = tableHeadersTh;
 
   const plainTextRows = result.map((c, i) => {
     const customerId = c.customer_id || c.cust_id || '';
-    const rawName = c.customer_name || c.name || `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
+    const defaultCustName = isEn ? `Customer #${customerId || (c.id || '').substring(0, 8)}` : `ลูกค้า #${customerId || (c.id || '').substring(0, 8)}`;
+    const rawName = c.customer_name || c.name || defaultCustName;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
     const custName = !customerId || isUuid ? rawName : `${rawName} (${customerId})`;
 
-    const catName = getCategoryLabel(c.category_name || c.category_id, 'th');
+    const catName = getCategoryLabel(c.category_name || c.category_id, isEn ? 'en' : 'th');
+    const statusText = isEn
+      ? (c.status === 'completed' ? 'Completed' : 'Pending')
+      : (c.status === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ');
+
     const chatIssues = issuesMap.get(c.id) || [];
     const subIssueLabels = chatIssues.map((iss: any, idx: number) => {
-      const catLabel = getCategoryLabel(iss.category_id, 'th');
+      const catLabel = getCategoryLabel(iss.category_id, isEn ? 'en' : 'th');
       return `#${idx + 1} ${catLabel}`;
     });
     const subIssuesText = subIssueLabels.length > 0 ? subIssueLabels.join(', ') : catName;
+
+    const timeFormatted = c.created_at
+      ? new Date(c.created_at).toLocaleString(isEn ? 'en-US' : 'th-TH', { timeZone: 'Asia/Bangkok' })
+      : '';
 
     return [
       i + 1,
@@ -522,10 +527,10 @@ export async function exportToGoogleSheets(
       custName,
       catName,
       (c.priority || 'low').toUpperCase(),
-      c.status === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ',
+      statusText,
       (c.summary || '').replace(/\t|\n/g, ' '),
       subIssuesText.replace(/\t|\n/g, ' '),
-      c.created_at ? new Date(c.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '',
+      timeFormatted,
     ].join('\t');
   });
 

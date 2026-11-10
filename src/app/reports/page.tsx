@@ -146,7 +146,7 @@ export default function ReportsPage() {
     let exportResult: { filename: string; size: string; openUrl?: string; rowCount?: number } | null = null;
 
     if (exportFormatMode === 'google_sheets') {
-      exportResult = await exportToGoogleSheets(chats, reportType, currentFilterOptions, dateRange, userProfile);
+      exportResult = await exportToGoogleSheets(chats, reportType, currentFilterOptions, dateRange, userProfile, language);
       if (exportResult) {
         setGoogleSheetsNotice({
           open: true,
@@ -295,7 +295,7 @@ export default function ReportsPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      exportToGoogleSheets(chats, reportType, currentFilterOptions, dateRange, userProfile);
+                      exportToGoogleSheets(chats, reportType, currentFilterOptions, dateRange, userProfile, language);
                     }}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#0f9d58] hover:bg-[#0b8043] text-white transition-colors cursor-pointer select-none"
                   >
