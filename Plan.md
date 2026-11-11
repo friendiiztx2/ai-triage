@@ -137,3 +137,7 @@ flowchart TD
   * รันคำถามจริง 30 ข้อจากผู้บริหารผ่าน `runExecAgent` อัตโนมัติ
   * อัตราการเลือก Tool ถูกต้อง 30 / 30 ข้อ (100% ผ่านทุกข้อ)
   * ส่งออกเป็นไฟล์ Google Sheets ทั้งแบบ `.xlsx` และหน้าเว็บ HTML 1-Click ทันที
+* **งาน 1.4 Deploy การแก้ Tool ขึ้นบอทจริง และรันเทียบผล (`Test_SIFT_AI`):** ✅ เสร็จสมบูรณ์
+  * Merge โค้ดที่แก้ทั้งหมดจาก `june` เข้า branch `development` และ Push ขึ้น GitHub เรียบร้อย
+  * Deploy บอทบนเซิร์ฟเวอร์ด้วยโค้ดล่าสุดบน branch `development` พร้อมระบบ Long-Polling
+  * ทดสอบยิงคำถามจริงในกลุ่ม Telegram `Test_SIFT_AI` ผลลัพธ์ตรงกับสคริปต์ 100% ผ่านครบทุกข้อ
