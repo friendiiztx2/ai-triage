@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { verifyApiAuth, isGlobalAdmin, getCompanyContext, getAllowedCompanyIds } from '@/lib/auth';
+import { QUOTA_ACTION_TYPES } from '@/lib/companyQuotaStore';
 
 interface CacheEntry {
   timestamp: number;
@@ -102,6 +103,13 @@ export async function POST(request: NextRequest) {
 
     if (!action || !details) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+    }
+
+    // SECURITY: quota is derived from these log types, so only the trusted server
+    // routes may write them. Block users from forging a quota change via this endpoint.
+    const normalizedAction = String(action).trim().toUpperCase();
+    if ((QUOTA_ACTION_TYPES as readonly string[]).includes(normalizedAction)) {
+      return NextResponse.json({ error: 'Forbidden: action type is reserved' }, { status: 403 });
     }
 
     const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session.id);

@@ -27,12 +27,15 @@ export default function Sidebar() {
   const { t, language, setLanguage } = useLanguage();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [activeCompany, setActiveCompany] = useState('');
+  // Least-privilege placeholder shown for a split second until the real session loads.
+  // (Previously this was a full system_admin, so admin-only menus flashed for every user.)
+  // Real access control is enforced by the server; this only affects what the menu shows.
   const defaultSession = {
-    id: 'admin-01',
-    name: 'System Admin',
-    role: 'system_admin',
+    id: '',
+    name: '…',
+    role: 'staff',
     company_id: '',
-    permissions: ['view_dashboard', 'view_chats', 'manage_categories', 'manage_users', 'manage_companies', 'export_csv']
+    permissions: [] as string[]
   };
 
   const [userProfile, setUserProfile] = useState<any>(defaultSession);

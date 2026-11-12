@@ -5,7 +5,6 @@ import { hashPassword } from '@/lib/password';
 import {
   setCompanyQuotaInMemory,
   getPackageInfoFromQuota,
-  saveFallbackCompany,
 } from '@/lib/companyQuotaStore';
 import crypto from 'crypto';
 
@@ -91,27 +90,22 @@ export async function POST(request: NextRequest) {
       .select('id, name, domain, client_id, client_secret, created_at')
       .abortSignal(controller.signal);
 
+    // If the company could not be saved, stop here. Never hand out credentials
+    // (client_id / client_secret / admin login) for a company that doesn't exist in the database.
     if (companyErr) {
+      clearTimeout(timeoutId);
       const errText = String(companyErr.message || '');
       if (errText.includes('exceed_egress_quota') || errText.includes('restricted')) {
-        warnings.push(
-          'ขณะนี้ฐานข้อมูล Supabase ติดโควต้า Egress ชั่วคราว ระบบได้สร้างข้อมูลในโหมดพรีวิวเพื่อให้คุณทดสอบใบส่งมอบลูกค้าได้ทันที'
+        return NextResponse.json(
+          { error: 'ฐานข้อมูล Supabase ติดโควต้าชั่วคราว ยังบันทึกบริษัทไม่ได้ กรุณาลองใหม่ภายหลัง' },
+          { status: 503 }
         );
-      } else {
-        clearTimeout(timeoutId);
-        throw companyErr;
       }
+      throw companyErr;
     }
 
-    // Store Quota & Fallback Company in memory
+    // Cache the quota for this server instance (the source of truth is the activity_logs entry below)
     setCompanyQuotaInMemory(newCompanyId, resolvedQuota);
-    saveFallbackCompany({
-      ...newCompany,
-      monthly_quota: resolvedQuota,
-      package_name: resolvedPackageName,
-      package_badge: pkgInfo.badgeText,
-      is_unlimited: pkgInfo.isUnlimited,
-    });
     try {
       await db.from('companies').update({ quota: resolvedQuota }).eq('id', newCompanyId);
     } catch {}

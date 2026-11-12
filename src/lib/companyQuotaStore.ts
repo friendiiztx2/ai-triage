@@ -2,23 +2,20 @@ import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 export const DEFAULT_COMPANY_QUOTA = 50000;
 
-// Shared in-memory cache for fast access within the same instance
+/**
+ * Action types whose activity_logs rows define a company's quota.
+ * Only trusted server routes (usage-quotas PATCH, companies/register) may write these;
+ * /api/audit-logs refuses them so users can't forge their own quota.
+ */
+export const QUOTA_ACTION_TYPES = ['UPDATE_COMPANY_QUOTA', 'CREATE_COMPANY_ONBOARDING'] as const;
+
+// Shared in-memory cache for fast access within the same server instance
 const customQuotasMap = new Map<string, number>();
-// In-memory store for newly created companies when Supabase is temporarily restricted
-const fallbackCompaniesMap = new Map<string, any>();
 
 let lastHydratedAt = 0;
 const HYDRATE_TTL_MS = 30000; // 30s
-
-export function saveFallbackCompany(company: any) {
-  if (company && company.id) {
-    fallbackCompaniesMap.set(company.id, company);
-  }
-}
-
-export function getFallbackCompanies(): any[] {
-  return Array.from(fallbackCompaniesMap.values());
-}
+const HYDRATE_PAGE_SIZE = 1000;
+const HYDRATE_MAX_PAGES = 20; // up to 20,000 quota events
 
 export function getPackageInfoFromQuota(quota: number): {
   id: 'starter' | 'pro' | 'enterprise' | 'custom';
@@ -90,25 +87,35 @@ export async function hydrateCompanyQuotas(): Promise<Map<string, number>> {
 
   const db = supabaseAdmin || supabase;
   try {
-    const { data: logs } = await db
-      .from('activity_logs')
-      .select('company_id, action_type, details, created_at')
-      .in('action_type', ['UPDATE_COMPANY_QUOTA', 'CREATE_COMPANY_ONBOARDING'])
-      .order('created_at', { ascending: true })
-      .limit(200);
+    // FIX: read NEWEST first and keep only the first (latest) value per company.
+    // Previously this read the OLDEST 200 rows, so once there were more than 200 quota
+    // events, later quota changes were silently ignored.
+    const latest = new Map<string, number>();
+    for (let page = 0; page < HYDRATE_MAX_PAGES; page++) {
+      const from = page * HYDRATE_PAGE_SIZE;
+      const { data: logs, error } = await db
+        .from('activity_logs')
+        .select('company_id, action_type, details, created_at')
+        .in('action_type', QUOTA_ACTION_TYPES as unknown as string[])
+        .order('created_at', { ascending: false })
+        .range(from, from + HYDRATE_PAGE_SIZE - 1);
 
-    if (Array.isArray(logs)) {
-      logs.forEach((log: any) => {
+      if (error || !Array.isArray(logs)) break;
+
+      for (const log of logs as any[]) {
         const cid = log.company_id || log.details?.company_id;
         const q = log.details?.new_quota ?? log.details?.monthly_quota;
-        if (cid && q !== undefined && !isNaN(Number(q))) {
-          customQuotasMap.set(cid, Number(q));
+        if (cid && !latest.has(cid) && q !== undefined && !isNaN(Number(q))) {
+          latest.set(cid, Number(q));
         }
-      });
+      }
+      if (logs.length < HYDRATE_PAGE_SIZE) break;
     }
+
+    latest.forEach((q, cid) => customQuotasMap.set(cid, q));
     lastHydratedAt = now;
   } catch {
-    // Ignore errors if activity_logs isn't reachable
+    // Ignore errors if activity_logs isn't reachable; keep the cached values
   }
 
   return customQuotasMap;
