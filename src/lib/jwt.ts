@@ -15,26 +15,37 @@ export interface AuthTokenPayload {
   exp: number; // Expiration timestamp in seconds
 }
 
-const DEFAULT_SECRET = 'sift-ai-fallback-secure-signing-key-32ch-min!';
-const ACTIVE_SUPABASE_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtb3Jmc3VkdWRpcXRuenJoZHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNTg3MTMsImV4cCI6MjEwODczNDcxM30.2P08kFFQoyqeYQlVkMhbV_7mExBFpINTRFqjhLQNhKA';
-const LEGACY_SUPABASE_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1aHNmeGRjbnRoYnhscnhtZnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ4OTMsImV4cCI6MjEwMTMwMDg5M30.qmzzPoWNFo6n8QIoU1Ryje7xXq5anlTlq9cqYmjsu9M';
+/**
+ * SECURITY: Tokens are signed and verified ONLY with SESSION_SECRET from the environment.
+ * Public or hard-coded values (Supabase anon keys, in-source defaults) must never be used,
+ * because anyone who knows them could forge an admin token.
+ *
+ * - Production: SESSION_SECRET is required (min 32 chars). Without it, login fails and
+ *   every token is rejected.
+ * - Local development only (NODE_ENV !== 'production'): a fixed dev-only secret is used
+ *   so `npm run dev` keeps working. It is never accepted in production builds.
+ */
+const DEV_ONLY_SECRET = 'sift-ai-local-development-only-secret-do-not-use-in-prod';
+const MIN_SECRET_LENGTH = 32;
+const isProduction = process.env.NODE_ENV === 'production';
 
-const PRIMARY_SIGNING_SECRET = process.env.SESSION_SECRET || DEFAULT_SECRET;
+function resolveSigningSecret(): string | null {
+  const envSecret = process.env.SESSION_SECRET?.trim();
+  if (envSecret && envSecret.length >= MIN_SECRET_LENGTH) return envSecret;
 
-// Candidate secrets so tokens issued before or after Supabase key rotation remain valid
-const CANDIDATE_SECRETS = Array.from(
-  new Set(
-    [
-      process.env.SESSION_SECRET,
-      DEFAULT_SECRET,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      ACTIVE_SUPABASE_KEY,
-      LEGACY_SUPABASE_KEY,
-    ].filter((s): s is string => Boolean(s && s.length > 0))
-  )
-);
+  if (envSecret) {
+    console.error(`[Security] SESSION_SECRET must be at least ${MIN_SECRET_LENGTH} characters.`);
+  }
+  if (isProduction) {
+    console.error('[Security] SESSION_SECRET is missing or too short. All sessions will be rejected.');
+    return null;
+  }
+
+  console.warn('[Security] SESSION_SECRET not set — using a dev-only secret. Set it in .env.local.');
+  return DEV_ONLY_SECRET;
+}
+
+const SIGNING_SECRET = resolveSigningSecret();
 
 function strToUint8(str: string): Uint8Array {
   return new TextEncoder().encode(str);
@@ -101,7 +112,10 @@ export async function createAuthToken(
   const payloadStr = JSON.stringify(payload);
   const dataPart = bufToBase64Url(strToUint8(payloadStr).buffer as ArrayBuffer);
 
-  const key = await getCryptoKeyForSecret(PRIMARY_SIGNING_SECRET);
+  if (!SIGNING_SECRET) {
+    throw new Error('Server misconfigured: SESSION_SECRET is not set');
+  }
+  const key = await getCryptoKeyForSecret(SIGNING_SECRET);
   const signature = await crypto.subtle.sign('HMAC', key, strToUint8(dataPart) as any);
   const sigPart = bufToBase64Url(signature);
 
@@ -109,11 +123,12 @@ export async function createAuthToken(
 }
 
 /**
- * Verifies a token's HMAC signature against all candidate secrets and checks expiration.
+ * Verifies a token's HMAC signature against SESSION_SECRET and checks expiration.
  * Returns the verified payload or null if invalid/tampered/expired.
  */
 export async function verifyAuthToken(token: string | undefined | null): Promise<AuthTokenPayload | null> {
   if (!token || typeof token !== 'string') return null;
+  if (!SIGNING_SECRET) return null;
 
   const parts = token.trim().split('.');
   if (parts.length !== 2) return null;
@@ -124,15 +139,8 @@ export async function verifyAuthToken(token: string | undefined | null): Promise
     const sigBytes = base64UrlToBuf(sigPart);
     const dataBytes = strToUint8(dataPart);
 
-    let isValid = false;
-    for (const secret of CANDIDATE_SECRETS) {
-      const key = await getCryptoKeyForSecret(secret);
-      const matched = await crypto.subtle.verify('HMAC', key, sigBytes as any, dataBytes as any);
-      if (matched) {
-        isValid = true;
-        break;
-      }
-    }
+    const key = await getCryptoKeyForSecret(SIGNING_SECRET);
+    const isValid = await crypto.subtle.verify('HMAC', key, sigBytes as any, dataBytes as any);
 
     if (!isValid) {
       return null;

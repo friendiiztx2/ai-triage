@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, supabase } from '@/lib/supabase';
 import { KNOWN_CATEGORY_NAMES, getBaseCatId, getCategoryLabel } from '@/lib/categories';
-import { verifyApiAuth, getCompanyContext } from '@/lib/auth';
+import { verifyApiAuth, getCompanyContext, isGlobalAdmin, getScopedCompanyIds } from '@/lib/auth';
 import { clearChatsCache } from '@/lib/serverCache';
 
 const defaultCategories = [
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
     return NextResponse.json(cached.data, {
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'Cache-Control': 'private, no-store',
         'X-Cache': 'HIT'
       }
     });
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(uniqueCategories, {
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+        'Cache-Control': 'private, no-store'
       }
     });
   } catch (err: any) {
@@ -103,10 +103,10 @@ export async function POST(request: NextRequest) {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   // Non-system admins can only create categories for their own company
-  const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+  const isSysAdmin = isGlobalAdmin(session);
   const companyId = isSysAdmin
     ? request.headers.get('x-company-id') || request.cookies.get('company_id')?.value || session.company_id
-    : session.company_id;
+    : getCompanyContext(request, session); // always one of the user's own companies
 
   try {
     const { id, name, description, name_en, name_th } = await request.json();
@@ -178,8 +178,8 @@ export async function PATCH(request: NextRequest) {
     let query = supabase.from('categories').update(updateData).eq('id', id);
 
     // Multi-tenant protection: non-system admins can only edit their own company categories
-    if (session.role !== 'system_admin' && session.role !== 'super_admin' && session.company_id) {
-      query = query.eq('company_id', session.company_id);
+    if (!isGlobalAdmin(session)) {
+      query = query.in('company_id', getScopedCompanyIds(session));
     }
 
     const { data, error } = await query.select('id, name, description, company_id, name_en').abortSignal(controller.signal);
@@ -216,8 +216,8 @@ export async function DELETE(request: NextRequest) {
     let query = supabase.from('categories').delete().eq('id', id);
 
     // Multi-tenant protection: non-system admins can only delete their own company categories
-    if (session.role !== 'system_admin' && session.role !== 'super_admin' && session.company_id) {
-      query = query.eq('company_id', session.company_id);
+    if (!isGlobalAdmin(session)) {
+      query = query.in('company_id', getScopedCompanyIds(session));
     }
 
     const { error } = await query.abortSignal(controller.signal);

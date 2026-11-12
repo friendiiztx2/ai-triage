@@ -38,10 +38,12 @@ export async function GET(
       return NextResponse.json({ error: 'ไม่พบกลุ่มนี้ในระบบ' }, { status: 404 });
     }
 
+    // SECURITY: non-global admins may only view members of groups bound to their company
+    // (unassigned groups' member lists are visible to system/super admins only)
     const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
-    if (!isSysAdmin && group.company_id) {
-      const allowedIds = (session.company_id || '').split(',').map((cid: string) => cid.trim());
-      if (!allowedIds.includes(group.company_id)) {
+    if (!isSysAdmin) {
+      const allowedIds = (session.company_id || '').split(',').map((cid: string) => cid.trim()).filter(Boolean);
+      if (!group.company_id || !allowedIds.includes(group.company_id)) {
         return NextResponse.json({ error: 'Forbidden: คุณไม่มีสิทธิ์เข้าถึงสมาชิกของกลุ่มนี้' }, { status: 403 });
       }
     }
@@ -120,10 +122,15 @@ export async function PATCH(
       .eq('chat_id', chatId)
       .maybeSingle();
 
+    if (!group) {
+      return NextResponse.json({ error: 'ไม่พบกลุ่มนี้ในระบบ' }, { status: 404 });
+    }
+
+    // SECURITY: non-global admins may only manage groups bound to their own company
     const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
-    if (!isSysAdmin && group?.company_id) {
-      const allowedIds = (session.company_id || '').split(',').map((cid: string) => cid.trim());
-      if (!allowedIds.includes(group.company_id)) {
+    if (!isSysAdmin) {
+      const allowedIds = (session.company_id || '').split(',').map((cid: string) => cid.trim()).filter(Boolean);
+      if (!group.company_id || !allowedIds.includes(group.company_id)) {
         return NextResponse.json({ error: 'Forbidden: คุณไม่มีสิทธิ์จัดการสมาชิกของกลุ่มนี้' }, { status: 403 });
       }
     }

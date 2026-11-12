@@ -6,7 +6,6 @@ import { verifyAuthToken, AuthTokenPayload } from '@/lib/jwt';
 const PUBLIC_API_ROUTES = new Set([
   '/api/users/login',
   '/api/users/logout',
-  '/api/schema',
 ]);
 
 /**
@@ -41,36 +40,10 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Cryptographically verify session token
-  let validSession: AuthTokenPayload | null = await verifyAuthToken(token);
-
-  // Graceful fallback to user_session cookie if auth_token was rotated
-  if (!validSession) {
-    const rawUserCookie = request.cookies.get('user_session')?.value;
-    if (rawUserCookie) {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(rawUserCookie));
-        if (parsed && (parsed.id || parsed.email) && parsed.role) {
-          validSession = {
-            id: parsed.id || parsed.email,
-            email: parsed.email || '',
-            name: parsed.name || parsed.email || 'Admin',
-            role: parsed.role,
-            company_id:
-              parsed.company_id &&
-              parsed.company_id !== 'null' &&
-              parsed.company_id !== 'undefined' &&
-              parsed.company_id !== 'all'
-                ? parsed.company_id
-                : null,
-            permissions: parsed.permissions || [],
-            iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + 86400,
-          };
-        }
-      } catch {}
-    }
-  }
+  // Cryptographically verify session token.
+  // SECURITY: only the signed auth_token is trusted. The client-readable
+  // user_session cookie is for UI display only and must never grant access.
+  const validSession: AuthTokenPayload | null = await verifyAuthToken(token);
 
   // If visiting login page:
   // - If validSession exists, redirect to '/'

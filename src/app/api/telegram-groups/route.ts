@@ -130,6 +130,18 @@ export async function POST(request: NextRequest) {
       .eq('chat_id', chat_id)
       .maybeSingle();
 
+    // SECURITY: a company admin may claim an unassigned group, but may never take over
+    // a group that is already bound to a different company.
+    if (existing && existing.company_id && !isSysAdmin) {
+      const allowedIds = (session.company_id || '').split(',').map((id: string) => id.trim());
+      if (!allowedIds.includes(existing.company_id)) {
+        return NextResponse.json(
+          { error: 'Forbidden: กลุ่มนี้ถูกผูกกับบริษัทอื่นอยู่แล้ว' },
+          { status: 403 }
+        );
+      }
+    }
+
     if (existing) {
       const { error: updateErr } = await db
         .from('telegram_groups')

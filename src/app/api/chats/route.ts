@@ -9,7 +9,13 @@ import {
   getInFlightRequest,
   setInFlightRequest,
 } from '@/lib/serverCache';
-import { verifyApiAuth, getCompanyContext, sanitizePostgrestFilter } from '@/lib/auth';
+import {
+  verifyApiAuth,
+  getCompanyContext,
+  sanitizePostgrestFilter,
+  isGlobalAdmin,
+  getScopedCompanyIds,
+} from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -285,8 +291,9 @@ export async function PATCH(request: NextRequest) {
     let query = db.from('chats').update(updateData);
 
     // Multi-tenant check: Non-system admins can only update chats within their company
-    if (session.role !== 'system_admin' && session.role !== 'super_admin' && session.company_id) {
-      query = query.eq('company_id', session.company_id);
+    // (fails closed: users with no company match nothing; multi-company users use .in)
+    if (!isGlobalAdmin(session)) {
+      query = query.in('company_id', getScopedCompanyIds(session));
     }
 
     if (ids && Array.isArray(ids)) {

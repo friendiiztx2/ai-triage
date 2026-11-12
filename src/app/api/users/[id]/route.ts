@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
-import { verifyApiAuth } from '@/lib/auth';
+import { verifyApiAuth, canManageRole, VALID_ROLES } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
 
 export async function PUT(
@@ -27,6 +27,22 @@ export async function PUT(
     if (!role && !permissions && !password && !name && !email && company_id === undefined) {
       clearTimeout(timeoutId);
       return NextResponse.json({ error: 'กรุณาระบุข้อมูลที่ต้องการแก้ไข' }, { status: 400 });
+    }
+
+    // SECURITY: role hierarchy — nobody edits or grants a role above their own
+    // (e.g. a super_admin can no longer promote someone to system_admin or reset its password)
+    const { data: targetUser } = await db.from('users').select('role').eq('id', id).maybeSingle();
+    if (!targetUser) {
+      clearTimeout(timeoutId);
+      return NextResponse.json({ error: 'ไม่พบผู้ใช้ที่ต้องการแก้ไข' }, { status: 404 });
+    }
+    if (!canManageRole(session, targetUser.role)) {
+      clearTimeout(timeoutId);
+      return NextResponse.json({ error: 'คุณไม่มีสิทธิ์แก้ไขผู้ใช้ที่มีสิทธิ์สูงกว่าตนเอง' }, { status: 403 });
+    }
+    if (role && (!VALID_ROLES.includes(role) || !canManageRole(session, role))) {
+      clearTimeout(timeoutId);
+      return NextResponse.json({ error: 'คุณไม่มีสิทธิ์กำหนดบทบาทนี้' }, { status: 403 });
     }
 
     const updateData: any = {};

@@ -14,7 +14,9 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { name, avatar, currentPassword, newPassword, userId, userEmail } = await request.json();
+    // NOTE: userId / userEmail sent by the client are intentionally ignored.
+    // SECURITY: a user may only ever edit their OWN profile, identified by the signed session.
+    const { name, avatar, currentPassword, newPassword } = await request.json();
 
     const isUUID = (val: any) =>
       typeof val === 'string' &&
@@ -22,41 +24,23 @@ export async function PUT(request: NextRequest) {
 
     let candidate: any = null;
 
-    // 2. Fetch target user from DB by valid UUID first
-    const targetUuid = [session.id, userId].find((id) => isUUID(id));
-    if (targetUuid) {
-      const { data } = await db.from('users').select('*').eq('id', targetUuid).limit(1);
+    // 2. Fetch the logged-in user by the id in the signed session token
+    if (session.id) {
+      const { data } = await db.from('users').select('*').eq('id', session.id).limit(1);
       if (data && data.length > 0) {
         candidate = data[0];
       }
     }
 
-    // 2b. Fallback: Search by email or username if ID is not a UUID or not found
-    if (!candidate) {
-      const searchTerms = [
-        session.email,
-        userEmail,
-        !isUUID(session.id) ? session.id : null,
-        !isUUID(userId) ? userId : null,
-        session.name,
-      ].filter(Boolean) as string[];
-
-      for (const term of searchTerms) {
-        if (!term || typeof term !== 'string') continue;
-        const cleanTerm = term.trim();
-        if (!cleanTerm) continue;
-
-        const { data: byEmail } = await db.from('users').select('*').eq('email', cleanTerm).limit(1);
-        if (byEmail && byEmail.length > 0) {
-          candidate = byEmail[0];
-          break;
-        }
-
-        const { data: byName } = await db.from('users').select('*').eq('name', cleanTerm).limit(1);
-        if (byName && byName.length > 0) {
-          candidate = byName[0];
-          break;
-        }
+    // 2b. Fallback: the session's own email (still from the signed token, never from the body)
+    if (!candidate && session.email) {
+      const { data: byEmail } = await db
+        .from('users')
+        .select('*')
+        .eq('email', session.email.trim().toLowerCase())
+        .limit(1);
+      if (byEmail && byEmail.length > 0) {
+        candidate = byEmail[0];
       }
     }
 
@@ -73,8 +57,12 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 4 ตัวอักษร' }, { status: 400 });
       }
 
-      // If user provided a current password, verify it first
-      if (currentPassword && currentPassword.trim()) {
+      // SECURITY: the current password is always required to set a new one
+      // (admins resetting someone else's password use the user-management screen instead).
+      if (candidate.password) {
+        if (!currentPassword || !currentPassword.trim()) {
+          return NextResponse.json({ error: 'กรุณากรอกรหัสผ่านปัจจุบันเพื่อยืนยันการเปลี่ยนรหัสผ่าน' }, { status: 400 });
+        }
         const check = await verifyPassword(currentPassword.trim(), candidate.password);
         if (!check.valid) {
           return NextResponse.json({ error: 'รหัสผ่านปัจจุบันไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง' }, { status: 400 });

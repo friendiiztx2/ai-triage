@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
     return NextResponse.json(cached.data, {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
+        'Cache-Control': 'private, no-store',
         'X-Cache': 'HIT'
       }
     });

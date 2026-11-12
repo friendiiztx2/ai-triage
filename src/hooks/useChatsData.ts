@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
 import { playAlertTone } from '@/lib/audio';
 
 interface UseChatsDataOptions {
@@ -129,31 +128,25 @@ export function useChatsData({ soundEnabled, desktopNotifyEnabled }: UseChatsDat
     }
   }, [fetchInitialData]);
 
-  // Realtime Supabase changes listener (debounced to avoid multiple rapid queries)
+  // Auto-refresh via the authenticated API (replaces the browser Supabase realtime channel,
+  // which required exposing a database key to the browser).
+  // Only refreshes while the tab is visible, plus immediately when the user returns to it.
   useEffect(() => {
-    let debounceTimer: any = null;
-    const triggerDebouncedFetch = () => {
-      // Don't refetch if tab is hidden
+    const REFRESH_INTERVAL_MS = 60_000;
+    const refreshIfVisible = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        fetchInitialData();
-      }, 2500);
+      fetchInitialData();
     };
 
-    const channel = supabase
-      .channel('realtime-chats-chats-page')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
-        triggerDebouncedFetch();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_issues' }, () => {
-        triggerDebouncedFetch();
-      })
-      .subscribe();
+    const intervalId = setInterval(refreshIfVisible, REFRESH_INTERVAL_MS);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refreshIfVisible();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      clearTimeout(debounceTimer);
-      supabase.removeChannel(channel);
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [fetchInitialData]);
 

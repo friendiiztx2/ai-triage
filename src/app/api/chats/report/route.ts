@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyApiAuth } from '@/lib/auth';
+import { verifyApiAuth, isGlobalAdmin, getScopedCompanyIds } from '@/lib/auth';
 import { sendTelegramReportNotification } from '@/lib/telegram';
 
 export async function POST(request: NextRequest) {
@@ -23,8 +23,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'chat_id is required' }, { status: 400 });
     }
 
-    const reporterName = reported_by || session.name || 'เจ้าหน้าที่';
-    const companyId = body.company_id || session.company_id || null;
+    // SECURITY: the chat must belong to the user's company; company_id comes from the
+    // chat row itself (never from the request body), and reporter from the session.
+    let chatQuery = supabase.from('chats').select('id, company_id').eq('id', chat_id);
+    if (!isGlobalAdmin(session)) {
+      chatQuery = chatQuery.in('company_id', getScopedCompanyIds(session));
+    }
+    const { data: chatRow } = await chatQuery.maybeSingle();
+    if (!chatRow) {
+      return NextResponse.json({ error: 'Forbidden: ไม่พบแชตนี้หรือคุณไม่มีสิทธิ์เข้าถึง' }, { status: 403 });
+    }
+
+    const reporterName = session.name || session.email || reported_by || 'เจ้าหน้าที่';
+    const companyId = chatRow.company_id || null;
 
     // 1. Insert report record into Supabase table `ai_feedback_reports`
     let dbSuccess = false;

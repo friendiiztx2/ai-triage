@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
 import { calculateDashboardMetrics } from '@/lib/dashboardMetrics';
 
 interface UseDashboardDataParams {
@@ -125,26 +124,24 @@ export function useDashboardData({ dateRange, startDate, endDate, language }: Us
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Realtime Supabase listener (debounced & pauses when tab is hidden)
+  // Auto-refresh via the authenticated API (replaces the browser Supabase realtime channel,
+  // which required exposing a database key to the browser). Pauses while the tab is hidden.
   useEffect(() => {
-    let debounceTimer: any = null;
-    const debouncedReload = () => {
+    const REFRESH_INTERVAL_MS = 60_000;
+    const refreshIfVisible = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        silentBackgroundReload();
-      }, 3000);
+      silentBackgroundReload();
     };
 
-    const channel = supabase
-      .channel('dashboard-realtime-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, debouncedReload)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_issues' }, debouncedReload)
-      .subscribe();
+    const intervalId = setInterval(refreshIfVisible, REFRESH_INTERVAL_MS);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refreshIfVisible();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      clearTimeout(debounceTimer);
-      supabase.removeChannel(channel);
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [silentBackgroundReload]);
 

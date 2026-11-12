@@ -157,8 +157,8 @@ export default function UserTableRow({
           <div className="flex items-center gap-2 font-mono text-xs text-neutral-500 dark:text-neutral-400">
             <div className="w-[120px] shrink-0">
               {isPasswordVisible ? (
-                user.password ? (
-                  user.password.startsWith('$2') ? (
+                user.password_status && user.password_status !== 'none' ? (
+                  user.password_status === 'hashed' ? (
                     <span
                       className="inline-flex items-center gap-1 text-[11px] font-sans font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/50 cursor-help whitespace-nowrap"
                       title={language === 'th' ? 'รหัสผ่านถูกเข้ารหัสทางเดียว (Bcrypt) อย่างปลอดภัย หากต้องการเปลี่ยนรหัสผ่าน ให้กดปุ่มดินสอแก้ไข' : 'Secured with one-way Bcrypt hash. Click edit to change password.'}
@@ -166,8 +166,11 @@ export default function UserTableRow({
                       <span>🔒 {language === 'th' ? 'เข้ารหัสแล้ว' : 'Encrypted'}</span>
                     </span>
                   ) : (
-                    <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded select-all truncate block max-w-[120px]">
-                      {user.password}
+                    <span
+                      className="inline-flex items-center gap-1 text-[11px] font-sans font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/50 cursor-help whitespace-nowrap"
+                      title={language === 'th' ? 'รหัสผ่านรูปแบบเก่ายังไม่ถูกเข้ารหัส จะเข้ารหัสอัตโนมัติเมื่อผู้ใช้ล็อกอินครั้งถัดไป หรือกดดินสอเพื่อตั้งรหัสใหม่' : 'Legacy password not yet hashed. It will be hashed on next login, or click edit to reset it.'}
+                    >
+                      <span>⚠️ {language === 'th' ? 'รหัสแบบเก่า' : 'Legacy'}</span>
                     </span>
                   )
                 ) : (

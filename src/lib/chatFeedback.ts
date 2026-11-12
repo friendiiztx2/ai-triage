@@ -1,4 +1,3 @@
-import { supabase } from '@/lib/supabase';
 
 interface SaveFeedbackParams {
   chat: any;
@@ -8,6 +7,22 @@ interface SaveFeedbackParams {
   editIssues: Record<string, { category_id: string; priority: string }>;
   editCategory: string;
   editPriority: string;
+}
+
+/**
+ * Records an audit entry through the authenticated API (the server fills in the
+ * user and company from the signed session). Never write to Supabase from the browser.
+ */
+async function logActivity(action: string, details: Record<string, any>) {
+  try {
+    await fetch('/api/audit-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, details }),
+    });
+  } catch (e) {
+    console.warn('activity log:', e);
+  }
 }
 
 export async function submitChatFeedback({
@@ -111,17 +126,7 @@ export async function submitChatFeedback({
     throw new Error('Failed to submit feedback');
   }
 
-  try {
-    await supabase.from('activity_logs').insert([{
-      company_id: userProfile?.company_id || null,
-      user_id: userProfile?.id || 'admin-01',
-      user_name: userProfile?.name || 'Admin',
-      action_type: 'UPDATE_CATEGORY',
-      details: { chat_id: chat.id, old_category: chat.category_id, new_category: finalCategoryId, old_priority: chat.priority, new_priority: finalPriority },
-    }]);
-  } catch (e) {
-    console.warn('activity_logs insert:', e);
-  }
+  await logActivity('UPDATE_CATEGORY', { chat_id: chat.id, old_category: chat.category_id, new_category: finalCategoryId, old_priority: chat.priority, new_priority: finalPriority });
 
   return { finalCategoryId, finalPriority };
 }
@@ -206,17 +211,7 @@ export async function submitApproveAI({
     throw new Error('Failed to approve AI triage');
   }
 
-  try {
-    await supabase.from('activity_logs').insert([{
-      company_id: userProfile?.company_id || null,
-      user_id: userProfile?.id || 'admin-01',
-      user_name: userProfile?.name || 'Admin',
-      action_type: 'APPROVE_AI_TRIAGE',
-      details: { chat_id: chat.id, category: finalCategoryId, priority: finalPriority },
-    }]);
-  } catch (e) {
-    console.warn('activity_logs insert:', e);
-  }
+  await logActivity('APPROVE_AI_TRIAGE', { chat_id: chat.id, category: finalCategoryId, priority: finalPriority });
 
   return { finalCategoryId, finalPriority };
 }

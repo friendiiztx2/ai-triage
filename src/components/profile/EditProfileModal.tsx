@@ -132,6 +132,10 @@ export default function EditProfileModal({
     }
 
     if (showPasswordSection) {
+      if (!currentPassword.trim()) {
+        setErrorMsg('กรุณากรอกรหัสผ่านปัจจุบันเพื่อยืนยันการเปลี่ยนรหัสผ่าน');
+        return;
+      }
       if (!newPassword.trim()) {
         setErrorMsg('กรุณากรอกรหัสผ่านใหม่');
         return;

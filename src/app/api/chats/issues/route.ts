@@ -19,17 +19,46 @@ export async function GET(request: NextRequest) {
 
   try {
     const db = supabaseAdmin || supabase;
-    let query = db
+
+    let requestedIds = chatIdsParam
+      ? chatIdsParam.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : [chatId as string];
+
+    // SECURITY: Multi-tenant isolation — non-global admins may only read issues
+    // for chats that belong to their own company(ies).
+    const isGlobalAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+    if (!isGlobalAdmin) {
+      const allowedCompanyIds = (session.company_id || '')
+        .split(',')
+        .map((id: string) => id.trim())
+        .filter(Boolean);
+
+      if (allowedCompanyIds.length === 0) {
+        clearTimeout(timeoutId);
+        return NextResponse.json([]);
+      }
+
+      const { data: ownedChats, error: ownErr } = await db
+        .from('chats')
+        .select('id')
+        .in('id', requestedIds)
+        .in('company_id', allowedCompanyIds)
+        .abortSignal(controller.signal);
+
+      if (ownErr) throw ownErr;
+      requestedIds = (ownedChats || []).map((c: any) => String(c.id));
+
+      if (requestedIds.length === 0) {
+        clearTimeout(timeoutId);
+        return NextResponse.json([]);
+      }
+    }
+
+    const query = db
       .from('chat_issues')
       .select('id, chat_id, category_id, priority, department, summary, recommended_reply, created_at, is_human_verified')
-      .order('created_at', { ascending: true });
-
-    if (chatIdsParam) {
-      const ids = chatIdsParam.split(',').map((s: string) => s.trim()).filter(Boolean);
-      query = query.in('chat_id', ids);
-    } else {
-      query = query.eq('chat_id', chatId);
-    }
+      .order('created_at', { ascending: true })
+      .in('chat_id', requestedIds);
 
     const { data, error } = await query.abortSignal(controller.signal);
 

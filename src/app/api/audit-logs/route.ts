@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
-import { verifyApiAuth } from '@/lib/auth';
+import { verifyApiAuth, isGlobalAdmin, getCompanyContext, getAllowedCompanyIds } from '@/lib/auth';
 
 interface CacheEntry {
   timestamp: number;
@@ -17,8 +17,12 @@ export async function GET(request: NextRequest) {
   const { session, errorResponse } = await verifyApiAuth(request, ['system_admin', 'super_admin', 'admin']);
   if (errorResponse || !session) return errorResponse!;
 
-  const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
-  const companyId = isSysAdmin ? request.nextUrl.searchParams.get('company_id') : session.company_id;
+  // SECURITY: non-global admins are always scoped to one of their own companies
+  // (never "all", even when they have no company assigned).
+  const isSysAdmin = isGlobalAdmin(session);
+  const companyId = isSysAdmin
+    ? request.nextUrl.searchParams.get('company_id')
+    : getCompanyContext(request, session);
 
   const cacheKey = request.url + `_comp_${companyId || 'all'}`;
   const now = Date.now();
@@ -27,7 +31,7 @@ export async function GET(request: NextRequest) {
   if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
     return NextResponse.json(cached.data, {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=45',
+        'Cache-Control': 'private, no-store',
         'X-Cache': 'HIT'
       }
     });
@@ -103,7 +107,12 @@ export async function POST(request: NextRequest) {
     const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session.id);
 
     const activityEntry: any = {
-      company_id: session.company_id || body.company_id || null,
+      // SECURITY: users can only write logs into their own company
+      company_id: isGlobalAdmin(session)
+        ? body.company_id || null
+        : getAllowedCompanyIds(session).includes(body.company_id)
+          ? body.company_id
+          : getAllowedCompanyIds(session)[0] || null,
       user_id: isValidUUID ? session.id : null,
       user_name: session.name || session.email || 'User',
       action_type: action || 'UPDATE',

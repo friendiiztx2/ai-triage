@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { playAlertTone } from '@/lib/audio';
-import { supabase } from '@/lib/supabase';
 import { UrgentToastData } from '@/components/notifications/UrgentToastCard';
 
 export function useUrgentNotifier() {
@@ -165,8 +164,9 @@ export function useUrgentNotifier() {
     // Initial check on mount
     pollUrgentChats();
 
-    // Fallback polling: only every 5 minutes (300,000ms), Realtime handles live inserts
-    const intervalId = setInterval(pollUrgentChats, 300000);
+    // Poll the lightweight urgent-only endpoint every 30s while the tab is visible.
+    // (Replaces the browser Supabase realtime channel, which required exposing a DB key.)
+    const intervalId = setInterval(pollUrgentChats, 30000);
 
     // Refresh when user returns to tab
     const handleVisibilityChange = () => {
@@ -175,50 +175,6 @@ export function useUrgentNotifier() {
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Realtime listener for immediate urgent alerts
-    const channel = supabase
-      .channel('global-urgent-notifier-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, (payload: any) => {
-        if (payload?.eventType === 'INSERT' || payload?.eventType === 'UPDATE') {
-          const row = payload.new;
-          if (row) {
-            const pri = (row.priority || '').toLowerCase();
-            const urg = (row.urgency || '').toLowerCase();
-            const isUrgent = pri === 'urgent' || pri === 'critical' || urg === 'urgent';
-            const resStatus = (row.resolution || '').toLowerCase();
-            const status = (row.status || '').toLowerCase();
-            const isResolved = resStatus === 'solved' || resStatus === 'closed' || status === 'resolved' || status === 'closed';
-            const compId = getActiveCompanyId();
-            const matchesComp = !compId || compId === 'all' || row.company_id === compId;
-
-            if (isUrgent && !isResolved && matchesComp) {
-              const notifiedSet = getNotifiedIds();
-              if (!notifiedSet.has(row.id)) {
-                markAsNotified(row.id);
-                setToast({
-                  id: row.id,
-                  customerName: row.customer_name || `ลูกค้า #${row.customer_id || row.id}`,
-                  summary: row.summary || 'พบเคสด่วนต้องการความช่วยเหลือเร่งด่วน',
-                  priority: row.priority || 'urgent',
-                  companyId: row.company_id,
-                });
-                setTimeLeft(60);
-                setIsPaused(false);
-                triggerSound();
-                triggerDesktopNotification({
-                  id: row.id,
-                  customerName: row.customer_name || `ลูกค้า #${row.customer_id || row.id}`,
-                  summary: row.summary || 'พบเคสด่วนต้องการความช่วยเหลือเร่งด่วน',
-                  priority: row.priority || 'urgent',
-                  companyId: row.company_id,
-                });
-              }
-            }
-          }
-        }
-      })
-      .subscribe();
 
     const handleUrgentEvent = (e: any) => {
       if (e?.detail) {
@@ -252,7 +208,6 @@ export function useUrgentNotifier() {
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      supabase.removeChannel(channel);
       window.removeEventListener('urgent-chat-detected', handleUrgentEvent);
     };
   }, []);

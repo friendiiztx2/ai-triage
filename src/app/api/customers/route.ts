@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
-import { verifyApiAuth } from '@/lib/auth';
+import { verifyApiAuth, isGlobalAdmin, getScopedCompanyIds } from '@/lib/auth';
 
 interface CacheEntry {
   timestamp: number;
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
     return NextResponse.json(cached.data, {
       headers: {
-        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        'Cache-Control': 'private, no-store',
         'X-Cache': 'HIT'
       }
     });
@@ -36,16 +36,29 @@ export async function GET(request: NextRequest) {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
+    // SECURITY: Multi-tenant isolation. Non-global users only see customers who have
+    // chats in their own company(ies).
+    const scoped = !isGlobalAdmin(session);
+    let chatsQuery = db.from('chats').select('customer_id');
+    if (scoped) {
+      chatsQuery = chatsQuery.in('company_id', getScopedCompanyIds(session));
+    }
+
     // 1. Fetch customers table and chats list in parallel (using admin client to bypass RLS)
     const [custRes, chatsRes] = await Promise.all([
       Promise.resolve(db.from('customers').select('*').abortSignal(controller.signal)).catch(() => ({ data: null })),
-      Promise.resolve(db.from('chats').select('customer_id').abortSignal(controller.signal)).catch(() => ({ data: null }))
+      Promise.resolve(chatsQuery.abortSignal(controller.signal)).catch(() => ({ data: null }))
     ]);
 
     clearTimeout(timeoutId);
 
-    const dbCusts = custRes?.data || [];
     const chatsData = chatsRes?.data || [];
+    const visibleCustomerIds = new Set(
+      chatsData.map((c: any) => c.customer_id).filter(Boolean).map(String)
+    );
+    const dbCusts = (custRes?.data || []).filter(
+      (c: any) => !scoped || visibleCustomerIds.has(String(c.id))
+    );
 
     // 2. Count real-time chats per customer_id
     const chatCounts: Record<string, number> = {};
@@ -108,7 +121,7 @@ export async function GET(request: NextRequest) {
     serverCache.set(cacheKey, { timestamp: now, data: result });
     return NextResponse.json(result, {
       headers: {
-        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60'
+        'Cache-Control': 'private, no-store'
       }
     });
   } catch (err: any) {

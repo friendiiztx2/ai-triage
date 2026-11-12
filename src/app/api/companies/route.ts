@@ -16,15 +16,35 @@ export async function GET(request: NextRequest) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+  // SECURITY: client_secret is only visible to system_admin (the only role that manages companies)
+  const canSeeSecrets = session.role === 'system_admin';
+  const isGlobalAdmin = session.role === 'system_admin' || session.role === 'super_admin';
+  const allowedIds = isGlobalAdmin
+    ? []
+    : (session.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
+
+  // Applies tenant isolation and secret redaction to any company list (DB or in-memory fallback)
+  const sanitizeList = (list: any[]) =>
+    list
+      .filter((c) => isGlobalAdmin || allowedIds.includes(c?.id))
+      .map((c) => {
+        if (canSeeSecrets) return c;
+        const { client_secret: _secret, ...rest } = c;
+        return rest;
+      });
+
   try {
     let query = db
       .from('companies')
-      .select('id, name, domain, client_id, client_secret, created_at')
+      .select(
+        canSeeSecrets
+          ? 'id, name, domain, client_id, client_secret, created_at'
+          : 'id, name, domain, client_id, created_at'
+      )
       .order('created_at', { ascending: false });
 
     // Multi-tenant Isolation: non-system_admin users only see their own assigned companies
-    if (session.role !== 'system_admin' && session.role !== 'super_admin') {
-      const allowedIds = (session.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
+    if (!isGlobalAdmin) {
       if (allowedIds.length === 0) {
         clearTimeout(timeoutId);
         return NextResponse.json([]);
@@ -39,7 +59,8 @@ export async function GET(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
-    const dbList = !error && Array.isArray(companies) ? companies : [];
+    // (column list is chosen at runtime, so supabase-js can't infer the row type)
+    const dbList: any[] = !error && Array.isArray(companies) ? (companies as any[]) : [];
     const fallbackList = getFallbackCompanies();
 
     // Merge fallback companies (if Supabase is restricted by egress quota)
@@ -47,7 +68,7 @@ export async function GET(request: NextRequest) {
     fallbackList.forEach((c) => mergedMap.set(c.id, c));
     dbList.forEach((c) => mergedMap.set(c.id, c));
 
-    const merged = Array.from(mergedMap.values());
+    const merged = sanitizeList(Array.from(mergedMap.values()));
 
     const enriched = merged.map((comp: any) => {
       const quota = resolveCompanyQuota(comp, quotaMap);
@@ -65,6 +86,6 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     clearTimeout(timeoutId);
     console.error('Error fetching companies:', err);
-    return NextResponse.json(getFallbackCompanies());
+    return NextResponse.json(sanitizeList(getFallbackCompanies()));
   }
 }

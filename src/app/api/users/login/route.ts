@@ -4,6 +4,43 @@ import { createAuthToken } from '@/lib/jwt';
 import { verifyPassword, hashPassword } from '@/lib/password';
 import { sanitizePostgrestFilter } from '@/lib/auth';
 
+// ---- Simple in-memory login rate limiter -------------------------------------
+// Note: per server instance only. For multi-instance production, back this with a
+// shared store (e.g. a Supabase table or Upstash Redis).
+const MAX_FAILED_ATTEMPTS = 8;
+const LOCK_WINDOW_MS = 15 * 60 * 1000;
+const loginFailures = new Map<string, { count: number; firstAt: number }>();
+
+function getLoginLockSeconds(key: string): number {
+  const entry = loginFailures.get(key);
+  if (!entry) return 0;
+  const elapsed = Date.now() - entry.firstAt;
+  if (elapsed > LOCK_WINDOW_MS) {
+    loginFailures.delete(key);
+    return 0;
+  }
+  return entry.count >= MAX_FAILED_ATTEMPTS ? Math.ceil((LOCK_WINDOW_MS - elapsed) / 1000) : 0;
+}
+
+function recordLoginFailure(key: string) {
+  const now = Date.now();
+  const entry = loginFailures.get(key);
+  if (!entry || now - entry.firstAt > LOCK_WINDOW_MS) {
+    loginFailures.set(key, { count: 1, firstAt: now });
+  } else {
+    entry.count += 1;
+  }
+  if (loginFailures.size > 5000) {
+    // prevent unbounded growth
+    const oldest = loginFailures.keys().next().value;
+    if (oldest) loginFailures.delete(oldest);
+  }
+}
+
+function clearLoginFailures(key: string) {
+  loginFailures.delete(key);
+}
+
 export async function POST(request: NextRequest) {
   const db = supabaseAdmin || supabase;
   try {
@@ -20,28 +57,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง' }, { status: 401 });
     }
 
-    const orClauses = [
-      `email.ilike.${safeSearch}`,
-      `name.ilike.%${safeSearch}%`
-    ];
-    const lower = safeSearch.toLowerCase();
-    if (lower === 'system' || lower === 'admin' || lower === 'sysadmin' || lower.includes('system admin')) {
-      orClauses.push('role.eq.system_admin');
+    // SECURITY: basic brute-force protection (per server instance)
+    const clientIp =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
+    const rateKey = `${clientIp}|${inputVal.toLowerCase()}`;
+    const retryAfter = getLoginLockSeconds(rateKey);
+    if (retryAfter > 0) {
+      return NextResponse.json(
+        { error: `พยายามเข้าสู่ระบบผิดหลายครั้งเกินไป กรุณารอ ${Math.ceil(retryAfter / 60)} นาทีแล้วลองใหม่` },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      );
     }
 
-    // Query matching user by email, name, or role using safe sanitized filter
-    const { data: dbUsers, error } = await db
-      .from('users')
-      .select('*')
-      .or(orClauses.join(','))
-      .limit(10);
+    // SECURITY: exact match only — by email (case-insensitive) or by exact account name.
+    // No partial/wildcard matching and no role-keyword shortcuts (e.g. typing "admin").
+    const lowerInput = inputVal.toLowerCase();
+    const escapedName = inputVal.replace(/[\\%_]/g, (ch: string) => `\\${ch}`);
 
+    const [byEmailRes, byNameRes] = await Promise.all([
+      db.from('users').select('*').eq('email', lowerInput).limit(5),
+      db.from('users').select('*').ilike('name', escapedName).limit(5),
+    ]);
+
+    const error = byEmailRes.error || byNameRes.error;
     if (error) {
       console.error('Login DB query error:', error);
       return NextResponse.json({ error: 'เกิดข้อผิดพลาดในการตรวจสอบบัญชี' }, { status: 500 });
     }
 
-    if (!dbUsers || dbUsers.length === 0) {
+    const seen = new Set<string>();
+    const dbUsers = [...(byEmailRes.data || []), ...(byNameRes.data || [])].filter((u: any) => {
+      const exact =
+        (typeof u.email === 'string' && u.email.toLowerCase() === lowerInput) ||
+        (typeof u.name === 'string' && u.name.trim().toLowerCase() === lowerInput);
+      if (!exact || seen.has(u.id)) return false;
+      seen.add(u.id);
+      return true;
+    });
+
+    if (dbUsers.length === 0) {
+      recordLoginFailure(rateKey);
       return NextResponse.json({ error: 'ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง' }, { status: 401 });
     }
 
@@ -59,8 +116,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!matchedUser) {
+      recordLoginFailure(rateKey);
       return NextResponse.json({ error: 'ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง' }, { status: 401 });
     }
+    clearLoginFailures(rateKey);
 
     if (matchedUser.is_active === false) {
       return NextResponse.json({ error: 'บัญชีผู้ใช้นี้ถูกระงับการใช้งาน' }, { status: 403 });
@@ -143,6 +202,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (err: any) {
     console.error('Login error:', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    // Don't leak internal error details on the public login endpoint
+    return NextResponse.json({ error: 'เกิดข้อผิดพลาดของระบบ กรุณาลองใหม่อีกครั้ง' }, { status: 500 });
   }
 }

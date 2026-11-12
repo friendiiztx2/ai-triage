@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { clearChatsCache } from '@/lib/serverCache';
-import { verifyApiAuth } from '@/lib/auth';
+import { verifyApiAuth, isGlobalAdmin, getScopedCompanyIds } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   clearChatsCache();
@@ -18,6 +18,21 @@ export async function POST(request: NextRequest) {
     if (!chat_id) {
       clearTimeout(timeoutId);
       return NextResponse.json({ error: 'chat_id is required' }, { status: 400 });
+    }
+
+    // 0. SECURITY: Multi-tenant check — the chat must belong to one of the user's companies
+    if (!isGlobalAdmin(session)) {
+      const { data: owned, error: ownErr } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('id', chat_id)
+        .in('company_id', getScopedCompanyIds(session))
+        .maybeSingle();
+      if (ownErr) throw ownErr;
+      if (!owned) {
+        clearTimeout(timeoutId);
+        return NextResponse.json({ error: 'Forbidden: คุณไม่มีสิทธิ์แก้ไขแชตนี้' }, { status: 403 });
+      }
     }
 
     // 1. Update the main chat status, classification, and history logs in Supabase
@@ -49,6 +64,7 @@ export async function POST(request: NextRequest) {
               priority: issue.priority || null
             })
             .eq('id', issue.id)
+            .eq('chat_id', chat_id) // only issues that belong to this (verified) chat
             .abortSignal(controller.signal);
 
           if (issueError) {
@@ -80,7 +96,7 @@ export async function POST(request: NextRequest) {
         .insert({
           chat_id,
           is_correct,
-          liked_by: liked_by || 'admin',
+          liked_by: session.name || session.email || liked_by || 'admin',
           created_at: new Date().toISOString()
         })
         .abortSignal(controller.signal);

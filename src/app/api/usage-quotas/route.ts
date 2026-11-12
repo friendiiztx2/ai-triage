@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
-import { verifyApiAuth, getCompanyContext } from '@/lib/auth';
+import { verifyApiAuth, getCompanyContext, isGlobalAdmin, getScopedCompanyIds } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -26,16 +26,18 @@ export async function GET(request: NextRequest) {
   const requestedMonth = searchParams.get('month'); // format: 'YYYY-MM'
 
   try {
-    const isSysAdmin = session.role === 'system_admin' || session.role === 'super_admin';
-    const activeCompanyId = requestedCompanyId || getCompanyContext(request, session) || session.company_id || 'all';
+    const isSysAdmin = isGlobalAdmin(session);
+    // SECURITY: non-global admins can never choose "all" or another company here;
+    // getCompanyContext already validates ?company_id against their own companies.
+    const activeCompanyId = isSysAdmin
+      ? requestedCompanyId || getCompanyContext(request, session) || 'all'
+      : (getCompanyContext(request, session) as string);
+    const scopedCompanyIds = isSysAdmin ? null : getScopedCompanyIds(session);
 
     // 1. Fetch companies & hydrate quotas in parallel
     let companiesQuery = db.from('companies').select('id, name, domain, created_at').order('name', { ascending: true });
-    if (!isSysAdmin && session.company_id) {
-      const allowedIds = (session.company_id || '').split(',').map((id: string) => id.trim()).filter(Boolean);
-      if (allowedIds.length > 0) {
-        companiesQuery = companiesQuery.in('id', allowedIds);
-      }
+    if (scopedCompanyIds) {
+      companiesQuery = companiesQuery.in('id', scopedCompanyIds);
     }
     const [{ data: companiesData }, quotaMap] = await Promise.all([
       companiesQuery,
@@ -77,6 +79,10 @@ export async function GET(request: NextRequest) {
       .select('id, company_id, created_at')
       .gte('created_at', startOfMonth.toISOString())
       .lte('created_at', endOfMonth.toISOString());
+
+    if (scopedCompanyIds) {
+      chatsQuery = chatsQuery.in('company_id', scopedCompanyIds);
+    }
 
     const { data: monthChats } = await chatsQuery;
     const allMonthChats = monthChats || [];
