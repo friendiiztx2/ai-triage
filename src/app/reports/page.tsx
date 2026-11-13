@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { usePersistentFilter } from '@/hooks/usePersistentFilter';
 import { useLanguage } from '@/components/LanguageContext';
 import ReportTypeSelector from '@/components/reports/ReportTypeSelector';
 import ReportFilterBar from '@/components/reports/ReportFilterBar';
@@ -29,9 +30,15 @@ export default function ReportsPage() {
   const [exportFormatMode, setExportFormatMode] = useState<ExportFormatMode>('xlsx_multi_sheet');
 
   // Filter States
-  const [dateRange, setDateRange] = useState('today');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // Date filters are remembered per browser (see usePersistentFilter)
+  const {
+    value: dateRange,
+    setValue: setDateRange,
+    setTemporary: setDateRangeTemp,
+    hasSavedRef: dateRangeSavedRef,
+  } = usePersistentFilter('reports.date', 'today');
+  const { value: startDate, setValue: setStartDate } = usePersistentFilter('reports.startDate', '');
+  const { value: endDate, setValue: setEndDate } = usePersistentFilter('reports.endDate', '');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -106,14 +113,14 @@ export default function ReportsPage() {
         const data = await res.json();
         if (Array.isArray(data)) {
           setChats(data);
-          if (data.length > 0 && dateRange === 'today') {
+          if (data.length > 0 && dateRange === 'today' && !dateRangeSavedRef.current) {
             const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
             const hasToday = data.some((c: any) => {
               if (!c.created_at) return false;
               return new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' }) === todayLocalStr;
             });
             if (!hasToday) {
-              setDateRange('30days');
+              setDateRangeTemp('30days');
             }
           }
         }

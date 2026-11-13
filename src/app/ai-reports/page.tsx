@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { usePersistentFilter } from '@/hooks/usePersistentFilter';
 import Link from 'next/link';
 import { 
   AlertTriangle, 
@@ -66,7 +67,7 @@ export default function UserIssuesPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
+  const { value: dateFilter, setValue: setDateFilter } = usePersistentFilter('aiReports.date', 'all');
 
   // Interactive Notes Modal
   const [editingNotesItem, setEditingNotesItem] = useState<ReportItem | null>(null);

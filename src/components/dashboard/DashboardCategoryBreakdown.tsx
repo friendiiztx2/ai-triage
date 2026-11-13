@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Layers, ArrowUpRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
 import AiPerformanceAuditCard from './AiPerformanceAuditCard';
+import { chatsTimeframeQuery, withQuery } from '@/lib/chatLinks';
 
 export interface DashboardCategoryBreakdownProps {
   sortedChartData: Array<{ name: string; value: number; id: string }>;
@@ -14,6 +15,8 @@ export interface DashboardCategoryBreakdownProps {
     correctedCount: number;
   };
   dateRange: string;
+  startDate?: string;
+  endDate?: string;
   language?: 'th' | 'en';
 }
 
@@ -21,8 +24,12 @@ export default function DashboardCategoryBreakdown({
   sortedChartData,
   aiMetrics,
   dateRange,
+  startDate,
+  endDate,
   language = 'th',
 }: DashboardCategoryBreakdownProps) {
+  // Keep the dashboard's period (incl. custom start/end dates) when drilling into chats
+  const timeQuery = chatsTimeframeQuery(dateRange, startDate, endDate);
   const { t } = useLanguage();
   const [showAllCategories, setShowAllCategories] = useState(false);
 
@@ -63,7 +70,7 @@ export default function DashboardCategoryBreakdown({
                 return (
                   <Link
                     key={item.id || item.name}
-                    href={`/chats?category=${encodeURIComponent(item.id)}&timeframe=${dateRange}`}
+                    href={withQuery(`/chats?category=${encodeURIComponent(item.id)}`, timeQuery)}
                     className="group py-2.5 flex items-center justify-between gap-4 hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40 px-2 rounded-lg transition-colors cursor-pointer"
                   >
                     {/* Rank & Name */}
@@ -125,7 +132,7 @@ export default function DashboardCategoryBreakdown({
       </div>
 
       {/* AI Performance Audit (KPI metrics card) */}
-      <AiPerformanceAuditCard aiMetrics={aiMetrics} language={language} />
+      <AiPerformanceAuditCard aiMetrics={aiMetrics} timeQuery={timeQuery} language={language} />
     </div>
   );
 }

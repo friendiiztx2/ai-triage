@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { MessageSquare, Clock, AlertTriangle, Sparkles, ArrowUpRight } from 'lucide-react';
+import { chatsTimeframeQuery, withQuery } from '@/lib/chatLinks';
 
 export interface DashboardKpiGridProps {
   stats: {
@@ -17,6 +18,8 @@ export interface DashboardKpiGridProps {
     correctedCount: number;
   };
   dateRange: string;
+  startDate?: string;
+  endDate?: string;
   language?: 'th' | 'en';
 }
 
@@ -24,8 +27,12 @@ export default function DashboardKpiGrid({
   stats,
   aiMetrics,
   dateRange,
+  startDate,
+  endDate,
   language = 'th',
 }: DashboardKpiGridProps) {
+  // Keep the dashboard's period (incl. custom start/end dates) when drilling into chats
+  const timeQuery = chatsTimeframeQuery(dateRange, startDate, endDate);
   const hasUrgent = stats.highPriority > 0;
   const hasPending = stats.pendingTriage > 0;
 
@@ -33,7 +40,7 @@ export default function DashboardKpiGrid({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       {/* 1. Total Volume */}
       <Link
-        href={`/chats?timeframe=${dateRange}`}
+        href={withQuery('/chats', timeQuery)}
         className="group relative rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md p-4 transition-all duration-200 hover:border-[#1a73e8]/40 dark:hover:border-[#8ab4f8]/40 hover:shadow-md hover:-translate-y-0.5 shadow-xs block"
       >
         <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
@@ -55,7 +62,7 @@ export default function DashboardKpiGrid({
 
       {/* 2. Pending Triage Queue */}
       <Link
-        href={`/chats?status=pending&timeframe=${dateRange}`}
+        href={withQuery('/chats?status=pending', timeQuery)}
         className={`group relative rounded-xl border p-4 transition-all duration-200 backdrop-blur-md shadow-xs block hover:shadow-md hover:-translate-y-0.5 ${
           hasPending
             ? 'border-amber-500/30 bg-amber-500/[0.02] dark:bg-amber-500/[0.04] hover:border-amber-500/60'
@@ -85,7 +92,7 @@ export default function DashboardKpiGrid({
 
       {/* 3. Urgent / Critical Escalations */}
       <Link
-        href={`/chats?priority=urgent&timeframe=${dateRange}`}
+        href={withQuery('/chats?priority=urgent', timeQuery)}
         className={`group relative rounded-xl border p-4 transition-all duration-200 backdrop-blur-md shadow-xs block hover:shadow-md hover:-translate-y-0.5 ${
           hasUrgent
             ? 'border-rose-500/40 bg-rose-500/[0.04] dark:bg-rose-500/[0.06] hover:border-rose-500/70'

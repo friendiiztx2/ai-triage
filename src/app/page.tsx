@@ -5,6 +5,7 @@ import { useLanguage } from '@/components/LanguageContext';
 import { isSoundEnabled } from '@/lib/audio';
 import { getCategoryLabel } from '@/lib/categories';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { usePersistentFilter } from '@/hooks/usePersistentFilter';
 
 import DashboardFilterHeader from '@/components/dashboard/DashboardFilterHeader';
 import DashboardKpiGrid from '@/components/dashboard/DashboardKpiGrid';
@@ -15,10 +16,15 @@ export default function DashboardPage() {
   const { language } = useLanguage();
   const didAutoFallbackRef = useRef(false);
 
-  // Filters & Controls
-  const [dateRange, setDateRange] = useState('today');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // Filters & Controls — date filters are remembered per browser (see usePersistentFilter)
+  const {
+    value: dateRange,
+    setValue: setDateRange,
+    setTemporary: setDateRangeTemp,
+    hasSavedRef: dateRangeSavedRef,
+  } = usePersistentFilter('dashboard.date', 'today');
+  const { value: startDate, setValue: setStartDate } = usePersistentFilter('dashboard.startDate', '');
+  const { value: endDate, setValue: setEndDate } = usePersistentFilter('dashboard.endDate', '');
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showSoundModal, setShowSoundModal] = useState(false);
 
@@ -41,7 +47,8 @@ export default function DashboardPage() {
   } = useDashboardData({ dateRange, startDate, endDate, language });
 
   useEffect(() => {
-    if (didAutoFallbackRef.current || loading || !allChats || allChats.length === 0) return;
+    // Auto-switch to 30 days only on a first visit (the user never chose a range)
+    if (didAutoFallbackRef.current || dateRangeSavedRef.current || loading || !allChats || allChats.length === 0) return;
     didAutoFallbackRef.current = true;
     const todayLocalStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
     const hasToday = allChats.some((c: any) => {
@@ -49,7 +56,7 @@ export default function DashboardPage() {
       return new Date(c.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' }) === todayLocalStr;
     });
     if (!hasToday && dateRange === 'today') {
-      setDateRange('30days');
+      setDateRangeTemp('30days');
     }
   }, [loading, allChats, dateRange]);
 
@@ -89,6 +96,8 @@ export default function DashboardPage() {
         stats={stats}
         aiMetrics={aiMetrics}
         dateRange={dateRange}
+        startDate={startDate}
+        endDate={endDate}
         language={language}
       />
 
@@ -98,6 +107,8 @@ export default function DashboardPage() {
         otherCount={otherCount}
         aiMetrics={aiMetrics}
         dateRange={dateRange}
+        startDate={startDate}
+        endDate={endDate}
         language={language}
       />
 
@@ -107,6 +118,9 @@ export default function DashboardPage() {
         priorityData={priorityData}
         uniqueCategoryNames={uniqueCategoryNames}
         totalChats={stats.totalChats}
+        dateRange={dateRange}
+        startDate={startDate}
+        endDate={endDate}
         language={language}
       />
     </div>

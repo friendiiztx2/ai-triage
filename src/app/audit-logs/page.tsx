@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { usePersistentFilter } from '@/hooks/usePersistentFilter';
 import { RefreshCw, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/components/LanguageContext';
@@ -13,9 +14,10 @@ export default function AuditLogsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('today');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // Date filters are remembered per browser (see usePersistentFilter)
+  const { value: dateFilter, setValue: setDateFilter } = usePersistentFilter('auditLogs.date', 'today');
+  const { value: startDate, setValue: setStartDate } = usePersistentFilter('auditLogs.startDate', '');
+  const { value: endDate, setValue: setEndDate } = usePersistentFilter('auditLogs.endDate', '');
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {

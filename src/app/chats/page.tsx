@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { usePersistentFilter } from '@/hooks/usePersistentFilter';
 import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageContext';
 import SoundSettingsModal from '@/components/sound/SoundSettingsModal';
@@ -53,10 +54,16 @@ function ChatsPageContent() {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('today');
+  // Date filters are remembered per browser (see usePersistentFilter)
+  const {
+    value: dateFilter,
+    setValue: setDateFilter,
+    setTemporary: setDateFilterTemp,
+    hasSavedRef: dateFilterSavedRef,
+  } = usePersistentFilter('chats.date', 'today');
   const [auditFilter, setAuditFilter] = useState('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const { value: startDate, setValue: setStartDate, setTemporary: setStartDateTemp } = usePersistentFilter('chats.startDate', '');
+  const { value: endDate, setValue: setEndDate, setTemporary: setEndDateTemp } = usePersistentFilter('chats.endDate', '');
 
   // Sync filters from URL query parameters (Deep-linking from Dashboard / Reports)
   useEffect(() => {
@@ -71,13 +78,18 @@ function ChatsPageContent() {
 
     if (statusParam) setStatusFilter(statusParam);
     if (priorityParam) setPriorityFilter(priorityParam);
-    if (timeframeParam) setDateFilter(timeframeParam);
+    if (timeframeParam) setDateFilterTemp(timeframeParam);
+    // Custom range from a dashboard link: carry the exact dates too
+    const startParam = searchParams.get('start');
+    const endParam = searchParams.get('end');
+    if (startParam) setStartDateTemp(startParam);
+    if (endParam) setEndDateTemp(endParam);
     if (qParam) setSearchQuery(qParam);
     if (catParam) setCategoryFilter(catParam);
     if (tagParam) setTagFilter(tagParam);
 
     if (openParam) {
-      if (!timeframeParam) setDateFilter('all');
+      if (!timeframeParam) setDateFilterTemp('all');
       if (!qParam) setSearchQuery(openParam);
     }
   }, [searchParams]);
@@ -200,11 +212,11 @@ function ChatsPageContent() {
   // Auto-switch initial timeframe from 'today' to '30days' once if there are chats in the DB but 0 today
   const didAutoFallbackDateRef = useRef(false);
   useEffect(() => {
-    if (didAutoFallbackDateRef.current || loading || companyFilteredChats.length === 0) return;
+    if (didAutoFallbackDateRef.current || dateFilterSavedRef.current || loading || companyFilteredChats.length === 0) return;
     didAutoFallbackDateRef.current = true;
     const hasTodayChats = filterChats(companyFilteredChats, { dateFilter: 'today' }).length > 0;
     if (!hasTodayChats && dateFilter === 'today') {
-      setDateFilter('30days');
+      setDateFilterTemp('30days');
     }
   }, [loading, companyFilteredChats, dateFilter]);
 

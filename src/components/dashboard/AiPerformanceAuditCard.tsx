@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Cpu, ArrowUpRight, Check, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
+import { withQuery } from '@/lib/chatLinks';
 
 interface AiPerformanceAuditCardProps {
   aiMetrics: {
@@ -10,11 +11,14 @@ interface AiPerformanceAuditCardProps {
     confirmedCount: number;
     correctedCount: number;
   };
+  /** time-range query fragment from the dashboard (see chatsTimeframeQuery) */
+  timeQuery?: string;
   language?: 'th' | 'en';
 }
 
 export default function AiPerformanceAuditCard({
   aiMetrics,
+  timeQuery = '',
   language = 'th',
 }: AiPerformanceAuditCardProps) {
   const { t } = useLanguage();
@@ -71,7 +75,7 @@ export default function AiPerformanceAuditCard({
         {/* Detailed Breakdown Rows */}
         <div className="space-y-1 divide-y divide-neutral-100 dark:divide-neutral-800/60 text-xs">
           <Link
-            href="/chats?status=completed"
+            href={withQuery('/chats?status=completed', timeQuery)}
             className="group flex items-center justify-between py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors cursor-pointer"
           >
             <span className="text-neutral-500">{t('auditedCases')}</span>
@@ -82,7 +86,7 @@ export default function AiPerformanceAuditCard({
           </Link>
 
           <Link
-            href="/chats?status=completed&audit=confirmed"
+            href={withQuery('/chats?status=completed&audit=confirmed', timeQuery)}
             className="group flex items-center justify-between py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-1.5 text-neutral-500">
@@ -95,7 +99,7 @@ export default function AiPerformanceAuditCard({
           </Link>
 
           <Link
-            href="/chats?status=completed&audit=corrected"
+            href={withQuery('/chats?status=completed&audit=corrected', timeQuery)}
             className="group flex items-center justify-between py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-1.5 text-neutral-500">

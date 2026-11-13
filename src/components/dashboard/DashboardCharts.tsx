@@ -13,12 +13,16 @@ import {
 } from 'recharts';
 import { TrendingUp, BarChart2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { chatsTimeframeQuery, withQuery } from '@/lib/chatLinks';
 
 export interface DashboardChartsProps {
   timeSeriesData: any[];
   priorityData: any[];
   uniqueCategoryNames: string[];
   totalChats: number;
+  dateRange?: string;
+  startDate?: string;
+  endDate?: string;
   language?: 'th' | 'en';
 }
 
@@ -94,8 +98,12 @@ export default function DashboardCharts({
   priorityData,
   uniqueCategoryNames,
   totalChats,
+  dateRange,
+  startDate,
+  endDate,
   language = 'th',
 }: DashboardChartsProps) {
+  const timeQuery = chatsTimeframeQuery(dateRange, startDate, endDate);
   const router = useRouter();
 
   return (
@@ -197,7 +205,7 @@ export default function DashboardCharts({
                   radius={[4, 4, 0, 0]}
                   onClick={(data: any) => {
                     if (data && data.name) {
-                      router.push(`/chats?priority=${data.name.toLowerCase()}`);
+                      router.push(withQuery(`/chats?priority=${data.name.toLowerCase()}`, timeQuery));
                     }
                   }}
                   className="cursor-pointer"
