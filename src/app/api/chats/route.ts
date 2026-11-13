@@ -33,6 +33,9 @@ const CHAT_DETAIL_COLUMNS =
 const CHAT_ISSUES_COLUMNS =
   'id, chat_id, issue_summary, category_id, priority, confidence, status, resolution, sentiment, created_at, department, recommended_reply';
 
+// Lightweight issue fields embedded in list results (detail view still loads full issues)
+const LIST_ISSUE_EMBED = 'chat_issues(id, category_id, priority)';
+
 const URGENT_CHECK_COLUMNS =
   'id, customer_id, customer_name, summary, priority, urgency, status, resolution, company_id, created_at';
 
@@ -164,9 +167,13 @@ export async function GET(request: NextRequest) {
       const startDate = request.nextUrl.searchParams.get('start_date');
       const endDate = request.nextUrl.searchParams.get('end_date');
 
+      // Include each chat's issues (only the 3 small fields the pages need) so the dashboard
+      // counts problems per ISSUE category — a chat about "slow site" can also contain
+      // "login", "payment", ... issues. Previously issues were dropped here, so the dashboard
+      // fell back to one main category per chat and under-counted problem types.
       let listQuery = db
         .from('chats')
-        .select(CHAT_LIST_COLUMNS)
+        .select(`${CHAT_LIST_COLUMNS}, ${LIST_ISSUE_EMBED}`)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -220,7 +227,7 @@ export async function GET(request: NextRequest) {
             row.customer_name || (row.customer_id ? custNameMap.get(row.customer_id) || null : null),
         };
         const transformed: any = transformChatRow(enrichedRow);
-        transformed.chat_issues = [];
+        transformed.chat_issues = Array.isArray(row.chat_issues) ? row.chat_issues : [];
         return transformed;
       });
 

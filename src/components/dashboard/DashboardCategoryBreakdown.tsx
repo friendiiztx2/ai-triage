@@ -102,7 +102,7 @@ export default function DashboardCategoryBreakdown({
                         {item.value.toLocaleString()}
                       </span>
                       <span className="text-[11px] text-neutral-400">
-                        {language === 'th' ? 'เคส' : 'cases'}
+                        {language === 'th' ? 'เรื่อง' : 'issues'}
                       </span>
                       <ArrowUpRight size={12} className="text-neutral-300 dark:text-neutral-700 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors" />
                     </div>

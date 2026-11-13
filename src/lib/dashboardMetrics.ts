@@ -14,6 +14,32 @@ export function getCategoryDisplayName(
   return getCategoryLabel(rawCatId, language);
 }
 
+const BANGKOK_TZ = 'Asia/Bangkok';
+
+/** "YYYY-MM-DD" of a date in Thailand time (avoids UTC shifting chats from 00:00–06:59 to the previous day) */
+function bangkokDateKey(d: Date): string {
+  return d.toLocaleDateString('sv-SE', { timeZone: BANGKOK_TZ });
+}
+
+/** Hour of day (0–23) in Thailand time, regardless of the viewer's computer time zone */
+function bangkokHour(d: Date): number {
+  return parseInt(
+    new Intl.DateTimeFormat('en-GB', { timeZone: BANGKOK_TZ, hour: '2-digit', hourCycle: 'h23' }).format(d),
+    10
+  );
+}
+
+/**
+ * Category ids of every problem in a chat — the same rule as the category breakdown:
+ * each chat_issue counts once; chats without issues fall back to their main category.
+ */
+function chatIssueCategoryIds(c: any): string[] {
+  if (Array.isArray(c.chat_issues) && c.chat_issues.length > 0) {
+    return c.chat_issues.map((issue: any) => issue.category_id || c.category_id || 'other');
+  }
+  return [c.category_id || 'other'];
+}
+
 export function calculateDashboardMetrics({
   filteredChats,
   rawCategories,
@@ -133,19 +159,18 @@ export function calculateDashboardMetrics({
 
   if (dateRange === '7days' || dateRange === '30days') {
     const numDays = dateRange === '7days' ? 7 : 30;
-    const today = new Date();
+    const now = Date.now();
     for (let i = numDays - 1; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const key = d.toISOString().substring(0, 10);
-      sortedDateKeys.push(key);
+      const d = new Date(now - i * 24 * 60 * 60 * 1000);
+      const key = bangkokDateKey(d);
+      if (!dateMap.has(key)) sortedDateKeys.push(key);
       dateMap.set(key, d);
     }
   } else {
     filteredChats.forEach((c: any) => {
       if (c.created_at) {
         const d = new Date(c.created_at);
-        const key = d.toISOString().substring(0, 10);
+        const key = bangkokDateKey(d);
         dateMap.set(key, d);
       }
     });
@@ -159,33 +184,38 @@ export function calculateDashboardMetrics({
   const allCategoryNames = Array.from(
     new Set([
       ...rawCategories.map((c: any) => getCategoryDisplayName(c.id, rawCategories, language)),
-      ...filteredChats.map((c: any) => getCategoryDisplayName(c.category_id || 'other', rawCategories, language)),
+      ...filteredChats.flatMap((c: any) =>
+        chatIssueCategoryIds(c)
+          .filter((id) => getBaseCatId(id) !== 'other')
+          .map((id) => getCategoryDisplayName(id, rawCategories, language))
+      ),
     ])
   );
 
   if (isSingleDay) {
-    const hourlyLabels = [
-      { label: '00:00 น.', start: 0, end: 4 },
-      { label: '04:00 น.', start: 4, end: 8 },
-      { label: '08:00 น.', start: 8, end: 12 },
-      { label: '12:00 น.', start: 12, end: 16 },
-      { label: '16:00 น.', start: 16, end: 20 },
-      { label: '20:00 น.', start: 20, end: 24 },
-    ];
+    // One point per hour (Thai time): a chat at 11:31 shows at "11:00 น."
+    const hourlyLabels = Array.from({ length: 24 }, (_, h) => ({
+      label: `${String(h).padStart(2, '0')}:00 น.`,
+      start: h,
+      end: h + 1,
+    }));
 
     timeSeriesData = hourlyLabels.map((hl) => {
       const item: Record<string, any> = { name: hl.label };
       allCategoryNames.forEach((cn) => { item[cn] = 0; });
       const hourChats = filteredChats.filter((c: any) => {
         if (!c.created_at) return false;
-        const h = new Date(c.created_at).getHours();
+        const h = bangkokHour(new Date(c.created_at));
         return h >= hl.start && h < hl.end;
       });
 
+      // Count every problem in each chat (same rule as the category breakdown)
       hourChats.forEach((c: any) => {
-        const catId = c.category_id || 'other';
-        const catName = getCategoryDisplayName(catId, rawCategories, language);
-        item[catName] = (item[catName] || 0) + 1;
+        chatIssueCategoryIds(c).forEach((catId) => {
+          if (getBaseCatId(catId) === 'other') return;
+          const catName = getCategoryDisplayName(catId, rawCategories, language);
+          item[catName] = (item[catName] || 0) + 1;
+        });
       });
 
       return item;
@@ -200,13 +230,16 @@ export function calculateDashboardMetrics({
       const item: Record<string, any> = { name: dateLabel };
       allCategoryNames.forEach((cn) => { item[cn] = 0; });
       const dayChats = filteredChats.filter(
-        (c: any) => c.created_at && c.created_at.substring(0, 10) === key
+        (c: any) => c.created_at && bangkokDateKey(new Date(c.created_at)) === key
       );
 
+      // Count every problem in each chat (same rule as the category breakdown)
       dayChats.forEach((c: any) => {
-        const catId = c.category_id || 'other';
-        const catName = getCategoryDisplayName(catId, rawCategories, language);
-        item[catName] = (item[catName] || 0) + 1;
+        chatIssueCategoryIds(c).forEach((catId) => {
+          if (getBaseCatId(catId) === 'other') return;
+          const catName = getCategoryDisplayName(catId, rawCategories, language);
+          item[catName] = (item[catName] || 0) + 1;
+        });
       });
 
       return item;

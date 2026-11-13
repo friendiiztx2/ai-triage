@@ -131,7 +131,8 @@ export default function DashboardCharts({
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={timeSeriesData} margin={{ top: 10, right: 15, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
+                {/* minTickGap lets the axis skip labels automatically when there are many points (24 hours / 30 days) */}
+                <XAxis dataKey="name" minTickGap={14} tick={{ fontSize: 10, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
                 <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
                 <Tooltip
                   content={<CustomLineTooltip language={language} />}
