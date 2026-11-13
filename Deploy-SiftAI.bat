@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 title Sift AI - Deploy to Vercel (push to main)
 cd /d "%~dp0"
 set LOG=deploy-result.log
@@ -14,6 +15,11 @@ echo    Output is saved to %LOG%
 echo ==========================================================
 echo.
 
+set "COMMIT_MSG="
+set /p "COMMIT_MSG=Describe this update (press Enter to skip): "
+if not defined COMMIT_MSG set "COMMIT_MSG=Update Sift AI BO"
+echo.
+
 > %LOG% echo ===== FOLDER =====
 >> %LOG% echo %CD%
 >> %LOG% echo ===== BRANCH =====
@@ -23,13 +29,14 @@ for /f %%b in ('"%GIT_EXE%" rev-parse --abbrev-ref HEAD') do set BRANCH=%%b
 >> %LOG% echo ===== STATUS BEFORE =====
 "%GIT_EXE%" status --short >> %LOG% 2>&1
 
-rem 1) Commit any remaining changes to tracked files + the security scripts
+rem 1) Commit changes: all tracked files + any NEW files inside src/, scripts/, public/
+rem    (personal notes in the project root, e.g. weekly_plan_*.md, are NOT added)
 "%GIT_EXE%" add -u >> %LOG% 2>&1
-"%GIT_EXE%" add -- "src/app/api/health/security/route.ts" "scripts/security_lockdown_rls.sql" "build-check.bat" "Deploy-SiftAI.bat" >> %LOG% 2>&1
+"%GIT_EXE%" add -- src scripts public >> %LOG% 2>&1
 "%GIT_EXE%" diff --cached --quiet
 if errorlevel 1 (
   >> %LOG% echo ===== COMMIT =====
-  "%GIT_EXE%" commit -m "Security hardening: auth, tenant isolation, remove browser DB access" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_01ULFT9t4Q6LR8rohoNimQ4b" >> %LOG% 2>&1
+  "%GIT_EXE%" commit -m "%COMMIT_MSG%" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_01ULFT9t4Q6LR8rohoNimQ4b" >> %LOG% 2>&1
 ) else (
   >> %LOG% echo ===== COMMIT ===== nothing new to commit
 )
