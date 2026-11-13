@@ -64,6 +64,7 @@ export default function LoginPage() {
           companyId: dbUser.company_id,
           companyName: compName,
           permissions: dbUser.permissions,
+          avatar: dbUser.preferences?.avatar || dbUser.avatar_url || null,
         });
         return;
       }
@@ -99,9 +100,13 @@ export default function LoginPage() {
         ? sessionObj.company_id
         : 'all';
 
+    // The avatar (often a base64 image) is kept in localStorage only — it would push
+    // the cookie past the browser's ~4KB limit and the cookie would be silently dropped.
+    const fullSession = { ...sessionObj, avatar: account.avatar || null };
+
     document.cookie = `user_session=${encodeURIComponent(JSON.stringify(sessionObj))}; path=/; max-age=31536000`;
     document.cookie = `company_id=${cleanCompanyId}; path=/; max-age=31536000`;
-    localStorage.setItem('user_session', JSON.stringify(sessionObj));
+    localStorage.setItem('user_session', JSON.stringify(fullSession));
     localStorage.setItem('company_id', cleanCompanyId);
 
     window.location.href = '/';

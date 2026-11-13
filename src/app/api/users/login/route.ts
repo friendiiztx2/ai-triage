@@ -181,7 +181,9 @@ export async function POST(request: NextRequest) {
     });
 
     // 2. Client-readable user_session cookie for UI rendering
-    response.cookies.set('user_session', encodeURIComponent(JSON.stringify(userWithoutPassword)), {
+    // Avatar/preferences are excluded: a base64 image would exceed the ~4KB cookie limit.
+    const { avatar_url: _avatar, preferences: _prefs, ...cookieUser } = userWithoutPassword;
+    response.cookies.set('user_session', encodeURIComponent(JSON.stringify(cookieUser)), {
       httpOnly: false,
       secure: isProd,
       sameSite: 'lax',

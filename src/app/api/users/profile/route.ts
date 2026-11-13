@@ -174,10 +174,10 @@ export async function PUT(request: NextRequest) {
       path: '/',
     });
 
-    response.cookies.set('user_session', encodeURIComponent(JSON.stringify({
-      ...userWithoutPassword,
-      avatar: existingPrefs.avatar || userWithoutPassword.avatar_url || null,
-    })), {
+    // Avatar/preferences are excluded: a base64 image would exceed the ~4KB cookie limit.
+    // The client keeps the avatar in localStorage from the JSON response instead.
+    const { avatar_url: _avatar, preferences: _prefs, ...cookieUser } = userWithoutPassword;
+    response.cookies.set('user_session', encodeURIComponent(JSON.stringify(cookieUser)), {
       httpOnly: false,
       secure: isProd,
       sameSite: 'lax',
