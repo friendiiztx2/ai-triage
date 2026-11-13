@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { RefreshCw, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { RefreshCw, ClipboardList, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
 import SortHeader from '@/components/ui/SortHeader';
 
@@ -13,6 +13,69 @@ interface AuditLogTableProps {
 }
 
 type AuditSortColumn = 'actor' | 'action' | 'detail' | 'timestamp';
+
+// When expanded, show JSON details as readable "key: value" lines with real line breaks.
+function formatExpanded(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith('{')) return text;
+  try {
+    const obj = JSON.parse(trimmed);
+    if (!obj || typeof obj !== 'object') return text;
+    return Object.entries(obj)
+      .map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+      .join('\n');
+  } catch {
+    return text;
+  }
+}
+
+// Detail text clamped to 3 lines with "…", plus a toggle to view the full entry.
+function DetailCell({ text, language }: { text: string; language: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [overflowing, setOverflowing] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [text]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || expanded) return;
+    const check = () => setOverflowing(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [text, expanded]);
+
+  if (!text) return <span className="text-neutral-400">-</span>;
+
+  return (
+    <div>
+      <div
+        ref={ref}
+        className={`[overflow-wrap:anywhere] ${
+          expanded ? 'whitespace-pre-wrap max-h-[480px] overflow-y-auto pr-1' : 'line-clamp-3'
+        }`}
+      >
+        {expanded ? formatExpanded(text) : text}
+      </div>
+      {(overflowing || expanded) && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1a73e8] hover:underline cursor-pointer"
+        >
+          {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          {expanded
+            ? language === 'th' ? 'ย่อ' : 'Show less'
+            : language === 'th' ? 'เปิดดูทั้งหมด' : 'Show all'}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function AuditLogTable({
   logs,
@@ -127,7 +190,14 @@ export default function AuditLogTable({
       ) : (
         <>
           <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-xs text-neutral-700 dark:text-neutral-200">
+          {/* Fixed layout so long details wrap inside their column instead of widening the table */}
+          <table className="w-full min-w-[880px] table-fixed border-collapse text-left text-xs text-neutral-700 dark:text-neutral-200">
+            <colgroup>
+              <col className="w-[180px]" />
+              <col className="w-[200px]" />
+              <col />
+              <col className="w-[190px]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/70 dark:bg-neutral-900/60">
                 <th className="px-6 py-3.5">
@@ -191,12 +261,17 @@ export default function AuditLogTable({
 
                   {/* Details */}
                   <td className="px-6 py-4 font-semibold text-neutral-700 dark:text-neutral-300">
-                    {log.details}
+                    <DetailCell text={log.details} language={language} />
                   </td>
 
                   {/* Timestamp */}
-                  <td className="px-6 py-4 text-neutral-400 dark:text-neutral-500 font-mono font-medium whitespace-nowrap">
-                    {new Date(log.created_at).toLocaleString('th-TH')}
+                  <td className="px-6 py-4 font-mono font-medium whitespace-nowrap">
+                    <span className="block text-neutral-600 dark:text-neutral-300">
+                      {new Date(log.created_at).toLocaleDateString('th-TH')}
+                    </span>
+                    <span className="block mt-0.5 text-[11px] text-neutral-400 dark:text-neutral-500">
+                      {new Date(log.created_at).toLocaleTimeString('th-TH')}
+                    </span>
                   </td>
                 </tr>
               ))}
