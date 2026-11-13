@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, RefreshCw, Bell, BellOff, SlidersHorizontal } from 'lucide-react';
-import SoundSettingsModal from '@/components/SoundSettingsModal';
+import SoundSettingsModal from '@/components/sound/SoundSettingsModal';
 import SelectDropdown from '@/components/ui/SelectDropdown';
 import DatePicker from '@/components/ui/DatePicker';
 import { playAlertTone } from '@/lib/audio';

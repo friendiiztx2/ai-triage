@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageContext';
-import SoundSettingsModal from '@/components/SoundSettingsModal';
+import SoundSettingsModal from '@/components/sound/SoundSettingsModal';
 import { isSoundEnabled, playAlertTone } from '@/lib/audio';
 import {
   filterChats,

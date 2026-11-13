@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
+import Sidebar from '@/components/sidebar/Sidebar';
 import GlobalNotifier from '@/components/GlobalNotifier';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

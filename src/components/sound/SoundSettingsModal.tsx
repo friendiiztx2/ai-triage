@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Volume2, VolumeX, Bell, Play, X } from 'lucide-react';
 import { playAlertTone, getAudioContext, isSoundEnabled } from '@/lib/audio';
-import SoundToneSelector from './sound/SoundToneSelector';
-import SoundVolumeSelector from './sound/SoundVolumeSelector';
+import SoundToneSelector from './SoundToneSelector';
+import SoundVolumeSelector from './SoundVolumeSelector';
 
 interface SoundSettingsModalProps {
   isOpen: boolean;
