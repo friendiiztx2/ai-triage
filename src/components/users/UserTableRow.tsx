@@ -44,13 +44,13 @@ export default function UserTableRow({
   // Google-inspired deterministic avatar background color
   const getGoogleAvatarColor = (str: string) => {
     const palette = [
-      'bg-[#1a73e8] text-white', // Google Blue
+      'bg-brand-600 text-white', // Google Blue
       'bg-[#00796b] text-white', // Google Teal
       'bg-[#188038] text-white', // Google Green
       'bg-[#8e24aa] text-white', // Google Purple
       'bg-[#e65100] text-white', // Google Deep Orange
       'bg-[#0b57d0] text-white', // Google Dark Blue
-      'bg-[#d93025] text-white', // Google Red
+      'bg-rose-600 text-white', // Google Red
     ];
     let hash = 0;
     const key = str || 'Admin';
@@ -64,25 +64,25 @@ export default function UserTableRow({
     switch (role) {
       case 'system_admin':
         return (
-          <span className="inline-flex items-center text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded font-medium bg-[#e8f0fe] text-[#1a73e8] border border-[#d2e3fc] dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+          <span className="inline-flex items-center text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-lg font-medium bg-brand-50 text-brand-600 border border-brand-100 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800">
             system_admin
           </span>
         );
       case 'super_admin':
         return (
-          <span className="inline-flex items-center text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded font-medium bg-[#f3e8fd] text-[#8430ce] border border-[#e1c5fb] dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
+          <span className="inline-flex items-center text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-lg font-medium bg-purple-50 text-purple-600 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
             super_admin
           </span>
         );
       case 'admin':
         return (
-          <span className="inline-flex items-center text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded font-medium bg-[#e0f2f1] text-[#00695c] border border-[#b2dfdb] dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800">
+          <span className="inline-flex items-center text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-lg font-medium bg-[#e0f2f1] text-[#00695c] border border-[#b2dfdb] dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800">
             admin
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+          <span className="inline-flex items-center text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-lg font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
             {role || 'agent'}
           </span>
         );
@@ -105,7 +105,7 @@ export default function UserTableRow({
               <span className="font-medium text-neutral-900 dark:text-neutral-100 block truncate">
                 {user.name}
               </span>
-              <span className="text-[11px] font-mono text-neutral-400 block truncate">
+              <span className="text-xs font-mono text-neutral-400 block truncate">
                 {user.email}
               </span>
             </div>
@@ -133,19 +133,19 @@ export default function UserTableRow({
                 {user.permissions.slice(0, 2).map((perm: string) => (
                   <span
                     key={perm}
-                    className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-neutral-700/60"
+                    className="text-xs font-mono px-1.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-neutral-700/60"
                   >
                     {getPermissionLabel(perm, true)}
                   </span>
                 ))}
                 {user.permissions.length > 2 && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
+                  <span className="text-xs font-mono px-1.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
                     +{user.permissions.length - 2}
                   </span>
                 )}
               </>
             ) : (
-              <span className="text-[10px] text-neutral-400 italic">
+              <span className="text-xs text-neutral-400 italic">
                 {language === 'th' ? 'ไม่มีสิทธิ์พิเศษ' : 'Default access'}
               </span>
             )}
@@ -160,21 +160,21 @@ export default function UserTableRow({
                 user.password_status && user.password_status !== 'none' ? (
                   user.password_status === 'hashed' ? (
                     <span
-                      className="inline-flex items-center gap-1 text-[11px] font-sans font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/50 cursor-help whitespace-nowrap"
+                      className="inline-flex items-center gap-1 text-xs font-sans font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-lg border border-emerald-200/60 dark:border-emerald-800/50 cursor-help whitespace-nowrap"
                       title={language === 'th' ? 'รหัสผ่านถูกเข้ารหัสทางเดียว (Bcrypt) อย่างปลอดภัย หากต้องการเปลี่ยนรหัสผ่าน ให้กดปุ่มดินสอแก้ไข' : 'Secured with one-way Bcrypt hash. Click edit to change password.'}
                     >
                       <span>🔒 {language === 'th' ? 'เข้ารหัสแล้ว' : 'Encrypted'}</span>
                     </span>
                   ) : (
                     <span
-                      className="inline-flex items-center gap-1 text-[11px] font-sans font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/50 cursor-help whitespace-nowrap"
+                      className="inline-flex items-center gap-1 text-xs font-sans font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-lg border border-amber-200/60 dark:border-amber-800/50 cursor-help whitespace-nowrap"
                       title={language === 'th' ? 'รหัสผ่านรูปแบบเก่ายังไม่ถูกเข้ารหัส จะเข้ารหัสอัตโนมัติเมื่อผู้ใช้ล็อกอินครั้งถัดไป หรือกดดินสอเพื่อตั้งรหัสใหม่' : 'Legacy password not yet hashed. It will be hashed on next login, or click edit to reset it.'}
                     >
                       <span>⚠️ {language === 'th' ? 'รหัสแบบเก่า' : 'Legacy'}</span>
                     </span>
                   )
                 ) : (
-                  <span className="text-[11px] font-sans text-neutral-400 italic">
+                  <span className="text-xs font-sans text-neutral-400 italic">
                     {language === 'th' ? '(ไม่ได้ตั้งรหัส)' : '(No password)'}
                   </span>
                 )
@@ -185,7 +185,7 @@ export default function UserTableRow({
             <button
               type="button"
               onClick={() => onTogglePassword(user.id)}
-              className="p-1 rounded text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer shrink-0"
+              className="p-1 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer shrink-0"
               title={isPasswordVisible ? (language === 'th' ? 'ซ่อนรหัสผ่าน' : 'Hide password') : (language === 'th' ? 'แสดงรหัสผ่าน' : 'Show password')}
             >
               {isPasswordVisible ? <EyeOff size={13} /> : <Eye size={13} />}
@@ -199,9 +199,9 @@ export default function UserTableRow({
             <button
               type="button"
               onClick={() => onTogglePatch(user)}
-              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isPatchActive
-                  ? 'bg-[#e8f0fe] text-[#1a73e8] dark:bg-blue-950/60 dark:text-blue-300'
+                  ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300'
                   : 'text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800'
               }`}
               title="แก้ไขข้อมูล"
@@ -211,7 +211,7 @@ export default function UserTableRow({
             <button
               type="button"
               onClick={() => onDelete(user)}
-              className="p-1.5 rounded-md text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-955/20 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-955/20 transition-colors cursor-pointer"
               title="ลบผู้ใช้งาน"
             >
               <Trash2 size={13} />

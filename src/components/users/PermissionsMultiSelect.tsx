@@ -61,11 +61,11 @@ export default function PermissionsMultiSelect({
                   disabled={isDisabled}
                   checked={isChecked}
                   onChange={() => onTogglePermission(p.id)}
-                  className="w-4 h-4 mt-0.5 text-indigo-600 border-neutral-300 rounded cursor-pointer disabled:cursor-not-allowed shrink-0"
+                  className="w-4 h-4 mt-0.5 text-indigo-600 border-neutral-300 rounded-lg cursor-pointer disabled:cursor-not-allowed shrink-0"
                 />
                 <div className="min-w-0">
                   <span className="block leading-normal font-extrabold">{p.label}</span>
-                  <span className="block text-[9px] text-neutral-400 dark:text-neutral-500 font-medium leading-normal mt-0.5">
+                  <span className="block text-xs text-neutral-400 dark:text-neutral-500 font-medium leading-normal mt-0.5">
                     {p.description}
                   </span>
                 </div>

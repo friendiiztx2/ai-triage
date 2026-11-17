@@ -31,7 +31,7 @@ export default function SidebarNavMenu({
             href={item.href}
             className={`relative flex items-center rounded-lg text-[13px] font-medium transition-all duration-150 group ${
               isActive
-                ? 'bg-[#e8f0fe] dark:bg-blue-950/50 text-[#1a73e8] dark:text-blue-200 font-semibold shadow-2xs'
+                ? 'bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-200 font-semibold shadow-2xs'
                 : 'text-neutral-600 dark:text-neutral-200 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
             } ${isCollapsed ? 'justify-center p-2.5' : 'gap-2.5 px-2.5 py-1.5'}`}
           >
@@ -39,7 +39,7 @@ export default function SidebarNavMenu({
               size={16}
               className={`shrink-0 transition-colors ${
                 isActive
-                  ? 'text-[#1a73e8] dark:text-blue-300'
+                  ? 'text-brand-600 dark:text-brand-300'
                   : 'text-neutral-400 dark:text-neutral-400 group-hover:text-neutral-800 dark:group-hover:text-white'
               }`}
             />

@@ -7,6 +7,22 @@
   /* Font Family Stack: Inter (Latin/numbers) + IBM Plex Sans Thai (Thai) */
   --font-sans: var(--font-inter), var(--font-ibm-plex-sans-thai), "IBM Plex Sans Thai", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
+  /* Brand colour: indigo, the middle of the login page's sky → indigo → pink gradient.
+     Use brand-* classes (bg-brand-600, text-brand-700, ...) for primary actions, links,
+     selected states and focus rings. To re-brand, change these values only. */
+  --color-brand-50: var(--color-indigo-50);
+  --color-brand-100: var(--color-indigo-100);
+  --color-brand-200: var(--color-indigo-200);
+  --color-brand-300: var(--color-indigo-300);
+  --color-brand-400: var(--color-indigo-400);
+  --color-brand-500: var(--color-indigo-500);
+  --color-brand-600: var(--color-indigo-600);
+  --color-brand-700: var(--color-indigo-700);
+  --color-brand-800: var(--color-indigo-800);
+  --color-brand-900: var(--color-indigo-900);
+  --color-brand-950: var(--color-indigo-950);
+  --color-brand-955: #111329; /* deep dark-mode tint, same as indigo-955 */
+
   /* Custom theme base backgrounds for deep dark mode */
   --color-slate-955: #080b11;
   --color-indigo-955: #111329;

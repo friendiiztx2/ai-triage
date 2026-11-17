@@ -131,7 +131,7 @@ export default function LoginPage() {
         {/* Clean Glassmorphic Card */}
         <div className="w-full bg-white/85 dark:bg-neutral-900/85 backdrop-blur-2xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-[28px] shadow-[0_20px_70px_-15px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.02)] dark:shadow-[0_25px_80px_-20px_rgba(0,0,0,0.6)] p-5 sm:p-6 transition-all">
           {error && (
-            <div className="bg-rose-50/90 dark:bg-rose-955/30 text-rose-600 dark:text-rose-400 text-xs font-medium p-3.5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 mb-5 leading-normal flex items-start gap-2 animate-in fade-in duration-300">
+            <div className="bg-rose-50/90 dark:bg-rose-955/30 text-rose-600 dark:text-rose-400 text-xs font-medium p-3.5 rounded-xl border border-rose-200/60 dark:border-rose-900/40 mb-5 leading-normal flex items-start gap-2 animate-in fade-in duration-300">
               <span className="shrink-0 mt-0.5">⚠️</span>
               <span>{error}</span>
             </div>
@@ -147,7 +147,7 @@ export default function LoginPage() {
                   placeholder="ชื่อผู้ใช้ หรือ อีเมล"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-4 focus:ring-sky-500/15 dark:focus:ring-sky-400/20 focus:border-sky-400 dark:focus:border-sky-400 focus:bg-white dark:focus:bg-neutral-900 transition-all"
+                  className="w-full bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-4 focus:ring-sky-500/15 dark:focus:ring-sky-400/20 focus:border-sky-400 dark:focus:border-sky-400 focus:bg-white dark:focus:bg-neutral-900 transition-all"
                   autoComplete="username"
                   aria-label="ชื่อผู้ใช้ หรือ อีเมล"
                 />
@@ -162,7 +162,7 @@ export default function LoginPage() {
                   placeholder="รหัสผ่าน"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 rounded-2xl pl-10 pr-11 py-3 text-xs sm:text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-4 focus:ring-sky-500/15 dark:focus:ring-sky-400/20 focus:border-sky-400 dark:focus:border-sky-400 focus:bg-white dark:focus:bg-neutral-900 transition-all"
+                  className="w-full bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 rounded-xl pl-10 pr-11 py-3 text-xs sm:text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-4 focus:ring-sky-500/15 dark:focus:ring-sky-400/20 focus:border-sky-400 dark:focus:border-sky-400 focus:bg-white dark:focus:bg-neutral-900 transition-all"
                   autoComplete="current-password"
                   aria-label="รหัสผ่าน"
                 />

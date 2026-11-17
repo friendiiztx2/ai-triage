@@ -23,7 +23,7 @@ export default function CustomerComparisonPanel({
 }: CustomerComparisonPanelProps) {
   if (selectedCustomers.length === 0) {
     return (
-      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 p-16 rounded-2xl shadow-xs text-center text-neutral-400 dark:text-neutral-500 text-xs flex flex-col items-center justify-center gap-3">
+      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 p-16 rounded-xl shadow-xs text-center text-neutral-400 dark:text-neutral-500 text-xs flex flex-col items-center justify-center gap-3">
         <Layers size={36} className="text-neutral-300 dark:text-neutral-700" />
         <span className="font-semibold">
           {language === 'th'

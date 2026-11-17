@@ -48,7 +48,7 @@ export default function ReportTypeSelector({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+    <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
       {types.map((t) => {
         const isSelected = reportType === t.id;
         return (
@@ -56,33 +56,33 @@ export default function ReportTypeSelector({
             key={t.id}
             type="button"
             onClick={() => onSelectType(t.id)}
-            className={`p-3.5 rounded-xl border text-left transition-colors cursor-pointer backdrop-blur-md ${
+            className={`p-2 sm:p-3.5 rounded-xl border text-left min-w-0 transition-colors cursor-pointer backdrop-blur-md ${
               isSelected
-                ? 'bg-[#e8f0fe]/60 dark:bg-blue-950/30 border-[#1a73e8] dark:border-blue-500/60 shadow-xs'
-                : 'bg-white/70 dark:bg-neutral-900/70 border-neutral-200/80 dark:border-neutral-800/80 hover:border-[#1a73e8]/40 dark:hover:border-blue-500/40 hover:shadow-sm shadow-xs'
+                ? 'bg-brand-50/60 dark:bg-brand-950/30 border-brand-600 dark:border-brand-500/60 shadow-xs'
+                : 'bg-white/70 dark:bg-neutral-900/70 border-neutral-200/80 dark:border-neutral-800/80 hover:border-brand-600/40 dark:hover:border-brand-500/40 hover:shadow-sm shadow-xs'
             }`}
           >
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2 sm:mb-1">
               <div
-                className={`p-1.5 rounded-md transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   isSelected
-                    ? 'bg-[#1a73e8] text-white shadow-xs'
+                    ? 'bg-brand-600 text-white shadow-xs'
                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
                 }`}
               >
                 {t.icon}
               </div>
               <span
-                className={`font-medium text-xs ${
+                className={`font-medium text-xs leading-snug ${
                   isSelected
-                    ? 'text-[#1a73e8] dark:text-blue-300 font-semibold'
+                    ? 'text-brand-600 dark:text-brand-300 font-semibold'
                     : 'text-neutral-700 dark:text-neutral-300'
                 }`}
               >
                 {t.title}
               </span>
             </div>
-            <p className="text-[11px] text-neutral-400 dark:text-neutral-500 font-normal leading-relaxed">
+            <p className="hidden sm:block text-xs text-neutral-400 dark:text-neutral-500 font-normal leading-relaxed">
               {t.desc}
             </p>
           </button>

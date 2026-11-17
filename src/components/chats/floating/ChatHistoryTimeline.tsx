@@ -42,13 +42,13 @@ export default function ChatHistoryTimeline({
           return (
             <div key={idx} className="relative text-xs">
               <div className="absolute -left-[18px] top-1.5 w-2 h-2 rounded-full bg-neutral-900 dark:bg-neutral-100 ring-2 ring-white dark:ring-neutral-900" />
-              <div className="text-[10px] font-mono text-neutral-400">
+              <div className="text-xs font-mono text-neutral-400">
                 {new Date(log.timestamp).toLocaleString('th-TH')}
               </div>
               <div className="text-neutral-800 dark:text-neutral-200 font-medium text-xs mt-0.5">
                 {language === 'th' ? 'โดย:' : 'By:'} <span className="font-mono text-neutral-600 dark:text-neutral-400">{log.actor}</span>
               </div>
-              <div className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+              <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                 {language === 'th' ? 'หมวดหมู่:' : 'Category:'}{' '}
                 <span className="line-through text-neutral-400">{oldCatLabel}</span>
                 <span className="mx-1 text-neutral-400">→</span>
@@ -61,13 +61,13 @@ export default function ChatHistoryTimeline({
         {/* Initial AI Creation */}
         <div className="relative text-xs">
           <div className="absolute -left-[18px] top-1.5 w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-700 ring-2 ring-white dark:ring-neutral-900" />
-          <div className="text-[10px] font-mono text-neutral-400">
+          <div className="text-xs font-mono text-neutral-400">
             {chat.created_at ? new Date(chat.created_at).toLocaleString('th-TH') : '-'}
           </div>
           <div className="text-neutral-600 dark:text-neutral-400 font-medium text-xs mt-0.5">
             {language === 'th' ? 'โดย: Sift AI Engine' : 'By: Sift AI Engine'}
           </div>
-          <div className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+          <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
             {language === 'th' ? 'หมวดหมู่เริ่มต้น:' : 'Initial Category:'}{' '}
             <span className="font-medium text-neutral-700 dark:text-neutral-300">
               {getCategoryLabel(categories.find((c: any) => c.id === chat.category_id || getBaseCatId(c.id) === getBaseCatId(chat.category_id)) || chat.category_id, language)}

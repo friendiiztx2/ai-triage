@@ -120,7 +120,7 @@ export default function ChatReportModal({
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fade-in">
       <div 
-        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col"
+        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -132,11 +132,11 @@ export default function ChatReportModal({
             <div>
               <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
                 <span>{language === 'th' ? 'รายงานผลการวิเคราะห์ AI' : 'Report AI Inaccuracy'}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-normal">
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-normal">
                   Feedback to Dev
                 </span>
               </h3>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 {language === 'th'
                   ? 'ส่งความคิดเห็นและข้อมูลข้อผิดพลาดถึงทีมผู้พัฒนาเพื่อปรับปรุง AI'
                   : 'Send feedback and error context directly to the development team'}
@@ -173,19 +173,19 @@ export default function ChatReportModal({
           <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto max-h-[75vh]">
             {/* Context Box */}
             <div className="bg-neutral-50 dark:bg-neutral-950/50 p-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 text-xs space-y-1.5">
-              <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 text-[11px]">
+              <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 text-xs">
                 <span className="flex items-center gap-1 font-mono">
                   <MessageSquare size={12} />
                   <span>แชต: #{chat.id.substring(0, 10)}</span>
                 </span>
                 <span>ลูกค้า: <strong className="text-neutral-800 dark:text-neutral-200">{chat.customer_name || 'ไม่ระบุ'}</strong></span>
               </div>
-              <div className="pt-1 flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-300">
+              <div className="pt-1 flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-300">
                 <span className="text-neutral-400">AI ปัจจุบัน:</span>
-                <span className="px-2 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 font-medium text-neutral-800 dark:text-neutral-200">
+                <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 font-medium text-neutral-800 dark:text-neutral-200">
                   {currentCatLabel}
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded uppercase bg-neutral-200 dark:bg-neutral-800">
+                <span className="text-xs font-mono px-1.5 py-0.5 rounded-lg uppercase bg-neutral-200 dark:bg-neutral-800">
                   {chat.priority || 'medium'}
                 </span>
               </div>
@@ -222,7 +222,7 @@ export default function ChatReportModal({
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 flex items-center justify-between">
                 <span>{language === 'th' ? 'ข้อความถึงผู้พัฒนา / คำอธิบายเพิ่มเติม:' : 'Message to Developers:'}</span>
-                <span className="text-[10px] text-neutral-400 font-normal">
+                <span className="text-xs text-neutral-400 font-normal">
                   {comment.length}/500
                 </span>
               </label>
@@ -240,7 +240,7 @@ export default function ChatReportModal({
             </div>
 
             {/* Telegram Alert Note */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-200/80 dark:border-sky-900/40 text-[11px] text-sky-700 dark:text-sky-300">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-200/80 dark:border-sky-900/40 text-xs text-sky-700 dark:text-sky-300">
               <Bot size={14} className="shrink-0 text-sky-600 dark:text-sky-400" />
               <span>
                 {language === 'th'

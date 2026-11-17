@@ -16,7 +16,7 @@ export default function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div className="p-4 rounded-3xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 mb-4 shadow-inner">
+      <div className="p-4 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 mb-4 shadow-inner">
         {icon || <Inbox size={32} />}
       </div>
       <h3 className="font-extrabold text-neutral-800 dark:text-neutral-200 text-base mb-1 font-display">

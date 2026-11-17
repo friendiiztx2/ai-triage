@@ -1,3 +1,4 @@
+import { priorityLabel } from '@/lib/priority';
 import React from 'react';
 import {
   ResponsiveContainer,
@@ -60,13 +61,13 @@ function CustomLineTooltip({ active, payload, label, language = 'th' }: any) {
         <span className="font-semibold text-xs text-neutral-900 dark:text-neutral-100 font-mono">
           {label}
         </span>
-        <span className="text-[10px] font-semibold font-mono text-[#1a73e8] dark:text-blue-300">
+        <span className="text-xs font-semibold font-mono text-brand-600 dark:text-brand-300">
           {totalForTime} {language === 'th' ? 'เคส' : 'cases'}
         </span>
       </div>
 
       {activeItems.length === 0 ? (
-        <p className="text-[11px] text-neutral-400 italic py-1">
+        <p className="text-xs text-neutral-400 italic py-1">
           {language === 'th' ? 'ไม่มีเคสในเวลานี้' : 'No cases recorded'}
         </p>
       ) : (
@@ -78,11 +79,11 @@ function CustomLineTooltip({ active, payload, label, language = 'th' }: any) {
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: item.color || item.stroke }}
                 />
-                <span className="text-neutral-700 dark:text-neutral-300 truncate max-w-[170px] text-[11px]">
+                <span className="text-neutral-700 dark:text-neutral-300 truncate max-w-[170px] text-xs">
                   {item.name}
                 </span>
               </div>
-              <span className="font-mono font-semibold text-neutral-900 dark:text-neutral-100 text-[11px] tabular-nums">
+              <span className="font-mono font-semibold text-neutral-900 dark:text-neutral-100 text-xs tabular-nums">
                 {item.value}
               </span>
             </div>
@@ -117,12 +118,12 @@ export default function DashboardCharts({
               {language === 'th' ? 'แนวโน้มประเภทปัญหาตามช่วงเวลา' : 'Category Trends Over Time'}
             </h2>
           </div>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+          <span className="text-xs font-mono uppercase tracking-wider text-neutral-400">
             {language === 'th' ? 'เส้นเวลา' : 'Timeline'}
           </span>
         </div>
 
-        <div className="h-[280px] mt-4 w-full flex items-center justify-center">
+        <div className="h-[200px] sm:h-[280px] mt-4 w-full flex items-center justify-center">
           {timeSeriesData.length === 0 ? (
             <div className="text-neutral-400 text-xs font-mono">
               {language === 'th' ? 'ไม่มีข้อมูลแนวโน้มในช่วงเวลานี้' : 'No trend telemetry in this window'}
@@ -132,8 +133,8 @@ export default function DashboardCharts({
               <LineChart data={timeSeriesData} margin={{ top: 10, right: 15, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
                 {/* minTickGap lets the axis skip labels automatically when there are many points (24 hours / 30 days) */}
-                <XAxis dataKey="name" minTickGap={14} tick={{ fontSize: 10, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
+                <XAxis dataKey="name" minTickGap={14} tick={{ fontSize: 12, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
                 <Tooltip
                   content={<CustomLineTooltip language={language} />}
                   reverseDirection={{ x: false, y: true }}
@@ -171,12 +172,12 @@ export default function DashboardCharts({
               {language === 'th' ? 'สถิติระดับความเร่งด่วน' : 'Priority Distribution'}
             </h2>
           </div>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+          <span className="text-xs font-mono uppercase tracking-wider text-neutral-400">
             {language === 'th' ? 'ระดับความด่วน' : 'SLA Matrix'}
           </span>
         </div>
 
-        <div className="h-[280px] mt-4 w-full flex items-center justify-center">
+        <div className="h-[200px] sm:h-[280px] mt-4 w-full flex items-center justify-center">
           {totalChats === 0 ? (
             <div className="text-neutral-400 text-xs font-mono">
               {language === 'th' ? 'ไม่มีข้อมูลเคส' : 'No priority data in this window'}
@@ -185,17 +186,18 @@ export default function DashboardCharts({
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={priorityData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
+                <XAxis dataKey="name" tickFormatter={(name) => priorityLabel(String(name), language)} tick={{ fontSize: 12, fill: '#737373' }} stroke="transparent" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#737373', fontFamily: 'monospace' }} stroke="transparent" />
                 <Tooltip
-                  formatter={(value) => [`${value} เคส`, 'Volume']}
+                  labelFormatter={(name) => priorityLabel(String(name), language)}
+                  formatter={(value) => [`${value} ${language === 'th' ? 'เคส' : 'cases'}`, language === 'th' ? 'จำนวน' : 'Volume']}
                   contentStyle={{
                     backgroundColor: '#ffffff',
                     borderRadius: '12px',
                     border: '1px solid #e5e7eb',
                     boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
                     color: '#1f2937',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     fontFamily: 'monospace',
                   }}
                   itemStyle={{ color: '#1f2937' }}

@@ -35,7 +35,7 @@ export default function CategoryCard({
         {/* Header */}
         <div className="flex justify-between items-start gap-4">
           <div>
-            <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-mono uppercase tracking-wider font-semibold">
+            <span className="text-xs text-neutral-400 dark:text-neutral-500 font-mono uppercase tracking-wider font-semibold">
               ID: {baseKey}
             </span>
             <h3 className="font-bold text-base text-neutral-800 dark:text-neutral-100 mt-0.5 font-display group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">

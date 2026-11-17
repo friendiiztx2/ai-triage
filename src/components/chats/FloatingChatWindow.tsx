@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useLanguage } from '@/components/LanguageContext';
 import FloatingChatHeader from '@/components/chats/floating/FloatingChatHeader';
 import ChatConversationView from '@/components/chats/floating/ChatConversationView';
@@ -62,6 +62,16 @@ export default function FloatingChatWindow({
     }
   };
 
+  // Below md (768px) a draggable window does not fit, so the chat opens as a full-screen sheet
+  const [isPhone, setIsPhone] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsPhone(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   // Hover Zoom State for Images
   const [hoveredImg, setHoveredImg] = useState<string | null>(null);
 
@@ -115,6 +125,27 @@ export default function FloatingChatWindow({
 
   if (!chat) return null;
 
+  // Phones get a full-screen sheet (a minimized window docks to the bottom edge)
+  const fullScreen = isMaximized || isPhone;
+  const windowStyle: CSSProperties = isPhone
+    ? {
+        transform: 'none',
+        left: 0,
+        top: isMinimized ? 'auto' : 0,
+        bottom: isMinimized ? 0 : 'auto',
+        width: '100vw',
+        height: isMinimized ? 52 : '100dvh',
+        zIndex: initialZIndex,
+      }
+    : {
+        transform: isMaximized ? 'none' : `translate3d(${x}px, ${y}px, 0px)`,
+        width: isMaximized ? '100vw' : isMinimized ? 340 : width,
+        height: isMaximized ? '100vh' : isMinimized ? 52 : height,
+        top: 0,
+        left: 0,
+        zIndex: initialZIndex,
+      };
+
   const chatWithConversation = fullConversation ? { ...chat, conversation: fullConversation } : chat;
 
   const handleTogglePresetTag = (tagName: string) => {
@@ -142,20 +173,11 @@ export default function FloatingChatWindow({
 
   return (
     <div
-      style={{
-        transform: isMaximized
-          ? 'none'
-          : `translate3d(${x}px, ${y}px, 0px)`,
-        width: isMaximized ? '100vw' : isMinimized ? 340 : width,
-        height: isMaximized ? '100vh' : isMinimized ? 52 : height,
-        top: isMaximized ? 0 : 0,
-        left: isMaximized ? 0 : 0,
-        zIndex: initialZIndex,
-      }}
+      style={windowStyle}
       className={`fixed transition-shadow select-none duration-100 flex flex-col ${
-        isMaximized
+        fullScreen
           ? 'rounded-none'
-          : 'rounded-2xl shadow-2xl border border-neutral-200/90 dark:border-neutral-800'
+          : 'rounded-xl shadow-2xl border border-neutral-200/90 dark:border-neutral-800'
       } bg-white dark:bg-neutral-900 overflow-hidden text-neutral-800 dark:text-neutral-100`}
       onClick={onFocus}
     >
@@ -177,7 +199,8 @@ export default function FloatingChatWindow({
 
       {/* 2. Main Window Body (Hidden if Minimized) */}
       {!isMinimized && (
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden divide-y md:divide-y-0 md:divide-x divide-neutral-200/80 dark:divide-neutral-800">
+        // Phones: one scrolling column (conversation, then AI triage); desktop: two side-by-side panes
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden divide-y md:divide-y-0 md:divide-x divide-neutral-200/80 dark:divide-neutral-800">
           {/* Left Column: Full Raw Chat Dialogue & Media Preview */}
           <ChatConversationView
             chat={chatWithConversation}
@@ -187,8 +210,8 @@ export default function FloatingChatWindow({
           />
 
           {/* Right Column: AI Triage, Categorization & Resolution Timeline */}
-          <div className="w-full md:w-1/2 flex flex-col h-full bg-white dark:bg-neutral-900 overflow-hidden">
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4">
+          <div className="w-full md:w-1/2 flex flex-col shrink-0 md:shrink md:h-full bg-white dark:bg-neutral-900 md:overflow-hidden">
+            <div className="md:flex-1 md:overflow-y-auto overflow-x-hidden p-3 md:p-4 space-y-3 md:space-y-4">
               {/* Sift AI Triage Panel */}
               <ChatIssuesTriagePanel
                 chat={chat}
@@ -228,7 +251,7 @@ export default function FloatingChatWindow({
       )}
 
       {/* Resize Grip (Only in Normal Window Mode) */}
-      {!isMaximized && !isMinimized && (
+      {!fullScreen && !isMinimized && (
         <div
           onMouseDown={handleResizeMouseDown}
           className="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize z-30 group flex items-end justify-end p-0.5"

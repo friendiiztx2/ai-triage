@@ -8,6 +8,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import DatePicker from '@/components/ui/DatePicker';
+import SelectDropdown from '@/components/ui/SelectDropdown';
 
 export interface ChatQuickTabsProps {
   totalCount: number;
@@ -80,7 +81,7 @@ export default function ChatQuickTabs({
         priorityFilter === 'all' &&
         (tagFilter === 'all' || !tagFilter) &&
         auditFilter === 'all',
-      activeClass: 'bg-[#1a73e8] text-white shadow-xs font-semibold',
+      activeClass: 'bg-brand-600 text-white shadow-xs font-semibold',
       inactiveIconColor: 'text-neutral-400 dark:text-neutral-500',
       countClass: 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400',
     },
@@ -90,11 +91,11 @@ export default function ChatQuickTabs({
       icon: AlertTriangle,
       count: urgentCount,
       isActive: priorityFilter === 'urgent',
-      activeClass: 'bg-[#d93025] text-white shadow-xs font-semibold',
-      inactiveIconColor: urgentCount > 0 ? 'text-[#d93025]' : 'text-neutral-400',
+      activeClass: 'bg-rose-600 text-white shadow-xs font-semibold',
+      inactiveIconColor: urgentCount > 0 ? 'text-rose-600' : 'text-neutral-400',
       countClass:
         urgentCount > 0
-          ? 'bg-[#fce8e6] text-[#c5221f] dark:bg-rose-950/60 dark:text-rose-300 font-bold'
+          ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold'
           : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
     },
     {
@@ -144,11 +145,11 @@ export default function ChatQuickTabs({
       icon: ImageIcon,
       count: imageOnlyCount,
       isActive: isImageOnlyActive,
-      activeClass: 'bg-[#8430ce] text-white shadow-xs font-semibold',
-      inactiveIconColor: imageOnlyCount > 0 ? 'text-[#8430ce]' : 'text-neutral-400',
+      activeClass: 'bg-purple-600 text-white shadow-xs font-semibold',
+      inactiveIconColor: imageOnlyCount > 0 ? 'text-purple-600' : 'text-neutral-400',
       countClass:
         imageOnlyCount > 0
-          ? 'bg-[#f3e8fd] text-[#8430ce] dark:bg-purple-950/60 dark:text-purple-300 font-semibold'
+          ? 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-300 font-semibold'
           : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500',
     },
   ];
@@ -168,8 +169,36 @@ export default function ChatQuickTabs({
         'bg-white/70 dark:bg-neutral-900/70 rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs backdrop-blur-md'
       }`}
     >
-      {/* 1. Operational Triage Queue Tabs (Left) */}
-      <div className="flex flex-wrap items-center gap-1">
+      {/* 1a. Phones: the queue tabs wrap into two rows, so show them as one dropdown */}
+      <div className="md:hidden">
+        <SelectDropdown
+          menuClassName="min-w-[240px]"
+          size="md"
+          aria-label={language === 'th' ? 'เลือกคิวแชต' : 'Choose chat queue'}
+          value={tabs.find((tab) => tab.isActive)?.id ?? ''}
+          onChange={(id) => onSelectTab(id)}
+          placeholder={language === 'th' ? 'ตัวกรองที่เลือกเอง' : 'Custom filters'}
+          options={tabs.map((tab) => {
+            const Icon = tab.icon;
+            return {
+              value: tab.id,
+              // The count sits in the label so the closed dropdown shows it too
+              label: (
+                <span className="inline-flex items-center gap-1.5">
+                  {tab.label}
+                  <span className={`px-1.5 py-0.2 rounded-full text-xs font-mono tabular-nums ${tab.countClass}`}>
+                    {tab.count}
+                  </span>
+                </span>
+              ),
+              icon: <Icon size={14} className={tab.inactiveIconColor} />,
+            };
+          })}
+        />
+      </div>
+
+      {/* 1b. Operational Triage Queue Tabs (Left) */}
+      <div className="hidden md:flex flex-wrap items-center gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -186,7 +215,7 @@ export default function ChatQuickTabs({
               <Icon size={13} className={tab.isActive ? 'text-white' : tab.inactiveIconColor} />
               <span>{tab.label}</span>
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono tabular-nums ${
+                className={`px-1.5 py-0.2 rounded-full text-xs font-mono tabular-nums ${
                   tab.isActive ? 'bg-white/25 text-white font-bold' : tab.countClass
                 }`}
               >
@@ -211,7 +240,7 @@ export default function ChatQuickTabs({
                   key={preset.id}
                   type="button"
                   onClick={() => onDateFilterChange(preset.id)}
-                  className={`px-2 py-1 rounded-md text-xs transition-all cursor-pointer select-none font-medium ${
+                  className={`px-2 py-1 rounded-lg text-xs transition-all cursor-pointer select-none font-medium ${
                     isSelected
                       ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 shadow-xs font-semibold'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-white/40 dark:hover:bg-neutral-700/40'

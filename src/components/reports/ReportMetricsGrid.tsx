@@ -35,50 +35,50 @@ export default function ReportMetricsGrid({
       {/* Overview Stat Counters */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+          <span className="text-xs font-mono uppercase tracking-wider text-neutral-400">
             {language === 'th' ? 'สถิติข้อมูลแชตตามตัวกรอง' : 'Export Queue Telemetry'}
           </span>
-          <span className="text-[10px] font-mono text-neutral-400">
+          <span className="text-xs font-mono text-neutral-400">
             {filteredCount.toLocaleString()} {language === 'th' ? 'รายการพร้อมส่งออก' : 'records selected'}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
           <div className="p-2.5 bg-neutral-50/80 dark:bg-neutral-800/50 rounded-lg border border-neutral-200/60 dark:border-neutral-700/50 shadow-xs">
-            <span className="text-[10px] text-neutral-400 font-mono block uppercase">{language === 'th' ? 'ทั้งหมด' : 'Total'}</span>
-            <span className="text-xl font-semibold font-mono text-neutral-900 dark:text-neutral-100 tabular-nums">{filteredCount}</span>
+            <span className="text-xs text-neutral-400 block">{language === 'th' ? 'ทั้งหมด' : 'Total'}</span>
+            <span className="text-lg sm:text-xl font-semibold font-mono text-neutral-900 dark:text-neutral-100 tabular-nums">{filteredCount}</span>
           </div>
 
           <div className="p-2.5 bg-amber-500/[0.04] rounded-lg border border-amber-500/20">
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono block uppercase">{language === 'th' ? 'รอคัดแยก' : 'Pending'}</span>
-            <span className="text-xl font-semibold font-mono text-amber-600 dark:text-amber-400 tabular-nums">{pendingCount}</span>
+            <span className="text-xs text-amber-600 dark:text-amber-400 block">{language === 'th' ? 'รอคัดแยก' : 'Pending'}</span>
+            <span className="text-lg sm:text-xl font-semibold font-mono text-amber-600 dark:text-amber-400 tabular-nums">{pendingCount}</span>
           </div>
 
           <div className="p-2.5 bg-emerald-500/[0.04] rounded-lg border border-emerald-500/20">
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono block uppercase">{language === 'th' ? 'ตรวจแล้ว' : 'Completed'}</span>
-            <span className="text-xl font-semibold font-mono text-emerald-600 dark:text-emerald-400 tabular-nums">{completedCount}</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 block">{language === 'th' ? 'ตรวจแล้ว' : 'Completed'}</span>
+            <span className="text-lg sm:text-xl font-semibold font-mono text-emerald-600 dark:text-emerald-400 tabular-nums">{completedCount}</span>
           </div>
 
           <div className="p-2.5 bg-rose-500/[0.04] rounded-lg border border-rose-500/20">
-            <span className="text-[10px] text-rose-600 dark:text-rose-400 font-mono block uppercase">Urgent SLA</span>
-            <span className="text-xl font-semibold font-mono text-rose-600 dark:text-rose-400 tabular-nums">{urgentCount}</span>
+            <span className="text-xs text-rose-600 dark:text-rose-400 block">{language === 'th' ? 'ด่วนวิกฤต' : 'Urgent SLA'}</span>
+            <span className="text-lg sm:text-xl font-semibold font-mono text-rose-600 dark:text-rose-400 tabular-nums">{urgentCount}</span>
           </div>
 
           <div className="p-2.5 bg-neutral-50/80 dark:bg-neutral-800/50 rounded-lg border border-neutral-200/60 dark:border-neutral-700/50">
-            <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono block uppercase">High Priority</span>
-            <span className="text-xl font-semibold font-mono text-neutral-800 dark:text-neutral-200 tabular-nums">{highCount}</span>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400 block">{language === 'th' ? 'ด่วนสูง' : 'High Priority'}</span>
+            <span className="text-lg sm:text-xl font-semibold font-mono text-neutral-800 dark:text-neutral-200 tabular-nums">{highCount}</span>
           </div>
 
           <div className="p-2.5 bg-neutral-50/80 dark:bg-neutral-800/50 rounded-lg border border-neutral-200/60 dark:border-neutral-700/50">
-            <span className="text-[10px] text-neutral-400 font-mono block uppercase">Normal</span>
-            <span className="text-xl font-semibold font-mono text-neutral-700 dark:text-neutral-300 tabular-nums">{mediumCount + lowCount}</span>
+            <span className="text-xs text-neutral-400 block">{language === 'th' ? 'ทั่วไป' : 'Normal'}</span>
+            <span className="text-lg sm:text-xl font-semibold font-mono text-neutral-700 dark:text-neutral-300 tabular-nums">{mediumCount + lowCount}</span>
           </div>
         </div>
       </div>
 
       {/* Specialized Business Breakdown (Finance & Marketing Criteria) */}
       <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800/60 space-y-2">
-        <span className="block text-[10px] font-mono text-neutral-400 uppercase tracking-wider">
+        <span className="block text-xs font-mono text-neutral-400 uppercase tracking-wider">
           {language === 'th' ? 'การจำแนกตามเป้าหมายธุรกิจ' : 'Domain Intent Breakdown'}
         </span>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">

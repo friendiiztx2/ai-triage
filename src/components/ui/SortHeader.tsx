@@ -34,9 +34,9 @@ export default function SortHeader({
       <span className="shrink-0 transition-colors">
         {active ? (
           direction === 'asc' ? (
-            <ArrowUp size={13} className="text-[#1a73e8] dark:text-[#8ab4f8] stroke-[2.5]" />
+            <ArrowUp size={13} className="text-brand-600 dark:text-brand-300 stroke-[2.5]" />
           ) : (
-            <ArrowDown size={13} className="text-[#1a73e8] dark:text-[#8ab4f8] stroke-[2.5]" />
+            <ArrowDown size={13} className="text-brand-600 dark:text-brand-300 stroke-[2.5]" />
           )
         ) : (
           <ArrowUpDown size={13} className="text-neutral-400/60 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors" />

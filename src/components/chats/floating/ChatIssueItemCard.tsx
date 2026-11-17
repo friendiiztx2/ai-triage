@@ -5,6 +5,13 @@ import { Sparkles, Check, Copy, Building2, Tag, ShieldAlert } from 'lucide-react
 import { getCategoryLabel, getBaseCatId } from '@/lib/categories';
 import SelectDropdown from '@/components/ui/SelectDropdown';
 
+const PRIORITY_OPTIONS = [
+  { id: 'low', label: 'ปกติ', textClass: 'text-neutral-700 dark:text-neutral-200', activeClass: 'bg-white dark:bg-neutral-900 text-neutral-800 dark:text-white font-bold shadow-2xs border border-neutral-200/80 dark:border-neutral-700' },
+  { id: 'medium', label: 'ปานกลาง', textClass: 'text-brand-700 dark:text-brand-300', activeClass: 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold shadow-2xs border border-brand-200 dark:border-brand-900/60' },
+  { id: 'high', label: 'ด่วนสูง', textClass: 'text-amber-700 dark:text-amber-300', activeClass: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold shadow-2xs border border-amber-200 dark:border-amber-900/60' },
+  { id: 'urgent', label: 'ด่วนวิกฤต', textClass: 'text-rose-700 dark:text-rose-300', activeClass: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold shadow-2xs border border-rose-200 dark:border-rose-900/60' },
+];
+
 interface ChatIssueItemCardProps {
   idx: number;
   issueItem: any;
@@ -38,33 +45,36 @@ export default function ChatIssueItemCard({
   const isCopied = copiedId === `reply-${issueKey}`;
 
   return (
-    <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 shadow-xs space-y-3 min-w-0 relative transition-all hover:border-neutral-300 dark:hover:border-neutral-700">
-      {/* 1. Card Header: Issue Index & Summary */}
+    <div className="p-3 md:p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-xs space-y-2.5 md:space-y-3 min-w-0 relative transition-all hover:border-neutral-300 dark:hover:border-neutral-700">
+      {/* 1. Card Header: Issue Index & Summary (phones: title and department share one line, the ID is hidden) */}
       <div className="flex items-start justify-between gap-2.5">
-        <div className="flex items-start gap-2.5 min-w-0 flex-1">
-          <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-lg border border-blue-200/80 dark:border-blue-900/60 shrink-0">
+        <div className="flex items-start gap-2 md:gap-2.5 min-w-0 flex-1">
+          <span className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/50 px-1.5 md:px-2 py-0.5 rounded-lg border border-brand-200/80 dark:border-brand-900/60 shrink-0">
             #{idx + 1}
           </span>
-          <div className="space-y-1.5 min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 md:block md:space-y-1.5 min-w-0 flex-1">
             <h4 className="font-bold text-neutral-900 dark:text-neutral-100 text-sm leading-snug break-words">
               {issueTitle}
             </h4>
             {issueItem.department && (
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-[11px] font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700">
+              <div className="inline-flex items-center gap-1 md:gap-1.5 px-1.5 md:px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-xs font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700">
                 <Building2 size={12} className="text-neutral-400" />
-                <span>แผนก: {issueItem.department}</span>
+                <span>
+                  <span className="hidden md:inline">แผนก: </span>
+                  {issueItem.department}
+                </span>
               </div>
             )}
           </div>
         </div>
-        <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-mono shrink-0">
+        <span className="hidden md:inline text-xs text-neutral-400 dark:text-neutral-500 font-mono shrink-0">
           ID: {issueKey.substring(0, 8)}
         </span>
       </div>
 
-      {/* 2. Category Dropdown & Priority Selector */}
-      <div className="flex flex-wrap items-center gap-2 pt-1 min-w-0">
-        <div className="flex-1 min-w-[160px]">
+      {/* 2. Category Dropdown & Priority Selector (phones: two dropdowns side by side on one row) */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] md:flex md:flex-wrap items-center gap-2 md:pt-1 min-w-0">
+        <div className="min-w-0 md:flex-1 md:min-w-[160px]">
           <SelectDropdown
             value={selectedCategoryVal}
             onChange={onUpdateCategory}
@@ -87,14 +97,24 @@ export default function ChatIssueItemCard({
           />
         </div>
 
+        {/* Priority as a compact dropdown on phones */}
+        <div className="md:hidden w-[118px]">
+          <SelectDropdown
+            value={currentPri}
+            onChange={onUpdatePriority}
+            disabled={userProfile?.role === 'agent'}
+            align="right"
+            aria-label={language === 'th' ? 'ความเร่งด่วน' : 'Priority'}
+            options={PRIORITY_OPTIONS.map((p) => ({
+              value: p.id,
+              label: <span className={p.textClass}>{p.label}</span>,
+            }))}
+          />
+        </div>
+
         {/* Priority Segmented Control */}
-        <div className="flex items-center gap-0.5 bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-xl shrink-0 border border-neutral-200/60 dark:border-neutral-700/60">
-          {[
-            { id: 'low', label: 'ปกติ', activeClass: 'bg-white dark:bg-neutral-900 text-neutral-800 dark:text-white font-bold shadow-2xs border border-neutral-200/80 dark:border-neutral-700' },
-            { id: 'medium', label: 'ปานกลาง', activeClass: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold shadow-2xs border border-blue-200 dark:border-blue-900/60' },
-            { id: 'high', label: 'ด่วนสูง', activeClass: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold shadow-2xs border border-amber-200 dark:border-amber-900/60' },
-            { id: 'urgent', label: 'ด่วนวิกฤต', activeClass: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold shadow-2xs border border-rose-200 dark:border-rose-900/60' },
-          ].map((p) => {
+        <div className="hidden md:flex items-center gap-0.5 bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-xl shrink-0 border border-neutral-200/60 dark:border-neutral-700/60">
+          {PRIORITY_OPTIONS.map((p) => {
             const isActive = currentPri === p.id;
             return (
               <button
@@ -102,7 +122,7 @@ export default function ChatIssueItemCard({
                 type="button"
                 onClick={() => onUpdatePriority(p.id)}
                 disabled={userProfile?.role === 'agent'}
-                className={`px-2.5 py-1 rounded-lg text-[11px] transition-all cursor-pointer shrink-0 select-none ${
+                className={`px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer shrink-0 select-none ${
                   isActive
                     ? p.activeClass
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
@@ -117,10 +137,10 @@ export default function ChatIssueItemCard({
 
       {/* 3. Recommended Reply Box with High-Contrast One-Click Copy */}
       {issueItem.recommended_reply && (
-        <div className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 dark:from-neutral-900 dark:via-neutral-900 dark:to-blue-950/20 p-3.5 space-y-2.5 shadow-2xs">
+        <div className="rounded-xl border border-brand-200/80 dark:border-brand-900/50 bg-gradient-to-br from-brand-50/50 via-white to-indigo-50/30 dark:from-neutral-900 dark:via-neutral-900 dark:to-brand-950/20 p-3.5 space-y-2.5 shadow-2xs">
           <div className="flex items-center justify-between gap-2">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-blue-900 dark:text-blue-300">
-              <Sparkles size={14} className="text-blue-600 dark:text-blue-400" />
+            <span className="flex items-center gap-1.5 text-xs font-bold text-brand-900 dark:text-brand-300">
+              <Sparkles size={14} className="text-brand-600 dark:text-brand-400" />
               <span>{language === 'th' ? 'ข้อความตอบกลับแนะนำจาก AI' : 'AI Recommended Reply'}</span>
             </span>
 
@@ -131,7 +151,7 @@ export default function ChatIssueItemCard({
               className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95 ${
                 isCopied
                   ? 'bg-emerald-600 text-white shadow-emerald-500/20'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+                  : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/20'
               }`}
               title={language === 'th' ? 'คลิกเพื่อคัดลอกข้อความไปตอบลูกค้า' : 'Copy recommended reply'}
             >

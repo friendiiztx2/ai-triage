@@ -125,13 +125,13 @@ export async function exportChatsToGoogleSheets(
           : priority === 'high'
           ? 'background-color: #feefe3; color: #c26401; font-weight: bold;'
           : priority === 'medium'
-          ? 'background-color: #e8f0fe; color: #1a73e8;'
+          ? 'background-color: #eef2ff; color: #4f46e5;'
           : 'background-color: #f1f3f4; color: #5f6368;';
 
       const statusText = isEn
         ? (c.status === 'completed' ? 'Completed' : 'Pending')
         : (c.status === 'completed' ? 'แยกแยะแล้ว' : 'รอดำเนินการ');
-      const statusColor = c.status === 'completed' ? '#137333' : '#e37400';
+      const statusColor = c.status === 'completed' ? 'var(--color-emerald-700)' : '#e37400';
 
       const timeFormatted = c.created_at
         ? new Date(c.created_at).toLocaleString(isEn ? 'en-US' : 'th-TH', { timeZone: 'Asia/Bangkok' })
@@ -161,7 +161,7 @@ export async function exportChatsToGoogleSheets(
       return `
       <tr style="border-bottom: 1px solid #dadce0; ${i % 2 === 1 ? 'background-color: #f8f9fa;' : 'background-color: #ffffff;'}">
         <td style="padding: 8px 10px; font-family: monospace; font-size: 11px; text-align: center; color: #5f6368;">${i + 1}</td>
-        <td style="padding: 8px 10px; font-family: monospace; font-size: 11px; color: #1a73e8; font-weight: 500;">${c.id || '-'}</td>
+        <td style="padding: 8px 10px; font-family: monospace; font-size: 11px; color: #4f46e5; font-weight: 500;">${c.id || '-'}</td>
         <td style="padding: 8px 10px; font-size: 12px; font-weight: 500; color: #202124;">${custName}</td>
         <td style="padding: 8px 10px; font-size: 12px; color: #3c4043; font-weight: 500;">${catName}</td>
         <td style="padding: 8px 10px; text-align: center;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; ${priorityStyle}">${priority.toUpperCase()}</span></td>

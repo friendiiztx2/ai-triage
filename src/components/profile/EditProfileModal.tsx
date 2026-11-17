@@ -206,13 +206,13 @@ export default function EditProfileModal({
       }}
     >
       <div 
-        className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-3xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.6)] border border-neutral-200/90 dark:border-neutral-800 overflow-hidden flex flex-col transition-all"
+        className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.6)] border border-neutral-200/90 dark:border-neutral-800 overflow-hidden flex flex-col transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Fixed dark mode gradient so no white streak appears */}
-        <div className="px-6 py-5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-gradient-to-r from-blue-50/70 via-white to-purple-50/40 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900">
+        <div className="px-6 py-5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-gradient-to-r from-brand-50/70 via-white to-purple-50/40 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 dark:bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+            <div className="w-10 h-10 rounded-xl bg-brand-600 dark:bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-500/20">
               <Sparkles size={20} />
             </div>
             <div>
@@ -237,21 +237,21 @@ export default function EditProfileModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[82vh]">
           {/* Notifications */}
           {errorMsg && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/80 flex items-start gap-3 text-xs text-rose-700 dark:text-rose-300">
+            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/80 flex items-start gap-3 text-xs text-rose-700 dark:text-rose-300">
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
               <span className="font-medium">{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/80 flex items-center gap-3 text-xs text-emerald-700 dark:text-emerald-300">
+            <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/80 flex items-center gap-3 text-xs text-emerald-700 dark:text-emerald-300">
               <Check size={16} className="shrink-0" />
               <span className="font-semibold">{successMsg}</span>
             </div>
           )}
 
           {/* 1. Avatar Card */}
-          <div className="p-5 rounded-2xl bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 flex flex-col sm:flex-row items-center gap-5">
+          <div className="p-5 rounded-xl bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 flex flex-col sm:flex-row items-center gap-5">
             <div className="relative group shrink-0">
               <div className="w-22 h-22 rounded-full overflow-hidden border-3 border-white dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 shadow-md flex items-center justify-center">
                 {avatar ? (
@@ -261,7 +261,7 @@ export default function EditProfileModal({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-3xl font-bold font-sans">
+                  <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center text-3xl font-bold font-sans">
                     {initial}
                   </div>
                 )}
@@ -271,7 +271,7 @@ export default function EditProfileModal({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 p-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-md transition cursor-pointer border-2 border-white dark:border-neutral-800"
+                className="absolute bottom-0 right-0 p-2 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-md transition cursor-pointer border-2 border-white dark:border-neutral-800"
                 title="เลือกรูปภาพใหม่"
               >
                 <Camera size={14} />
@@ -301,7 +301,7 @@ export default function EditProfileModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-neutral-800 text-blue-600 dark:text-blue-400 border border-neutral-200 dark:border-neutral-700 shadow-2xs hover:bg-neutral-50 dark:hover:bg-neutral-750 transition cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-neutral-800 text-brand-600 dark:text-brand-400 border border-neutral-200 dark:border-neutral-700 shadow-2xs hover:bg-neutral-50 dark:hover:bg-neutral-750 transition cursor-pointer"
                 >
                   เลือกรูปใหม่
                 </button>
@@ -323,7 +323,7 @@ export default function EditProfileModal({
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center justify-between">
               <span>ชื่อเล่น / ชื่อที่ใช้แสดงในระบบ</span>
-              <span className="text-[11px] text-neutral-400 dark:text-neutral-400 font-normal">แสดงในเมนูด้านข้าง</span>
+              <span className="text-xs text-neutral-400 dark:text-neutral-400 font-normal">แสดงในเมนูด้านข้าง</span>
             </label>
             <div className="relative">
               <input
@@ -331,7 +331,7 @@ export default function EditProfileModal({
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder="เช่น มิกะ, zoon"
-                className="w-full px-4 py-2.5 pl-10 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                className="w-full px-4 py-2.5 pl-10 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition"
                 required
               />
               <UserIcon size={16} className="absolute left-3.5 top-3 text-neutral-400 dark:text-neutral-400" />
@@ -339,9 +339,9 @@ export default function EditProfileModal({
           </div>
 
           {/* 3. Account Meta Info */}
-          <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 text-xs">
+          <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-neutral-50/80 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/70 text-xs">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-400 flex items-center gap-1">
+              <span className="text-xs uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-400 flex items-center gap-1">
                 <Mail size={12} />
                 บัญชีผู้ใช้งาน
               </span>
@@ -350,12 +350,12 @@ export default function EditProfileModal({
               </p>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-400 flex items-center gap-1">
+              <span className="text-xs uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-400 flex items-center gap-1">
                 <Shield size={12} />
                 ระดับสิทธิ์
               </span>
               <div>
-                <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/70 uppercase">
+                <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/70 uppercase">
                   {roleDisplay}
                 </span>
               </div>
@@ -363,7 +363,7 @@ export default function EditProfileModal({
           </div>
 
           {/* 4. Password Accordion */}
-          <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-700/70 overflow-hidden bg-white dark:bg-neutral-800/40">
+          <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-700/70 overflow-hidden bg-white dark:bg-neutral-800/40">
             <button
               type="button"
               onClick={() => setShowPasswordSection(!showPasswordSection)}
@@ -376,7 +376,7 @@ export default function EditProfileModal({
                 <span>เปลี่ยนรหัสผ่านเข้าสู่ระบบ</span>
               </div>
               <div className="p-1 rounded-lg text-neutral-400 dark:text-neutral-400 transition">
-                <ChevronDown size={16} className={`transition-transform duration-200 ${showPasswordSection ? 'rotate-180 text-blue-500' : ''}`} />
+                <ChevronDown size={16} className={`transition-transform duration-200 ${showPasswordSection ? 'rotate-180 text-brand-500' : ''}`} />
               </div>
             </button>
 
@@ -384,7 +384,7 @@ export default function EditProfileModal({
               <div className="p-4 pt-1 space-y-3.5 border-t border-neutral-100 dark:border-neutral-700/70 bg-neutral-50/40 dark:bg-neutral-900/40">
                 {/* Current Password */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                     รหัสผ่านเดิม (ถ้ามี)
                   </label>
                   <div className="relative">
@@ -393,7 +393,7 @@ export default function EditProfileModal({
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="ใส่รหัสผ่านเดิมเพื่อความปลอดภัย"
-                      className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                     <button
                       type="button"
@@ -408,7 +408,7 @@ export default function EditProfileModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* New Password */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                    <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                       รหัสผ่านใหม่ <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
@@ -417,7 +417,7 @@ export default function EditProfileModal({
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="อย่างน้อย 4 ตัวอักษร"
-                        className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
                       />
                       <button
                         type="button"
@@ -431,7 +431,7 @@ export default function EditProfileModal({
 
                   {/* Confirm Password */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                    <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                       ยืนยันรหัสใหม่ <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
@@ -440,7 +440,7 @@ export default function EditProfileModal({
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="กรอกรหัสใหม่อีกครั้ง"
-                        className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-3.5 py-2 pr-9 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
                       />
                       <button
                         type="button"
@@ -469,7 +469,7 @@ export default function EditProfileModal({
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-md shadow-brand-500/25 transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
             >
               {isLoading ? (
                 <>

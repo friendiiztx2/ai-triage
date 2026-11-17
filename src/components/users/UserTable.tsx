@@ -100,7 +100,7 @@ export default function UserTable({
           action={
             <button
               onClick={onOpenAddModal}
-              className="px-3.5 py-1.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium transition-colors shadow-xs cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium transition-colors shadow-xs cursor-pointer"
             >
               {language === 'th' ? 'เพิ่มผู้ใช้งานใหม่' : 'Add New User'}
             </button>

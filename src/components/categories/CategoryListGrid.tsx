@@ -114,7 +114,7 @@ export default function CategoryListGrid({
         </div>
 
         {!canManage && (
-          <div className="inline-flex items-center gap-1.5 text-[11px] text-neutral-500 bg-neutral-100 dark:bg-neutral-800/80 px-2.5 py-1 rounded-md border border-neutral-200/60 dark:border-neutral-700/60 font-mono">
+          <div className="inline-flex items-center gap-1.5 text-xs text-neutral-500 bg-neutral-100 dark:bg-neutral-800/80 px-2.5 py-1 rounded-lg border border-neutral-200/60 dark:border-neutral-700/60 font-mono">
             <Lock size={11} className="text-neutral-400" />
             <span>{language === 'th' ? 'โหมดอ่านอย่างเดียว' : 'Read-only access'}</span>
           </div>
@@ -185,7 +185,7 @@ export default function CategoryListGrid({
                         <span className="font-medium text-neutral-900 dark:text-neutral-100 text-xs">
                           {label}
                         </span>
-                        <span className="font-mono text-[10px] text-neutral-400 dark:text-neutral-500 mt-0.5">
+                        <span className="font-mono text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
                           {baseKey}
                         </span>
                       </div>
@@ -205,13 +205,13 @@ export default function CategoryListGrid({
                           <span className="font-mono font-semibold text-neutral-900 dark:text-neutral-100 tabular-nums">
                             {count.toLocaleString()}
                           </span>
-                          <span className="text-[10px] text-neutral-400 font-mono">
+                          <span className="text-xs text-neutral-400 font-mono">
                             ({percent}%)
                           </span>
                         </div>
                         <div className="w-16 bg-neutral-100 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden mt-1">
                           <div
-                            className="bg-[#1a73e8] h-full rounded-full transition-all duration-300"
+                            className="bg-brand-600 h-full rounded-full transition-all duration-300"
                             style={{ width: `${Math.min(100, Math.max(0, Number(percent)))}%` }}
                           />
                         </div>
@@ -220,8 +220,8 @@ export default function CategoryListGrid({
 
                     {/* Status */}
                     <td className="py-3 px-4 text-center hidden sm:table-cell">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#e6f4ea] text-[#137333] border border-[#ceead6] dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800 font-medium">
-                        Active
+                      <span className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800 font-medium whitespace-nowrap">
+                        {language === 'th' ? 'ใช้งาน' : 'Active'}
                       </span>
                     </td>
 
@@ -231,7 +231,7 @@ export default function CategoryListGrid({
                         <Link
                           href={`/chats?category=${encodeURIComponent(baseKey)}`}
                           title={language === 'th' ? 'ดูรายการแชต' : 'View chats'}
-                          className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                          className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                         >
                           <ArrowUpRight size={13} />
                         </Link>
@@ -242,7 +242,7 @@ export default function CategoryListGrid({
                               type="button"
                               onClick={() => onEdit(cat)}
                               title={language === 'th' ? 'แก้ไขหมวดหมู่' : 'Edit category'}
-                              className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                             >
                               <Edit2 size={13} />
                             </button>
@@ -250,7 +250,7 @@ export default function CategoryListGrid({
                               type="button"
                               onClick={() => onDelete(cat)}
                               title={language === 'th' ? 'ลบหมวดหมู่' : 'Delete category'}
-                              className="p-1.5 rounded-md text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-955/30 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-955/30 transition-colors cursor-pointer"
                             >
                               <Trash2 size={13} />
                             </button>
@@ -268,11 +268,11 @@ export default function CategoryListGrid({
                   <div className="flex flex-col">
                     <span className="font-medium text-neutral-800 dark:text-neutral-200 text-xs flex items-center gap-1.5">
                       <span>{language === 'th' ? 'เรื่องอื่นๆ' : 'Other / Unclassified'}</span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-neutral-200/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                      <span className="text-xs font-mono px-1.5 py-0.2 rounded-lg bg-neutral-200/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
                         Default
                       </span>
                     </span>
-                    <span className="font-mono text-[10px] text-neutral-400 mt-0.5">
+                    <span className="font-mono text-xs text-neutral-400 mt-0.5">
                       other
                     </span>
                   </div>
@@ -290,14 +290,14 @@ export default function CategoryListGrid({
                       <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-200 tabular-nums">
                         {(categoryStats['other'] || 0).toLocaleString()}
                       </span>
-                      <span className="text-[10px] text-neutral-400 font-mono">
+                      <span className="text-xs text-neutral-400 font-mono">
                         ({totalChatsCount > 0 ? (((categoryStats['other'] || 0) / totalChatsCount) * 100).toFixed(1) : '0'}%)
                       </span>
                     </div>
                   </div>
                 </td>
                 <td className="py-3 px-4 text-center hidden sm:table-cell">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 border border-neutral-200 dark:border-neutral-700 font-medium">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 border border-neutral-200 dark:border-neutral-700 font-medium">
                     System
                   </span>
                 </td>
@@ -305,7 +305,7 @@ export default function CategoryListGrid({
                   <Link
                     href="/chats?category=other"
                     title={language === 'th' ? 'ดูรายการเคสอื่นๆ' : 'View unclassified chats'}
-                    className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors inline-flex"
+                    className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors inline-flex"
                   >
                     <ArrowUpRight size={13} />
                   </Link>

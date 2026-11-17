@@ -81,7 +81,7 @@ export default function SchemaPage() {
             onClick={() => setActiveTable(table)}
             className={`px-6 py-3 border-b-2 text-sm font-semibold transition-all cursor-pointer ${
               activeTable === table
-                ? 'border-[#1a73e8] text-[#1a73e8] dark:text-blue-400'
+                ? 'border-brand-600 text-brand-600 dark:text-brand-400'
                 : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
             }`}
           >
@@ -91,11 +91,11 @@ export default function SchemaPage() {
       </div>
 
       {/* Content */}
-      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 rounded-2xl shadow-xs overflow-hidden transition-all duration-250">
+      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 rounded-xl shadow-xs overflow-hidden transition-all duration-250">
         <div className="p-6 border-b border-neutral-100 dark:border-neutral-800/60 bg-neutral-50/70 dark:bg-neutral-900/60 flex items-center justify-between">
           <h2 className="font-bold text-neutral-800 dark:text-neutral-100 text-base flex items-center gap-2">
             <Table size={18} className="text-neutral-400 dark:text-neutral-500" />
-            ตาราง: <span className="text-[#1a73e8] dark:text-blue-400 font-mono">{activeTable}</span>
+            ตาราง: <span className="text-brand-600 dark:text-brand-400 font-mono">{activeTable}</span>
           </h2>
           <span className="text-xs text-neutral-400 dark:text-neutral-500 font-medium">แสดงข้อมูลฟิลด์แถวแรก</span>
         </div>
@@ -103,7 +103,7 @@ export default function SchemaPage() {
         <div className="p-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3 text-neutral-400 dark:text-neutral-500">
-              <RefreshCw size={32} className="animate-spin text-[#1a73e8]" />
+              <RefreshCw size={32} className="animate-spin text-brand-600" />
               <span className="text-sm font-medium">กำลังโหลดข้อมูลโครงสร้าง...</span>
             </div>
           ) : error ? (
@@ -118,7 +118,7 @@ export default function SchemaPage() {
                   โปรดตรวจสอบว่าได้ตั้งค่า API URL และ anon key ใน .env ถูกต้อง และรัน Supabase ปลดล็อก RLS แล้ว
                 </p>
               </div>
-              <button onClick={fetchSchemaData} className="bg-[#1a73e8] hover:bg-[#1557b0] text-white font-medium text-xs px-4 py-2 rounded-lg transition shadow-xs cursor-pointer">
+              <button onClick={fetchSchemaData} className="bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs px-4 py-2 rounded-lg transition shadow-xs cursor-pointer">
                 ลองอีกครั้ง
               </button>
             </div>
@@ -130,7 +130,7 @@ export default function SchemaPage() {
               <div>
                 <h3 className="font-bold text-neutral-800 dark:text-neutral-100 text-base">เชื่อมต่อตารางได้ แต่ไม่มีข้อมูล</h3>
                 <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">
-                  พบตาราง <code className="font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 rounded">{activeTable}</code> ในฐานข้อมูล แต่ไม่มีข้อมูลเลยสักแถวเดียวครับ รบกวนป้อนข้อมูลจำลองลงตารางก่อนครับ
+                  พบตาราง <code className="font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 rounded-lg">{activeTable}</code> ในฐานข้อมูล แต่ไม่มีข้อมูลเลยสักแถวเดียวครับ รบกวนป้อนข้อมูลจำลองลงตารางก่อนครับ
                 </p>
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function SchemaPage() {
               {/* Field mapping table */}
               <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-inner">
                 <table className="w-full text-left border-collapse text-sm">
-                  <thead>
+                  <thead className="whitespace-nowrap">
                     <tr className="bg-neutral-50/70 dark:bg-neutral-900/60 border-b border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 font-bold">
                       <th className="px-5 py-3 flex items-center gap-1.5"><Key size={14} className="text-neutral-400" /> ชื่อคอลัมน์ (Column Name)</th>
                       <th className="px-5 py-3">ประเภทข้อมูล (Data Type)</th>

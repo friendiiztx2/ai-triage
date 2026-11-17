@@ -16,13 +16,13 @@ export default function ImageHoverZoom({
   if (!imageUrl) return null;
 
   return (
-    <div className="pointer-events-none fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-neutral-950/95 p-3 rounded-2xl shadow-2xl border border-neutral-700/80 backdrop-blur-md max-w-[500px] max-h-[500px] flex flex-col items-center animate-fade-in select-none">
-      <div className="w-full flex items-center justify-between pb-2 text-[11px] font-bold text-neutral-300">
+    <div className="pointer-events-none fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-neutral-950/95 p-3 rounded-xl shadow-2xl border border-neutral-700/80 backdrop-blur-md max-w-[500px] max-h-[500px] flex flex-col items-center animate-fade-in select-none">
+      <div className="w-full flex items-center justify-between pb-2 text-xs font-bold text-neutral-300">
         <span className="flex items-center gap-1.5">
           <span>🔍</span>
           <span>{title}</span>
         </span>
-        <span className="text-[10px] text-indigo-400 font-mono">{hint}</span>
+        <span className="text-xs text-indigo-400 font-mono">{hint}</span>
       </div>
       <img
         src={imageUrl}

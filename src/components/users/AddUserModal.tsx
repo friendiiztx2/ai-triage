@@ -144,7 +144,7 @@ export default function AddUserModal({
     >
       <div className="p-6">
         {error && (
-          <div className="bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-500 text-[10px] font-bold p-3.5 rounded-xl border border-rose-200/50 dark:border-rose-900/30 mb-4 leading-normal">
+          <div className="bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-500 text-xs font-bold p-3.5 rounded-xl border border-rose-200/50 dark:border-rose-900/30 mb-4 leading-normal">
             ⚠️ {error}
           </div>
         )}
@@ -249,7 +249,7 @@ export default function AddUserModal({
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-[#1a73e8] hover:bg-[#1557b0] text-white disabled:opacity-40 py-2.5 rounded-lg font-medium text-xs shadow-xs transition cursor-pointer text-center block mt-2"
+            className="w-full bg-brand-600 hover:bg-brand-700 text-white disabled:opacity-40 py-2.5 rounded-lg font-medium text-xs shadow-xs transition cursor-pointer text-center block mt-2"
           >
             {saving ? 'กำลังบันทึกข้อมูล...' : 'ยืนยันสร้างบัญชีใหม่'}
           </button>

@@ -87,7 +87,7 @@ export default function CategoryModal({
         {/* Category ID (only editable when creating) */}
         {!isEdit ? (
           <div>
-            <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-[10px] uppercase tracking-wider mb-1.5">
+            <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-xs uppercase tracking-wider mb-1.5">
               ไอดีหมวดหมู่ <span className="text-rose-500">*</span>
             </label>
             <input
@@ -98,7 +98,7 @@ export default function CategoryModal({
               onChange={(e) => setId(e.target.value)}
               className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors"
             />
-            <p className="text-[10px] font-mono text-neutral-400 mt-1">
+            <p className="text-xs font-mono text-neutral-400 mt-1">
               * ภาษาอังกฤษตัวพิมพ์เล็ก ไม่มีเว้นวรรค
             </p>
           </div>
@@ -106,7 +106,7 @@ export default function CategoryModal({
 
         {/* Category Name (Thai) */}
         <div>
-          <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-[10px] uppercase tracking-wider mb-1.5">
+          <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-xs uppercase tracking-wider mb-1.5">
             {language === 'th' ? 'ชื่อหมวดหมู่ภาษาไทย' : 'Thai Category Name'} <span className="text-rose-500">*</span>
           </label>
           <input
@@ -121,7 +121,7 @@ export default function CategoryModal({
 
         {/* Category Name (English) */}
         <div>
-          <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-[10px] uppercase tracking-wider mb-1.5">
+          <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-xs uppercase tracking-wider mb-1.5">
             {language === 'th' ? 'ชื่อหมวดหมู่ภาษาอังกฤษ' : 'English Category Name'}
           </label>
           <input
@@ -135,7 +135,7 @@ export default function CategoryModal({
 
         {/* Category Description */}
         <div>
-          <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-[10px] uppercase tracking-wider mb-1.5">
+          <label className="block text-neutral-500 dark:text-neutral-400 font-mono text-xs uppercase tracking-wider mb-1.5">
             เกณฑ์หรือคำอธิบายสำหรับ AI
           </label>
           <textarea
@@ -159,7 +159,7 @@ export default function CategoryModal({
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white px-4 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-colors cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-colors cursor-pointer disabled:opacity-40"
           >
             {saving ? (
               <RefreshCw size={12} className="animate-spin" />

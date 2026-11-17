@@ -187,7 +187,7 @@ export default function DatePicker({
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 focus:outline-none focus:border-[#1a73e8]/70 dark:focus:border-[#8ab4f8]/70 shadow-2xs transition-all cursor-pointer text-xs font-mono disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 focus:outline-none focus:border-brand-600/70 dark:focus:border-brand-300/70 shadow-2xs transition-all cursor-pointer text-xs font-mono disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       >
         <div className="flex items-center gap-1.5 truncate">
           <CalendarIcon size={13} className="text-neutral-400 dark:text-neutral-500 shrink-0" />
@@ -208,7 +208,7 @@ export default function DatePicker({
               e.stopPropagation();
               onChange('');
             }}
-            className="p-0.5 rounded hover:bg-neutral-200/70 dark:hover:bg-neutral-700/70 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors cursor-pointer shrink-0 ml-1"
+            className="p-0.5 rounded-lg hover:bg-neutral-200/70 dark:hover:bg-neutral-700/70 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors cursor-pointer shrink-0 ml-1"
             title={language === 'th' ? 'ล้างค่าวันที่' : 'Clear date'}
           >
             <X size={12} />
@@ -219,7 +219,7 @@ export default function DatePicker({
       {/* Modern Frosted Calendar Popover */}
       {isOpen && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} mt-1.5 z-[9999] w-64 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] p-3 animate-scale-in select-none`}
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} mt-1.5 z-[9999] w-64 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] p-3 animate-scale-in select-none`}
         >
           {/* Header Month / Year Navigation */}
           <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-neutral-100 dark:border-neutral-800/70">
@@ -251,7 +251,7 @@ export default function DatePicker({
             {weekdays.map((wd, idx) => (
               <span
                 key={wd}
-                className={`text-[10px] font-semibold py-1 ${
+                className={`text-xs font-semibold py-1 ${
                   idx === 0
                     ? 'text-rose-500/80'
                     : 'text-neutral-400 dark:text-neutral-500'
@@ -283,9 +283,9 @@ export default function DatePicker({
                   }}
                   className={`h-7 w-7 mx-auto rounded-lg text-xs flex items-center justify-center transition-all cursor-pointer relative ${
                     isSelected
-                      ? 'bg-[#1a73e8] text-white font-bold shadow-xs hover:bg-[#1557b0]'
+                      ? 'bg-brand-600 text-white font-bold shadow-xs hover:bg-brand-700'
                       : isToday
-                      ? 'border border-[#1a73e8] text-[#1a73e8] dark:text-blue-300 font-bold hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      ? 'border border-brand-600 text-brand-600 dark:text-brand-300 font-bold hover:bg-neutral-100 dark:hover:bg-neutral-800'
                       : !c.isCurrentMonth
                       ? 'text-neutral-300 dark:text-neutral-600 hover:text-neutral-500 dark:hover:text-neutral-400 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50 font-normal'
                       : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 font-medium'
@@ -305,7 +305,7 @@ export default function DatePicker({
                 onChange('');
                 setIsOpen(false);
               }}
-              className="text-[11px] font-medium text-neutral-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-rose-500/[0.08]"
+              className="text-xs font-medium text-neutral-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer px-1.5 py-0.5 rounded-lg hover:bg-rose-500/[0.08]"
             >
               {language === 'th' ? 'ล้างค่า' : 'Clear'}
             </button>
@@ -316,7 +316,7 @@ export default function DatePicker({
                 onChange(todayStr);
                 setIsOpen(false);
               }}
-              className="text-[11px] font-semibold text-[#1a73e8] dark:text-blue-400 hover:underline transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-[#1a73e8]/10"
+              className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline transition-colors cursor-pointer px-1.5 py-0.5 rounded-lg hover:bg-brand-600/10"
             >
               {language === 'th' ? 'วันนี้' : 'Today'}
             </button>

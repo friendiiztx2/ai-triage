@@ -44,7 +44,7 @@ interface ReportItem {
 
 const REASON_MAP: Record<string, { label: string; icon: string; color: string }> = {
   wrong_category: { label: 'จัดหมวดหมู่ผิด', icon: '🏷️', color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' },
-  inaccurate_summary: { label: 'สรุปประเด็นผิด', icon: '📝', color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20' },
+  inaccurate_summary: { label: 'สรุปประเด็นผิด', icon: '📝', color: 'bg-brand-500/10 text-brand-700 dark:text-brand-400 border-brand-500/20' },
   bad_reply: { label: 'คำตอบไม่เหมาะสม', icon: '💬', color: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20' },
   wrong_priority: { label: 'ความสำคัญผิด', icon: '⚡', color: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20' },
   hallucination: { label: 'AI เข้าใจผิด/ข้อมูลเท็จ', icon: '🧠', color: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20' },
@@ -219,7 +219,7 @@ export default function UserIssuesPage() {
         </p>
         <Link
           href="/"
-          className="mt-2 px-4 py-2 bg-[#1a73e8] text-white text-xs font-medium rounded-xl hover:bg-[#1557b0] transition"
+          className="mt-2 px-4 py-2 bg-brand-600 text-white text-xs font-medium rounded-xl hover:bg-brand-700 transition"
         >
           กลับสู่หน้าหลัก
         </Link>
@@ -237,7 +237,7 @@ export default function UserIssuesPage() {
               <AlertTriangle size={20} />
             </span>
             <span>{language === 'th' ? 'ปัญหาจากผู้ใช้งาน' : 'User Reported Issues'}</span>
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 font-normal">
+            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 font-normal">
               AI Feedback Hub
             </span>
           </h1>
@@ -259,66 +259,66 @@ export default function UserIssuesPage() {
       </div>
 
       {/* 2. KPI Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 shadow-2xs flex items-center justify-between">
-          <div>
-            <div className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-4">
+        <div className="p-2 sm:p-4 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 shadow-2xs flex items-stretch sm:items-center justify-between min-w-0">
+          <div className="flex flex-col justify-between min-w-0">
+            <div className="text-xs leading-snug font-medium text-neutral-500 dark:text-neutral-400">
               {language === 'th' ? 'รายงานทั้งหมด' : 'Total Reports'}
             </div>
-            <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-1 font-mono">
+            <div className="text-lg sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-1.5 sm:mt-1 font-mono">
               {kpis.total}
             </div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+          <div className="hidden sm:flex w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400">
             <MessageSquare size={18} />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-amber-200/80 dark:border-amber-900/40 shadow-2xs flex items-center justify-between">
-          <div>
-            <div className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+        <div className="p-2 sm:p-4 rounded-xl bg-white dark:bg-neutral-900 border border-amber-200/80 dark:border-amber-900/40 shadow-2xs flex items-stretch sm:items-center justify-between min-w-0">
+          <div className="flex flex-col justify-between min-w-0">
+            <div className="text-xs leading-snug font-medium text-amber-600 dark:text-amber-400">
               {language === 'th' ? 'รอดำเนินการ' : 'Pending'}
             </div>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">
+            <div className="text-lg sm:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1.5 sm:mt-1 font-mono">
               {kpis.pending}
             </div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+          <div className="hidden sm:flex w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
             <Clock size={18} />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-sky-200/80 dark:border-sky-900/40 shadow-2xs flex items-center justify-between">
-          <div>
-            <div className="text-[11px] font-medium text-sky-600 dark:text-sky-400">
+        <div className="p-2 sm:p-4 rounded-xl bg-white dark:bg-neutral-900 border border-sky-200/80 dark:border-sky-900/40 shadow-2xs flex items-stretch sm:items-center justify-between min-w-0">
+          <div className="flex flex-col justify-between min-w-0">
+            <div className="text-xs leading-snug font-medium text-sky-600 dark:text-sky-400">
               {language === 'th' ? 'กำลังตรวจสอบ' : 'Investigating'}
             </div>
-            <div className="text-2xl font-bold text-sky-600 dark:text-sky-400 mt-1 font-mono">
+            <div className="text-lg sm:text-2xl font-bold text-sky-600 dark:text-sky-400 mt-1.5 sm:mt-1 font-mono">
               {kpis.investigating}
             </div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-600">
+          <div className="hidden sm:flex w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-600">
             <SearchCode size={18} />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-emerald-200/80 dark:border-emerald-900/40 shadow-2xs flex items-center justify-between">
-          <div>
-            <div className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+        <div className="p-2 sm:p-4 rounded-xl bg-white dark:bg-neutral-900 border border-emerald-200/80 dark:border-emerald-900/40 shadow-2xs flex items-stretch sm:items-center justify-between min-w-0">
+          <div className="flex flex-col justify-between min-w-0">
+            <div className="text-xs leading-snug font-medium text-emerald-600 dark:text-emerald-400">
               {language === 'th' ? 'แก้ไข/ปรับปรุงแล้ว' : 'Resolved'}
             </div>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 font-mono">
+            <div className="text-lg sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1.5 sm:mt-1 font-mono">
               {kpis.resolved}
             </div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+          <div className="hidden sm:flex w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
             <CheckCircle2 size={18} />
           </div>
         </div>
       </div>
 
       {/* 3. Filter & Search Toolbar */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 p-3 sm:p-4 rounded-2xl shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 p-3 sm:p-4 rounded-xl shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
@@ -370,10 +370,10 @@ export default function UserIssuesPage() {
       </div>
 
       {/* 4. Reports Table */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-2xl shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-xl shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs divide-y divide-neutral-200/80 dark:divide-neutral-800">
-            <thead className="bg-neutral-50/75 dark:bg-neutral-950/60 text-neutral-500 dark:text-neutral-400 font-medium">
+            <thead className="bg-neutral-50/75 dark:bg-neutral-950/60 text-neutral-500 dark:text-neutral-400 font-medium whitespace-nowrap">
               <tr>
                 <th className="px-4 py-3.5">วัน-เวลา</th>
                 <th className="px-4 py-3.5">แชต / ลูกค้า</th>
@@ -403,7 +403,7 @@ export default function UserIssuesPage() {
                       <span className="font-medium text-neutral-700 dark:text-neutral-300">
                         ไม่พบรายงานปัญหาที่ตรงตามเงื่อนไข
                       </span>
-                      <span className="text-[11px] text-neutral-400">
+                      <span className="text-xs text-neutral-400">
                         {reports.length === 0
                           ? 'ยังไม่มีรายงานปัญหา AI ถูกส่งเข้ามาในระบบ'
                           : 'ลองเปลี่ยนคำค้นหาหรือตัวกรองด้านบนเพื่อดูข้อมูลเพิ่มเติม'}
@@ -422,7 +422,7 @@ export default function UserIssuesPage() {
                       className="hover:bg-neutral-50/60 dark:hover:bg-neutral-800/30 transition-colors"
                     >
                       {/* 1. Date */}
-                      <td className="px-4 py-3.5 text-neutral-500 font-mono whitespace-nowrap text-[11px]">
+                      <td className="px-4 py-3.5 text-neutral-500 font-mono whitespace-nowrap text-xs">
                         {new Date(report.created_at).toLocaleString('th-TH', {
                           day: '2-digit',
                           month: '2-digit',
@@ -438,7 +438,7 @@ export default function UserIssuesPage() {
                           <div className="font-semibold text-neutral-900 dark:text-neutral-100 truncate">
                             {report.customer_name || 'ลูกค้า'}
                           </div>
-                          <div className="flex items-center gap-1 font-mono text-[10px] text-neutral-500">
+                          <div className="flex items-center gap-1 font-mono text-xs text-neutral-500">
                             <span className="truncate max-w-[100px]" title={report.chat_id}>
                               #{report.chat_id.slice(-8)}
                             </span>
@@ -461,7 +461,7 @@ export default function UserIssuesPage() {
                             return (
                               <span
                                 key={reasonKey}
-                                className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md border ${info.color}`}
+                                className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-lg border whitespace-nowrap ${info.color}`}
                               >
                                 <span>{info.icon}</span>
                                 <span>{info.label}</span>
@@ -475,15 +475,15 @@ export default function UserIssuesPage() {
                       <td className="px-4 py-3.5 max-w-[190px]">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-medium text-[11px] truncate max-w-[130px]">
+                            <span className="px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-medium text-xs truncate max-w-[130px]">
                               {report.ai_snapshot?.category_name || 'ไม่ระบุหมวด'}
                             </span>
-                            <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800">
+                            <span className="text-xs font-mono uppercase px-1.5 py-0.5 rounded-lg bg-neutral-200 dark:bg-neutral-800">
                               {report.ai_snapshot?.priority || 'med'}
                             </span>
                           </div>
                           {report.ai_snapshot?.summary && (
-                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 truncate" title={report.ai_snapshot.summary}>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 truncate" title={report.ai_snapshot.summary}>
                               {report.ai_snapshot.summary}
                             </p>
                           )}
@@ -493,16 +493,16 @@ export default function UserIssuesPage() {
                       {/* 5. User Comment */}
                       <td className="px-4 py-3.5 max-w-[210px]">
                         {report.comment ? (
-                          <div className="p-2 rounded-lg bg-neutral-50 dark:bg-neutral-950/40 border border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-700 dark:text-neutral-300 line-clamp-2">
+                          <div className="p-2 rounded-lg bg-neutral-50 dark:bg-neutral-950/40 border border-neutral-100 dark:border-neutral-800 text-xs text-neutral-700 dark:text-neutral-300 line-clamp-2">
                             &ldquo;{report.comment}&rdquo;
                           </div>
                         ) : (
-                          <span className="text-neutral-400 text-[11px] italic">ไม่มีข้อความ</span>
+                          <span className="text-neutral-400 text-xs italic">ไม่มีข้อความ</span>
                         )}
                       </td>
 
                       {/* 6. Reporter */}
-                      <td className="px-4 py-3.5 text-neutral-600 dark:text-neutral-300 whitespace-nowrap text-[11px]">
+                      <td className="px-4 py-3.5 text-neutral-600 dark:text-neutral-300 whitespace-nowrap text-xs">
                         <span className="font-medium">{report.reported_by}</span>
                       </td>
 
@@ -511,7 +511,7 @@ export default function UserIssuesPage() {
                         <select
                           value={report.status}
                           onChange={(e) => handleUpdateStatus(report.id, e.target.value)}
-                          className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border focus:outline-none cursor-pointer ${statusConf.bg} ${statusConf.text} ${statusConf.border}`}
+                          className={`text-xs font-medium px-2.5 py-1 rounded-lg border focus:outline-none cursor-pointer ${statusConf.bg} ${statusConf.text} ${statusConf.border}`}
                         >
                           <option value="pending">⏳ รอดำเนินการ</option>
                           <option value="investigating">🔍 กำลังตรวจสอบ</option>
@@ -542,7 +542,7 @@ export default function UserIssuesPage() {
                           {/* Open Chat Link */}
                           <Link
                             href={`/chats?open=${encodeURIComponent(report.chat_id)}${report.company_id ? `&company_id=${encodeURIComponent(report.company_id)}` : ''}&date=all`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white text-[11px] font-medium transition shadow-2xs"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium transition shadow-2xs"
                             title="เปิดดูบทสนทนานี้ในหน้าแชต"
                           >
                             <span>เปิดแชต</span>
@@ -562,7 +562,7 @@ export default function UserIssuesPage() {
       {/* 5. Developer Notes Modal */}
       {editingNotesItem && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden p-5 space-y-4">
+          <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden p-5 space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800">
               <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
                 <FileEdit size={16} className="text-sky-600" />
@@ -601,7 +601,7 @@ export default function UserIssuesPage() {
                 type="button"
                 onClick={handleSaveDeveloperNotes}
                 disabled={savingNotes}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium shadow-2xs transition cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium shadow-2xs transition cursor-pointer disabled:opacity-50"
               >
                 {savingNotes ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
                 <span>บันทึกโน้ต</span>

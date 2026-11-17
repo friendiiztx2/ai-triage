@@ -273,7 +273,7 @@ export default function ReportsPage() {
         <div className="rounded-xl border border-emerald-200/90 dark:border-emerald-900/80 bg-emerald-50/80 dark:bg-emerald-950/40 p-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-[#0f9d58] dark:text-emerald-300 shrink-0">
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 shrink-0">
                 <CheckCircle2 size={18} />
               </div>
               <div className="space-y-1">
@@ -281,20 +281,20 @@ export default function ReportsPage() {
                   <h4 className="font-semibold text-xs sm:text-sm text-neutral-900 dark:text-neutral-100">
                     {language === 'th' ? 'เปิดหน้า Google Sheets เรียบร้อยแล้ว!' : 'Google Sheets opened successfully!'}
                   </h4>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-100 dark:bg-emerald-900/50 text-[#0f9d58] dark:text-emerald-300">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-mono bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-300">
                     {googleSheetsNotice.itemCount} {language === 'th' ? 'รายการ' : 'items'}
                   </span>
                 </div>
                 <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
                   {language === 'th' ? (
                     <>
-                      ระบบได้เปิดหน้า <strong className="text-[#0f9d58] font-mono">Google Sheets</strong> ในแท็บใหม่ และคัดลอกตารางข้อมูลลงคลิปบอร์ดแล้ว
-                      <br className="hidden sm:inline" /> เพียงกด <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[11px] font-mono font-semibold shadow-2xs">Ctrl + V</kbd> หรือคลิกขวาแล้วเลือก <strong className="font-medium">วาง (Paste)</strong> ในเซลล์ A1 ของหน้า Google Sheets ตารางข้อมูลพร้อมหัวข้อจะปรากฏทันทีค่ะ ✨
+                      ระบบได้เปิดหน้า <strong className="text-emerald-600 font-mono">Google Sheets</strong> ในแท็บใหม่ และคัดลอกตารางข้อมูลลงคลิปบอร์ดแล้ว
+                      <br className="hidden sm:inline" /> เพียงกด <kbd className="px-1.5 py-0.5 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-xs font-mono font-semibold shadow-2xs">Ctrl + V</kbd> หรือคลิกขวาแล้วเลือก <strong className="font-medium">วาง (Paste)</strong> ในเซลล์ A1 ของหน้า Google Sheets ตารางข้อมูลพร้อมหัวข้อจะปรากฏทันทีค่ะ ✨
                     </>
                   ) : (
                     <>
-                      Opened <strong className="text-[#0f9d58] font-mono">Google Sheets</strong> in a new tab and copied report table to your clipboard.
-                      <br className="hidden sm:inline" /> Press <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[11px] font-mono font-semibold shadow-2xs">Ctrl + V</kbd> or right-click <strong className="font-medium">Paste</strong> into cell A1 in Google Sheets.
+                      Opened <strong className="text-emerald-600 font-mono">Google Sheets</strong> in a new tab and copied report table to your clipboard.
+                      <br className="hidden sm:inline" /> Press <kbd className="px-1.5 py-0.5 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-xs font-mono font-semibold shadow-2xs">Ctrl + V</kbd> or right-click <strong className="font-medium">Paste</strong> into cell A1 in Google Sheets.
                     </>
                   )}
                 </p>
@@ -304,7 +304,7 @@ export default function ReportsPage() {
                     onClick={() => {
                       exportToGoogleSheets(chats, reportType, currentFilterOptions, dateRange, userProfile, language);
                     }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#0f9d58] hover:bg-[#0b8043] text-white transition-colors cursor-pointer select-none"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-600 hover:bg-[#0b8043] text-white transition-colors cursor-pointer select-none"
                   >
                     <Copy size={12} />
                     <span>{language === 'th' ? 'คัดลอกตารางใหม่อีกครั้ง' : 'Copy Table Again'}</span>
@@ -314,7 +314,7 @@ export default function ReportsPage() {
                     href="https://docs.google.com/spreadsheets/create"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:underline"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:underline"
                   >
                     <ExternalLink size={12} />
                     <span>{language === 'th' ? 'เปิดแท็บ Google Sheets อีกครั้ง' : 'Open Tab Again'}</span>

@@ -37,7 +37,7 @@ export default function AiPerformanceAuditCard({
               {t('aiAccuracyTitle')}
             </h2>
           </div>
-          <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700/60">
+          <span className="text-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700/60">
             {language === 'th' ? 'โหมดตรวจสอบ' : 'Audit Mode'}
           </span>
         </div>
@@ -45,10 +45,10 @@ export default function AiPerformanceAuditCard({
         {/* Big Precision Metric */}
         <div className="my-5 p-4 rounded-lg bg-neutral-50/80 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800/60">
           <div className="flex items-baseline justify-between mb-2">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-500">
+            <span className="text-xs font-mono uppercase tracking-wider text-neutral-500">
               {t('accuracyRate')}
             </span>
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-medium ${
+            <span className={`text-xs font-mono px-2 py-0.5 rounded-lg font-medium ${
               isHealthy
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                 : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
@@ -113,7 +113,7 @@ export default function AiPerformanceAuditCard({
         </div>
       </div>
 
-      <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800/60 mt-4 text-[10px] font-mono text-neutral-400 dark:text-neutral-500 text-center">
+      <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800/60 mt-4 text-xs font-mono text-neutral-400 dark:text-neutral-500 text-center">
         {language === 'th' ? 'คำนวณจากประวัติการยืนยันเคสจริง' : 'Calculated against human verification'}
       </div>
     </div>

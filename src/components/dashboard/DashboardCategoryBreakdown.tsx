@@ -53,7 +53,7 @@ export default function DashboardCategoryBreakdown({
                 {t('casesByCategory')}
               </h2>
             </div>
-            <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500">
+            <span className="text-xs font-mono text-neutral-400 dark:text-neutral-500">
               {sortedChartData.length} {language === 'th' ? 'หมวดหมู่ที่มีเคส' : 'active topics'}
             </span>
           </div>
@@ -75,7 +75,7 @@ export default function DashboardCategoryBreakdown({
                   >
                     {/* Rank & Name */}
                     <div className="flex items-center gap-2.5 min-w-0 max-w-[40%] sm:max-w-[45%]">
-                      <span className="font-mono text-[11px] text-neutral-400 w-4 text-right shrink-0">
+                      <span className="font-mono text-xs text-neutral-400 w-4 text-right shrink-0">
                         {idx + 1}
                       </span>
                       <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200 truncate group-hover:text-neutral-950 dark:group-hover:text-white transition-colors">
@@ -87,11 +87,11 @@ export default function DashboardCategoryBreakdown({
                     <div className="flex-1 hidden sm:flex items-center gap-2 max-w-xs">
                       <div className="w-full bg-neutral-100 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-[#1a73e8] h-full rounded-full transition-all duration-300"
+                          className="bg-brand-600 h-full rounded-full transition-all duration-300"
                           style={{ width: `${Math.min(100, Math.max(4, Number(percentage)))}%` }}
                         />
                       </div>
-                      <span className="font-mono text-[11px] text-neutral-400 w-11 text-right shrink-0">
+                      <span className="font-mono text-xs text-neutral-400 w-11 text-right shrink-0">
                         {percentage}%
                       </span>
                     </div>
@@ -101,7 +101,7 @@ export default function DashboardCategoryBreakdown({
                       <span className="font-mono text-xs font-semibold text-neutral-900 dark:text-neutral-100 tabular-nums">
                         {item.value.toLocaleString()}
                       </span>
-                      <span className="text-[11px] text-neutral-400">
+                      <span className="text-xs text-neutral-400">
                         {language === 'th' ? 'เรื่อง' : 'issues'}
                       </span>
                       <ArrowUpRight size={12} className="text-neutral-300 dark:text-neutral-700 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors" />
@@ -118,7 +118,7 @@ export default function DashboardCategoryBreakdown({
             <button
               type="button"
               onClick={() => setShowAllCategories(!showAllCategories)}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors cursor-pointer py-1 px-3 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors cursor-pointer py-1 px-3 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
             >
               <span>
                 {showAllCategories

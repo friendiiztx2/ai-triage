@@ -25,7 +25,7 @@ export default function CustomerListPanel({
   return (
     <div className="space-y-4">
       {/* Search Input Box */}
-      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 p-4 rounded-2xl shadow-xs transition-all duration-250">
+      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 p-4 rounded-xl shadow-xs transition-all duration-250">
         <div className="relative">
           <Search className="absolute left-3.5 top-3.5 text-neutral-400" size={16} />
           <input
@@ -39,7 +39,7 @@ export default function CustomerListPanel({
       </div>
 
       {/* Customer List Container */}
-      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 rounded-2xl shadow-xs overflow-hidden transition-all duration-250">
+      <div className="backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 rounded-xl shadow-xs overflow-hidden transition-all duration-250">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-neutral-400 dark:text-neutral-500">
             <RefreshCw size={28} className="animate-spin text-indigo-600 dark:text-indigo-400" />
@@ -60,30 +60,30 @@ export default function CustomerListPanel({
                   key={cust.id} 
                   onClick={() => onSelectCustomer(cust)}
                   className={`p-4 flex items-center justify-between hover:bg-neutral-50/70 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer group ${
-                    isOpened ? 'bg-[#e8f0fe]/60 dark:bg-blue-955/30 font-semibold' : ''
+                    isOpened ? 'bg-brand-50/60 dark:bg-brand-955/30 font-semibold' : ''
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#1a73e8] flex items-center justify-center font-medium text-white text-xs shadow-xs shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center font-medium text-white text-xs shadow-xs shrink-0">
                       {cust.name?.charAt(0) || 'C'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-xs text-neutral-800 dark:text-neutral-200 block">{cust.name}</span>
                         {isOpened && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#1a73e8] dark:bg-blue-955/60 dark:text-blue-300 border border-[#1a73e8]/20">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 dark:bg-brand-955/60 dark:text-brand-300 border border-brand-600/20">
                             กำลังเปิด
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-mono">
+                      <span className="text-xs text-neutral-400 dark:text-neutral-500 font-mono">
                         {cust.phone || cust.email || `ID: ${cust.id?.substring(0, 8)}...`}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                    <span className="text-xs font-extrabold px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
                       {cust.total_chats || 1} เคส
                     </span>
                     <ChevronRight size={14} className="text-neutral-300 dark:text-neutral-600 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />

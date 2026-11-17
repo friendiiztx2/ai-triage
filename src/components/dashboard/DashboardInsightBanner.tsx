@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/components/LanguageContext';
 import { Activity, ArrowUpRight, Cpu, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 export interface DashboardInsightBannerProps {
@@ -20,6 +21,7 @@ export default function DashboardInsightBanner({
   topCategoryValue = 0,
 }: DashboardInsightBannerProps) {
   const hasUrgent = highPriority > 0;
+  const { language } = useLanguage();
 
   return (
     <div className={`rounded-xl border transition-all backdrop-blur-md px-4 py-3 sm:px-5 sm:py-3.5 shadow-xs ${
@@ -39,12 +41,12 @@ export default function DashboardInsightBanner({
                 hasUrgent ? 'bg-rose-500' : 'bg-emerald-500'
               }`}></span>
             </span>
-            <span className="font-mono text-[11px] font-medium uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
-              {hasUrgent ? 'Attention Required' : 'Pipeline Healthy'}
+            <span className={`text-xs font-medium text-neutral-600 dark:text-neutral-400 ${language === 'en' ? 'font-mono uppercase tracking-wider' : ''}`}>
+              {language === 'th' ? (hasUrgent ? 'ต้องติดตามด่วน' : 'ระบบทำงานปกติ') : (hasUrgent ? 'Attention Required' : 'Pipeline Healthy')}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 font-mono text-[11px]">
+          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 font-mono text-xs">
             <Cpu size={13} className="text-neutral-400" />
             <span>Sift AI v2.4</span>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
@@ -80,15 +82,15 @@ export default function DashboardInsightBanner({
           {hasUrgent ? (
             <Link
               href="/chats?priority=urgent"
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-[11px] font-semibold font-mono uppercase bg-rose-500 text-white hover:bg-rose-600 transition-colors shadow-xs shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-rose-500 text-white hover:bg-rose-600 transition-colors shadow-xs shrink-0 cursor-pointer"
             >
-              <span>Queue</span>
+              <span>{language === 'th' ? 'ดูคิว' : 'Queue'}</span>
               <ArrowUpRight size={12} />
             </Link>
           ) : pendingTriage > 0 ? (
             <Link
               href="/chats?status=pending"
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium font-mono text-neutral-700 dark:text-neutral-300 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium font-mono text-neutral-700 dark:text-neutral-300 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors shrink-0 cursor-pointer"
             >
               <span>ตรวจทาน {pendingTriage} เคส</span>
               <ArrowUpRight size={11} />

@@ -160,7 +160,7 @@ export default function MonthPicker({ value, onChange, language = 'th' }: MonthP
 
       {/* Popover Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 z-50 w-64 p-3.5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 z-50 w-64 p-3.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
           {/* Year Navigation Bar */}
           <div className="flex items-center justify-between pb-3 mb-2.5 border-b border-neutral-100 dark:border-neutral-800">
             <button
@@ -175,7 +175,7 @@ export default function MonthPicker({ value, onChange, language = 'th' }: MonthP
             <div className="text-center font-bold text-xs text-neutral-800 dark:text-neutral-200 tracking-tight">
               <span>{viewYear}</span>
               {language === 'th' && (
-                <span className="text-neutral-400 text-[11px] font-normal ml-1">
+                <span className="text-neutral-400 text-xs font-normal ml-1">
                   (พ.ศ. {viewYear + 543})
                 </span>
               )}
@@ -218,7 +218,7 @@ export default function MonthPicker({ value, onChange, language = 'th' }: MonthP
           </div>
 
           {/* Quick Preset Buttons */}
-          <div className="mt-3 pt-2.5 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px]">
+          <div className="mt-3 pt-2.5 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs">
             <button
               type="button"
               onClick={handleSelectLastMonth}

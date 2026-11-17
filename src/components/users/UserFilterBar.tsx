@@ -80,7 +80,7 @@ export default function UserFilterBar({
 
         <button
           onClick={onOpenAddModal}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium shadow-xs transition-colors cursor-pointer select-none"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium shadow-xs transition-colors cursor-pointer select-none"
         >
           <Plus size={13} />
           <span>{language === 'th' ? 'เพิ่มผู้ใช้ใหม่' : 'Add User'}</span>

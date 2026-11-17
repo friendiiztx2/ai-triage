@@ -31,13 +31,13 @@ export default function CompanyAccessChecklist({
           {companies.map((c) => (
             <label
               key={c.id}
-              className="flex items-center gap-2.5 font-semibold text-neutral-700 dark:text-neutral-200 cursor-pointer text-[10px] select-none hover:text-indigo-600 transition"
+              className="flex items-center gap-2.5 font-semibold text-neutral-700 dark:text-neutral-200 cursor-pointer text-xs select-none hover:text-indigo-600 transition"
             >
               <input
                 type="checkbox"
                 checked={selectedCompanies.includes(c.id)}
                 onChange={() => onToggleCompany(c.id)}
-                className="w-3.5 h-3.5 text-indigo-600 border-neutral-300 rounded cursor-pointer"
+                className="w-3.5 h-3.5 text-indigo-600 border-neutral-300 rounded-lg cursor-pointer"
               />
               <span>{c.name}</span>
             </label>

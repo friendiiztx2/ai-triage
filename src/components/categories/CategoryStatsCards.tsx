@@ -42,58 +42,58 @@ export default function CategoryStatsCards({
   const topPercent = totalChatsCount > 0 ? ((topCount / totalChatsCount) * 100).toFixed(1) : '0';
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-[1fr_1fr_1.6fr] sm:grid-cols-3 gap-1.5 sm:gap-3">
       {/* 1. Mapped Categories */}
-      <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md p-4 shadow-xs">
-        <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider font-medium">
+      <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md p-2 sm:p-4 shadow-xs flex flex-col sm:block min-w-0">
+        <div className="flex justify-between text-neutral-500 dark:text-neutral-400 flex-1 items-start sm:items-center mb-1.5 sm:mb-2">
+          <span className="text-xs leading-snug sm:font-mono uppercase sm:tracking-wider font-medium">
             {language === 'th' ? 'หมวดหมู่ที่เปิดใช้งาน' : 'Mapped Intents'}
           </span>
-          <Database size={13} className="text-neutral-400" />
+          <Database size={13} className="hidden sm:block text-neutral-400" />
         </div>
-        <div className="text-2xl font-semibold font-mono tracking-tight text-neutral-900 dark:text-neutral-100 tabular-nums">
+        <div className="text-lg sm:text-2xl font-semibold font-mono tracking-tight text-neutral-900 dark:text-neutral-100 tabular-nums">
           {categories.length}
         </div>
-        <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-2">
+        <p className="hidden sm:block text-xs text-neutral-400 dark:text-neutral-500 mt-2">
           {language === 'th' ? 'หัวข้อที่ใช้จำแนกโดย AI' : 'Active classification topics'}
         </p>
       </div>
 
       {/* 2. Historical Total Cases */}
-      <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md p-4 shadow-xs">
-        <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider font-medium">
+      <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md p-2 sm:p-4 shadow-xs flex flex-col sm:block min-w-0">
+        <div className="flex justify-between text-neutral-500 dark:text-neutral-400 flex-1 items-start sm:items-center mb-1.5 sm:mb-2">
+          <span className="text-xs leading-snug sm:font-mono uppercase sm:tracking-wider font-medium">
             {language === 'th' ? 'เคสสะสมทั้งหมด' : 'Accumulated Volume'}
           </span>
-          <TrendingUp size={13} className="text-neutral-400" />
+          <TrendingUp size={13} className="hidden sm:block text-neutral-400" />
         </div>
-        <div className="text-2xl font-semibold font-mono tracking-tight text-neutral-900 dark:text-neutral-100 tabular-nums">
+        <div className="text-lg sm:text-2xl font-semibold font-mono tracking-tight text-neutral-900 dark:text-neutral-100 tabular-nums">
           {totalChatsCount.toLocaleString()}
         </div>
-        <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-2">
+        <p className="hidden sm:block text-xs text-neutral-400 dark:text-neutral-500 mt-2">
           {language === 'th' ? 'ประวัติเคสที่จัดกลุ่มเรียบร้อย' : 'Classified customer sessions'}
         </p>
       </div>
 
       {/* 3. Dominant Category */}
-      <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md p-4 shadow-xs">
-        <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 mb-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider font-medium">
+      <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md p-2 sm:p-4 shadow-xs flex flex-col sm:block min-w-0">
+        <div className="flex justify-between text-neutral-500 dark:text-neutral-400 flex-1 items-start sm:items-center mb-1.5 sm:mb-2">
+          <span className="text-xs leading-snug sm:font-mono uppercase sm:tracking-wider font-medium">
             {language === 'th' ? 'หมวดหมู่อันดับ 1' : 'Dominant Topic'}
           </span>
-          <BarChart3 size={13} className="text-neutral-400" />
+          <BarChart3 size={13} className="hidden sm:block text-neutral-400" />
         </div>
-        <div className="flex items-baseline gap-2">
-          <div className="text-base font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[180px]">
+        <div className="flex items-baseline gap-1 sm:gap-2 min-w-0">
+          <div className="text-sm sm:text-base font-semibold text-neutral-900 dark:text-neutral-100 truncate min-w-0 sm:max-w-[180px] leading-7 sm:leading-normal">
             {topDisplayName || (language === 'th' ? 'ยังไม่มีเคส' : 'No cases')}
           </div>
           {topKey && (
-            <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+            <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400 shrink-0">
               ({topPercent}%)
             </span>
           )}
         </div>
-        <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-2">
+        <p className="hidden sm:block text-xs text-neutral-400 dark:text-neutral-500 mt-2">
           {topKey ? `${topCount.toLocaleString()} เคสสะสม` : (language === 'th' ? 'รอเคสเข้าระบบ' : 'Awaiting data')}
         </p>
       </div>

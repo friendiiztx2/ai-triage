@@ -56,8 +56,8 @@ export default function ChatIssuesTriagePanel({
 
   if (isWaitingForAI) {
     return (
-      <div className="bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-8 flex flex-col items-center justify-center text-center space-y-3.5 shadow-2xs">
-        <Loader2 size={32} className="animate-spin text-blue-500" />
+      <div className="bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-8 flex flex-col items-center justify-center text-center space-y-3.5 shadow-2xs">
+        <Loader2 size={32} className="animate-spin text-brand-500" />
         <div className="space-y-1">
           <div className="text-sm font-bold text-neutral-800 dark:text-neutral-200">
             กำลังวิเคราะห์ข้อมูลด้วย Sift AI...
@@ -80,7 +80,7 @@ export default function ChatIssuesTriagePanel({
             type="button"
             onClick={onTriggerTriage}
             disabled={retryingTriage}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
           >
             <RotateCcw size={12} className={retryingTriage ? 'animate-spin' : ''} />
             <span>{retryingTriage ? 'กำลังส่งคำขอ...' : 'สั่งวิเคราะห์ซ้ำ'}</span>
@@ -117,7 +117,7 @@ export default function ChatIssuesTriagePanel({
     <>
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-blue-500" />
+          <Sparkles size={14} className="text-brand-500" />
           <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
             {isSingleFallback
               ? language === 'th'
@@ -126,12 +126,12 @@ export default function ChatIssuesTriagePanel({
               : `${language === 'th' ? 'ประเด็นที่ AI จำแนก' : 'Identified Sub-issues'} (${issuesToDisplay.length})`}
           </span>
         </div>
-        <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/60">
+        <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-lg bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200/60 dark:border-brand-900/60">
           Sift AI Engine v3
         </span>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5 md:space-y-3">
         {issuesToDisplay.map((issueItem: any, idx: number) => {
           const issueKey = issueItem.id || 'issue-' + idx;
           const currentVal = editIssues[issueKey] || {
@@ -219,7 +219,7 @@ export default function ChatIssuesTriagePanel({
               type="button"
               onClick={onSaveChanges}
               disabled={updating}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
             >
               <Save size={12} />
               <span>{updating ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}</span>

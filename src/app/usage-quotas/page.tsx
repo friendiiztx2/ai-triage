@@ -151,7 +151,7 @@ export default function UsageQuotasPage() {
 
   // Status Color Logic
   const getProgressColor = (percent: number, unlimited = false) => {
-    if (unlimited) return 'from-purple-500 via-indigo-500 to-blue-500';
+    if (unlimited) return 'from-purple-500 via-indigo-500 to-brand-500';
     if (percent >= 90) return 'from-rose-500 to-red-600';
     if (percent >= 80) return 'from-amber-500 to-orange-500';
     return 'from-emerald-500 to-teal-500';
@@ -194,7 +194,7 @@ export default function UsageQuotasPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
               <Activity size={22} />
             </div>
             <div>
@@ -242,7 +242,7 @@ export default function UsageQuotasPage() {
             className="p-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition shadow-xs cursor-pointer"
             title={t('quotaRefresh')}
           >
-            <RefreshCw size={15} className={loading ? 'animate-spin text-blue-500' : ''} />
+            <RefreshCw size={15} className={loading ? 'animate-spin text-brand-500' : ''} />
           </button>
 
           {/* System Admin Edit Current Company Quota */}
@@ -256,7 +256,7 @@ export default function UsageQuotasPage() {
                 });
                 setModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-xs transition cursor-pointer"
             >
               <Sliders size={13} />
               <span>{t('quotaEditBtn')}</span>
@@ -267,7 +267,7 @@ export default function UsageQuotasPage() {
 
       {/* 2. Automated Alert Banners (Unlimited / 80% / 90% Thresholds) */}
       {isUnlimited ? (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-brand-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-purple-600 text-white shrink-0">
               <Sparkles size={20} />
@@ -277,7 +277,7 @@ export default function UsageQuotasPage() {
                 <span className="font-bold text-sm tracking-wide text-purple-800 dark:text-purple-300 uppercase">
                   {t('quotaUnlimitedPlan')}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-600 text-white">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-purple-600 text-white">
                   {t('quotaUnlimitedBadge')}
                 </span>
               </div>
@@ -315,7 +315,7 @@ export default function UsageQuotasPage() {
           )}
         </div>
       ) : alertLevel === 'critical_90' ? (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 text-rose-800 dark:text-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md animate-pulse">
+        <div className="p-4 rounded-xl bg-rose-500/10 border-2 border-rose-500/40 text-rose-800 dark:text-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md animate-pulse">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-rose-500 text-white shrink-0">
               <ShieldAlert size={20} />
@@ -325,7 +325,7 @@ export default function UsageQuotasPage() {
                 <span className="font-bold text-sm tracking-wide text-rose-700 dark:text-rose-300 uppercase">
                   {t('quotaCriticalTitle')}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500 text-white">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500 text-white">
                   {percentUsed}% {language === 'th' ? 'แล้ว' : 'Used'}
                 </span>
               </div>
@@ -365,7 +365,7 @@ export default function UsageQuotasPage() {
           )}
         </div>
       ) : alertLevel === 'warning_80' ? (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-800 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-500 text-white shrink-0">
               <AlertTriangle size={20} />
@@ -375,7 +375,7 @@ export default function UsageQuotasPage() {
                 <span className="font-bold text-sm text-amber-800 dark:text-amber-300 uppercase">
                   {t('quotaWarningTitle')}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500 text-white">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white">
                   {percentUsed}%
                 </span>
               </div>
@@ -411,7 +411,7 @@ export default function UsageQuotasPage() {
           )}
         </div>
       ) : (
-        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-3 text-xs">
+        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
             <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>
@@ -428,14 +428,14 @@ export default function UsageQuotasPage() {
               )}
             </span>
           </div>
-          <span className="hidden sm:inline-block font-mono text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+          <span className="hidden sm:inline-block font-mono text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
             {data?.currentMonthLabel}
           </span>
         </div>
       )}
 
       {/* 3. Hero Monthly Quota Progress Card */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs relative overflow-hidden">
+      <div className="p-6 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Left: Quota Progress */}
           <div className="flex-1 space-y-3">
@@ -479,12 +479,12 @@ export default function UsageQuotasPage() {
                       }`}
                     />
                     <span className="font-semibold">{getStatusLabel(alertLevel)}</span>
-                    <span className="text-[11px] opacity-75 font-mono tracking-tight">
+                    <span className="text-xs opacity-75 font-mono tracking-tight">
                       {getStatusThreshold(alertLevel)}
                     </span>
                   </span>
                 </div>
-                <p className="text-[11px] text-neutral-400 font-sans">
+                <p className="text-xs text-neutral-400 font-sans">
                   {isUnlimited
                     ? t('quotaUnlimitedPlan')
                     : language === 'th'
@@ -506,7 +506,7 @@ export default function UsageQuotasPage() {
             </div>
 
             {/* Threshold Markers Note */}
-            <div className="flex justify-between items-center text-[10px] text-neutral-400 font-mono pt-0.5">
+            <div className="flex justify-between items-center text-xs text-neutral-400 font-mono pt-0.5">
               {isUnlimited ? (
                 <>
                   <span className="text-purple-500 font-medium">{t('quotaUnlimitedPackageNote')}</span>
@@ -532,7 +532,7 @@ export default function UsageQuotasPage() {
             <div className="text-lg font-bold text-neutral-800 dark:text-neutral-200">
               {t('quotaRemainingDays', { n: data?.daysRemaining || 0 })}
             </div>
-            <p className="text-[11px] text-neutral-400">
+            <p className="text-xs text-neutral-400">
               {t('quotaElapsedDays', {
                 elapsed: data?.daysElapsed || 0,
                 total: data?.totalDaysInMonth || 30,
@@ -543,19 +543,19 @@ export default function UsageQuotasPage() {
       </div>
 
       {/* 4. 4 Key KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-4">
         {/* Card 1: Used Messages */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-1.5">
-          <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-xs font-medium">{t('quotaCardUsed')}</span>
-            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+        <div className="p-2 sm:p-4 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs sm:space-y-1.5 flex flex-col sm:block min-w-0">
+          <div className="flex justify-between text-neutral-400 flex-1 items-start sm:items-center mb-1.5 sm:mb-0">
+            <span className="text-xs font-medium leading-snug">{t('quotaCardUsed')}</span>
+            <div className="hidden sm:block p-1.5 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400">
               <MessageSquare size={16} />
             </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 dark:text-white">
+          <div className="text-base sm:text-2xl font-bold font-mono truncate text-neutral-900 dark:text-white">
             {usedMessages.toLocaleString()}
           </div>
-          <p className="text-[11px] text-neutral-400">
+          <p className="hidden sm:block text-xs text-neutral-400">
             {isUnlimited
               ? t('quotaUnlimitedPlan')
               : language === 'th'
@@ -565,33 +565,33 @@ export default function UsageQuotasPage() {
         </div>
 
         {/* Card 2: Estimated Tokens */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-1.5">
-          <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-xs font-medium">{t('quotaCardTokens')}</span>
-            <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+        <div className="p-2 sm:p-4 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs sm:space-y-1.5 flex flex-col sm:block min-w-0">
+          <div className="flex justify-between text-neutral-400 flex-1 items-start sm:items-center mb-1.5 sm:mb-0">
+            <span className="text-xs font-medium leading-snug">{t('quotaCardTokens')}</span>
+            <div className="hidden sm:block p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
               <Cpu size={16} />
             </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-purple-600 dark:text-purple-400">
+          <div className="text-base sm:text-2xl font-bold font-mono truncate text-purple-600 dark:text-purple-400">
             ~{(Number(data?.tokensEstimated || 0) / 1000000).toFixed(2)}M
           </div>
-          <p className="text-[11px] text-neutral-400 font-mono">
+          <p className="hidden sm:block text-xs text-neutral-400 font-mono">
             {Number(data?.tokensEstimated || 0).toLocaleString()} {t('quotaTokensUnit')}
           </p>
         </div>
 
         {/* Card 3: Daily Average */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-1.5">
-          <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-xs font-medium">{t('quotaCardDailyAvg')}</span>
-            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+        <div className="p-2 sm:p-4 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs sm:space-y-1.5 flex flex-col sm:block min-w-0">
+          <div className="flex justify-between text-neutral-400 flex-1 items-start sm:items-center mb-1.5 sm:mb-0">
+            <span className="text-xs font-medium leading-snug">{t('quotaCardDailyAvg')}</span>
+            <div className="hidden sm:block p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <TrendingUp size={16} />
             </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 dark:text-white">
+          <div className="text-base sm:text-2xl font-bold font-mono truncate text-neutral-900 dark:text-white">
             {Number(data?.dailyAverage || 0).toLocaleString()}
           </div>
-          <p className="text-[11px] text-neutral-400">
+          <p className="hidden sm:block text-xs text-neutral-400">
             {isUnlimited
               ? (language === 'th' ? 'ไม่จำกัดโควต้าต่อวัน' : 'No daily limit')
               : (language === 'th'
@@ -601,18 +601,18 @@ export default function UsageQuotasPage() {
         </div>
 
         {/* Card 4: Month-end Forecast */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-1.5">
-          <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-xs font-medium">{t('quotaCardForecast')}</span>
-            <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+        <div className="p-2 sm:p-4 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs sm:space-y-1.5 flex flex-col sm:block min-w-0">
+          <div className="flex justify-between text-neutral-400 flex-1 items-start sm:items-center mb-1.5 sm:mb-0">
+            <span className="text-xs font-medium leading-snug">{t('quotaCardForecast')}</span>
+            <div className="hidden sm:block p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
               <CalendarClock size={16} />
             </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 dark:text-white">
+          <div className="text-base sm:text-2xl font-bold font-mono truncate text-neutral-900 dark:text-white">
             {Number(data?.projectedMonthEnd || 0).toLocaleString()}
           </div>
           <p
-            className={`text-[11px] font-medium ${
+            className={`hidden sm:block text-xs font-medium ${
               isUnlimited
                 ? 'text-purple-600 dark:text-purple-400'
                 : Number(data?.projectedMonthEnd || 0) > monthlyQuota
@@ -634,17 +634,17 @@ export default function UsageQuotasPage() {
       {/* 5. Charts Section (Daily Usage & Peak Hours) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Daily Usage Chart (2 Cols) */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-4">
+        <div className="lg:col-span-2 p-5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BarChart3 size={18} className="text-blue-500" />
+              <BarChart3 size={18} className="text-brand-500" />
               <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
                 {t('quotaDailyTrend')}
               </h3>
             </div>
-            <div className="flex items-center gap-3 text-[11px] text-neutral-400">
+            <div className="flex items-center gap-3 text-xs text-neutral-400">
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-xs bg-blue-500 inline-block" />
+                <span className="w-2.5 h-2.5 rounded-xs bg-brand-500 inline-block" />
                 {language === 'th' ? 'ข้อความที่ใช้' : 'Messages Used'}
               </span>
               {!isUnlimited && (
@@ -656,7 +656,7 @@ export default function UsageQuotasPage() {
             </div>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-48 sm:h-64 w-full">
             {isMounted && data?.dailyChart?.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.dailyChart} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -664,11 +664,11 @@ export default function UsageQuotasPage() {
                   <XAxis
                     dataKey="day"
                     stroke="#888888"
-                    fontSize={11}
+                    fontSize={12}
                     tickLine={false}
                     axisLine={false}
                   />
-                  <YAxis stroke="#888888" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(23, 23, 23, 0.9)',
@@ -688,12 +688,12 @@ export default function UsageQuotasPage() {
                       label={{
                         value: t('quotaBenchmarkLabel'),
                         fill: '#f43f5e',
-                        fontSize: 10,
+                        fontSize: 12,
                         position: 'insideTopRight',
                       }}
                     />
                   )}
-                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={32}>
+                  <Bar dataKey="count" fill="var(--color-brand-500)" radius={[4, 4, 0, 0]} maxBarSize={32}>
                     {data.dailyChart.map((entry: any, index: number) => (
                       <Cell
                         key={`cell-${index}`}
@@ -704,7 +704,7 @@ export default function UsageQuotasPage() {
                             ? '#f43f5e'
                             : entry.count > (entry.benchmark || 0)
                             ? '#f59e0b'
-                            : '#3b82f6'
+                            : 'var(--color-brand-500)'
                         }
                       />
                     ))}
@@ -720,7 +720,7 @@ export default function UsageQuotasPage() {
         </div>
 
         {/* Peak Hours Chart (1 Col) */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-4">
+        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock size={18} className="text-purple-500" />
@@ -728,10 +728,10 @@ export default function UsageQuotasPage() {
                 {t('quotaPeakHours')}
               </h3>
             </div>
-            <span className="text-[11px] text-neutral-400">00:00 - 23:00</span>
+            <span className="text-xs text-neutral-400">00:00 - 23:00</span>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-48 sm:h-64 w-full">
             {isMounted && data?.peakHours?.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.peakHours} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
@@ -739,12 +739,12 @@ export default function UsageQuotasPage() {
                   <XAxis
                     dataKey="hour"
                     stroke="#888888"
-                    fontSize={10}
+                    fontSize={12}
                     interval={3}
                     tickLine={false}
                     axisLine={false}
                   />
-                  <YAxis stroke="#888888" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(23, 23, 23, 0.9)',
@@ -769,7 +769,7 @@ export default function UsageQuotasPage() {
       </div>
 
       {/* 6. Historical Monthly Usage Table */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-4">
+      <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
@@ -793,7 +793,7 @@ export default function UsageQuotasPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-[11px] font-semibold">
+              <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-xs font-semibold">
                 <th className="pb-3 pl-3">{t('quotaColMonth')}</th>
                 <th className="pb-3 px-4">{t('quotaColAllocated')}</th>
                 <th className="pb-3 px-4">{t('quotaColActual')}</th>
@@ -817,7 +817,7 @@ export default function UsageQuotasPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       {itemUnlimited ? (
-                        <span className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold font-sans">
+                        <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold font-sans">
                           ไม่จำกัด
                         </span>
                       ) : (
@@ -830,7 +830,7 @@ export default function UsageQuotasPage() {
                               style={{ width: `${Math.min(100, item.percent)}%` }}
                             />
                           </div>
-                          <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right tabular-nums">
+                          <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right tabular-nums">
                             {item.percent}%
                           </span>
                         </div>
@@ -838,7 +838,7 @@ export default function UsageQuotasPage() {
                     </td>
                     <td className="py-3.5 pr-3 text-right whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-sans font-medium border shadow-2xs ${getBadgeStyle(
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans font-medium border shadow-2xs ${getBadgeStyle(
                           item.status
                         )}`}
                       >
@@ -854,7 +854,7 @@ export default function UsageQuotasPage() {
                           }`}
                         />
                         <span className="font-semibold">{getStatusLabel(item.status)}</span>
-                        <span className="text-[10px] opacity-75 font-mono">
+                        <span className="text-xs opacity-75 font-mono">
                           {getStatusThreshold(item.status)}
                         </span>
                       </span>
@@ -869,11 +869,11 @@ export default function UsageQuotasPage() {
 
       {/* 7. System Admin: Multi-Company Quotas Overview Table */}
       {data?.isSystemAdmin && (
-        <div className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-4">
+        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <Building2 size={18} className="text-blue-500" />
+                <Building2 size={18} className="text-brand-500" />
                 <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
                   {t('quotaAllCompaniesTitle')}
                 </h3>
@@ -891,7 +891,7 @@ export default function UsageQuotasPage() {
                 placeholder={t('quotaSearchCompany')}
                 value={companySearch}
                 onChange={(e) => setCompanySearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500/20"
               />
             </div>
           </div>
@@ -899,7 +899,7 @@ export default function UsageQuotasPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-[11px] font-semibold">
+                <tr className="border-b border-neutral-200 dark:border-neutral-800 text-neutral-400 uppercase text-xs font-semibold">
                   <th className="pb-3 pl-3">{t('quotaColCompany')}</th>
                   <th className="pb-3 px-4">{t('quotaColPackage')}</th>
                   <th className="pb-3 px-4">{t('quotaColUsed')}</th>
@@ -915,14 +915,14 @@ export default function UsageQuotasPage() {
                     <tr
                       key={comp.id}
                       className={`hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition ${
-                        selectedCompanyId === comp.id ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
+                        selectedCompanyId === comp.id ? 'bg-brand-50/40 dark:bg-brand-950/20' : ''
                       }`}
                     >
                       <td className="py-3.5 pl-3 font-sans font-medium text-neutral-900 dark:text-neutral-100">
                         <div className="flex items-center gap-2">
                           <span>{comp.name}</span>
                           {selectedCompanyId === comp.id && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-sans font-medium">
+                            <span className="text-xs px-1.5 py-0.5 rounded-lg bg-brand-100 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-sans font-medium">
                               {t('quotaActiveBadge')}
                             </span>
                           )}
@@ -943,7 +943,7 @@ export default function UsageQuotasPage() {
                       </td>
                       <td className="py-3.5 px-4">
                         {compUnlimited ? (
-                          <span className="text-[11px] text-purple-600 dark:text-purple-400 font-sans font-semibold">
+                          <span className="text-xs text-purple-600 dark:text-purple-400 font-sans font-semibold">
                             ไม่จำกัด
                           </span>
                         ) : (
@@ -956,7 +956,7 @@ export default function UsageQuotasPage() {
                                 style={{ width: `${Math.min(100, comp.percent_used)}%` }}
                               />
                             </div>
-                            <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right tabular-nums">
+                            <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 w-10 text-right tabular-nums">
                               {comp.percent_used}%
                             </span>
                           </div>
@@ -964,7 +964,7 @@ export default function UsageQuotasPage() {
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-sans font-medium border shadow-2xs ${getBadgeStyle(
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans font-medium border shadow-2xs ${getBadgeStyle(
                             comp.status
                           )}`}
                         >
@@ -980,7 +980,7 @@ export default function UsageQuotasPage() {
                             }`}
                           />
                           <span className="font-semibold">{getStatusLabel(comp.status)}</span>
-                          <span className="text-[10px] opacity-75 font-mono">
+                          <span className="text-xs opacity-75 font-mono">
                             {getStatusThreshold(comp.status)}
                           </span>
                         </span>
@@ -989,7 +989,7 @@ export default function UsageQuotasPage() {
                         <div className="inline-flex items-center gap-1.5">
                           <button
                             onClick={() => setSelectedCompanyId(comp.id)}
-                            className="px-2.5 py-1 rounded-lg text-[11px] font-sans font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg text-xs font-sans font-medium text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/50 transition cursor-pointer"
                           >
                             {t('quotaViewChart')}
                           </button>

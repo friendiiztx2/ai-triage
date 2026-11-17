@@ -128,7 +128,7 @@ export default function LinkGroupModal({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fade-in select-none">
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transition-all duration-200">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden transition-all duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
           <div className="flex items-center gap-2.5">
@@ -155,13 +155,13 @@ export default function LinkGroupModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* How it works Banner */}
-          <div className="bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-900/50 rounded-xl p-3.5 flex items-start gap-2.5 text-[12px] text-blue-900 dark:text-blue-200">
-            <HelpCircle size={16} className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+          <div className="bg-brand-50/80 dark:bg-brand-950/30 border border-brand-200/70 dark:border-brand-900/50 rounded-xl p-3.5 flex items-start gap-2.5 text-[12px] text-brand-900 dark:text-brand-200">
+            <HelpCircle size={16} className="text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="font-medium text-blue-950 dark:text-blue-100">
+              <p className="font-medium text-brand-950 dark:text-brand-100">
                 วิธีผูกกลุ่มอัตโนมัติ:
               </p>
-              <p className="text-blue-800/80 dark:text-blue-300 text-[11px] leading-relaxed">
+              <p className="text-brand-800/80 dark:text-brand-300 text-xs leading-relaxed">
                 1. เชิญบอท Telegram เข้ากลุ่มที่ต้องการ<br/>
                 2. บอทจะบันทึกกลุ่มเข้าระบบเพื่อรอผูกกับบริษัทโดยอัตโนมัติ<br/>
                 3. เลือกกลุ่มจากรายการด้านล่างเพื่อผูกกับบริษัทของคุณได้ทันที
@@ -187,7 +187,7 @@ export default function LinkGroupModal({
               value={targetCompanyId}
               onChange={(e) => setTargetCompanyId(e.target.value)}
               disabled={!isSystemAdmin && companies.length <= 1}
-              className="w-full px-3 py-2 text-[13px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 disabled:bg-neutral-100 dark:disabled:bg-neutral-800/50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full px-3 py-2 text-[13px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 disabled:bg-neutral-100 dark:disabled:bg-neutral-800/50 disabled:cursor-not-allowed cursor-pointer"
             >
               {companies.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -208,7 +208,7 @@ export default function LinkGroupModal({
               <button
                 type="button"
                 onClick={() => setIsManualMode(!isManualMode)}
-                className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+                className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium cursor-pointer"
               >
                 {isManualMode ? '← เลือกจากกลุ่มที่ระบบตรวจพบล่าสุด' : '+ ระบุ Chat ID เอง'}
               </button>
@@ -226,7 +226,7 @@ export default function LinkGroupModal({
                     <select
                       value={selectedChatId}
                       onChange={(e) => setSelectedChatId(e.target.value)}
-                      className="w-full px-3 py-2.5 text-[13px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer font-medium"
+                      className="w-full px-3 py-2.5 text-[13px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 cursor-pointer font-medium"
                     >
                       {unassignedGroups.map((g) => (
                         <option key={g.chat_id} value={g.chat_id}>
@@ -234,7 +234,7 @@ export default function LinkGroupModal({
                         </option>
                       ))}
                     </select>
-                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                       <CheckCircle2 size={12} />
                       <span>พบบอทในกลุ่มใหม่ {unassignedGroups.length} กลุ่ม พร้อมให้กดผูกได้ทันที</span>
                     </p>
@@ -247,7 +247,7 @@ export default function LinkGroupModal({
                     <button
                       type="button"
                       onClick={() => setIsManualMode(true)}
-                      className="inline-flex items-center gap-1 text-[12px] text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                      className="inline-flex items-center gap-1 text-[12px] text-brand-600 dark:text-brand-400 font-medium hover:underline"
                     >
                       <span>คลิกที่นี่เพื่อกรอก Chat ID ด้วยตนเอง</span>
                     </button>
@@ -257,7 +257,7 @@ export default function LinkGroupModal({
             ) : (
               <div className="space-y-3 bg-neutral-50 dark:bg-neutral-800/40 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                  <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
                     Telegram Chat ID (เช่น -5495142610) *
                   </label>
                   <div className="relative">
@@ -268,13 +268,13 @@ export default function LinkGroupModal({
                       placeholder="-5495142610"
                       value={manualChatId}
                       onChange={(e) => setManualChatId(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 text-[13px] rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 font-mono"
+                      className="w-full pl-8 pr-3 py-2 text-[13px] rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                  <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
                     ชื่อกลุ่ม
                   </label>
                   <input
@@ -282,7 +282,7 @@ export default function LinkGroupModal({
                     placeholder="เช่น กลุ่มผู้บริหาร สาขาหลัก"
                     value={manualGroupName}
                     onChange={(e) => setManualGroupName(e.target.value)}
-                    className="w-full px-3 py-2 text-[13px] rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full px-3 py-2 text-[13px] rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500/20"
                   />
                 </div>
               </div>
@@ -302,7 +302,7 @@ export default function LinkGroupModal({
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition disabled:opacity-60 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-[12px] font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-xs transition disabled:opacity-60 cursor-pointer"
             >
               {submitting ? (
                 <>

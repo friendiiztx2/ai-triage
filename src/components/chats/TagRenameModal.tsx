@@ -52,14 +52,14 @@ export default function TagRenameModal({
       <form onSubmit={handleSubmit} className="p-6 space-y-4">
         <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
           ระบบจะทำการเปลี่ยนชื่อแท็ก{' '}
-          <span className="font-mono font-medium text-neutral-900 dark:text-neutral-100 px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+          <span className="font-mono font-medium text-neutral-900 dark:text-neutral-100 px-1.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
             {tagToRename}
           </span>{' '}
           สำหรับทุกบทสนทนาที่ติดแท็กนี้อยู่ ให้เปลี่ยนเป็นชื่อใหม่พร้อมกันทันที
         </p>
 
         <div>
-          <label className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block mb-1.5">
+          <label className="text-xs font-mono text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block mb-1.5">
             ชื่อแท็กใหม่
           </label>
           <input
@@ -83,7 +83,7 @@ export default function TagRenameModal({
           <button
             type="submit"
             disabled={submitting || !newTagName.trim()}
-            className="px-4 py-1.5 rounded-lg text-xs font-medium bg-[#1a73e8] hover:bg-[#1557b0] disabled:opacity-50 text-white shadow-xs transition cursor-pointer"
+            className="px-4 py-1.5 rounded-lg text-xs font-medium bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white shadow-xs transition cursor-pointer"
           >
             {submitting ? 'กำลังบันทึก...' : 'ยืนยันเปลี่ยนชื่อ'}
           </button>

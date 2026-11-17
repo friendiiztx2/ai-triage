@@ -15,11 +15,11 @@ export default function ChatTagsSection({
   onTogglePresetTag,
 }: ChatTagsSectionProps) {
   const PRESET_TAGS = [
-    { name: '#VIP', style: 'bg-[#f3e8fd] text-[#8430ce] border-[#e1c5fb] dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800' },
+    { name: '#VIP', style: 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800' },
     { name: '#ติดตามผล', style: 'bg-[#fef7e0] text-[#b06000] border-[#feefc3] dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800' },
-    { name: '#รอสลิป', style: 'bg-[#e8f0fe] text-[#1a73e8] border-[#c2e7ff] dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800' },
-    { name: '#ส่งเรื่องทีมเทคนิค', style: 'bg-[#fce8e6] text-[#c5221f] border-[#fad2cf] dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800' },
-    { name: '#รอธนาคารแก้ไข', style: 'bg-[#e6f4ea] text-[#137333] border-[#ceead6] dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' },
+    { name: '#รอสลิป', style: 'bg-brand-50 text-brand-600 border-[#c2e7ff] dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800' },
+    { name: '#ส่งเรื่องทีมเทคนิค', style: 'bg-rose-50 text-rose-700 border-[#fad2cf] dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800' },
+    { name: '#รอธนาคารแก้ไข', style: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' },
     { name: '#เคสพิเศษ', style: 'bg-[#e0f2f1] text-[#00695c] border-[#b2dfdb] dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800' },
   ];
 
@@ -34,10 +34,10 @@ export default function ChatTagsSection({
     <div className="bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 rounded-xl p-3.5 space-y-3 shadow-2xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-          <TagIcon size={13} className="text-[#1a73e8]" />
+          <TagIcon size={13} className="text-brand-600" />
           <span>ป้ายกำกับเคส</span>
         </div>
-        <span className="text-[11px] font-mono text-neutral-400">
+        <span className="text-xs font-mono text-neutral-400">
           {currentTags.length}
         </span>
       </div>
@@ -48,13 +48,13 @@ export default function ChatTagsSection({
           currentTags.map((t: string, idx: number) => (
             <span
               key={idx}
-              className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md border font-mono transition shadow-2xs ${getTagStyle(t)}`}
+              className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border font-mono transition shadow-2xs ${getTagStyle(t)}`}
             >
               <span>{t}</span>
               <button
                 type="button"
                 onClick={() => onRemoveTag(t)}
-                className="opacity-60 hover:opacity-100 transition cursor-pointer p-0.5 rounded"
+                className="opacity-60 hover:opacity-100 transition cursor-pointer p-0.5 rounded-lg"
                 title="ลบแท็กนี้"
               >
                 <X size={11} />
@@ -70,7 +70,7 @@ export default function ChatTagsSection({
 
       {/* Preset Quick Tags */}
       <div className="space-y-1.5 pt-2.5 border-t border-neutral-100 dark:border-neutral-800/80">
-        <span className="text-[10px] font-mono font-medium text-neutral-400 uppercase tracking-wider block">
+        <span className="text-xs font-mono font-medium text-neutral-400 uppercase tracking-wider block">
           แท็กด่วนที่แนะนำ:
         </span>
         <div className="flex flex-wrap gap-1.5">
@@ -81,7 +81,7 @@ export default function ChatTagsSection({
                 key={ptag.name}
                 type="button"
                 onClick={() => onTogglePresetTag(ptag.name)}
-                className={`text-xs font-mono px-2.5 py-1 rounded-md border transition-all cursor-pointer inline-flex items-center gap-1 shadow-2xs ${
+                className={`text-xs font-mono px-2.5 py-1 rounded-lg border transition-all cursor-pointer inline-flex items-center gap-1 shadow-2xs ${
                   isSelected
                     ? `${ptag.style} ring-1.5 ring-current font-semibold scale-102`
                     : `${ptag.style} opacity-80 hover:opacity-100 hover:scale-101`

@@ -44,7 +44,7 @@ export default function ExportHistoryLogs({
           <History size={13} className="text-neutral-400" />
           <span>{language === 'th' ? 'ประวัติการส่งออกล่าสุด' : 'Recent Export Archive'}</span>
         </h3>
-        <span className="font-mono text-[10px] text-neutral-400">
+        <span className="font-mono text-xs text-neutral-400">
           {logs.length} files
         </span>
       </div>
@@ -53,10 +53,10 @@ export default function ExportHistoryLogs({
         {logs.map((log) => (
           <div key={log.id} className="py-2.5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500 shrink-0">
+              <div className="p-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-500 shrink-0">
                 {log.openUrl ? (
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                    <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#0F9D58"/>
+                    <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="var(--color-emerald-600)"/>
                     <path d="M14 2V8H20L14 2Z" fill="#87CEAC"/>
                     <path d="M8 12H16M8 15H16M8 9H11M12 9V18" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
                   </svg>
@@ -68,7 +68,7 @@ export default function ExportHistoryLogs({
                 <span className="font-medium text-xs text-neutral-900 dark:text-neutral-100 block truncate">
                   {log.name}
                 </span>
-                <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-400 mt-0.5">
+                <div className="flex items-center gap-2 text-xs font-mono text-neutral-400 mt-0.5">
                   <span>{log.id}</span>
                   <span>•</span>
                   <span>{log.type}</span>
@@ -83,7 +83,7 @@ export default function ExportHistoryLogs({
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <span className="text-[11px] font-mono text-neutral-400 tabular-nums">{log.size}</span>
+              <span className="text-xs font-mono text-neutral-400 tabular-nums">{log.size}</span>
               {log.openUrl ? (
                 <button
                   type="button"
@@ -91,7 +91,7 @@ export default function ExportHistoryLogs({
                     window.open(log.openUrl, '_blank', 'noopener,noreferrer');
                     onReDownload(log);
                   }}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-mono border border-emerald-200 dark:border-emerald-900/60 text-[#0f9d58] dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer select-none"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono border border-emerald-200 dark:border-emerald-900/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer select-none"
                 >
                   <ExternalLink size={11} />
                   <span>{language === 'th' ? 'เปิดสเปรดชีต' : 'Open Sheet'}</span>
@@ -100,7 +100,7 @@ export default function ExportHistoryLogs({
                 <button
                   type="button"
                   onClick={() => onReDownload(log)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-mono border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer select-none"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer select-none"
                 >
                   <Download size={11} />
                   <span>{language === 'th' ? 'ดาวน์โหลด' : 'Download'}</span>

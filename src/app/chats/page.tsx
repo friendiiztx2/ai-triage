@@ -478,9 +478,9 @@ function ChatsPageContent() {
       {chatsGoogleSheetsNotice && chatsGoogleSheetsNotice.open && (
         <div className="rounded-xl border border-emerald-200/90 dark:border-emerald-900/80 bg-emerald-50/90 dark:bg-emerald-950/40 p-3 shadow-sm flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-[#0f9d58] dark:text-emerald-300 shrink-0">
+            <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 shrink-0">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="#0F9D58"/>
+                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="var(--color-emerald-600)"/>
                 <path d="M14 2V8H20L14 2Z" fill="#87CEAC"/>
                 <path d="M8 12H16M8 15H16M8 9H11M12 9V18" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
@@ -488,11 +488,11 @@ function ChatsPageContent() {
             <p className="text-xs text-neutral-700 dark:text-neutral-200 truncate">
               {language === 'th' ? (
                 <>
-                  เปิดหน้า <strong>Google Sheets</strong> เรียบร้อยแล้ว! คัดลอกข้อมูล <strong>{chatsGoogleSheetsNotice.count} แชต</strong> ลงคลิปบอร์ดแล้ว เพียงกด <kbd className="px-1 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[10px] font-mono font-semibold">Ctrl + V</kbd> ในเซลล์ A1 เพื่อวางข้อมูลทันที ✨
+                  เปิดหน้า <strong>Google Sheets</strong> เรียบร้อยแล้ว! คัดลอกข้อมูล <strong>{chatsGoogleSheetsNotice.count} แชต</strong> ลงคลิปบอร์ดแล้ว เพียงกด <kbd className="px-1 py-0.5 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-xs font-mono font-semibold">Ctrl + V</kbd> ในเซลล์ A1 เพื่อวางข้อมูลทันที ✨
                 </>
               ) : (
                 <>
-                  Opened <strong>Google Sheets</strong> and copied <strong>{chatsGoogleSheetsNotice.count} chats</strong> to clipboard! Press <kbd className="px-1 py-0.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-[10px] font-mono font-semibold">Ctrl + V</kbd> to paste.
+                  Opened <strong>Google Sheets</strong> and copied <strong>{chatsGoogleSheetsNotice.count} chats</strong> to clipboard! Press <kbd className="px-1 py-0.5 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-xs font-mono font-semibold">Ctrl + V</kbd> to paste.
                 </>
               )}
             </p>
@@ -500,7 +500,7 @@ function ChatsPageContent() {
           <button
             type="button"
             onClick={() => setChatsGoogleSheetsNotice(null)}
-            className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-1 rounded-md cursor-pointer"
+            className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-1 rounded-lg cursor-pointer"
           >
             ✕
           </button>

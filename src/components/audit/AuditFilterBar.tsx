@@ -83,21 +83,21 @@ export default function AuditFilterBar({
           />
         </div>
 
-        <div className="text-neutral-400 dark:text-neutral-500 text-[11px] font-bold text-right pt-2.5 md:pr-2 select-none">
+        <div className="text-neutral-400 dark:text-neutral-500 text-xs font-bold text-right pt-2.5 md:pr-2 select-none">
           {language === 'th' ? `พบประวัติทั้งหมด ${totalResults} รายการ` : `Found ${totalResults} total logs`}
         </div>
       </div>
 
       {/* Custom Date Pickers Drawer */}
       {dateFilter === 'custom' && (
-        <div className="flex flex-wrap items-center gap-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800 p-3.5 rounded-2xl transition-all">
+        <div className="flex flex-wrap items-center gap-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800 p-3.5 rounded-xl transition-all">
           <div className="flex items-center gap-2 text-xs font-bold text-neutral-600 dark:text-neutral-300">
             <Calendar size={14} className="text-indigo-500" />
             <span>{language === 'th' ? 'ระบุช่วงวันที่:' : 'Select Range:'}</span>
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">{language === 'th' ? 'จาก:' : 'From:'}</span>
+            <span className="text-xs font-bold text-neutral-400 uppercase">{language === 'th' ? 'จาก:' : 'From:'}</span>
             <DatePicker
               value={startDate}
               onChange={onStartDateChange}
@@ -107,7 +107,7 @@ export default function AuditFilterBar({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">{language === 'th' ? 'ถึง:' : 'To:'}</span>
+            <span className="text-xs font-bold text-neutral-400 uppercase">{language === 'th' ? 'ถึง:' : 'To:'}</span>
             <DatePicker
               value={endDate}
               onChange={onEndDateChange}

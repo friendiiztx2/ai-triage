@@ -268,7 +268,7 @@ export default function AddCompanyModal({
 
   return (
     <div className="fixed inset-0 bg-neutral-950/75 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl max-w-2xl w-full shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-850">
           <div className="flex items-center gap-3">
@@ -281,7 +281,7 @@ export default function AddCompanyModal({
                   ? 'ใบส่งมอบระบบบริษัทใหม่'
                   : 'สร้างและส่งมอบบริษัทใหม่ทีละขั้นตอน'}
               </h2>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 {successData
                   ? 'สรุปข้อมูลทั้งหมดสำหรับส่งมอบให้ลูกค้าเริ่มใช้งานได้ทันที'
                   : `ขั้นตอนที่ ${step} จาก 4 • ตั้งค่าระบบครบวงจรในที่เดียว`}
@@ -325,7 +325,7 @@ export default function AddCompanyModal({
                     }`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-extrabold shrink-0 ${
+                      className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0 ${
                         isActive
                           ? 'bg-white/20 text-white'
                           : isDone
@@ -336,7 +336,7 @@ export default function AddCompanyModal({
                       {isDone ? <Check size={13} /> : s.num}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[10px] font-bold truncate leading-tight">
+                      <div className="text-xs font-bold truncate leading-tight">
                         {s.title}
                       </div>
                     </div>
@@ -397,7 +397,7 @@ export default function AddCompanyModal({
                       placeholder="เช่น siamtech (ภาษาอังกฤษพิมพ์เล็กหรือตัวเลข ห้ามเว้นวรรค)"
                       className="w-full px-3.5 py-2.5 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm"
                     />
-                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
                       ใช้สำหรับสร้างรหัส <code className="font-mono">Client ID</code> และแยกพื้นที่ข้อมูลอย่างปลอดภัย ของลูกค้าแต่ละรายออกจากกัน
                     </p>
                   </div>
@@ -408,7 +408,7 @@ export default function AddCompanyModal({
                       <Sparkles size={15} />
                       <span>สิ่งที่ระบบจะเตรียมให้อัตโนมัติเมื่อสร้างบริษัท:</span>
                     </div>
-                    <ul className="space-y-1 text-[11px] text-neutral-600 dark:text-neutral-300 pl-5 list-disc">
+                    <ul className="space-y-1 text-xs text-neutral-600 dark:text-neutral-300 pl-5 list-disc">
                       <li>สร้างรหัสความปลอดภัย <b>Client ID</b> และ <b>Client Secret</b> เฉพาะบริษัท</li>
                       <li>สร้างหมวดหมู่คัดกรองพื้นฐาน 3 หมวดหมู่ (สอบถามทั่วไป, แจ้งปัญหาระบบ, การชำระเงิน)</li>
                       <li>ผูกโควต้าแพ็กเกจ บัญชีแอดมิน และกลุ่มแจ้งเตือน Telegram พร้อมใบสรุปส่งมอบลูกค้า</li>
@@ -425,7 +425,7 @@ export default function AddCompanyModal({
                       <h3 className="font-bold text-neutral-900 dark:text-white text-sm">
                         เลือกแพ็กเกจและโควต้าข้อความรายเดือน
                       </h3>
-                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         กำหนดโควต้าเริ่มต้นให้บริษัท <b>{name}</b> (สามารถปรับเปลี่ยนภายหลังได้ที่เมนูโควต้าการใช้งาน)
                       </p>
                     </div>
@@ -438,14 +438,14 @@ export default function AddCompanyModal({
                         <div
                           key={pkg.id}
                           onClick={() => setSelectedPkgId(pkg.id)}
-                          className={`p-4 rounded-2xl border-2 transition cursor-pointer relative flex flex-col justify-between ${
+                          className={`p-4 rounded-xl border-2 transition cursor-pointer relative flex flex-col justify-between ${
                             isSelected
                               ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 dark:border-indigo-500 shadow-md'
                               : 'border-neutral-200 dark:border-neutral-800 hover:border-indigo-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-850'
                           }`}
                         >
                           {pkg.popular && (
-                            <span className="absolute -top-2.5 right-3 px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-extrabold shadow-sm">
+                            <span className="absolute -top-2.5 right-3 px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-xs font-extrabold shadow-sm">
                               ยอดนิยม (แนะนำ)
                             </span>
                           )}
@@ -465,12 +465,12 @@ export default function AddCompanyModal({
                               <span>{pkg.quotaLabel}</span>
                             </div>
 
-                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
                               {pkg.description}
                             </p>
                           </div>
 
-                          <div className="mt-3 pt-2.5 border-t border-neutral-200/70 dark:border-neutral-800 flex items-center justify-between text-[11px]">
+                          <div className="mt-3 pt-2.5 border-t border-neutral-200/70 dark:border-neutral-800 flex items-center justify-between text-xs">
                             <span
                               className={`font-semibold ${
                                 pkg.includesTelegram
@@ -505,7 +505,7 @@ export default function AddCompanyModal({
                       <div className="font-bold text-neutral-900 dark:text-white text-xs">
                         สร้างบัญชีผู้ดูแลคนแรกให้ลูกค้าทันที
                       </div>
-                      <div className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">
                         สร้าง Username และรหัสผ่านสำหรับให้ลูกค้าล็อกอินเข้าดูเฉพาะข้อมูลของบริษัทตนเอง
                       </div>
                     </div>
@@ -573,7 +573,7 @@ export default function AddCompanyModal({
                             <button
                               type="button"
                               onClick={() => setAdminPassword(generateRandomPassword())}
-                              className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                              className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
                             >
                               <RefreshCw size={10} />
                               <span>สุ่มรหัสผ่านใหม่</span>
@@ -588,7 +588,7 @@ export default function AddCompanyModal({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-lg">
+                      <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-lg">
                         <ShieldCheck size={14} className="shrink-0" />
                         <span>
                           รหัสผ่านจะถูกเข้ารหัสด้วย <b>bcrypt</b> ลงฐานข้อมูล และแสดงในใบส่งมอบขั้นตอนสุดท้ายเพื่อให้คัดลอกส่งให้ลูกค้า
@@ -607,7 +607,7 @@ export default function AddCompanyModal({
               {step === 4 && (
                 <div className="space-y-4">
                   {selectedPackage.id === 'starter' && (
-                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 flex items-center gap-2 text-[11px] font-semibold">
+                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 flex items-center gap-2 text-xs font-semibold">
                       <AlertCircle size={15} className="shrink-0 text-amber-500" />
                       <span>
                         หมายเหตุ: แพ็กเกจ <b>Starter (20,000 แชต)</b> ตามมาตรฐานไม่รวม AI Telegram Bot คุณสามารถข้ามขั้นตอนนี้ได้ทันที
@@ -620,7 +620,7 @@ export default function AddCompanyModal({
                       <div className="font-bold text-neutral-900 dark:text-white text-xs">
                         ผูกกลุ่มแจ้งเตือนเคสด่วน Telegram ตอนนี้เลยหรือไม่?
                       </div>
-                      <div className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">
                         หากลูกค้าเชิญบอทเข้ากลุ่ม Telegram แล้ว สามารถเลือกผูกหรือใส่ Chat ID ได้ทันที (หรือข้ามไปผูกทีหลังได้)
                       </div>
                     </div>
@@ -639,7 +639,7 @@ export default function AddCompanyModal({
                     <div className="space-y-3.5 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                       {unassignedGroups.length > 0 && (
                         <div className="space-y-1.5">
-                          <label className="block font-bold text-sky-600 dark:text-sky-400 text-[11px]">
+                          <label className="block font-bold text-sky-600 dark:text-sky-400 text-xs">
                             เลือกจากกลุ่มที่รอผูกในระบบ:
                           </label>
                           <select
@@ -701,10 +701,10 @@ export default function AddCompanyModal({
 
                   {/* Quick Pre-Flight Review Box before creating */}
                   <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/50 space-y-1.5">
-                    <div className="text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">
+                    <div className="text-xs font-extrabold text-indigo-700 dark:text-indigo-300">
                       สรุปข้อมูลก่อนยืนยันการสร้างบริษัท:
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-neutral-700 dark:text-neutral-300">
+                    <div className="grid grid-cols-2 gap-2 text-xs text-neutral-700 dark:text-neutral-300">
                       <div>
                         • <b>บริษัท:</b> {name} (<code className="font-mono">{domain}</code>)
                       </div>

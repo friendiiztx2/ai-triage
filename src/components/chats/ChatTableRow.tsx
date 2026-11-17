@@ -139,7 +139,7 @@ export default function ChatTableRow({
       onClick={() => onSelectChat(chat)}
       className={`hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60 transition-colors duration-150 cursor-pointer group text-xs ${
         isSelected
-          ? 'bg-blue-50/60 dark:bg-blue-950/40'
+          ? 'bg-brand-50/60 dark:bg-brand-950/40'
           : isUrgentRow && auditState === 'unverified'
           ? 'bg-rose-50/30 dark:bg-rose-950/15'
           : ''
@@ -165,7 +165,7 @@ export default function ChatTableRow({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1 font-mono text-[10px] text-neutral-400 dark:text-neutral-500 pl-0.5">
+          <div className="flex items-center gap-1 font-mono text-xs text-neutral-400 dark:text-neutral-500 pl-0.5">
             <span>{date}</span>
             {date && <span>•</span>}
             <span className="text-neutral-600 dark:text-neutral-400 font-medium">{time}</span>
@@ -174,25 +174,25 @@ export default function ChatTableRow({
       </td>
 
       {/* 2. Customer & Session ID */}
-      <td className="px-3 py-3.5 whitespace-nowrap">
+      <td className="px-3 py-3.5 whitespace-nowrap overflow-hidden">
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
-              className="font-bold text-neutral-900 dark:text-neutral-100 truncate max-w-[185px]"
+              className="font-bold text-neutral-900 dark:text-neutral-100 truncate"
               title={chat.customer_name || chat.customer_id}
             >
               {chat.customer_name || 'ลูกค้า #' + (chat.customer_id || chat.id?.substring(0, 8))}
             </span>
             {chat.tags && chat.tags.includes('#VIP') && (
-              <span className="inline-flex items-center gap-0.5 text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-bold shrink-0">
+              <span className="inline-flex items-center gap-0.5 text-xs font-mono px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-bold shrink-0">
                 <Star size={8} className="fill-amber-400 text-amber-500" />
                 <span>VIP</span>
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 min-w-0">
             <span
-              className="font-mono text-[10px] text-neutral-500 dark:text-neutral-400 truncate max-w-[230px]"
+              className="font-mono text-xs text-neutral-500 dark:text-neutral-400 truncate min-w-0"
               title={chat.id}
             >
               {language === 'th' ? 'ไอดี:' : 'ID:'} {chat.id}
@@ -200,7 +200,7 @@ export default function ChatTableRow({
             <button
               type="button"
               onClick={handleCopyId}
-              className="opacity-70 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-0.5 rounded transition-opacity cursor-pointer shrink-0"
+              className="opacity-70 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-0.5 rounded-lg transition-opacity cursor-pointer shrink-0"
               title={language === 'th' ? 'คัดลอกแชตไอดี' : 'Copy Session ID'}
             >
               {copiedId ? <Check size={10} className="text-emerald-500" /> : <Copy size={10} />}
@@ -210,7 +210,7 @@ export default function ChatTableRow({
       </td>
 
       {/* 3. AI Summary, Media Preview & Issue Badges */}
-      <td className="px-3 py-3.5 max-w-[460px]">
+      <td className="px-3 py-3.5 overflow-hidden">
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             {/* Image-Only Badge */}
@@ -222,7 +222,7 @@ export default function ChatTableRow({
                   e.stopPropagation();
                   window.open(firstImg, '_blank', 'noopener,noreferrer');
                 }}
-                className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-[10px] font-mono px-2 py-0.5 rounded-md border shrink-0 cursor-zoom-in transition-all shadow-2xs font-semibold"
+                className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-xs font-mono px-2 py-0.5 rounded-lg border shrink-0 cursor-zoom-in transition-all shadow-2xs font-semibold"
                 title={
                   language === 'th'
                     ? 'รูปภาพล้วน (ชี้เมาส์เพื่อดูรูป / คลิกเปิดรูปใหญ่)'
@@ -243,7 +243,7 @@ export default function ChatTableRow({
                   e.stopPropagation();
                   window.open(firstImg, '_blank', 'noopener,noreferrer');
                 }}
-                className="inline-flex items-center gap-1 text-[10px] font-mono text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100 px-2 py-0.5 rounded-md bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/50 dark:hover:bg-sky-900/60 border border-sky-200/80 dark:border-sky-800/70 cursor-zoom-in shrink-0 transition-all shadow-2xs font-semibold"
+                className="inline-flex items-center gap-1 text-xs font-mono text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100 px-2 py-0.5 rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/50 dark:hover:bg-sky-900/60 border border-sky-200/80 dark:border-sky-800/70 cursor-zoom-in shrink-0 transition-all shadow-2xs font-semibold"
                 title={
                   language === 'th'
                     ? 'มีรูปภาพแนบมากับข้อความ (ชี้เมาส์เพื่อดูรูป / คลิกเปิดรูปใหญ่)'
@@ -258,7 +258,7 @@ export default function ChatTableRow({
             {/* Multi-issue indicator when AI detected >1 sub-issues */}
             {issueCount > 1 && (
               <span
-                className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800/70 shrink-0 font-bold"
+                className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800/70 shrink-0 font-bold"
                 title={
                   language === 'th'
                     ? `AI ตรวจพบ ${issueCount} ประเด็นย่อยในบทสนทนานี้`
@@ -287,13 +287,13 @@ export default function ChatTableRow({
               {visibleTags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
-                  className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200/70 dark:border-neutral-700/70"
+                  className="text-xs font-mono px-1.5 py-0.2 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200/70 dark:border-neutral-700/70"
                 >
                   {tag}
                 </span>
               ))}
               {visibleTags.length > 3 && (
-                <span className="text-[10px] font-mono text-neutral-400">
+                <span className="text-xs font-mono text-neutral-400">
                   +{visibleTags.length - 3}
                 </span>
               )}
@@ -305,12 +305,12 @@ export default function ChatTableRow({
       {/* 4. Inline Quick Category Selector */}
       <td className="px-3 py-3.5 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
         {onQuickCategoryChange && categories.length > 0 ? (
-          <div className="relative inline-flex items-center">
+          <div className="relative flex items-center">
             <select
               value={currentBaseCat}
               disabled={isUpdatingCat}
               onChange={handleCategorySelect}
-              className="appearance-none bg-white dark:bg-neutral-800/90 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-200/90 dark:border-neutral-700/90 hover:border-neutral-300 dark:hover:border-neutral-600 rounded-xl pl-3 pr-7 py-1 text-xs font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer transition-all max-w-[185px] truncate shadow-2xs"
+              className="appearance-none bg-white dark:bg-neutral-800/90 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-200/90 dark:border-neutral-700/90 hover:border-neutral-300 dark:hover:border-neutral-600 rounded-xl pl-3 pr-7 py-1 text-xs font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 cursor-pointer transition-all w-full max-w-full truncate shadow-2xs"
               title={language === 'th' ? 'คลิกเพื่อสลับหมวดหมู่ได้ทันที' : 'Click to change category immediately'}
             >
               {categories.map((cat) => {
@@ -329,7 +329,7 @@ export default function ChatTableRow({
             {isUpdatingCat ? (
               <Loader2
                 size={11}
-                className="pointer-events-none absolute right-2.5 text-blue-500 animate-spin"
+                className="pointer-events-none absolute right-2.5 text-brand-500 animate-spin"
               />
             ) : (
               <ChevronDown
@@ -355,7 +355,7 @@ export default function ChatTableRow({
         <div className="inline-flex items-center justify-end gap-2">
           {auditState === 'confirmed' ? (
             <span
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
               title={language === 'th' ? 'ตรวจสอบแล้ว: ถูกต้องตามที่ AI จัดหมวด' : 'Verified: Matches AI'}
             >
               <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400" />
@@ -363,7 +363,7 @@ export default function ChatTableRow({
             </span>
           ) : auditState === 'corrected' ? (
             <span
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60"
               title={language === 'th' ? 'ตรวจสอบแล้ว: ปรับแก้หมวดหมู่โดยแอดมิน' : 'Reviewed: Category corrected'}
             >
               <Edit3 size={12} className="text-amber-600 dark:text-amber-400" />
@@ -374,7 +374,7 @@ export default function ChatTableRow({
               type="button"
               disabled={isApproving}
               onClick={handleApproveClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
               title={
                 language === 'th'
                   ? 'คลิกเดียวเพื่อยืนยันว่า AI จัดหมวดหมู่ถูกต้อง (ไม่ต้องเปิดหน้าต่างแชต)'

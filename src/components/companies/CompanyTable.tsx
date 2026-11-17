@@ -73,7 +73,7 @@ export default function CompanyTable({
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 p-16 text-center shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/80 dark:border-neutral-800 p-16 text-center shadow-sm">
         <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
         <p className="text-neutral-400 text-xs font-medium">
           {language === 'th' ? 'กำลังดึงข้อมูลรายชื่อบริษัท...' : 'Fetching registered companies...'}
@@ -84,7 +84,7 @@ export default function CompanyTable({
 
   if (companies.length === 0) {
     return (
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 p-16 text-center shadow-sm space-y-3">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/80 dark:border-neutral-800 p-16 text-center shadow-sm space-y-3">
         <Building2 size={40} className="mx-auto text-neutral-300 dark:text-neutral-700" />
         <div className="max-w-xs mx-auto space-y-1">
           <h3 className="font-bold text-neutral-700 dark:text-neutral-200 text-sm">
@@ -123,11 +123,11 @@ export default function CompanyTable({
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/40 text-[11px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+            <tr className="border-b border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/40 text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
               <th className="py-3.5 px-5 whitespace-nowrap">
                 {language === 'th' ? 'ชื่อบริษัท / แบรนด์' : 'Company Name'}
               </th>
@@ -159,9 +159,10 @@ export default function CompanyTable({
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500/10 to-violet-500/10 dark:from-indigo-500/20 dark:to-violet-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase shrink-0">
                         {(c.name || 'CO').slice(0, 2)}
                       </div>
-                      <div>
-                        <span className="block">{c.name}</span>
-                        <span className="text-[10px] font-mono text-neutral-400 font-normal">
+                      <div className="min-w-0">
+                        <span className="block whitespace-nowrap">{c.name}</span>
+                        {/* Full UUID wraps over 5 lines on phones; keep it on one line and show it all on hover */}
+                        <span className="block text-xs font-mono text-neutral-400 font-normal truncate max-w-[150px] md:max-w-none" title={c.id}>
                           ID: {c.id}
                         </span>
                       </div>
@@ -170,12 +171,12 @@ export default function CompanyTable({
 
                   <td className="py-3.5 px-5">
                     <div className="flex flex-col items-start gap-1">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                         <Globe size={11} className="text-indigo-500 shrink-0" />
                         <span className="truncate max-w-[150px]">{c.domain}</span>
                       </span>
                       {c.created_at && (
-                        <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium flex items-center gap-1 pl-1 tabular-nums whitespace-nowrap">
+                        <span className="text-xs text-neutral-400 dark:text-neutral-500 font-medium flex items-center gap-1 pl-1 tabular-nums whitespace-nowrap">
                           <Calendar size={10} className="text-neutral-400 shrink-0" />
                           <span>
                             {language === 'th' ? 'จัดตั้ง ' : 'Created '}
@@ -196,7 +197,7 @@ export default function CompanyTable({
                   <td className="py-3.5 px-5 whitespace-nowrap">
                     <div className="flex flex-col items-start gap-1">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold border ${getBadgeStyle(
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-extrabold border ${getBadgeStyle(
                           pkgName
                         )}`}
                       >
@@ -205,7 +206,7 @@ export default function CompanyTable({
                       </span>
                       <Link
                         href={`/usage-quotas?company_id=${c.id}`}
-                        className="text-[10px] text-neutral-500 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold flex items-center gap-1 hover:underline"
+                        className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold flex items-center gap-1 hover:underline"
                       >
                         {isUnlimited ? (
                           <>
@@ -222,12 +223,12 @@ export default function CompanyTable({
                   <td className="py-3.5 px-5 font-mono text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
                     {c.client_id ? (
                       <div className="flex items-center gap-2">
-                        <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded text-[11px] border border-neutral-200 dark:border-neutral-700">
+                        <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-lg text-xs border border-neutral-200 dark:border-neutral-700">
                           {c.client_id}
                         </span>
                         <button
                           onClick={() => handleCopy(c.client_id, `cid-${c.id}`)}
-                          className="text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded transition cursor-pointer"
+                          className="text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded-lg transition cursor-pointer"
                           title={language === 'th' ? 'คัดลอก Client ID' : 'Copy Client ID'}
                         >
                           {copiedKey === `cid-${c.id}` ? (
@@ -245,16 +246,16 @@ export default function CompanyTable({
                   <td className="py-3.5 px-5 font-mono">
                     {c.client_secret ? (
                       <div className="flex items-center gap-1.5">
-                        <div className="bg-amber-50/50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded text-[10.5px] border border-amber-200/60 dark:border-amber-800/50 flex items-start gap-1.5 w-[180px] shrink-0">
+                        <div className="bg-amber-50/50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded-lg text-[10.5px] border border-amber-200/60 dark:border-amber-800/50 flex items-start gap-1.5 w-[180px] shrink-0">
                           <KeyRound size={12} className="text-amber-500 shrink-0 mt-0.5" />
-                          <span className={showSecrets[c.id] ? 'break-all leading-tight text-[10px]' : 'tracking-widest'}>
+                          <span className={showSecrets[c.id] ? 'break-all leading-tight text-xs' : 'tracking-widest'}>
                             {showSecrets[c.id] ? c.client_secret : '••••••••••••••••'}
                           </span>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0">
                           <button
                             onClick={() => handleToggleSecret(c.id)}
-                            className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-1 rounded transition cursor-pointer"
+                            className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-1 rounded-lg transition cursor-pointer"
                             title={
                               showSecrets[c.id]
                                 ? language === 'th'
@@ -269,7 +270,7 @@ export default function CompanyTable({
                           </button>
                           <button
                             onClick={() => handleCopy(c.client_secret, `sec-${c.id}`)}
-                            className="text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded transition cursor-pointer"
+                            className="text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded-lg transition cursor-pointer"
                             title={language === 'th' ? 'คัดลอก Client Secret' : 'Copy Client Secret'}
                           >
                             {copiedKey === `sec-${c.id}` ? (
@@ -281,7 +282,7 @@ export default function CompanyTable({
                         </div>
                       </div>
                     ) : (
-                      <span className="text-neutral-400 italic flex items-center gap-1 text-[11px]">
+                      <span className="text-neutral-400 italic flex items-center gap-1 text-xs">
                         <ShieldAlert size={12} /> Legacy
                       </span>
                     )}

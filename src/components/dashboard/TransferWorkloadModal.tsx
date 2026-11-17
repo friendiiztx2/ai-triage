@@ -44,7 +44,7 @@ export default function TransferWorkloadModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl max-w-md w-full p-6 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] space-y-5 animate-scale-in">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl max-w-md w-full p-6 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] space-y-5 animate-scale-in">
         <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
           <h3 className="font-extrabold text-neutral-800 dark:text-neutral-100 text-sm flex items-center gap-2">
             🔄 โอนย้ายกระจายภาระงาน
@@ -58,7 +58,7 @@ export default function TransferWorkloadModal({
         </div>
 
         <div className="space-y-4 text-xs">
-          <div className="bg-amber-50 dark:bg-amber-955/30 border border-amber-200 dark:border-amber-900/50 p-3 rounded-2xl text-amber-800 dark:text-amber-300 font-bold">
+          <div className="bg-amber-50 dark:bg-amber-955/30 border border-amber-200 dark:border-amber-900/50 p-3 rounded-xl text-amber-800 dark:text-amber-300 font-bold">
             👤 ผู้ส่งเคส:{' '}
             <span className="text-neutral-900 dark:text-neutral-100 font-extrabold">
               {sourceAgent.name}
@@ -67,7 +67,7 @@ export default function TransferWorkloadModal({
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider">
+            <label className="block text-xs font-extrabold text-neutral-400 uppercase tracking-wider">
               เลือกเจ้าหน้าที่รับโอนเคสปลายทาง:
             </label>
             <SelectDropdown
@@ -79,7 +79,7 @@ export default function TransferWorkloadModal({
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider">
+            <label className="block text-xs font-extrabold text-neutral-400 uppercase tracking-wider">
               จำนวนเคสที่ต้องการโอนย้าย:
             </label>
             <input
@@ -102,7 +102,7 @@ export default function TransferWorkloadModal({
           </button>
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 rounded-lg text-xs font-medium bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-xs transition cursor-pointer"
+            className="px-4 py-2 rounded-lg text-xs font-medium bg-brand-600 hover:bg-brand-700 text-white shadow-xs transition cursor-pointer"
           >
             ยืนยันการโอนย้ายเคส
           </button>

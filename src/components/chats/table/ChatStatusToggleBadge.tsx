@@ -18,7 +18,7 @@ export default function ChatStatusToggleBadge({
   if (isCompleted) {
     return (
       <span
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium border bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 select-none"
+        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium border bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 select-none"
         title={language === 'th' ? 'AI วิเคราะห์เสร็จสิ้น' : 'AI Analysis Completed'}
       >
         <CheckCircle2 size={11} className="text-emerald-500 shrink-0" />
@@ -30,7 +30,7 @@ export default function ChatStatusToggleBadge({
   if (isProcessing) {
     return (
       <span
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium border bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 select-none"
+        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium border bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 select-none"
         title={language === 'th' ? 'AI กำลังประมวลผล' : 'AI Processing'}
       >
         <Loader2 size={11} className="text-sky-500 shrink-0 animate-spin" />
@@ -41,7 +41,7 @@ export default function ChatStatusToggleBadge({
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium border bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20 select-none"
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium border bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20 select-none"
       title={language === 'th' ? 'รอ AI ประมวลผล' : 'Pending Analysis'}
     >
       <Clock size={11} className="text-amber-500 shrink-0" />

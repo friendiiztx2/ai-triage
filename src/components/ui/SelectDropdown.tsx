@@ -123,7 +123,7 @@ export default function SelectDropdown({
                   }}
                   className={`w-full flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-[#e8f0fe] text-[#1a73e8] dark:bg-blue-950/70 dark:text-[#8ab4f8] font-semibold'
+                      ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/70 dark:text-brand-300 font-semibold'
                       : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/80'
                   }`}
                 >
@@ -134,7 +134,7 @@ export default function SelectDropdown({
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     {opt.badge && <span>{opt.badge}</span>}
                     {isSelected && (
-                      <Check size={14} className="text-[#1a73e8] dark:text-[#8ab4f8] shrink-0 stroke-[2.5]" />
+                      <Check size={14} className="text-brand-600 dark:text-brand-300 shrink-0 stroke-[2.5]" />
                     )}
                   </div>
                 </button>
@@ -158,7 +158,7 @@ export default function SelectDropdown({
           if (!isOpen) updatePosition();
           setIsOpen((prev) => !prev);
         }}
-        className={`w-full flex items-center justify-between gap-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50/80 dark:hover:bg-neutral-800/80 focus:outline-none focus:border-[#1a73e8]/70 dark:focus:border-[#8ab4f8]/70 shadow-2xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses} ${className}`}
+        className={`w-full flex items-center justify-between gap-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50/80 dark:hover:bg-neutral-800/80 focus:outline-none focus:border-brand-600/70 dark:focus:border-brand-300/70 shadow-2xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses} ${className}`}
       >
         <div className="flex items-center gap-1.5 truncate">
           {icon && <span className="text-neutral-400 shrink-0">{icon}</span>}

@@ -13,7 +13,7 @@ export const DEFAULT_SYSTEM_TAGS: SystemTagItem[] = [
   {
     name: '#รูปภาพแนบ',
     desc: 'มีภาพแนบมากับข้อความ',
-    style: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-955/30 dark:text-blue-300 dark:border-blue-900/50',
+    style: 'bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-955/30 dark:text-brand-300 dark:border-brand-900/50',
   },
   {
     name: '#รูปภาพล้วน',

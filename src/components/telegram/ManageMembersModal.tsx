@@ -185,11 +185,11 @@ export default function ManageMembersModal({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fade-in select-none">
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl max-w-4xl w-full h-[90vh] max-h-[800px] flex flex-col overflow-hidden transition-all duration-200">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl max-w-4xl w-full h-[90vh] max-h-[800px] flex flex-col overflow-hidden transition-all duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               <Send size={20} />
             </div>
             <div>
@@ -197,7 +197,7 @@ export default function ManageMembersModal({
                 <h2 className="text-[16px] font-semibold text-neutral-900 dark:text-white">
                   {group.group_name || 'กลุ่ม Telegram'}
                 </h2>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                <span className="text-xs font-mono px-2 py-0.5 rounded-lg bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
                   ID: {group.chat_id}
                 </span>
                 <button
@@ -297,12 +297,12 @@ export default function ManageMembersModal({
               placeholder="ค้นหาสมาชิกด้วยชื่อ, นามสกุล, @username หรือ Contact ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-[12.5px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+              className="w-full pl-9 pr-4 py-2 text-[12.5px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500/20"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-[11px]"
+                className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-xs"
               >
                 ล้าง
               </button>
@@ -332,12 +332,12 @@ export default function ManageMembersModal({
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 space-y-3">
-              <Loader2 size={24} className="animate-spin text-blue-500" />
+              <Loader2 size={24} className="animate-spin text-brand-500" />
               <p className="text-[13px] text-neutral-500">กำลังโหลดรายชื่อสมาชิกจาก Telegram...</p>
             </div>
           ) : filteredMembers.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center p-6 space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 flex items-center justify-center">
                 <Users size={22} />
               </div>
               <p className="text-[14px] font-medium text-neutral-700 dark:text-neutral-300">
@@ -349,7 +349,7 @@ export default function ManageMembersModal({
             </div>
           ) : (
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-neutral-50 dark:bg-neutral-800/90 backdrop-blur-xs text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-100 dark:border-neutral-800 z-10">
+              <thead className="sticky top-0 bg-neutral-50 dark:bg-neutral-800/90 backdrop-blur-xs text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-100 dark:border-neutral-800 z-10">
                 <tr>
                   <th className="py-2.5 px-6">สมาชิก</th>
                   <th className="py-2.5 px-4">Telegram ID</th>
@@ -389,7 +389,7 @@ export default function ManageMembersModal({
                                 {fullName}
                               </span>
                               {isExecutive && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
                                   ผู้บริหาร
                                 </span>
                               )}
@@ -422,7 +422,7 @@ export default function ManageMembersModal({
 
                       {/* Last Seen / Joined */}
                       <td className="py-3 px-4 text-[11.5px] text-neutral-500 dark:text-neutral-400">
-                        <div className="flex items-center gap-1 text-[11px]">
+                        <div className="flex items-center gap-1 text-xs">
                           <Clock size={11} className="text-neutral-400" />
                           <span>{formatDate(member.last_seen_at || member.joined_at)}</span>
                         </div>
@@ -432,7 +432,7 @@ export default function ManageMembersModal({
                       <td className="py-3 px-6 text-right">
                         <div className="inline-flex items-center justify-end gap-1">
                           {isUpdating ? (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-[11px] text-neutral-500">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-500">
                               <Loader2 size={12} className="animate-spin" />
                               <span>กำลังบันทึก...</span>
                             </div>
@@ -442,7 +442,7 @@ export default function ManageMembersModal({
                               <button
                                 type="button"
                                 onClick={() => handleRoleChange(member, 'executive')}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition cursor-pointer ${
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
                                   isExecutive
                                     ? 'bg-amber-500 text-white shadow-xs'
                                     : 'text-neutral-500 dark:text-neutral-400 hover:text-amber-700 dark:hover:text-amber-300'
@@ -457,7 +457,7 @@ export default function ManageMembersModal({
                               <button
                                 type="button"
                                 onClick={() => handleRoleChange(member, 'member')}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer ${
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
                                   !isExecutive
                                     ? 'bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 shadow-xs'
                                     : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-white'
@@ -482,7 +482,7 @@ export default function ManageMembersModal({
         {/* Footer RBAC Policy Explainer */}
         <div className="p-4 px-6 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/70 flex flex-wrap items-center justify-between gap-3 text-[11.5px] text-neutral-500 dark:text-neutral-400 shrink-0">
           <div className="flex items-center gap-2">
-            <ShieldCheck size={14} className="text-blue-600 dark:text-blue-400 shrink-0" />
+            <ShieldCheck size={14} className="text-brand-600 dark:text-brand-400 shrink-0" />
             <span>
               <strong>เงื่อนไขสิทธิ์:</strong> เฉพาะสิทธิ์{' '}
               <strong className="text-amber-600 dark:text-amber-400 font-semibold">ผู้บริหาร</strong>{' '}

@@ -25,7 +25,7 @@ export default function SidebarLogo({ isCollapsed }: SidebarLogoProps) {
             <h1 className="font-bold text-neutral-900 dark:text-white text-base leading-none tracking-tight font-sans">
               Sift AI
             </h1>
-            <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#1a73e8] dark:bg-blue-950/60 dark:text-blue-300 border border-[#1a73e8]/20 tracking-wider uppercase">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-600/20 tracking-wider uppercase">
               Back Office
             </span>
           </div>

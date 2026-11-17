@@ -15,6 +15,8 @@ import {
   Check, 
   Link2, 
   Unlink, 
+  Power,
+  PowerOff,
   AlertCircle, 
   Loader2, 
   ShieldCheck, 
@@ -224,13 +226,13 @@ export default function TelegramGroupsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-neutral-200 dark:border-neutral-800">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               <Send size={18} />
             </div>
             <div>
               <h1 className="text-xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                 <span>{language === 'th' ? 'จัดการกลุ่ม Telegram & สิทธิ์ผู้บริหาร' : 'Telegram Groups & Executive Access'}</span>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-900">
                   {language === 'th' ? 'ระบบแยกบริษัท' : 'Multi-Tenant Bot'}
                 </span>
               </h1>
@@ -254,7 +256,7 @@ export default function TelegramGroupsPage() {
 
           <button
             onClick={() => setIsLinkModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white text-[12px] font-semibold shadow-xs transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-[12px] font-semibold shadow-xs transition cursor-pointer"
           >
             <Plus size={14} />
             <span>{language === 'th' ? 'ผูกกลุ่มใหม่' : 'Link New Group'}</span>
@@ -289,70 +291,70 @@ export default function TelegramGroupsPage() {
       )}
 
       {/* 2. KPI Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-4">
         {/* Total Groups */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4.5 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] font-medium text-neutral-500 dark:text-neutral-400">กลุ่มที่ผูกแล้วทั้งหมด</span>
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2 sm:p-4.5 shadow-2xs flex flex-col sm:block min-w-0">
+          <div className="flex justify-between flex-1 items-start sm:items-center mb-1.5 sm:mb-0">
+            <span className="text-xs font-medium leading-snug text-neutral-500 dark:text-neutral-400">กลุ่มที่ผูกแล้วทั้งหมด</span>
+            <div className="hidden sm:flex w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               <Send size={15} />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-neutral-900 dark:text-white">{stats.total}</span>
-            <span className="text-[12px] text-neutral-500">กลุ่ม</span>
+          <div className="sm:mt-2 flex items-baseline gap-1 sm:gap-2">
+            <span className="text-lg sm:text-2xl font-bold text-neutral-900 dark:text-white">{stats.total}</span>
+            <span className="text-xs text-neutral-500">กลุ่ม</span>
           </div>
-          <p className="text-[11px] text-neutral-400 mt-1">ที่เชื่อมต่อในระบบ</p>
+          <p className="hidden sm:block text-xs text-neutral-400 mt-1">ที่เชื่อมต่อในระบบ</p>
         </div>
 
         {/* Active Groups */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4.5 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] font-medium text-neutral-500 dark:text-neutral-400">กลุ่มที่เปิดใช้งาน</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2 sm:p-4.5 shadow-2xs flex flex-col sm:block min-w-0">
+          <div className="flex justify-between flex-1 items-start sm:items-center mb-1.5 sm:mb-0">
+            <span className="text-xs font-medium leading-snug text-neutral-500 dark:text-neutral-400">กลุ่มที่เปิดใช้งาน</span>
+            <div className="hidden sm:flex w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <CheckCircle2 size={15} />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.active}</span>
-            <span className="text-[12px] text-neutral-500">กลุ่ม</span>
+          <div className="sm:mt-2 flex items-baseline gap-1 sm:gap-2">
+            <span className="text-lg sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.active}</span>
+            <span className="text-xs text-neutral-500">กลุ่ม</span>
           </div>
-          <p className="text-[11px] text-neutral-400 mt-1">AI Bot พร้อมตอบคำถาม</p>
+          <p className="hidden sm:block text-xs text-neutral-400 mt-1">AI Bot พร้อมตอบคำถาม</p>
         </div>
 
         {/* Total Executives */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4.5 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] font-medium text-neutral-500 dark:text-neutral-400">{language === 'th' ? 'ผู้บริหาร (สิทธิ์ถาม AI)' : 'Executives (AI Access)'}</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2 sm:p-4.5 shadow-2xs flex flex-col sm:block min-w-0">
+          <div className="flex justify-between flex-1 items-start sm:items-center mb-1.5 sm:mb-0">
+            <span className="text-xs font-medium leading-snug text-neutral-500 dark:text-neutral-400">{language === 'th' ? 'ผู้บริหาร (สิทธิ์ถาม AI)' : 'Executives (AI Access)'}</span>
+            <div className="hidden sm:flex w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Star size={15} className="fill-amber-500 text-amber-500" />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.totalExecutives}</span>
-            <span className="text-[12px] text-neutral-500">คน</span>
+          <div className="sm:mt-2 flex items-baseline gap-1 sm:gap-2">
+            <span className="text-lg sm:text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.totalExecutives}</span>
+            <span className="text-xs text-neutral-500">คน</span>
           </div>
-          <p className="text-[11px] text-neutral-400 mt-1">ได้รับสิทธิ์ Executive</p>
+          <p className="hidden sm:block text-xs text-neutral-400 mt-1">ได้รับสิทธิ์ Executive</p>
         </div>
 
         {/* Total Members */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4.5 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] font-medium text-neutral-500 dark:text-neutral-400">สมาชิกทั้งหมดในกลุ่ม</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2 sm:p-4.5 shadow-2xs flex flex-col sm:block min-w-0">
+          <div className="flex justify-between flex-1 items-start sm:items-center mb-1.5 sm:mb-0">
+            <span className="text-xs font-medium leading-snug text-neutral-500 dark:text-neutral-400">สมาชิกทั้งหมดในกลุ่ม</span>
+            <div className="hidden sm:flex w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
               <Users size={15} />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-neutral-900 dark:text-white">{stats.totalMembers}</span>
-            <span className="text-[12px] text-neutral-500">คน</span>
+          <div className="sm:mt-2 flex items-baseline gap-1 sm:gap-2">
+            <span className="text-lg sm:text-2xl font-bold text-neutral-900 dark:text-white">{stats.totalMembers}</span>
+            <span className="text-xs text-neutral-500">คน</span>
           </div>
-          <p className="text-[11px] text-neutral-400 mt-1">บันทึกอัตโนมัติจาก Telegram</p>
+          <p className="hidden sm:block text-xs text-neutral-400 mt-1">บันทึกอัตโนมัติจาก Telegram</p>
         </div>
       </div>
 
       {/* 3. Filter Bar */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 shadow-2xs space-y-3">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 shadow-2xs space-y-3">
         <div className="flex flex-col md:flex-row items-center gap-3">
           {/* Search Box */}
           <div className="relative flex-1 w-full">
@@ -362,12 +364,12 @@ export default function TelegramGroupsPage() {
               placeholder="ค้นหาชื่อกลุ่ม Telegram, Chat ID หรือชื่อบริษัท..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-[12.5px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+              className="w-full pl-9 pr-4 py-2 text-[12.5px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500/20"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-[11px]"
+                className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-xs"
               >
                 ล้าง
               </button>
@@ -380,7 +382,7 @@ export default function TelegramGroupsPage() {
               <select
                 value={companyFilter}
                 onChange={(e) => setCompanyFilter(e.target.value)}
-                className="w-full px-3 py-2 text-[12.5px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                className="w-full px-3 py-2 text-[12.5px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
               >
                 <option value="all">{language === 'th' ? 'ทุกบริษัท' : 'All Companies'}</option>
                 {companies.map((c) => (
@@ -429,11 +431,11 @@ export default function TelegramGroupsPage() {
       </div>
 
       {/* 4. Groups Table */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-850 text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+              <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/75 dark:bg-neutral-850 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider whitespace-nowrap">
                 <th className="py-3 px-6">{language === 'th' ? 'กลุ่ม Telegram' : 'Telegram Group'}</th>
                 <th className="py-3 px-4">Chat ID</th>
                 <th className="py-3 px-4">{language === 'th' ? 'บริษัทที่ผูก' : 'Linked Company'}</th>
@@ -446,7 +448,7 @@ export default function TelegramGroupsPage() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center text-neutral-400">
-                    <Loader2 size={24} className="animate-spin mx-auto text-blue-500 mb-2" />
+                    <Loader2 size={24} className="animate-spin mx-auto text-brand-500 mb-2" />
                     <span>กำลังโหลดรายการกลุ่ม Telegram...</span>
                   </td>
                 </tr>
@@ -454,7 +456,7 @@ export default function TelegramGroupsPage() {
                 <tr>
                   <td colSpan={6} className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center space-y-2">
-                      <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 flex items-center justify-center">
                         <Send size={20} />
                       </div>
                       <p className="text-[14px] font-medium text-neutral-700 dark:text-neutral-300">
@@ -465,7 +467,7 @@ export default function TelegramGroupsPage() {
                       </p>
                       <button
                         onClick={() => setIsLinkModalOpen(true)}
-                        className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-medium transition cursor-pointer shadow-xs"
+                        className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-[12px] font-medium transition cursor-pointer shadow-xs"
                       >
                         <Plus size={13} />
                         <span>กดผูกกลุ่มตอนนี้</span>
@@ -484,7 +486,7 @@ export default function TelegramGroupsPage() {
                       className="hover:bg-neutral-50/70 dark:hover:bg-neutral-800/40 transition"
                     >
                       {/* Group Name */}
-                      <td className="py-3.5 px-6">
+                      <td className="py-3.5 px-4 md:px-6 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
                             <Send size={16} />
@@ -493,7 +495,7 @@ export default function TelegramGroupsPage() {
                             <span className="font-semibold text-neutral-900 dark:text-white block">
                               {group.group_name || 'กลุ่มไม่มีชื่อ'}
                             </span>
-                            <span className="text-[11px] text-neutral-400">
+                            <span className="text-xs text-neutral-400">
                               อัปเดต: {group.updated_at ? new Date(group.updated_at).toLocaleDateString('th-TH') : '-'}
                             </span>
                           </div>
@@ -521,7 +523,7 @@ export default function TelegramGroupsPage() {
 
                       {/* Company Name */}
                       <td className="py-3.5 px-4">
-                        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-[11.5px] font-medium">
+                        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-medium whitespace-nowrap">
                           <Building2 size={11} className="text-neutral-500" />
                           <span>{group.company_name || 'ไม่ระบุ'}</span>
                         </div>
@@ -530,13 +532,13 @@ export default function TelegramGroupsPage() {
                       {/* Member & Executive Count */}
                       <td className="py-3.5 px-4">
                         <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-1.5 text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200 whitespace-nowrap" title={`สมาชิก ${group.member_count || 0} คน`}>
                             <Users size={12} className="text-neutral-500" />
-                            <span>{group.member_count || 0} คน</span>
+                            <span>{group.member_count || 0}<span className="hidden md:inline"> คน</span></span>
                           </div>
-                          <div className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                          <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-medium whitespace-nowrap" title={`ผู้บริหาร ${group.executive_count || 0} คน`}>
                             <Star size={11} className="fill-amber-500 text-amber-500" />
-                            <span>ผู้บริหาร {group.executive_count || 0} คน</span>
+                            <span><span className="hidden md:inline">ผู้บริหาร </span>{group.executive_count || 0}<span className="hidden md:inline"> คน</span></span>
                           </div>
                         </div>
                       </td>
@@ -551,16 +553,18 @@ export default function TelegramGroupsPage() {
                           title={group.is_active ? 'คลิกเพื่อปิดการทำงาน AI Bot ในกลุ่มนี้' : 'คลิกเพื่อเปิดใช้งาน AI Bot'}
                         >
                           {isToggling ? (
-                            <Loader2 size={16} className="animate-spin text-blue-500" />
+                            <Loader2 size={16} className="animate-spin text-brand-500" />
                           ) : group.is_active ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                              <span>เปิดใช้งาน</span>
+                            <span className="inline-flex items-center gap-1 p-1.5 md:px-2.5 md:py-0.5 rounded-full text-xs font-bold whitespace-nowrap bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
+                              <span className="hidden md:inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <Power size={13} className="md:hidden" aria-hidden="true" />
+                              <span className="sr-only md:not-sr-only">เปิดใช้งาน</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700">
-                              <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
-                              <span>ปิดใช้งาน</span>
+                            <span className="inline-flex items-center gap-1 p-1.5 md:px-2.5 md:py-0.5 rounded-full text-xs font-medium whitespace-nowrap bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700">
+                              <span className="hidden md:inline-block w-1.5 h-1.5 rounded-full bg-neutral-400" />
+                              <PowerOff size={13} className="md:hidden" aria-hidden="true" />
+                              <span className="sr-only md:not-sr-only">ปิดใช้งาน</span>
                             </span>
                           )}
                         </button>
@@ -572,21 +576,23 @@ export default function TelegramGroupsPage() {
                           {/* Manage Members Button */}
                           <button
                             onClick={() => setSelectedGroupForMembers(group)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-[11.5px] font-medium transition cursor-pointer border border-blue-200/60 dark:border-blue-800"
+                            className="inline-flex items-center gap-1 p-1.5 md:px-2.5 md:py-1 rounded-lg whitespace-nowrap bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 text-xs font-medium transition cursor-pointer border border-brand-200/60 dark:border-brand-800"
                             title="ดูรายชื่อสมาชิก และจัดการสิทธิ์ผู้บริหารในกลุ่ม"
+                            aria-label="จัดการสมาชิก & สิทธิ์"
                           >
-                            <Users size={12} />
-                            <span>จัดการสมาชิก & สิทธิ์</span>
+                            <Users size={14} className="md:w-3 md:h-3" />
+                            <span className="hidden md:inline">จัดการสมาชิก & สิทธิ์</span>
                           </button>
 
                           {/* Unlink Button */}
                           <button
                             onClick={() => handleUnbindGroup(group)}
                             disabled={isUnbinding}
-                            className="p-1 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                            aria-label="ยกเลิกการผูกกลุ่ม"
+                            className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
                             title="ยกเลิกการผูกกลุ่มนี้ออกจากบริษัท"
                           >
-                            {isUnbinding ? <Loader2 size={13} className="animate-spin text-rose-500" /> : <Unlink size={13} />}
+                            {isUnbinding ? <Loader2 size={14} className="animate-spin text-rose-500" /> : <Unlink size={14} />}
                           </button>
                         </div>
                       </td>

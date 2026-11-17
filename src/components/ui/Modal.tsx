@@ -61,7 +61,7 @@ export default function Modal({
       }}
     >
       <div
-        className={`bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] w-full overflow-hidden transition-all transform scale-100 ${maxWidthMap[maxWidth]} ${className}`}
+        className={`bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] w-full overflow-hidden transition-all transform scale-100 ${maxWidthMap[maxWidth]} ${className}`}
       >
         {(title || icon) && (
           <div
@@ -69,7 +69,7 @@ export default function Modal({
           >
             <div className="flex items-center gap-3">
               {icon && (
-                <div className="p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-955/20 text-indigo-600 dark:text-indigo-400 shrink-0">
+                <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-955/20 text-indigo-600 dark:text-indigo-400 shrink-0">
                   {icon}
                 </div>
               )}

@@ -52,7 +52,7 @@ export default function FloatingChatHeader({
           </h3>
         </div>
         <span
-          className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md border border-neutral-200/70 dark:border-neutral-700/70 shrink-0 select-all"
+          className="text-xs font-mono text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-lg border border-neutral-200/70 dark:border-neutral-700/70 shrink-0 select-all"
           title={chat.id}
         >
           แชตไอดี: {chat.id}
@@ -62,7 +62,7 @@ export default function FloatingChatHeader({
       <div className="flex items-center gap-1.5 shrink-0">
         {/* Next / Prev Chat Navigation */}
         {totalChatsCount !== undefined && totalChatsCount > 1 && (
-          <div className="flex items-center gap-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5 border border-neutral-200/80 dark:border-neutral-700/80 font-mono text-[10px]">
+          <div className="flex items-center gap-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5 border border-neutral-200/80 dark:border-neutral-700/80 font-mono text-xs">
             <button
               type="button"
               onClick={(e) => {
@@ -70,7 +70,7 @@ export default function FloatingChatHeader({
                 onNavigatePrev?.();
               }}
               disabled={!onNavigatePrev}
-              className="w-5 h-5 rounded hover:bg-white dark:hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
+              className="w-5 h-5 rounded-lg hover:bg-white dark:hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
               title="แชตก่อนหน้า"
             >
               <ChevronLeft size={12} />
@@ -87,7 +87,7 @@ export default function FloatingChatHeader({
                 onNavigateNext?.();
               }}
               disabled={!onNavigateNext}
-              className="w-5 h-5 rounded hover:bg-white dark:hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
+              className="w-5 h-5 rounded-lg hover:bg-white dark:hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
               title="แชตถัดไป"
             >
               <ChevronRight size={12} />
@@ -101,7 +101,7 @@ export default function FloatingChatHeader({
             setIsMinimized(!isMinimized);
             if (isMaximized) setIsMaximized(false);
           }}
-          className="w-6 h-6 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 flex items-center justify-center transition cursor-pointer"
+          className="w-6 h-6 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 flex items-center justify-center transition cursor-pointer"
           title={isMinimized ? 'ขยายหน้าต่าง' : 'ย่อหน้าต่าง'}
         >
           <Minus size={12} />
@@ -114,7 +114,7 @@ export default function FloatingChatHeader({
             setIsMaximized(!isMaximized);
             setIsMinimized(false);
           }}
-          className="w-6 h-6 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 flex items-center justify-center transition cursor-pointer"
+          className="w-6 h-6 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 flex items-center justify-center transition cursor-pointer"
           title={isMaximized ? 'ย่อกลับขนาดปกติ' : 'ขยายเต็มหน้าจอ'}
         >
           <Square size={10} />
@@ -124,7 +124,7 @@ export default function FloatingChatHeader({
         <button 
           type="button"
           onClick={onClose}
-          className="w-6 h-6 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/30 text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition cursor-pointer"
+          className="w-6 h-6 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition cursor-pointer"
           title="ปิด"
         >
           <X size={12} />

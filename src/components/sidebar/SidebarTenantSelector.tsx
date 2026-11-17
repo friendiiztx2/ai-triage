@@ -37,7 +37,7 @@ export default function SidebarTenantSelector({
 
   return (
     <div className="mb-6 px-1">
-      <label className="block text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-1.5">
+      <label className="block text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-1.5">
         {tenantLabel}
       </label>
       {showDropdown ? (

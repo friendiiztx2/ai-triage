@@ -66,7 +66,7 @@ export default function ChatTimeframeFilter({
         <button
           type="button"
           onClick={onClearFilters}
-          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 px-2.5 py-1 rounded-md transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 text-xs font-mono text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
         >
           <RotateCcw size={11} />
           <span>{language === 'th' ? 'ล้างตัวกรอง' : 'Reset filters'}</span>

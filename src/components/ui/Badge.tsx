@@ -11,7 +11,7 @@ const variantClasses: Record<string, string> = {
   default: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700',
   urgent: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border-rose-200/80 dark:border-rose-900/40 font-black animate-pulse',
   high: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200/80 dark:border-amber-900/40',
-  medium: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border-blue-200/80 dark:border-blue-900/40',
+  medium: 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400 border-brand-200/80 dark:border-brand-900/40',
   low: 'bg-neutral-50 text-neutral-600 dark:bg-neutral-800/40 dark:text-neutral-400 border-neutral-200/80 dark:border-neutral-700/40',
   success: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200/80 dark:border-emerald-900/40',
   warning: 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200/80 dark:border-amber-900/40',
@@ -25,7 +25,7 @@ export default function Badge({
   size = 'md',
   className = '',
 }: BadgeProps) {
-  const sizeClass = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+  const sizeClass = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-xs';
   const colorClass = variantClasses[variant] || variantClasses.default;
 
   return (

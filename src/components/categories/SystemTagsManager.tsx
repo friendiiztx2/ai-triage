@@ -138,7 +138,7 @@ export default function SystemTagsManager({
             <button
               type="button"
               onClick={handleAddSystemTag}
-              className="inline-flex items-center gap-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-colors cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-colors cursor-pointer shrink-0"
             >
               <Plus size={13} />
               <span>เพิ่มแท็ก</span>
@@ -198,12 +198,12 @@ export default function SystemTagsManager({
                                 if (e.key === 'Escape') setEditingTag(null);
                               }}
                               autoFocus
-                              className="bg-white dark:bg-neutral-800 border border-neutral-400 dark:border-neutral-600 rounded px-2 py-1 text-xs font-mono font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none"
+                              className="bg-white dark:bg-neutral-800 border border-neutral-400 dark:border-neutral-600 rounded-lg px-2 py-1 text-xs font-mono font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none"
                             />
                             <button
                               type="button"
                               onClick={() => handleRenameSystemTag(tagName)}
-                              className="p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-955/20 rounded"
+                              className="p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-955/20 rounded-lg"
                               title="บันทึก"
                             >
                               <Check size={13} />
@@ -211,7 +211,7 @@ export default function SystemTagsManager({
                             <button
                               type="button"
                               onClick={() => setEditingTag(null)}
-                              className="p-1 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                              className="p-1 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
                               title="ยกเลิก"
                             >
                               <X size={13} />
@@ -219,7 +219,7 @@ export default function SystemTagsManager({
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-200/60 dark:border-neutral-700/60">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-200/60 dark:border-neutral-700/60">
                               <Tag size={11} className="text-neutral-400" />
                               <span>{tagName}</span>
                             </span>
@@ -229,7 +229,7 @@ export default function SystemTagsManager({
 
                       {/* Status */}
                       <td className="py-2.5 px-4 hidden sm:table-cell">
-                        <span className="text-[10px] font-mono text-neutral-400 dark:text-neutral-500">
+                        <span className="text-xs font-mono text-neutral-400 dark:text-neutral-500">
                           พร้อมใช้งานใน Triage Queue
                         </span>
                       </td>
@@ -240,7 +240,7 @@ export default function SystemTagsManager({
                           <Link
                             href={`/chats?search=${encodeURIComponent(tagName)}`}
                             title="ค้นหาเคสติดแท็กนี้"
-                            className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                           >
                             <ArrowUpRight size={13} />
                           </Link>
@@ -251,7 +251,7 @@ export default function SystemTagsManager({
                                 type="button"
                                 onClick={() => setEditingTag({ oldName: tagName, newName: tagName })}
                                 title="แก้ไขชื่อแท็ก"
-                                className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                               >
                                 <Edit2 size={13} />
                               </button>
@@ -259,7 +259,7 @@ export default function SystemTagsManager({
                                 type="button"
                                 onClick={() => handleDeleteSystemTag(tagName)}
                                 title="ลบแท็ก"
-                                className="p-1.5 rounded-md text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-955/30 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-955/30 transition-colors cursor-pointer"
                               >
                                 <Trash2 size={13} />
                               </button>

@@ -66,7 +66,7 @@ export default function StatCard({
   return (
     <div
       onClick={onClick}
-      className={`p-5 rounded-2xl border ${styles.bg} ${styles.border} shadow-sm transition-all ${
+      className={`p-5 rounded-xl border ${styles.bg} ${styles.border} shadow-sm transition-all ${
         onClick ? 'cursor-pointer hover:shadow-md hover:scale-[1.01]' : ''
       }`}
     >
@@ -97,7 +97,7 @@ export default function StatCard({
       </div>
 
       {subtitle && (
-        <p className="text-[11px] text-neutral-400 dark:text-neutral-500 font-medium mt-1">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 font-medium mt-1">
           {subtitle}
         </p>
       )}

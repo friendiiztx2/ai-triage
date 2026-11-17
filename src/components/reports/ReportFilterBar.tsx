@@ -48,14 +48,14 @@ export default function ReportFilterBar({
   return (
     <div className="relative z-30 backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800/80 p-5 rounded-[22px] shadow-xs space-y-4">
       <div className="flex items-center gap-2 font-semibold text-neutral-800 dark:text-neutral-100 text-xs uppercase tracking-wider">
-        <Filter size={13} className="text-[#1a73e8]" />
+        <Filter size={13} className="text-brand-600" />
         <span>{language === 'th' ? 'เงื่อนไขการคัดกรองข้อมูลรายงาน' : 'Report Filters'}</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         {/* Date Presets */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider">
             {language === 'th' ? 'ช่วงเวลา' : 'Date Range'}
           </label>
           <SelectDropdown
@@ -74,7 +74,7 @@ export default function ReportFilterBar({
 
         {/* Categories */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider">
             {language === 'th' ? 'หมวดหมู่ปัญหา' : 'Category'}
           </label>
           <SelectDropdown
@@ -93,7 +93,7 @@ export default function ReportFilterBar({
 
         {/* Priority */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider">
             {language === 'th' ? 'ระดับความด่วน' : 'Priority'}
           </label>
           <SelectDropdown
@@ -113,7 +113,7 @@ export default function ReportFilterBar({
         {/* Company Filter (for System Admin) */}
         {isSystemAdmin ? (
           <div className="space-y-1">
-            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
+            <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider">
               {language === 'th' ? 'บริษัทที่สังกัด' : 'Company'}
             </label>
             <SelectDropdown
@@ -131,7 +131,7 @@ export default function ReportFilterBar({
           </div>
         ) : (
           <div className="space-y-1">
-            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wider">
+            <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider">
               {language === 'th' ? 'สถานะการดูแล' : 'Status'}
             </label>
             <SelectDropdown

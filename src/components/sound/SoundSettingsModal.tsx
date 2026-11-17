@@ -67,7 +67,7 @@ export default function SoundSettingsModal({ isOpen, onClose, onSettingsChanged 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] max-w-lg w-full overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] max-w-lg w-full overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
           <div className="flex items-center gap-2.5">
@@ -90,7 +90,7 @@ export default function SoundSettingsModal({ isOpen, onClose, onSettingsChanged 
         {/* Body */}
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           {/* Main Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800">
             <div className="flex items-center gap-3">
               {soundEnabled ? (
                 <Volume2 size={22} className="text-indigo-600 dark:text-indigo-400" />
@@ -105,7 +105,7 @@ export default function SoundSettingsModal({ isOpen, onClose, onSettingsChanged 
             <button
               onClick={() => handleToggleSound(!soundEnabled)}
               className={`w-12 h-7 rounded-full transition-colors relative cursor-pointer p-1 ${
-                soundEnabled ? 'bg-[#1a73e8]' : 'bg-neutral-300 dark:bg-neutral-700'
+                soundEnabled ? 'bg-brand-600' : 'bg-neutral-300 dark:bg-neutral-700'
               }`}
             >
               <div
@@ -130,7 +130,7 @@ export default function SoundSettingsModal({ isOpen, onClose, onSettingsChanged 
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium border transition shadow-xs cursor-pointer ${
               isPlayingTest
                 ? 'bg-emerald-600 text-white border-emerald-600 scale-95'
-                : 'bg-[#e8f0fe] dark:bg-blue-950/40 text-[#1a73e8] dark:text-blue-300 border-[#1a73e8]/30 hover:bg-[#d2e3fc]'
+                : 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-300 border-brand-600/30 hover:bg-brand-100'
             }`}
           >
             <Play size={14} className={isPlayingTest ? 'animate-spin' : ''} />
@@ -139,7 +139,7 @@ export default function SoundSettingsModal({ isOpen, onClose, onSettingsChanged 
 
           <button
             onClick={onClose}
-            className="bg-[#1a73e8] hover:bg-[#1557b0] text-white px-5 py-2 rounded-lg text-xs font-medium shadow-xs transition cursor-pointer"
+            className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-lg text-xs font-medium shadow-xs transition cursor-pointer"
           >
             เสร็จสิ้น
           </button>

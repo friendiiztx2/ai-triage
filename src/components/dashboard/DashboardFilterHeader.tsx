@@ -75,12 +75,12 @@ export default function DashboardFilterHeader({
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                 </span>
                 <Bell size={13} className="text-neutral-700 dark:text-neutral-200" />
-                <span className="text-[11px] font-mono">{language === 'th' ? 'เตือนเสียง' : 'Sound'}</span>
+                <span className="text-xs font-mono">{language === 'th' ? 'เตือนเสียง' : 'Sound'}</span>
               </>
             ) : (
               <>
                 <BellOff size={13} className="text-neutral-400" />
-                <span className="text-[11px] font-mono text-neutral-400">{language === 'th' ? 'ปิดเสียง' : 'Muted'}</span>
+                <span className="text-xs font-mono text-neutral-400">{language === 'th' ? 'ปิดเสียง' : 'Muted'}</span>
               </>
             )}
           </button>

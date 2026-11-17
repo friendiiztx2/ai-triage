@@ -28,7 +28,7 @@ export default function SoundVolumeSelector({ volumeLevel, onSelectVolume }: Sou
               onClick={() => onSelectVolume(vol.val)}
               className={`py-2 px-2 rounded-xl text-xs font-medium border transition text-center cursor-pointer ${
                 isActive
-                  ? 'bg-[#1a73e8] text-white border-[#1a73e8] shadow-xs'
+                  ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
                   : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
               }`}
             >

@@ -131,7 +131,7 @@ export default function CompanyRegistrationSuccessView({
     <div className="space-y-4 text-xs select-text">
       {/* Header Banner */}
       <div className="flex flex-col items-center text-center gap-1.5 pb-1">
-        <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
+        <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
           <CheckCircle2 size={28} />
         </div>
         <h3 className="font-extrabold text-neutral-900 dark:text-white text-base">
@@ -139,7 +139,7 @@ export default function CompanyRegistrationSuccessView({
             ? 'จัดตั้งบริษัทและเตรียมระบบส่งมอบสำเร็จ!'
             : 'Company Onboarding Completed!'}
         </h3>
-        <p className="text-neutral-500 dark:text-neutral-400 text-[11px] max-w-md">
+        <p className="text-neutral-500 dark:text-neutral-400 text-xs max-w-md">
           {language === 'th'
             ? 'ระบบได้สร้างพื้นที่บริษัท ตั้งค่าโควต้าหมวดหมู่เริ่มต้น และเตรียมใบสรุปสำหรับส่งมอบให้ลูกค้าเรียบร้อยแล้ว'
             : 'Company workspace, quota, default categories, and handover summary are ready.'}
@@ -150,7 +150,7 @@ export default function CompanyRegistrationSuccessView({
       {successData.warnings && successData.warnings.length > 0 && (
         <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 space-y-1">
           {successData.warnings.map((w, idx) => (
-            <div key={idx} className="flex items-center gap-2 text-[11px] font-medium">
+            <div key={idx} className="flex items-center gap-2 text-xs font-medium">
               <AlertTriangle size={14} className="shrink-0 text-amber-500" />
               <span>{w}</span>
             </div>
@@ -162,45 +162,45 @@ export default function CompanyRegistrationSuccessView({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* 1. Company Profile */}
         <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase">
             <Building2 size={13} />
             <span>1. ข้อมูลบริษัท</span>
           </div>
           <div className="font-extrabold text-neutral-900 dark:text-white text-sm truncate">
             {successData.name}
           </div>
-          <div className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
+          <div className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
             Domain: <span className="text-neutral-700 dark:text-neutral-300 font-semibold">{successData.domain}</span>
           </div>
         </div>
 
         {/* 2. Package & Monthly Quota */}
         <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">
             <PackageCheck size={13} />
             <span>2. แพ็กเกจโควต้า</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 font-extrabold text-xs border border-emerald-500/30">
+            <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 font-extrabold text-xs border border-emerald-500/30">
               {pkgName}
             </span>
             <span className="font-bold text-neutral-800 dark:text-neutral-200 text-xs">
               {quotaDisplay}
             </span>
           </div>
-          <div className="text-[10px] text-neutral-500 dark:text-neutral-400">
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">
             สร้างหมวดหมู่คัดกรองพื้นฐาน 3 หมวดหมู่แล้ว
           </div>
         </div>
 
         {/* 3. Initial Admin Account */}
         <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-violet-600 dark:text-violet-400 uppercase">
             <UserCheck size={13} />
             <span>3. บัญชีแอดมินลูกค้า</span>
           </div>
           {successData.admin_created && successData.admin_user ? (
-            <div className="space-y-0.5 text-[11px]">
+            <div className="space-y-0.5 text-xs">
               <div className="font-bold text-neutral-900 dark:text-white truncate">
                 {successData.admin_user.name}
               </div>
@@ -212,7 +212,7 @@ export default function CompanyRegistrationSuccessView({
               </div>
             </div>
           ) : (
-            <div className="text-[11px] text-neutral-400 dark:text-neutral-500 pt-1">
+            <div className="text-xs text-neutral-400 dark:text-neutral-500 pt-1">
               ข้ามขั้นตอนนี้ (สร้างภายหลังได้ที่เมนูจัดการผู้ใช้งาน)
             </div>
           )}
@@ -220,12 +220,12 @@ export default function CompanyRegistrationSuccessView({
 
         {/* 4. Telegram Bot Binding */}
         <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-sky-600 dark:text-sky-400 uppercase">
             <Send size={13} />
             <span>4. กลุ่มแจ้งเตือน Telegram</span>
           </div>
           {successData.telegram_bound && successData.telegram_group ? (
-            <div className="space-y-0.5 text-[11px]">
+            <div className="space-y-0.5 text-xs">
               <div className="font-bold text-neutral-900 dark:text-white truncate">
                 {successData.telegram_group.group_name}
               </div>
@@ -234,7 +234,7 @@ export default function CompanyRegistrationSuccessView({
               </div>
             </div>
           ) : (
-            <div className="text-[11px] text-neutral-400 dark:text-neutral-500 pt-1">
+            <div className="text-xs text-neutral-400 dark:text-neutral-500 pt-1">
               ยังไม่ผูกกลุ่ม (ผูกภายหลังได้ที่เมนูกลุ่มแจ้งเตือน Telegram)
             </div>
           )}
@@ -244,23 +244,23 @@ export default function CompanyRegistrationSuccessView({
       {/* Security API Credentials Box */}
       <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-950/60 space-y-2 font-mono">
         <div className="flex items-center justify-between font-sans">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase">
             <KeyRound size={12} />
             <span>API Integration Credentials</span>
           </div>
           <button
             type="button"
             onClick={handleCopyApiOnly}
-            className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
           >
             {copiedApi ? <Check size={11} /> : <Copy size={11} />}
             {copiedApi ? 'คัดลอก API Key แล้ว' : 'คัดลอกเฉพาะ API Key'}
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
           <div className="p-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800">
-            <span className="block text-[9px] text-neutral-400 uppercase font-sans font-bold">
+            <span className="block text-xs text-neutral-400 uppercase font-sans font-bold">
               Client ID
             </span>
             <span className="font-bold text-neutral-800 dark:text-neutral-200 break-all">
@@ -268,7 +268,7 @@ export default function CompanyRegistrationSuccessView({
             </span>
           </div>
           <div className="p-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800">
-            <span className="block text-[9px] text-neutral-400 uppercase font-sans font-bold">
+            <span className="block text-xs text-neutral-400 uppercase font-sans font-bold">
               Client Secret
             </span>
             <span className="font-bold text-rose-600 dark:text-rose-400 break-all">

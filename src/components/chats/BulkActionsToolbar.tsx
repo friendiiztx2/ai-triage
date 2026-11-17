@@ -41,14 +41,14 @@ export default function BulkActionsToolbar({
   ];
 
   return (
-    <div className="relative z-20 bg-[#e8f0fe] dark:bg-blue-950/70 border border-[#1a73e8]/30 px-4 py-2.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs select-none backdrop-blur-md mb-3 animate-fade-in text-xs">
+    <div className="relative z-20 bg-brand-50 dark:bg-brand-950/70 border border-brand-600/30 px-4 py-2.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs select-none backdrop-blur-md mb-3 animate-fade-in text-xs">
       <div className="flex items-center gap-3">
-        <span className="font-mono font-semibold text-[#1a73e8] dark:text-blue-300">
+        <span className="font-mono font-semibold text-brand-600 dark:text-brand-300">
           {language === 'th' ? `เลือกอยู่ ${selectedCount} รายการ` : `${selectedCount} selected`}
         </span>
         <button
           onClick={onDeselectAll}
-          className="inline-flex items-center gap-1 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors cursor-pointer text-[11px]"
+          className="inline-flex items-center gap-1 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors cursor-pointer text-xs"
         >
           <X size={11} />
           <span>{language === 'th' ? 'ยกเลิก' : 'Deselect'}</span>

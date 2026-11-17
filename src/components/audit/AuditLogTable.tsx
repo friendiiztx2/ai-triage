@@ -65,7 +65,7 @@ function DetailCell({ text, language }: { text: string; language: string }) {
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1a73e8] hover:underline cursor-pointer"
+          className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline cursor-pointer"
         >
           {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           {expanded
@@ -158,6 +158,10 @@ export default function AuditLogTable({
     return pages;
   };
 
+  // Thai names for the audit actions; unknown actions keep their raw code
+  const ACTION_TH: Record<string, string> = { CREATE: 'สร้าง', UPDATE: 'แก้ไข', DELETE: 'ลบ', LOGIN: 'เข้าสู่ระบบ', LOGOUT: 'ออกจากระบบ', EXPORT: 'ส่งออก' };
+  const actionLabel = (action: string) => (language === 'th' && ACTION_TH[action?.toUpperCase()]) || action;
+
   const getActionBadge = (action: string) => {
     switch (action) {
       case 'CREATE':
@@ -167,7 +171,7 @@ export default function AuditLogTable({
       case 'DELETE':
         return 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30';
       case 'LOGIN':
-        return 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30';
+        return 'bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 border border-brand-100 dark:border-brand-900/30';
       default:
         return 'bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700';
     }
@@ -243,7 +247,7 @@ export default function AuditLogTable({
                   {/* Admin Name & Email */}
                   <td className="px-6 py-4">
                     <div>
-                      <span className="block font-bold text-neutral-800 dark:text-neutral-100 text-[11px]">
+                      <span className="block font-bold text-neutral-800 dark:text-neutral-100 text-xs">
                         {log.admin_name}
                       </span>
                       <span className="block text-[9.5px] text-neutral-400 dark:text-neutral-500 font-medium">
@@ -254,8 +258,8 @@ export default function AuditLogTable({
 
                   {/* Action Badge */}
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-extrabold tracking-wide uppercase select-none ${getActionBadge(log.action)}`}>
-                      {log.action}
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap select-none ${language === 'en' ? 'tracking-wide uppercase' : ''} ${getActionBadge(log.action)}`}>
+                      {actionLabel(log.action)}
                     </span>
                   </td>
 
@@ -269,7 +273,7 @@ export default function AuditLogTable({
                     <span className="block text-neutral-600 dark:text-neutral-300">
                       {new Date(log.created_at).toLocaleDateString('th-TH')}
                     </span>
-                    <span className="block mt-0.5 text-[11px] text-neutral-400 dark:text-neutral-500">
+                    <span className="block mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">
                       {new Date(log.created_at).toLocaleTimeString('th-TH')}
                     </span>
                   </td>
@@ -310,7 +314,7 @@ export default function AuditLogTable({
                         onClick={() => setCurrentPage(p)}
                         className={`h-8 min-w-[32px] px-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                           safeCurrentPage === p
-                            ? 'bg-[#1a73e8] text-white font-bold shadow-xs'
+                            ? 'bg-brand-600 text-white font-bold shadow-xs'
                             : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                         }`}
                       >

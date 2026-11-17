@@ -187,7 +187,7 @@ export default function ChatTable({
           <button
             type="button"
             onClick={() => onDateChange('30days')}
-            className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium transition-colors shadow-xs cursor-pointer select-none"
+            className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium transition-colors shadow-xs cursor-pointer select-none"
           >
             <span>{language === 'th' ? '📅 สลับดูข้อมูลย้อนหลัง 30 วันล่าสุด' : '📅 View Past 30 Days'}</span>
           </button>
@@ -199,10 +199,18 @@ export default function ChatTable({
   return (
     <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md shadow-xs overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-xs">
+        <table className="w-full min-w-[920px] table-fixed text-left border-collapse text-xs">
+          {/* Fixed layout: the summary column takes the remaining width and truncates, so the table fits the page */}
+          <colgroup>
+            <col className="w-[150px]" />
+            <col className="w-[180px]" />
+            <col />
+            <col className="w-[180px]" />
+            <col className="w-[140px]" />
+          </colgroup>
           <thead>
             <tr className="bg-neutral-50/70 dark:bg-neutral-900/60 border-b border-neutral-200/80 dark:border-neutral-800/80">
-              <th className="pl-3.5 pr-3 py-3 whitespace-nowrap w-[115px]">
+              <th className="pl-3.5 pr-3 py-3 whitespace-nowrap">
                 <SortHeader
                   label={language === 'th' ? 'ความด่วน & เวลา' : 'Priority & Time'}
                   active={sortColumn === 'priority'}
@@ -210,7 +218,7 @@ export default function ChatTable({
                   onSort={() => handleSort('priority')}
                 />
               </th>
-              <th className="px-3 py-3 whitespace-nowrap w-[195px]">
+              <th className="px-3 py-3 whitespace-nowrap">
                 <SortHeader
                   label={language === 'th' ? 'ลูกค้า & รหัสแชต' : 'Customer & ID'}
                   active={sortColumn === 'customer'}
@@ -218,7 +226,7 @@ export default function ChatTable({
                   onSort={() => handleSort('customer')}
                 />
               </th>
-              <th className="px-3 py-3 max-w-[460px]">
+              <th className="px-3 py-3">
                 <SortHeader
                   label={language === 'th' ? 'สรุปประเด็น AI & รูปแนบ' : 'AI Summary & Media'}
                   active={sortColumn === 'summary'}
@@ -226,7 +234,7 @@ export default function ChatTable({
                   onSort={() => handleSort('summary')}
                 />
               </th>
-              <th className="px-3 py-3 whitespace-nowrap w-[190px]">
+              <th className="px-3 py-3 whitespace-nowrap">
                 <SortHeader
                   label={language === 'th' ? 'หมวดหมู่' : 'Category'}
                   active={sortColumn === 'category'}
@@ -234,7 +242,7 @@ export default function ChatTable({
                   onSort={() => handleSort('category')}
                 />
               </th>
-              <th className="px-3 py-3 whitespace-nowrap text-right w-[150px]">
+              <th className="px-3 py-3 whitespace-nowrap text-right">
                 <SortHeader
                   label={language === 'th' ? 'การคัดแยกเคส' : 'Triage Action'}
                   active={sortColumn === 'audit'}
@@ -288,7 +296,7 @@ export default function ChatTable({
                 <select
                   value={pageSize}
                   onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                  className="appearance-none bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200/90 dark:border-neutral-700 rounded-lg pl-2.5 pr-6 py-1 text-xs font-mono font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-[#1a73e8] focus:border-[#1a73e8] dark:focus:border-blue-500 cursor-pointer shadow-2xs transition-colors"
+                  className="appearance-none bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200/90 dark:border-neutral-700 rounded-lg pl-2.5 pr-6 py-1 text-xs font-mono font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-brand-600 focus:border-brand-600 dark:focus:border-brand-500 cursor-pointer shadow-2xs transition-colors"
                 >
                   <option value={20}>20</option>
                   <option value={50}>50</option>
@@ -328,7 +336,7 @@ export default function ChatTable({
                       onClick={() => setCurrentPage(p)}
                       className={`h-8 min-w-[32px] px-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                         safeCurrentPage === p
-                          ? 'bg-[#1a73e8] text-white font-bold shadow-xs'
+                          ? 'bg-brand-600 text-white font-bold shadow-xs'
                           : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                       }`}
                     >

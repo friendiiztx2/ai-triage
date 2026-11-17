@@ -80,7 +80,7 @@ export default function SidebarWorkspaceSwitcher({
         }}
         className={`flex items-center justify-between p-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/80 dark:bg-neutral-800/50 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/80 transition-all group shadow-2xs ${
           showDropdown ? 'cursor-pointer' : 'cursor-default'
-        } ${isOpen ? 'ring-2 ring-[#1a73e8]/20 border-[#1a73e8]/50' : ''}`}
+        } ${isOpen ? 'ring-2 ring-brand-600/20 border-brand-600/50' : ''}`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
           <img
@@ -93,25 +93,25 @@ export default function SidebarWorkspaceSwitcher({
               <span className="font-semibold text-xs text-neutral-900 dark:text-white leading-tight tracking-tight">
                 Sift AI
               </span>
-              <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-md bg-[#e8f0fe] text-[#1a73e8] dark:bg-blue-950/60 dark:text-blue-300 border border-[#1a73e8]/20">
+              <span className="text-xs font-semibold px-1.5 py-0.2 rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-600/20">
                 Pro
               </span>
             </div>
-            <p className="text-[11px] font-medium text-neutral-500 dark:text-neutral-300 truncate leading-tight mt-0.5">
+            <p className="text-xs font-medium text-neutral-500 dark:text-neutral-300 truncate leading-tight mt-0.5">
               {currentCompany}
             </p>
           </div>
         </div>
 
         {showDropdown && (
-          <ChevronsUpDown size={14} className={`text-neutral-400 group-hover:text-neutral-600 dark:text-neutral-300 dark:group-hover:text-white shrink-0 ml-1 transition-all ${isOpen ? 'text-[#1a73e8]' : ''}`} />
+          <ChevronsUpDown size={14} className={`text-neutral-400 group-hover:text-neutral-600 dark:text-neutral-300 dark:group-hover:text-white shrink-0 ml-1 transition-all ${isOpen ? 'text-brand-600' : ''}`} />
         )}
       </div>
 
       {/* Google Workspace Styled Custom Popover Dropdown */}
       {showDropdown && isOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 z-[9999] bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-[0_16px_40px_-4px_rgba(0,0,0,0.3)] p-1.5 space-y-1 animate-scale-in">
-          <div className="px-2.5 py-1 text-[10px] font-semibold text-neutral-400 dark:text-neutral-400 uppercase tracking-wider">
+          <div className="px-2.5 py-1 text-xs font-semibold text-neutral-400 dark:text-neutral-400 uppercase tracking-wider">
             พื้นที่ทำงาน
           </div>
           <div className="max-h-56 overflow-y-auto space-y-0.5">
@@ -127,13 +127,13 @@ export default function SidebarWorkspaceSwitcher({
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors cursor-pointer text-left ${
                     isSelected
-                      ? 'bg-[#e8f0fe] text-[#1a73e8] dark:bg-blue-950/70 dark:text-[#8ab4f8] font-semibold'
+                      ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/70 dark:text-brand-300 font-semibold'
                       : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100/80 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white font-medium'
                   }`}
                 >
                   <span className="truncate">{c.name}</span>
                   {isSelected && (
-                    <Check size={14} className="text-[#1a73e8] dark:text-[#8ab4f8] shrink-0 ml-2 stroke-[2.5]" />
+                    <Check size={14} className="text-brand-600 dark:text-brand-300 shrink-0 ml-2 stroke-[2.5]" />
                   )}
                 </button>
               );

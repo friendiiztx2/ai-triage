@@ -43,7 +43,7 @@ export default function CategoryHeader({
           {activeTab === 'categories' && canManage && (
             <button
               onClick={onOpenCreateModal}
-              className="inline-flex items-center gap-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-colors cursor-pointer"
             >
               <Plus size={13} />
               <span>{language === 'th' ? 'เพิ่มหมวดหมู่' : 'Add Category'}</span>
@@ -66,13 +66,13 @@ export default function CategoryHeader({
           onClick={() => setActiveTab('categories')}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer select-none font-medium ${
             activeTab === 'categories'
-              ? 'bg-[#1a73e8] text-white shadow-xs'
+              ? 'bg-brand-600 text-white shadow-xs'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
           }`}
         >
-          <Database size={13} className={activeTab === 'categories' ? 'text-white' : 'text-[#1a73e8]'} />
+          <Database size={13} className={activeTab === 'categories' ? 'text-white' : 'text-brand-600'} />
           <span>{language === 'th' ? 'หมวดหมู่หลัก' : 'Main Categories'}</span>
-          <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full tabular-nums ${
+          <span className={`text-xs font-mono px-1.5 py-0.2 rounded-full tabular-nums ${
             activeTab === 'categories'
               ? 'bg-white/20 text-white font-medium'
               : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
@@ -85,13 +85,13 @@ export default function CategoryHeader({
           onClick={() => setActiveTab('tags')}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer select-none font-medium ${
             activeTab === 'tags'
-              ? 'bg-[#8430ce] text-white shadow-xs'
+              ? 'bg-purple-600 text-white shadow-xs'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
           }`}
         >
-          <Tag size={13} className={activeTab === 'tags' ? 'text-white' : 'text-[#8430ce]'} />
+          <Tag size={13} className={activeTab === 'tags' ? 'text-white' : 'text-purple-600'} />
           <span>{language === 'th' ? 'แท็กระบบ' : 'System Tags'}</span>
-          <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full tabular-nums ${
+          <span className={`text-xs font-mono px-1.5 py-0.2 rounded-full tabular-nums ${
             activeTab === 'tags'
               ? 'bg-white/20 text-white font-medium'
               : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'

@@ -71,7 +71,7 @@ export default function TagManagerModal({
                     <button
                       type="button"
                       onClick={() => handleSave(idx)}
-                      className="bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
+                      className="bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
                     >
                       บันทึก
                     </button>
@@ -86,10 +86,10 @@ export default function TagManagerModal({
                 ) : (
                   <>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-medium px-2.5 py-1 rounded-md border border-neutral-200/80 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
+                      <span className="text-xs font-mono font-medium px-2.5 py-1 rounded-lg border border-neutral-200/80 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
                         {tagObj.name}
                       </span>
-                      <span className="text-[11px] text-neutral-400 font-normal">({tagObj.desc})</span>
+                      <span className="text-xs text-neutral-400 font-normal">({tagObj.desc})</span>
                     </div>
                     <button
                       type="button"

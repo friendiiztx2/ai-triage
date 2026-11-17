@@ -40,12 +40,12 @@ export default function RootLayout({
     <html
       lang="th"
       suppressHydrationWarning
-      className={`${inter.variable} ${ibmPlexSansThai.variable} font-sans h-screen overflow-hidden antialiased`}
+      className={`${inter.variable} ${ibmPlexSansThai.variable} font-sans h-dvh overflow-hidden antialiased`}
     >
       <head>
         <ThemeInitializer />
       </head>
-      <body className="font-sans h-screen overflow-hidden antialiased">
+      <body className="font-sans h-dvh overflow-hidden antialiased">
         <LanguageProvider>
           <AppShell>{children}</AppShell>
         </LanguageProvider>

@@ -15,15 +15,31 @@ import {
   Send,
   Activity,
   ChevronLeft, 
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react';
 
 import SidebarWorkspaceSwitcher from '@/components/sidebar/SidebarWorkspaceSwitcher';
 import SidebarNavMenu from '@/components/sidebar/SidebarNavMenu';
 import SidebarFooter from '@/components/sidebar/SidebarFooter';
 
-export default function Sidebar() {
+interface SidebarProps {
+  /** Drawer state on screens narrower than md (768px); ignored on desktop */
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
+  // Below md the sidebar is a full-width drawer, so the desktop "collapsed" mode does not apply
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
   const { t, language, setLanguage } = useLanguage();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [activeCompany, setActiveCompany] = useState('');
@@ -227,38 +243,55 @@ export default function Sidebar() {
     visibleMenuItems.push({ href: '/reports', label: language === 'th' ? 'รายงานและส่งออก' : 'Reports & Export', icon: FileSpreadsheet });
   }
 
+  const collapsed = isCollapsed && !isMobile;
+
   return (
-    <aside className={`bg-white/80 dark:bg-neutral-900/70 backdrop-blur-md border-r border-neutral-200/80 dark:border-neutral-800/80 h-screen flex flex-col justify-between transition-all duration-200 relative z-30 select-none shadow-xs ${isCollapsed ? 'w-16 overflow-visible' : 'w-60'}`}>
-      {/* Collapse/Expand Toggle Button */}
-      <button 
+    <aside
+      className={`h-dvh flex flex-col justify-between select-none shadow-xs border-r border-neutral-200/80 dark:border-neutral-800/80 transition-all duration-200
+        fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-neutral-900 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:relative md:z-30 md:max-w-none md:translate-x-0 md:bg-white/80 md:dark:bg-neutral-900/70 md:backdrop-blur-md ${collapsed ? 'md:w-16 overflow-visible' : 'md:w-60'}`}
+      aria-label="เมนูหลัก"
+    >
+      {/* Collapse/Expand Toggle Button (desktop) */}
+      <button
         onClick={toggleCollapse}
-        className="absolute -right-3 top-5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white p-1 rounded-full shadow-xs transition-all z-50 cursor-pointer"
+        className="hidden md:block absolute -right-3 top-5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white p-1 rounded-full shadow-xs transition-all z-50 cursor-pointer"
         title={isCollapsed ? 'ขยายเมนู' : 'พับเมนู'}
       >
         {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
 
-      <div className={`flex-1 ${isCollapsed ? 'overflow-visible p-2' : 'overflow-y-auto p-3'}`}>
+      {/* Close button (mobile drawer) */}
+      <button
+        type="button"
+        onClick={onMobileClose}
+        className="md:hidden absolute right-3 top-3 p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 z-50 cursor-pointer"
+        aria-label="ปิดเมนู"
+      >
+        <X size={20} />
+      </button>
+
+      <div className={`flex-1 ${collapsed ? 'overflow-visible p-2' : 'overflow-y-auto p-3 pt-14 md:pt-3'}`}>
         {/* Unified Workspace Switcher (Logo + Company context) */}
         <SidebarWorkspaceSwitcher
           companies={companies}
           activeCompany={activeCompany}
           onCompanyChange={handleCompanyChange}
           userProfile={userProfile}
-          isCollapsed={isCollapsed}
+          isCollapsed={collapsed}
         />
 
         {/* Navigation Menu */}
         <SidebarNavMenu
           items={visibleMenuItems}
           pathname={pathname}
-          isCollapsed={isCollapsed}
+          isCollapsed={collapsed}
         />
       </div>
 
       {/* Footer User Info & Micro Actions */}
       <SidebarFooter
-        isCollapsed={isCollapsed}
+        isCollapsed={collapsed}
         theme={theme}
         onToggleTheme={toggleTheme}
         userProfile={userProfile}
