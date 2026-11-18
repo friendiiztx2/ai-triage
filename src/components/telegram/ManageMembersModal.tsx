@@ -187,7 +187,7 @@ export default function ManageMembersModal({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fade-in select-none">
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl max-w-4xl w-full h-[90vh] max-h-[800px] flex flex-col overflow-hidden transition-all duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               <Send size={20} />
@@ -224,7 +224,7 @@ export default function ManageMembersModal({
         </div>
 
         {/* Stats & Filters Bar */}
-        <div className="px-6 py-3.5 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 shrink-0 space-y-3">
+        <div className="px-5 py-3 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 shrink-0 space-y-3">
           {/* Quick Stats Badges */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -480,7 +480,7 @@ export default function ManageMembersModal({
         </div>
 
         {/* Footer RBAC Policy Explainer */}
-        <div className="p-4 px-6 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/70 flex flex-wrap items-center justify-between gap-3 text-[11.5px] text-neutral-500 dark:text-neutral-400 shrink-0">
+        <div className="px-5 py-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/70 flex flex-wrap items-center justify-between gap-3 text-[11.5px] text-neutral-500 dark:text-neutral-400 shrink-0">
           <div className="flex items-center gap-2">
             <ShieldCheck size={14} className="text-brand-600 dark:text-brand-400 shrink-0" />
             <span>

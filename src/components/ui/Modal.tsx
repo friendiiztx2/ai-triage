@@ -65,17 +65,17 @@ export default function Modal({
       >
         {(title || icon) && (
           <div
-            className={`p-6 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center bg-neutral-50/50 dark:bg-neutral-900/50 ${headerClassName}`}
+            className={`px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center bg-neutral-50/50 dark:bg-neutral-900/50 ${headerClassName}`}
           >
             <div className="flex items-center gap-3">
               {icon && (
-                <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-955/20 text-indigo-600 dark:text-indigo-400 shrink-0">
+                <div className="p-1.5 rounded-lg bg-brand-50 dark:bg-brand-955/40 text-brand-600 dark:text-brand-400 shrink-0">
                   {icon}
                 </div>
               )}
               <div>
                 {title && (
-                  <h3 className="font-bold text-neutral-800 dark:text-neutral-100 text-base leading-tight">
+                  <h3 className="font-bold text-neutral-800 dark:text-neutral-100 text-sm leading-tight">
                     {title}
                   </h3>
                 )}
@@ -89,7 +89,7 @@ export default function Modal({
             <button
               type="button"
               onClick={onClose}
-              className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition cursor-pointer"
+              className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition cursor-pointer"
             >
               <X size={18} />
             </button>

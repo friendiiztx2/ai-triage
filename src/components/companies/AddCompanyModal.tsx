@@ -270,7 +270,7 @@ export default function AddCompanyModal({
     <div className="fixed inset-0 bg-neutral-950/75 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-white dark:bg-neutral-900 rounded-xl max-w-2xl w-full shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-850">
+        <div className="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-850">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-600/10 dark:bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <Building2 size={20} />
@@ -299,7 +299,7 @@ export default function AddCompanyModal({
 
         {/* Stepper Progress Bar (Hidden once completed) */}
         {!successData && (
-          <div className="px-6 py-3 bg-neutral-100/60 dark:bg-neutral-950/50 border-b border-neutral-200/80 dark:border-neutral-800/80">
+          <div className="px-5 py-2.5 bg-neutral-100/60 dark:bg-neutral-950/50 border-b border-neutral-200/80 dark:border-neutral-800/80">
             <div className="grid grid-cols-4 gap-2">
               {stepsMeta.map((s) => {
                 const Icon = s.icon;
@@ -348,7 +348,7 @@ export default function AddCompanyModal({
         )}
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-5 overflow-y-auto flex-1">
           {successData ? (
             <CompanyRegistrationSuccessView
               successData={successData}
@@ -357,7 +357,7 @@ export default function AddCompanyModal({
               language={language}
             />
           ) : (
-            <form onSubmit={handleCompleteOnboarding} className="space-y-5 text-xs">
+            <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
               {errorMsg && (
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-300 flex items-center gap-2 text-xs font-semibold">
                   <AlertCircle size={16} className="shrink-0 text-rose-500" />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 export interface DatePickerProps {
@@ -51,6 +51,29 @@ export default function DatePicker({
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Where the calendar opens, measured from the trigger each time it opens so it stays on screen
+  const [placement, setPlacement] = useState<{ left: number; above: boolean } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setPlacement(null);
+      return;
+    }
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const POPOVER_W = 256; // w-64
+    const POPOVER_H = 330;
+    const GAP = 8;
+    // Preferred edge from `align`, then clamped inside the viewport
+    const preferred = align === 'right' ? rect.right - POPOVER_W : rect.left;
+    const maxLeft = window.innerWidth - GAP - POPOVER_W;
+    const viewportLeft = Math.max(GAP, Math.min(preferred, maxLeft));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    setPlacement({
+      left: viewportLeft - rect.left,
+      above: spaceBelow < POPOVER_H && rect.top > spaceBelow,
+    });
+  }, [isOpen, align]);
 
   // Initialize view year/month based on current value or today
   const initialDate = value ? new Date(value) : new Date();
@@ -219,7 +242,8 @@ export default function DatePicker({
       {/* Modern Frosted Calendar Popover */}
       {isOpen && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} mt-1.5 z-[9999] w-64 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] p-3 animate-scale-in select-none`}
+          style={{ left: placement?.left ?? 0, visibility: placement ? 'visible' : 'hidden' }}
+          className={`absolute ${placement?.above ? 'bottom-full mb-1.5' : 'top-full mt-1.5'} z-[9999] w-64 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] p-3 animate-scale-in select-none`}
         >
           {/* Header Month / Year Navigation */}
           <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-neutral-100 dark:border-neutral-800/70">

@@ -210,7 +210,7 @@ export default function EditProfileModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Fixed dark mode gradient so no white streak appears */}
-        <div className="px-6 py-5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-gradient-to-r from-brand-50/70 via-white to-purple-50/40 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900">
+        <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-gradient-to-r from-brand-50/70 via-white to-purple-50/40 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-600 dark:bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-500/20">
               <Sparkles size={20} />
@@ -234,7 +234,7 @@ export default function EditProfileModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[82vh]">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto max-h-[82vh]">
           {/* Notifications */}
           {errorMsg && (
             <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/80 flex items-start gap-3 text-xs text-rose-700 dark:text-rose-300">

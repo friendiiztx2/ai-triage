@@ -1,10 +1,10 @@
 import React from 'react';
 
 export const VOLUME_LEVELS = [
-  { label: 'เบา (50%)', val: 0.5 },
-  { label: 'ปานกลาง (75%)', val: 0.75 },
-  { label: 'ดังชัด (100%)', val: 1.0 },
-  { label: 'ดังที่สุด (150%)', val: 1.5 },
+  { label: 'เบา', pct: '50%', val: 0.5 },
+  { label: 'กลาง', pct: '75%', val: 0.75 },
+  { label: 'ดัง', pct: '100%', val: 1.0 },
+  { label: 'ดังสุด', pct: '150%', val: 1.5 },
 ];
 
 interface SoundVolumeSelectorProps {
@@ -12,27 +12,27 @@ interface SoundVolumeSelectorProps {
   onSelectVolume: (volume: number) => void;
 }
 
+/** Four volume steps as one segmented control */
 export default function SoundVolumeSelector({ volumeLevel, onSelectVolume }: SoundVolumeSelectorProps) {
   return (
-    <div className="space-y-3">
-      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 block">
-        🔊 ปรับระดับความดังเสียง
-      </label>
-      <div className="grid grid-cols-4 gap-2">
+    <div className="space-y-2">
+      <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block">ความดัง</label>
+      <div className="grid grid-cols-4 gap-0.5 p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200/70 dark:border-neutral-700/60">
         {VOLUME_LEVELS.map((vol) => {
           const isActive = volumeLevel === vol.val;
           return (
             <button
               key={vol.val}
               type="button"
+              aria-pressed={isActive}
               onClick={() => onSelectVolume(vol.val)}
-              className={`py-2 px-2 rounded-xl text-xs font-medium border transition text-center cursor-pointer ${
+              className={`py-1.5 rounded-lg text-xs transition text-center cursor-pointer ${
                 isActive
-                  ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
-                  : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
+                  ? 'bg-white dark:bg-neutral-900 text-brand-700 dark:text-brand-300 font-semibold shadow-xs'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
               }`}
             >
-              {vol.label}
+              {vol.label} <span className="text-neutral-400 font-normal">{vol.pct}</span>
             </button>
           );
         })}

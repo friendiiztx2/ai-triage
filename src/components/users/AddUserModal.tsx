@@ -142,7 +142,7 @@ export default function AddUserModal({
       icon={<UserPlus size={20} />}
       maxWidth="md"
     >
-      <div className="p-6">
+      <div className="p-5">
         {error && (
           <div className="bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-500 text-xs font-bold p-3.5 rounded-xl border border-rose-200/50 dark:border-rose-900/30 mb-4 leading-normal">
             ⚠️ {error}

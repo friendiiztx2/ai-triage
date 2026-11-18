@@ -45,7 +45,7 @@ export default function TagManagerModal({
       maxWidth="lg"
       zIndex="z-[9999]"
     >
-      <div className="p-6 space-y-4">
+      <div className="p-5 space-y-4">
         <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
           การเปลี่ยนชื่อป้ายกำกับจะทำการอัปเดตชื่อใหม่ให้ทุกบทสนทนาในระบบทันที:
         </p>

@@ -6,11 +6,18 @@ import { getCategoryLabel, getBaseCatId } from '@/lib/categories';
 import SelectDropdown from '@/components/ui/SelectDropdown';
 
 const PRIORITY_OPTIONS = [
-  { id: 'low', label: 'ปกติ', textClass: 'text-neutral-700 dark:text-neutral-200', activeClass: 'bg-white dark:bg-neutral-900 text-neutral-800 dark:text-white font-bold shadow-2xs border border-neutral-200/80 dark:border-neutral-700' },
-  { id: 'medium', label: 'ปานกลาง', textClass: 'text-brand-700 dark:text-brand-300', activeClass: 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold shadow-2xs border border-brand-200 dark:border-brand-900/60' },
-  { id: 'high', label: 'ด่วนสูง', textClass: 'text-amber-700 dark:text-amber-300', activeClass: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold shadow-2xs border border-amber-200 dark:border-amber-900/60' },
-  { id: 'urgent', label: 'ด่วนวิกฤต', textClass: 'text-rose-700 dark:text-rose-300', activeClass: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold shadow-2xs border border-rose-200 dark:border-rose-900/60' },
+  { id: 'low', label: 'ปกติ', textClass: 'text-emerald-700 dark:text-emerald-300', color: 'var(--color-emerald-500)' },
+  { id: 'medium', label: 'ปานกลาง', textClass: 'text-brand-700 dark:text-brand-300', color: 'var(--color-brand-500)' },
+  { id: 'high', label: 'ด่วนสูง', textClass: 'text-amber-700 dark:text-amber-300', color: 'var(--color-amber-500)' },
+  { id: 'urgent', label: 'ด่วนวิกฤต', textClass: 'text-rose-700 dark:text-rose-300', color: 'var(--color-rose-500)' },
 ];
+
+/** Dot size and halo as inline styles, so the selected dot never depends on a utility class being generated */
+function priorityDotStyle(color: string, isActive: boolean): React.CSSProperties {
+  return isActive
+    ? { width: 12, height: 12, backgroundColor: color, boxShadow: `0 0 0 3px color-mix(in srgb, ${color} 28%, transparent)` }
+    : { width: 8, height: 8, backgroundColor: color };
+}
 
 interface ChatIssueItemCardProps {
   idx: number;
@@ -46,30 +53,25 @@ export default function ChatIssueItemCard({
 
   return (
     <div className="p-3 md:p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-xs space-y-2.5 md:space-y-3 min-w-0 relative transition-all hover:border-neutral-300 dark:hover:border-neutral-700">
-      {/* 1. Card Header: Issue Index & Summary (phones: title and department share one line, the ID is hidden) */}
+      {/* 1. Card Header: index + summary on the left, a small department tag on the right */}
       <div className="flex items-start justify-between gap-2.5">
         <div className="flex items-start gap-2 md:gap-2.5 min-w-0 flex-1">
           <span className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/50 px-1.5 md:px-2 py-0.5 rounded-lg border border-brand-200/80 dark:border-brand-900/60 shrink-0">
             #{idx + 1}
           </span>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 md:block md:space-y-1.5 min-w-0 flex-1">
-            <h4 className="font-bold text-neutral-900 dark:text-neutral-100 text-sm leading-snug break-words">
-              {issueTitle}
-            </h4>
-            {issueItem.department && (
-              <div className="inline-flex items-center gap-1 md:gap-1.5 px-1.5 md:px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-xs font-medium text-neutral-600 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700">
-                <Building2 size={12} className="text-neutral-400" />
-                <span>
-                  <span className="hidden md:inline">แผนก: </span>
-                  {issueItem.department}
-                </span>
-              </div>
-            )}
-          </div>
+          <h4 className="font-medium text-neutral-800 dark:text-neutral-100 text-sm leading-relaxed break-words min-w-0 flex-1 pt-0.5">
+            {issueTitle}
+          </h4>
         </div>
-        <span className="hidden md:inline text-xs text-neutral-400 dark:text-neutral-500 font-mono shrink-0">
-          ID: {issueKey.substring(0, 8)}
-        </span>
+        {issueItem.department && (
+          <span
+            title={`แผนก: ${issueItem.department}`}
+            className="inline-flex items-center gap-1 px-1.5 py-px mt-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-500 dark:text-neutral-400 border border-neutral-200/80 dark:border-neutral-700 shrink-0 max-w-[40%]"
+          >
+            <Building2 size={11} className="text-neutral-400 shrink-0" />
+            <span className="truncate">{issueItem.department}</span>
+          </span>
+        )}
       </div>
 
       {/* 2. Category Dropdown & Priority Selector (phones: two dropdowns side by side on one row) */}
@@ -112,23 +114,34 @@ export default function ChatIssueItemCard({
           />
         </div>
 
-        {/* Priority Segmented Control */}
-        <div className="hidden md:flex items-center gap-0.5 bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-xl shrink-0 border border-neutral-200/60 dark:border-neutral-700/60">
+        {/* Priority as four colour dots; the name shows on hover or keyboard focus */}
+        <div
+          role="radiogroup"
+          aria-label={language === 'th' ? 'ความเร่งด่วน' : 'Priority'}
+          className="hidden md:flex items-center gap-0.5 shrink-0 h-8 px-1 rounded-full bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-700/60"
+        >
           {PRIORITY_OPTIONS.map((p) => {
             const isActive = currentPri === p.id;
             return (
               <button
                 key={p.id}
                 type="button"
+                role="radio"
+                aria-checked={isActive}
+                aria-label={p.label}
                 onClick={() => onUpdatePriority(p.id)}
                 disabled={userProfile?.role === 'agent'}
-                className={`px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer shrink-0 select-none ${
-                  isActive
-                    ? p.activeClass
-                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200'
-                }`}
+                className="group/pri relative w-6 h-6 flex items-center justify-center rounded-full cursor-pointer disabled:cursor-default focus-visible:outline-2 focus-visible:outline-brand-500 transition"
               >
-                {p.label}
+                <span
+                  style={priorityDotStyle(p.color, isActive)}
+                  className={`block rounded-full transition-all duration-150 ${
+                    isActive ? '' : 'opacity-40 group-hover/pri:opacity-100'
+                  }`}
+                />
+                <span className="pointer-events-none absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-neutral-900 dark:bg-neutral-100 px-2 py-1 text-xs font-medium text-white dark:text-neutral-900 opacity-0 group-hover/pri:opacity-100 group-focus-visible/pri:opacity-100 transition-opacity z-20 shadow-md">
+                  {p.label}
+                </span>
               </button>
             );
           })}

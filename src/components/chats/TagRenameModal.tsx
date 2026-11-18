@@ -49,7 +49,7 @@ export default function TagRenameModal({
       maxWidth="md"
       zIndex="z-[9999]"
     >
-      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="p-5 space-y-4">
         <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
           ระบบจะทำการเปลี่ยนชื่อแท็ก{' '}
           <span className="font-mono font-medium text-neutral-900 dark:text-neutral-100 px-1.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">

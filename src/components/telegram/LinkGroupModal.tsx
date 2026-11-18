@@ -130,7 +130,7 @@ export default function LinkGroupModal({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fade-in select-none">
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden transition-all duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
               <Link2 size={18} />
@@ -153,7 +153,7 @@ export default function LinkGroupModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {/* How it works Banner */}
           <div className="bg-brand-50/80 dark:bg-brand-950/30 border border-brand-200/70 dark:border-brand-900/50 rounded-xl p-3.5 flex items-start gap-2.5 text-[12px] text-brand-900 dark:text-brand-200">
             <HelpCircle size={16} className="text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
