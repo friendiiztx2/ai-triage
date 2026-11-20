@@ -9,6 +9,7 @@ import {
   Send,
   KeyRound,
   AlertTriangle,
+  FileDown,
 } from 'lucide-react';
 
 export interface OnboardingSuccessData {
@@ -276,6 +277,16 @@ export default function CompanyRegistrationSuccessView({
             </span>
           </div>
         </div>
+
+        {/* API guide for the customer's developers (route is system_admin only; the secret is not in the file) */}
+        <a
+          href="/api/api-doc"
+          download
+          className="font-sans inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+        >
+          <FileDown size={13} />
+          {language === 'th' ? 'ดาวน์โหลดเอกสาร API (ส่งแชตเข้า Sift AI)' : 'Download API guide (Chat Ingest)'}
+        </a>
       </div>
 
       {/* Primary Action Buttons */}

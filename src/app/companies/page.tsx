@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, RefreshCw, ShieldAlert } from 'lucide-react';
+import { Plus, Search, RefreshCw, ShieldAlert, FileDown } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
 import AddCompanyModal from '@/components/companies/AddCompanyModal';
 import CompanyTable from '@/components/companies/CompanyTable';
@@ -93,13 +93,24 @@ export default function CompaniesPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-colors cursor-pointer self-start sm:self-auto"
-        >
-          <Plus size={15} />
-          <span>{language === 'th' ? 'สร้างและส่งมอบบริษัทใหม่' : 'Onboard New Company'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* One generic API guide for every company; the route serves it to system_admin only */}
+          <a
+            href="/api/api-doc"
+            download
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 text-xs font-bold transition-colors"
+          >
+            <FileDown size={15} />
+            <span>{language === 'th' ? 'ดาวน์โหลดเอกสาร API' : 'Download API Guide'}</span>
+          </a>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-colors cursor-pointer"
+          >
+            <Plus size={15} />
+            <span>{language === 'th' ? 'สร้างและส่งมอบบริษัทใหม่' : 'Onboard New Company'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Search and Table Box */}
